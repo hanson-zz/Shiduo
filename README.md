@@ -64,7 +64,6 @@
 - **重复文件**：按大小和 SHA-256 指纹比对，只有内容完全相同才算重复。
 - **相似照片**：用 Vision 图像特征找出连拍、重复截图等看起来差不多的照片。
 
-<p align="center"><img src="docs/screenshots/duplicates.png" alt="重复文件" width="880"></p>
 
 ## 安装
 
