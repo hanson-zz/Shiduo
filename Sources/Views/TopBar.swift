@@ -46,7 +46,7 @@ struct TopBar: View {
 
             Spacer(minLength: 8)
 
-            if player.hasTrack {
+            if player.current != nil {
                 NowPlayingView()
             }
 
