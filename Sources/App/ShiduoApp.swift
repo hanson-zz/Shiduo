@@ -19,6 +19,7 @@ struct ShiduoApp: App {
         }
         .commands {
             SidebarCommands()
+            SupportCommands()
             CommandGroup(after: .newItem) {
                 Button("固定文件夹…") { store.choosePinnedFolder() }
                     .keyboardShortcut("p", modifiers: [.command, .shift])
@@ -57,11 +58,31 @@ struct ShiduoApp: App {
             }
         }
 
+        Window("支持拾掇", id: SponsorView.windowID) {
+            SponsorView()
+        }
+        .windowResizability(.contentSize)
+
         Settings {
             SettingsView()
                 .environmentObject(store)
                 .environmentObject(store.ocr)
                 .environmentObject(store.updater)
+        }
+    }
+}
+
+/// 应用菜单里的「支持拾掇…」，帮助菜单里的「发送反馈…」。
+struct SupportCommands: Commands {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            Button("支持拾掇…") { openWindow(id: SponsorView.windowID) }
+        }
+        CommandGroup(replacing: .help) {
+            Button("发送反馈…") { Support.openFeedback() }
+            Button("在 GitHub 上查看源代码") { Support.openRepo() }
         }
     }
 }

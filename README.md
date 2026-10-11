@@ -95,6 +95,22 @@ open Shiduo.xcodeproj
 
 README 里的截图由“截图”工作流生成：在 Actions 里手动运行它，会用演示数据启动拾掇（`Shiduo --demo --page=home|images|search|downloads|cleanup|duplicates [--dark]`），截下各个页面并提交到 `docs/screenshots`。
 
+## 支持拾掇
+
+拾掇完全免费、开源。如果它帮你省了时间、腾出了空间，可以：
+
+- ⭐ 在 GitHub 上点个星
+- 📤 分享给朋友
+- ☕ 请作者喝杯咖啡（微信 / 支付宝扫一扫，金额随意）
+
+<p>
+  <img src="docs/sponsor/wechat.png" width="220" alt="微信收款码">
+  &nbsp;&nbsp;
+  <img src="docs/sponsor/alipay.png" width="220" alt="支付宝收款码">
+</p>
+
+问题和建议请发邮件到 694561981@qq.com，或在 [Issues](https://github.com/hanson-zz/Shiduo/issues) 里留言。
+
 ## 许可
 
 [MIT](LICENSE)

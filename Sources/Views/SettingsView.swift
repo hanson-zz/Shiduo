@@ -61,11 +61,12 @@ struct SettingsView: View {
             Section("关于") {
                 LabeledContent("版本", value: UpdateChecker.currentVersion)
                 LabeledContent("许可", value: "MIT 开源")
-                Link("在 GitHub 上查看源代码", destination: UpdateChecker.repoURL)
             }
+
+            SupportSections()
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 620)
+        .frame(width: 560, height: 720)
     }
 
     private var statusText: String {
