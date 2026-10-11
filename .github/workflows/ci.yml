@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: 构建与测试
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 XcodeGen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+        run: brew install --quiet xcodegen
+
+      - name: 生成 Xcode 工程
+        run: xcodegen generate
+
+      - name: 构建（通用二进制，ad-hoc 签名）
+        run: |
+          xcodebuild build \
+            -project Shiduo.xcodeproj \
+            -scheme Shiduo \
+            -configuration Release \
+            -derivedDataPath build \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="-" \
+            DEVELOPMENT_TEAM="" \
+            > build.log 2>&1 || { grep -E "error:|\*\* BUILD" build.log | head -80; exit 1; }
+          grep -E "\*\* BUILD" build.log
+
+      - name: 单元测试
+        run: |
+          xcodebuild test \
+            -project Shiduo.xcodeproj \
+            -scheme Shiduo \
+            -configuration Debug \
+            -derivedDataPath build-test \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="-" \
+            DEVELOPMENT_TEAM="" \
+            > test.log 2>&1 || { grep -E "error:|failed|\*\* TEST" test.log | head -80; exit 1; }
+          grep -E "Executed [0-9]+ test" test.log | tail -1
+
+      # 失败时把错误摘要推到 ci-logs 分支，方便不打开网页也能读到。
+      - name: 保存错误摘要
+        if: failure() && github.event_name != 'pull_request'
+        run: |
+          {
+            echo "run: ${{ github.run_id }} commit: ${{ github.sha }}"
+            echo "== build =="
+            [ -f build.log ] && grep -nE "error:|warning: .*(deprecated|unused)|\*\* BUILD" build.log | head -200
+            echo "== test =="
+            [ -f test.log ] && grep -nE "error:|failed|XCTAssert|\*\* TEST" test.log | head -200
+          } > /tmp/ci-errors.txt || true
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git checkout --orphan ci-logs
+          git rm -rf --cached . > /dev/null
+          cp /tmp/ci-errors.txt ci-errors.txt
+          git add ci-errors.txt
+          git commit -m "CI 错误摘要 ${{ github.run_id }}"
+          git push -f origin ci-logs

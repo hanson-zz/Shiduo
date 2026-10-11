@@ -1,0 +1,61 @@
+name: Shiduo
+options:
+  bundleIdPrefix: io.github.hanson-zz
+  developmentLanguage: zh-Hans
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEAD_CODE_STRIPPING: YES
+    # 默认 ad-hoc 签名（"-"），不需要 Apple 开发者证书，任何人 clone 后都能直接构建。
+    ENABLE_HARDENED_RUNTIME: NO
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  Shiduo:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+      - path: Resources
+        excludes:
+          - "Info.plist"
+    settings:
+      base:
+        PRODUCT_NAME: Shiduo
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo
+        INFOPLIST_FILE: Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_APP_SANDBOX: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
+  ShiduoTests:
+    type: bundle.unit-test
+    platform: macOS
+    # 只编译纯逻辑部分（自然语言搜索解析），不需要启动整个应用。
+    sources:
+      - path: Tests
+      - path: Sources/Search/SearchQuery.swift
+      - path: Sources/Search/QueryParser.swift
+      - path: Sources/Model/FileCategory.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Shiduo:
+    build:
+      targets:
+        Shiduo: all
+    test:
+      targets:
+        - ShiduoTests

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh-Hans</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>zh-Hans</string>
+	</array>
+	<key>CFBundleDisplayName</key>
+	<string>拾掇</string>
+	<key>CFBundleName</key>
+	<string>拾掇</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>MIT 开源许可 · github.com/hanson-zz/Shiduo</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>拾掇需要读取桌面上的文件，才能显示缩略图、识别截图文字和查找重复文件。所有处理都在本机完成。</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>拾掇需要读取“文稿”中的文件，才能显示缩略图和查找重复文件。所有处理都在本机完成。</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>拾掇需要读取“下载”中的文件，才能按下载来源整理并找出可以清理的安装包。所有处理都在本机完成。</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>拾掇需要读取外接磁盘上的文件，才能显示缩略图。</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>拾掇需要读取网络磁盘上的文件，才能显示缩略图。</string>
+</dict>
+</plist>

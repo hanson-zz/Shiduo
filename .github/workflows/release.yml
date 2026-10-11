@@ -1,0 +1,102 @@
+name: 发布
+
+# 推送 v 开头的标签（例如 v0.1.0）时，自动构建并发布 DMG。
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 要发布的标签，例如 v0.1.0
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: 安装 XcodeGen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: brew install --quiet xcodegen
+
+      - name: 生成 Xcode 工程
+        run: xcodegen generate
+
+      - name: 计算构建号
+        run: |
+          VERSION="${TAG#v}"
+          IFS=. read -r MAJOR MINOR PATCH <<< "${VERSION%%-*}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "BUILD=$(( ${MAJOR:-0} * 10000 + ${MINOR:-0} * 100 + ${PATCH:-0} ))" >> "$GITHUB_ENV"
+
+      - name: 构建 Release（通用二进制）
+        run: |
+          xcodebuild build \
+            -project Shiduo.xcodeproj \
+            -scheme Shiduo \
+            -configuration Release \
+            -derivedDataPath build \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD" \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="-" \
+            DEVELOPMENT_TEAM="" \
+            > build.log 2>&1 || { grep -E "error:" build.log | head -80; exit 1; }
+          lipo -info build/Build/Products/Release/Shiduo.app/Contents/MacOS/Shiduo
+
+      - name: 打包 DMG 和 ZIP
+        run: |
+          APP=build/Build/Products/Release/Shiduo.app
+          ditto -c -k --keepParent "$APP" "Shiduo-${TAG}.zip"
+          STAGE="$(mktemp -d)/Shiduo"
+          mkdir -p "$STAGE"
+          ditto "$APP" "$STAGE/拾掇.app"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname "拾掇 ${TAG}" -srcfolder "$STAGE" -ov -format UDZO "Shiduo-${TAG}.dmg"
+
+      - name: 发布到 GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<'EOF'
+          ## 下载
+
+          下载下面的 `Shiduo-*.dmg`，打开后把“拾掇”拖进“应用程序”文件夹。
+
+          ## 系统要求
+
+          - macOS 14 Sonoma 或更新版本
+          - Apple 芯片和 Intel 芯片的 Mac 都可以
+
+          ## 第一次打开
+
+          拾掇是开源软件，没有经过 Apple 公证，第一次打开时系统会拦截：
+
+          1. 双击打开一次，看到提示后点“完成”
+          2. 打开“系统设置 ▸ 隐私与安全性”，在下方找到“拾掇”，点“仍要打开”
+          3. 输入开机密码确认
+
+          或者在“终端”里运行：`xattr -cr /Applications/拾掇.app`
+
+          ## 隐私
+
+          所有扫描、文字识别和查重都在本机完成。唯一的联网功能是“检查更新”，默认关闭。
+          EOF
+          sed -i '' 's/^          //' notes.md
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "Shiduo-${TAG}.dmg" "Shiduo-${TAG}.zip" --clobber
+          else
+            gh release create "$TAG" "Shiduo-${TAG}.dmg" "Shiduo-${TAG}.zip" \
+              --title "拾掇 ${TAG}" --notes-file notes.md
+          fi
