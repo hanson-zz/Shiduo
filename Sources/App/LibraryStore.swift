@@ -18,6 +18,30 @@ struct CategoryTotal {
     var bytes: Int64
 }
 
+/// 同一个下载来源的文件。
+struct SourceGroup: Identifiable {
+    let source: DownloadSource
+    let items: [FileItem]
+    var id: String { source.id }
+    var bytes: Int64 { items.reduce(0) { $0 + $1.size } }
+
+    static func make(from items: [FileItem]) -> [SourceGroup] {
+        var buckets: [String: (DownloadSource, [FileItem])] = [:]
+        for item in items {
+            guard let source = item.downloadSource else { continue }
+            buckets[source.id, default: (source, [])].1.append(item)
+        }
+        return buckets.values
+            .map { SourceGroup(source: $0.0, items: $0.1) }
+            .sorted { lhs, rhs in
+                // 认识的来源排在单纯的网站前面，同类按文件数。
+                let lk = !lhs.source.id.hasPrefix("site:"), rk = !rhs.source.id.hasPrefix("site:")
+                if lk != rk { return lk }
+                return lhs.items.count > rhs.items.count
+            }
+    }
+}
+
 struct Shelf: Identifiable {
     let id: String
     let title: String
@@ -42,6 +66,10 @@ final class LibraryStore: ObservableObject {
     @Published var isLoading = false
     @Published var totals: [FileCategory: CategoryTotal] = [:]
     @Published var shelves: [Shelf] = []
+    @Published var previews: [FileCategory: [FileItem]] = [:]
+    @Published var sourceGroups: [SourceGroup] = []
+    /// 打开“下载来源”时默认选中的来源。
+    @Published var downloadSourceFilter: String?
     @Published var dashboardLoaded = false
 
     @Published var searchText = ""
@@ -118,10 +146,16 @@ final class LibraryStore: ObservableObject {
 
     func refreshDashboard() async {
         var totals: [FileCategory: CategoryTotal] = [:]
+        var previews: [FileCategory: [FileItem]] = [:]
         for category in FileCategory.dashboard {
-            let r = await SpotlightSearch.run(predicate: category.predicate(), scopes: category.scopes, maxItems: 0)
+            let r = await SpotlightSearch.run(
+                predicate: category.predicate(), scopes: category.scopes, maxItems: 3,
+                sortKey: category == .apps ? "kMDItemLastUsedDate" : category.sortKey
+            )
             totals[category] = CategoryTotal(count: r.totalCount, bytes: r.totalBytes)
+            previews[category] = r.items
             self.totals = totals
+            self.previews = previews
         }
         let downloads = await Queries.recentDownloads(limit: 16)
         let screenshots = await Queries.screenshots(limit: 16)
@@ -136,6 +170,16 @@ final class LibraryStore: ObservableObject {
             Shelf(id: "images", title: "最近的图片", symbol: "photo", items: images, target: .category(.images)),
         ].filter { !$0.items.isEmpty }
         dashboardLoaded = true
+        let downloaded = await Queries.downloaded(limit: 3000)
+        sourceGroups = SourceGroup.make(from: downloaded)
+        if !cleanup.hasScanned && !cleanup.isRunning {
+            await cleanup.scan()
+        }
+    }
+
+    func openDownloads(source: String?) {
+        downloadSourceFilter = source
+        selection = .downloads
     }
 
     // MARK: - 搜索

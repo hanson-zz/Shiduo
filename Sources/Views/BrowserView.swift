@@ -139,6 +139,9 @@ struct FileCollectionView: View {
                     Button("按大小（大的在前）") {
                         sortOrder = [KeyPathComparator(\FileItem.size, order: .reverse)]
                     }
+                    Button("按种类") {
+                        sortOrder = [KeyPathComparator(\FileItem.kindText), KeyPathComparator(\FileItem.name)]
+                    }
                 } label: {
                     Label("排序", systemImage: "arrow.up.arrow.down")
                 }
@@ -213,6 +216,7 @@ struct FileCollectionView: View {
             }
             .width(min: 80, ideal: 120)
         }
+        .scrollContentBackground(.hidden)
         .contextMenu(forSelectionType: String.self) { ids in
             FileContextMenu(items: resolve(ids), preview: { previewURL = $0.url })
         } primaryAction: { ids in
@@ -274,13 +278,17 @@ struct FileGridCell: View {
                 .foregroundStyle(.secondary)
         }
         .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(selected ? Color.accentColor.opacity(0.18) : Color.clear)
-        )
+        .background {
+            if selected {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.accentColor.opacity(0.16))
+            }
+        }
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(selected ? Color.accentColor : Color.clear, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(selected ? Color.accentColor.opacity(0.8) : Color.clear, lineWidth: 1.5)
         )
         .contentShape(Rectangle())
     }

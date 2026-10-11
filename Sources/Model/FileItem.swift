@@ -53,6 +53,9 @@ struct FileItem: Identifiable, Hashable {
         return ext.isEmpty ? "文件" : ext.uppercased()
     }
 
+    /// 好认的下载来源（Gmail、微信、GitHub……），认不出来时是网站域名。
+    var downloadSource: DownloadSource? { SourceCatalog.classify(whereFroms: whereFroms) }
+
     /// 下载来源的域名。优先用引用页（第二项），它通常比 CDN 地址更好认。
     var sourceHost: String? {
         guard !whereFroms.isEmpty else { return nil }

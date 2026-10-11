@@ -35,6 +35,11 @@ struct InspectorView: View {
                             Text("下载来源")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            if let source = item.downloadSource {
+                                Label(source.name, systemImage: source.symbol)
+                                    .foregroundStyle(source.tint.color)
+                                    .font(.callout.weight(.semibold))
+                            }
                             ForEach(item.whereFroms, id: \.self) { source in
                                 if let url = URL(string: source), url.scheme?.hasPrefix("http") == true {
                                     Link(source, destination: url)

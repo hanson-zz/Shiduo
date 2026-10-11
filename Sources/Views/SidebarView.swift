@@ -2,6 +2,28 @@ import SwiftUI
 
 struct SidebarView: View {
     @EnvironmentObject private var store: LibraryStore
+    @EnvironmentObject private var cleanup: CleanupScanner
+    @EnvironmentObject private var duplicates: DuplicateScanner
+
+    /// 常用位置，和访达侧边栏一样。
+    private struct Location: Identifiable {
+        let name: String
+        let symbol: String
+        let path: String
+        var id: String { path }
+    }
+
+    private var locations: [Location] {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return [
+            Location(name: "桌面", symbol: "menubar.dock.rectangle", path: home + "/Desktop"),
+            Location(name: "文稿", symbol: "doc", path: home + "/Documents"),
+            Location(name: "下载", symbol: "arrow.down.circle", path: home + "/Downloads"),
+            Location(name: "图片", symbol: "photo", path: home + "/Pictures"),
+            Location(name: "影片", symbol: "film", path: home + "/Movies"),
+            Location(name: "音乐", symbol: "music.note", path: home + "/Music"),
+        ]
+    }
 
     var body: some View {
         List(selection: $store.selection) {
@@ -10,8 +32,14 @@ struct SidebarView: View {
 
             Section("资料库") {
                 ForEach(FileCategory.allCases) { category in
-                    Label(category.title, systemImage: category.symbol)
-                        .tag(SidebarItem.category(category))
+                    Label {
+                        Text(category.title)
+                    } icon: {
+                        Image(systemName: category.symbol)
+                            .foregroundStyle(category.tint)
+                    }
+                    .badge(store.totals[category].map { Text("\($0.count)") })
+                    .tag(SidebarItem.category(category))
                 }
             }
 
@@ -20,17 +48,28 @@ struct SidebarView: View {
                     .tag(SidebarItem.largeFiles)
                 Label("截图", systemImage: "camera.viewfinder")
                     .tag(SidebarItem.screenshots)
-                Label("下载来源", systemImage: "globe")
+                Label("下载来源", systemImage: "arrow.down.circle")
+                    .badge(store.sourceGroups.isEmpty ? nil : Text("\(store.sourceGroups.count)"))
                     .tag(SidebarItem.downloads)
             }
 
             Section("整理") {
                 Label("清理建议", systemImage: "sparkles")
+                    .badge(cleanup.totalBytes > 0 ? Text(cleanup.totalBytes.byteText).foregroundColor(.green) : nil)
                     .tag(SidebarItem.cleanup)
                 Label("重复文件", systemImage: "doc.on.doc")
+                    .badge(duplicates.hasScanned && duplicates.reclaimable > 0 ? Text(duplicates.reclaimable.byteText).foregroundColor(.green) : nil)
                     .tag(SidebarItem.duplicates)
                 Label("相似照片", systemImage: "photo.stack")
                     .tag(SidebarItem.similarPhotos)
+            }
+
+            Section("位置") {
+                ForEach(locations) { location in
+                    Label(location.name, systemImage: location.symbol)
+                        .help(location.path)
+                        .tag(SidebarItem.pinned(location.path))
+                }
             }
 
             Section {

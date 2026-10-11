@@ -10,6 +10,7 @@ struct ContentView: View {
         } detail: {
             DetailView()
         }
+        .background(GlassWindowConfigurator())
         .searchable(text: $store.searchText, placement: .toolbar, prompt: "搜索，例如：上周超过5MB的pdf")
         .onSubmit(of: .search) { store.submitSearch() }
         .onChange(of: store.searchText) { _, newValue in
@@ -81,6 +82,8 @@ struct DetailView: View {
 
     var body: some View {
         content
+            .background(GlassBackdrop())
+            .toolbarBackground(.hidden, for: .windowToolbar)
             .inspector(isPresented: $store.showInspector) {
                 InspectorView(item: store.inspectedItem)
                     .inspectorColumnWidth(min: 240, ideal: 280, max: 420)
@@ -110,7 +113,7 @@ struct DetailView: View {
             case .cleanup:
                 CleanupView()
             case .pinned(let path):
-                BrowserView(title: (path as NSString).lastPathComponent, showsOCRTools: false)
+                BrowserView(title: FileManager.default.displayName(atPath: path), showsOCRTools: false)
             }
         }
     }

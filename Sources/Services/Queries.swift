@@ -57,7 +57,9 @@ extension SearchQuery {
         }
         if let minSize { parts.append(P.sizeAtLeast(minSize)) }
         if let maxSize { parts.append(P.sizeBelow(maxSize)) }
-        if let source { parts.append(P.whereFromLike("*\(source)*")) }
+        if let source {
+            parts.append(P.any(SourceCatalog.searchPatterns(for: source).map { P.whereFromLike("*\($0)*") }))
+        }
         return P.all(parts)
     }
 

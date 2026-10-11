@@ -73,7 +73,31 @@ struct QueryParser {
 
     // MARK: - 来源
 
+    /// 已知来源的别名（“gmail”“微信”“b站”），长的在前，避免“qq邮箱”被“qq”抢先匹配。
+    private static let aliasPattern: String = {
+        let aliases = SourceCatalog.known.flatMap { $0.aliases }
+        let sorted = aliases.sorted { $0.count > $1.count }
+        return "(" + sorted.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|") + ")"
+    }()
+
+    private static func sourceName(alias: String) -> String? {
+        let a = alias.lowercased()
+        return SourceCatalog.known.first { $0.aliases.contains(a) }?.name
+    }
+
     private func parseSource(_ s: inout String, into q: inout SearchQuery) {
+        let alias = Self.aliasPattern
+        let aliasPatterns = [
+            "(?:来自|从)\\s*\(alias)(?![a-z0-9.])\\s*(?:网站|网盘)?\\s*(?:上|里)?\\s*(?:下载的|下载|收到的|保存的|的)?",
+            "(?<![a-z0-9])\(alias)(?![a-z0-9.])\\s*(?:上|里)?\\s*(?:下载的|收到的|保存的|发来的)",
+            "(?:downloaded\\s+|saved\\s+)?from\\s+(?:my\\s+)?(?<![a-z0-9])\(alias)(?![a-z0-9.])",
+        ]
+        for p in aliasPatterns {
+            if let g = take(p, from: &s), g.count > 1, let name = Self.sourceName(alias: g[1]) {
+                q.source = name
+                return
+            }
+        }
         let host = "([a-z0-9][a-z0-9\\-]*(?:\\.[a-z0-9\\-]+)*)"
         let patterns = [
             "(?:来自|从)\\s*\(host)\\s*(?:网站)?\\s*(?:上)?\\s*(?:下载的|下载)?",

@@ -59,7 +59,7 @@ final class QueryParserTests: XCTestCase {
 
     func testSourceInChinese() {
         let q = parser.parse("从github下载的dmg")
-        XCTAssertEqual(q.source, "github")
+        XCTAssertEqual(q.source, "GitHub")
         XCTAssertEqual(q.kinds, [.extensions(["dmg"], label: "DMG")])
     }
 
@@ -82,5 +82,30 @@ final class QueryParserTests: XCTestCase {
         let q = parser.parse("年度报告")
         XCTAssertTrue(q.kinds.isEmpty)
         XCTAssertEqual(q.text, "年度报告")
+    }
+
+    func testFriendlySourceAliases() {
+        let a = parser.parse("来自微信的图片")
+        XCTAssertEqual(a.source, "微信")
+        XCTAssertEqual(a.kinds, [.category(.images)])
+        XCTAssertEqual(a.text, "")
+
+        let b = parser.parse("pdfs from gmail")
+        XCTAssertEqual(b.source, "Gmail")
+        XCTAssertEqual(b.kinds, [.extensions(["pdf"], label: "PDF")])
+
+        let c = parser.parse("qq邮箱收到的发票")
+        XCTAssertEqual(c.source, "QQ 邮箱")
+        XCTAssertEqual(c.text, "发票")
+    }
+
+    func testSourceCatalogClassify() {
+        let gmail = SourceCatalog.classify(whereFroms: ["https://mail-attachment.googleusercontent.com/x", "https://mail.google.com/mail/u/0/"])
+        XCTAssertEqual(gmail?.id, "gmail")
+        let site = SourceCatalog.classify(whereFroms: ["https://www.example.org/file.zip"])
+        XCTAssertEqual(site?.name, "example.org")
+        let ext = SourceCatalog.classify(whereFroms: ["chrome-extension://abc/page.html"])
+        XCTAssertEqual(ext?.id, "extension")
+        XCTAssertEqual(SourceCatalog.searchPatterns(for: "微信").first, "weixin.qq.com")
     }
 }

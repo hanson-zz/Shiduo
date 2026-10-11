@@ -3,6 +3,8 @@ import SwiftUI
 struct ThumbnailView: View {
     let url: URL
     let size: CGFloat
+    /// 填满方框（裁掉多余部分），用于圆形小缩略图。
+    var fill = false
     @State private var image: NSImage?
 
     var body: some View {
@@ -10,7 +12,7 @@ struct ThumbnailView: View {
             if let image {
                 Image(nsImage: image)
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .aspectRatio(contentMode: fill ? .fill : .fit)
             } else {
                 Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
                     .resizable()
@@ -18,6 +20,7 @@ struct ThumbnailView: View {
             }
         }
         .frame(width: size, height: size)
+        .clipped()
         .task(id: "\(url.path)#\(Int(size))") {
             if let cached = ThumbnailService.shared.cached(for: url, size: size) {
                 image = cached
