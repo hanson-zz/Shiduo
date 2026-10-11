@@ -1,17 +1,25 @@
-// 打印某个应用最上面那个窗口的 CGWindowID，给 screencapture -l 用。
+// 打印某个进程（按 PID）最大的那个普通窗口的 CGWindowID，给 screencapture -l 用。
 import CoreGraphics
 import Foundation
 
-let owner = CommandLine.arguments.dropFirst().first ?? "Shiduo"
-let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
-let match = list.first { info in
-    (info[kCGWindowOwnerName as String] as? String) == owner
-        && (info[kCGWindowLayer as String] as? Int) == 0
-        && ((info[kCGWindowBounds as String] as? [String: CGFloat])?["Width"] ?? 0) > 400
+let pid = Int(CommandLine.arguments.dropFirst().first ?? "") ?? -1
+let list = CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID) as? [[String: Any]] ?? []
+func width(_ info: [String: Any]) -> CGFloat {
+    (info[kCGWindowBounds as String] as? [String: CGFloat])?["Width"] ?? 0
 }
-if let id = match?[kCGWindowNumber as String] as? Int {
+let mine = list.filter { info in
+    let owner = info[kCGWindowOwnerName as String] as? String ?? ""
+    let ownerPID = info[kCGWindowOwnerPID as String] as? Int ?? 0
+    return (ownerPID == pid || owner == "Shiduo" || owner == "拾掇")
+        && (info[kCGWindowLayer as String] as? Int) == 0 && width(info) > 400
+}
+if let id = mine.max(by: { width($0) < width($1) })?[kCGWindowNumber as String] as? Int {
     print(id)
 } else {
-    FileHandle.standardError.write("no window for \(owner)\n".data(using: .utf8)!)
+    var msg = "no window for pid \(pid); windows:\n"
+    for info in list where width(info) > 100 {
+        msg += "  \(info[kCGWindowOwnerName as String] ?? "?") pid=\(info[kCGWindowOwnerPID as String] ?? "?") layer=\(info[kCGWindowLayer as String] ?? "?") onscreen=\(info[kCGWindowIsOnscreen as String] ?? "?") \(info[kCGWindowBounds as String] ?? "")\n"
+    }
+    FileHandle.standardError.write(msg.data(using: .utf8)!)
     exit(1)
 }
