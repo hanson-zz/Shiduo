@@ -48,6 +48,8 @@ jobs:
             kill $pid || true
             sleep 2
           }
+          shoot home light warmup   # 冷启动预热，首张截图常停在加载中
+          rm -f docs/screenshots/warmup.png
           shoot home light home
           shoot home dark home-dark
           shoot images light images
