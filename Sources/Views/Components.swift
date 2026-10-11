@@ -50,9 +50,12 @@ struct FileContextMenu: View {
         }
         Divider()
         Button(items.count > 1 ? "拷贝 \(items.count) 个路径" : "拷贝路径") { FileActions.copyPaths(items) }
+        if items.contains(where: TextExtractor.canExtract) {
+            Button("拷贝文字") { store.copyText(items) }
+        }
         if items.count == 1, let item = items.first {
             if item.isImage {
-                Button("识别图中文字") { store.ocrItem = item }
+                Button("识别图中文字…") { store.ocrItem = item }
             }
             Button("固定所在文件夹") { store.pin(item.url.deletingLastPathComponent().path) }
         }
@@ -69,8 +72,8 @@ struct ChipBar: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                Text("筛选条件")
-                    .font(.callout)
+                Text("理解为")
+                    .font(.callout.weight(.medium))
                     .foregroundStyle(.secondary)
                 ForEach(query.chips) { chip in
                     HStack(spacing: 5) {
@@ -109,6 +112,30 @@ struct InfoRow: View {
             Text(value)
                 .textSelection(.enabled)
         }
+    }
+}
+
+extension FileItem {
+    /// 所在文件夹，用户目录写成 ~。
+    var displayFolder: String {
+        var folder = url.deletingLastPathComponent().path
+        if Demo.isOn, folder.hasPrefix(Demo.folder.path) {
+            folder = "~" + String(folder.dropFirst(Demo.folder.path.count))
+        }
+        let home = NSHomeDirectory()
+        if folder.hasPrefix(home) {
+            folder = "~" + String(folder.dropFirst(home.count))
+        }
+        return folder
+    }
+
+    /// “5 分钟前”“3 天前”。
+    var relativeDateText: String {
+        guard sortDate != .distantPast else { return "--" }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: sortDate, relativeTo: Date())
     }
 }
 

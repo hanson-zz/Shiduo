@@ -11,11 +11,6 @@ struct ContentView: View {
             DetailView()
         }
         .background(GlassWindowConfigurator())
-        .searchable(text: $store.searchText, placement: .toolbar, prompt: "搜索，例如：上周超过5MB的pdf")
-        .onSubmit(of: .search) { store.submitSearch() }
-        .onChange(of: store.searchText) { _, newValue in
-            if newValue.isEmpty { store.clearSearch() }
-        }
         .task {
             if Demo.isOn {
                 store.startDemo()
@@ -85,7 +80,20 @@ struct DetailView: View {
     @EnvironmentObject private var store: LibraryStore
 
     var body: some View {
-        content
+        VStack(spacing: 0) {
+            TopBar()
+            Divider().opacity(0.6)
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+            .overlay(alignment: .bottom) {
+                if let toast = store.toast {
+                    ToastView(text: toast)
+                        .padding(.bottom, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.toast)
             .background(GlassBackdrop())
             .toolbarBackground(.hidden, for: .windowToolbar)
             .inspector(isPresented: $store.showInspector) {
@@ -113,7 +121,7 @@ struct DetailView: View {
             case .duplicates:
                 DuplicatesView()
             case .similarPhotos:
-                SimilarPhotosView()
+                DuplicatesView()
             case .cleanup:
                 CleanupView()
             case .pinned(let path):

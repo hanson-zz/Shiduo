@@ -4,13 +4,12 @@ struct HomeView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var cleanup: CleanupScanner
     @EnvironmentObject private var duplicates: DuplicateScanner
-    @State private var openCard: CleanupKind?
 
     private var totalBytes: Int64 { store.totals.values.reduce(0) { $0 + $1.bytes } }
     private var totalCount: Int { store.totals.values.reduce(0) { $0 + $1.count } }
 
     private var cleanupCards: [CleanupCard] {
-        cleanup.cards.filter { !$0.items.isEmpty }.sorted { $0.bytes > $1.bytes }
+        cleanup.cards.filter { !$0.items.isEmpty && $0.bytes > 0 }.sorted { $0.bytes > $1.bytes }
     }
 
     private var reclaimable: Int64 { cleanup.totalBytes + duplicates.reclaimable }
@@ -38,9 +37,6 @@ struct HomeView: View {
         }
         .scrollContentBackground(.hidden)
         .navigationTitle("首页")
-        .sheet(item: $openCard) { kind in
-            CleanupReviewSheet(kind: kind)
-        }
     }
 
     // MARK: - 问候
@@ -109,9 +105,12 @@ struct HomeView: View {
                 }
                 ForEach(cleanupCards.prefix(3)) { card in
                     CleanupTile(card: card)
-                        .onTapGesture { openCard = card.kind }
+                        .onTapGesture { store.openCleanup(card.kind) }
                 }
             }
+            Label("不会直接删除，都进废纸篓，随时可以放回原处。", systemImage: "checkmark.shield")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -188,14 +187,16 @@ struct CleanupTile: View {
             }
             Spacer(minLength: 14)
             Text(card.kind.title)
-                .font(.callout)
+                .font(.callout.weight(.medium))
                 .foregroundStyle(.secondary)
             HStack(alignment: .firstTextBaseline) {
                 Text(card.bytes.byteText)
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
                 Spacer()
                 HStack(spacing: 3) {
-                    Text("\(card.items.count) 项")
+                    Text("\(card.items.count.formatted()) 个项目")
                     Image(systemName: "chevron.right")
                 }
                 .font(.callout)
@@ -230,19 +231,21 @@ struct DuplicatesTile: View {
             }
             Spacer(minLength: 14)
             Text("重复文件")
-                .font(.callout)
+                .font(.callout.weight(.medium))
                 .foregroundStyle(.secondary)
             HStack(alignment: .firstTextBaseline) {
                 if scanner.hasScanned {
                     Text(scanner.reclaimable.byteText)
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
                 } else {
                     Text(scanner.isRunning ? "扫描中…" : "点按扫描")
                         .font(.system(size: 22, weight: .semibold, design: .rounded))
                 }
                 Spacer()
                 HStack(spacing: 3) {
-                    Text(scanner.hasScanned ? "多出 \(extraCopies) 份" : "")
+                    Text(scanner.hasScanned ? "多出 \(extraCopies.formatted()) 份" : "")
                     Image(systemName: "chevron.right")
                 }
                 .font(.callout)
