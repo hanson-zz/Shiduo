@@ -33,7 +33,7 @@ struct DownloadSourcesView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .frame(minWidth: 210, idealWidth: 250, maxWidth: 320)
+            .frame(minWidth: 210, idealWidth: 250, maxWidth: 320, maxHeight: .infinity)
 
             Group {
                 if store.isLoading && store.items.isEmpty {
@@ -49,8 +49,9 @@ struct DownloadSourcesView: View {
                     FileCollectionView(items: visible)
                 }
             }
-            .frame(minWidth: 400)
+            .frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle("下载来源")
         .navigationSubtitle("\(groups.count) 个来源 · \(store.items.count) 个文件")
         .onAppear {

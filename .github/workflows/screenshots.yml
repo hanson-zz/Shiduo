@@ -45,7 +45,6 @@ jobs:
             ./window-id $pid || true
             wid=$(./window-id $pid) || { echo "NO WINDOW $page"; kill $pid; return 0; }
             screencapture -x -o -l "$wid" "docs/screenshots/$out.png"
-            [ "$out" = home ] && screencapture -x docs/screenshots/_full.png
             kill $pid || true
             sleep 2
           }
