@@ -13,6 +13,11 @@ enum SidebarItem: Hashable {
     case pinned(String)
 }
 
+enum DuplicatesTab: String, Hashable {
+    case exact
+    case similar
+}
+
 struct CategoryTotal {
     var count: Int
     var bytes: Int64
@@ -58,9 +63,21 @@ final class LibraryStore: ObservableObject {
             guard oldValue != selection else { return }
             activeQuery = nil
             searchText = ""
+            cleanupReview = nil
+            if selection == .similarPhotos { duplicatesTab = .similar }
+            if selection == .duplicates { duplicatesTab = .exact }
             reload()
         }
     }
+
+    /// 清理页里正在审阅的卡片（nil 时显示卡片总览）。
+    @Published var cleanupReview: CleanupKind?
+    @Published var duplicatesTab: DuplicatesTab = .exact
+    /// 底部的小提示，例如“已拷贝 3 张图片的文字”。
+    @Published var toast: String?
+    /// 每次改变都让顶部搜索框获得焦点（⌘F）。
+    @Published var searchFocusRequest = 0
+    @Published var largeFileCount = 0
 
     @Published var items: [FileItem] = []
     @Published var isLoading = false
@@ -92,6 +109,10 @@ final class LibraryStore: ObservableObject {
     let duplicates = DuplicateScanner()
     let similar = SimilarPhotoScanner()
     let cleanup = CleanupScanner()
+    let player = MusicPlayer()
+    let updater = Updater()
+
+    var libraryBytes: Int64 { totals.values.reduce(0) { $0 + $1.bytes } }
 
     private var known: [String: FileItem] = [:]
     private var loadTask: Task<Void, Never>?
@@ -182,6 +203,13 @@ final class LibraryStore: ObservableObject {
         dashboardLoaded = true
         let downloaded = await Queries.downloaded(limit: 3000)
         sourceGroups = SourceGroup.make(from: downloaded)
+        largeFileCount = await SpotlightSearch.run(
+            predicate: P.all([P.sizeAtLeast(200_000_000), P.notFolder]), scopes: Scopes.home, maxItems: 0
+        ).totalCount
+        // 后台识别截图和近期照片里的文字。
+        let recentPhotos = await Queries.recentImages(limit: 200)
+        let allShots = await Queries.screenshots(limit: 300)
+        ocr.autoRecognize(allShots + recentPhotos)
         if !cleanup.hasScanned && !cleanup.isRunning {
             await cleanup.scan()
         }
@@ -237,12 +265,76 @@ final class LibraryStore: ObservableObject {
                 let extra = ocr.paths(matching: query.text)
                     .filter { !existing.contains($0) && FileManager.default.fileExists(atPath: $0) }
                     .compactMap { FileItem(url: URL(fileURLWithPath: $0)) }
+                    .filter { query.matchesFilters($0) }
                 result.append(contentsOf: extra)
             }
             guard !Task.isCancelled else { return }
             remember(result)
             items = result
             isLoading = false
+        }
+    }
+
+    // MARK: - 导航与快捷键
+
+    func focusSearch() {
+        searchFocusRequest += 1
+    }
+
+    func openCleanup(_ kind: CleanupKind?) {
+        selection = .cleanup
+        cleanupReview = kind
+    }
+
+    func showToast(_ text: String) {
+        toast = text
+        let current = text
+        Task {
+            try? await Task.sleep(nanoseconds: 2_200_000_000)
+            if toast == current { toast = nil }
+        }
+    }
+
+    /// 双击：歌曲在工具栏里播放，其他文件用默认应用打开。
+    func open(_ item: FileItem, in list: [FileItem]) {
+        if item.category == .music {
+            player.play(item, in: list)
+        } else {
+            NSWorkspace.shared.open(item.url)
+        }
+    }
+
+    // MARK: - 拷贝文字
+
+    /// 拷贝一张或多张图片、PDF 里的文字（⇧⌘C）。
+    func copyText(_ list: [FileItem]) {
+        let targets = list.filter(TextExtractor.canExtract)
+        guard !targets.isEmpty else {
+            showToast("选中的文件里没有图片或 PDF")
+            return
+        }
+        showToast(targets.count == 1 ? "正在识别文字…" : "正在识别 \(targets.count) 个文件的文字…")
+        Task {
+            var parts: [String] = []
+            for item in targets {
+                let text: String
+                if item.ext == "pdf" {
+                    text = await TextExtractor.pdfText(item.url)
+                } else {
+                    text = await ocr.recognize(item)
+                }
+                let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    parts.append(targets.count > 1 ? "【\(item.name)】\n\(trimmed)" : trimmed)
+                }
+            }
+            if parts.isEmpty {
+                showToast("没有识别到文字")
+            } else {
+                FileActions.copy(parts.joined(separator: "\n\n"))
+                let kind = targets.allSatisfy(\.isImage) ? "张图片" : "个文件"
+                showToast("已拷贝 \(parts.count) \(kind)的文字")
+            }
         }
     }
 
@@ -305,8 +397,8 @@ final class LibraryStore: ObservableObject {
     // MARK: - 更新
 
     func checkForUpdatesOnLaunch() async {
-        guard UserDefaults.standard.bool(forKey: "checkUpdates") else { return }
-        if case .available(let info) = await UpdateChecker.check() {
+        AppDelegate.updater = updater
+        if let info = await updater.checkOnLaunch() {
             update = info
         }
     }

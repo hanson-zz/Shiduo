@@ -120,6 +120,19 @@ enum P {
         NSPredicate(format: "kMDItemTextContent LIKE[cd] %@", pattern)
     }
 
+    /// 文件内容里包含这个词（Spotlight 的查询语法，比 LIKE 更可靠）。
+    static func textContains(_ word: String) -> NSPredicate {
+        let w = word.replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: "\\", with: "")
+        return NSPredicate(fromMetadataQueryString: "kMDItemTextContent == \"*\(w)*\"cd") ?? textLike("*\(w)*")
+    }
+
+    /// 访达标签里包含这个词。
+    static func tagContains(_ word: String) -> NSPredicate {
+        let w = word.replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: "\\", with: "")
+        return NSPredicate(fromMetadataQueryString: "kMDItemUserTags == \"*\(w)*\"cd")
+            ?? NSPredicate(format: "kMDItemUserTags LIKE[cd] %@", "*\(w)*")
+    }
+
     static func whereFromLike(_ pattern: String) -> NSPredicate {
         NSPredicate(format: "kMDItemWhereFroms LIKE[cd] %@", pattern)
     }

@@ -187,16 +187,70 @@ final class SimilarPhotoScanner: ObservableObject {
         }.value
         if Task.isCancelled { return }
 
-        groups = clusters.enumerated().map { index, items in
+        let pairs = SimilarPhotoScanner.namePairs(images.filter { FileActions.isLocal($0.url) })
+        let merged = SimilarPhotoScanner.merge(clusters + pairs)
+        groups = merged.enumerated().map { index, items in
             let sorted = items.sorted { $0.sortDate > $1.sortDate }
             return FileGroup(id: "sim-\(index)-\(sorted.first?.path ?? "")",
-                             title: "\(sorted.count) 张相似的照片",
+                             title: SimilarPhotoScanner.title(for: sorted),
                              items: sorted)
         }
         status = groups.isEmpty ? "没有发现相似的照片" : "发现 \(groups.count) 组相似照片"
         progress = 1
         isRunning = false
         hasScanned = true
+    }
+
+    /// 同一文件夹里去掉扩展名和“(edited)”“副本”“ (1)”之后同名的照片：HEIC/JPEG 成对、编辑版。
+    nonisolated static func baseKey(_ item: FileItem) -> String {
+        var name = (item.name as NSString).deletingPathExtension.lowercased()
+        let suffixes = [" (edited)", "(edited)", "-edited", "_edited", " edited", "(已编辑)", " 已编辑", " 副本", "-副本", " copy"]
+        var changed = true
+        while changed {
+            changed = false
+            for suffix in suffixes where name.hasSuffix(suffix) {
+                name = String(name.dropLast(suffix.count))
+                changed = true
+            }
+            if let range = name.range(of: " ?\\(\\d+\\)$", options: .regularExpression) {
+                name.removeSubrange(range)
+                changed = true
+            }
+        }
+        return item.url.deletingLastPathComponent().path + "/" + name
+    }
+
+    nonisolated static func namePairs(_ items: [FileItem]) -> [[FileItem]] {
+        Dictionary(grouping: items, by: baseKey).values.filter { $0.count > 1 }.map { Array($0) }
+    }
+
+    /// 有共同文件的组合并成一组。
+    nonisolated static func merge(_ groups: [[FileItem]]) -> [[FileItem]] {
+        var result: [[FileItem]] = []
+        for group in groups {
+            var combined = group
+            var paths = Set(group.map(\.path))
+            result.removeAll { existing in
+                guard existing.contains(where: { paths.contains($0.path) }) else { return false }
+                for item in existing where !paths.contains(item.path) {
+                    combined.append(item)
+                    paths.insert(item.path)
+                }
+                return true
+            }
+            result.append(combined)
+        }
+        return result.sorted { $0.count > $1.count }
+    }
+
+    nonisolated static func title(for items: [FileItem]) -> String {
+        let exts = Set(items.map(\.ext))
+        let keys = Set(items.map(baseKey))
+        if exts.contains("heic") && (exts.contains("jpg") || exts.contains("jpeg")) && keys.count == 1 {
+            return "HEIC 和 JPEG 成对"
+        }
+        if keys.count == 1 { return "原图和编辑版" }
+        return "\(items.count) 张相似的照片"
     }
 
     nonisolated static func featurePrint(_ url: URL) -> VNFeaturePrintObservation? {

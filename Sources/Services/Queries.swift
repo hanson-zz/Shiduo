@@ -44,7 +44,8 @@ extension SearchQuery {
             String($0).replacingOccurrences(of: "*", with: "").replacingOccurrences(of: "?", with: "")
         }.filter { !$0.isEmpty }
         for word in words {
-            parts.append(P.any([P.nameLike("*\(word)*"), P.textLike("*\(word)*")]))
+            // 文件名、文件内容和标签都算。
+            parts.append(P.any([P.nameLike("*\(word)*"), P.textContains(word), P.tagContains(word)]))
         }
         if !kinds.isEmpty {
             parts.append(P.any(kinds.map(\.predicate)))
@@ -60,7 +61,40 @@ extension SearchQuery {
         if let source {
             parts.append(P.any(SourceCatalog.searchPatterns(for: source).map { P.whereFromLike("*\($0)*") }))
         }
+        if let device {
+            parts.append(P.any([
+                NSPredicate(format: "kMDItemAcquisitionModel LIKE[cd] %@", "*\(device)*"),
+                NSPredicate(format: "kMDItemAcquisitionMake LIKE[cd] %@", "*\(device)*"),
+            ]))
+        }
         return P.all(parts)
+    }
+
+    /// 不看关键词，只用类型、日期、大小、来源在内存里判断（用于图中文字搜到的文件）。
+    func matchesFilters(_ item: FileItem) -> Bool {
+        if !kinds.isEmpty {
+            let ok = kinds.contains { kind in
+                switch kind {
+                case .category(let c): return item.category == c
+                case .screenshot: return item.isScreenshot || item.name.hasPrefix("截屏") || item.name.hasPrefix("Screenshot")
+                case .extensions(let exts, _): return exts.contains(item.ext)
+                }
+            }
+            if !ok { return false }
+        }
+        if let date {
+            let d = item.modified ?? item.added ?? item.created ?? .distantPast
+            if d < date.start || d >= date.end { return false }
+        }
+        if let minSize, item.size < minSize { return false }
+        if let maxSize, item.size >= maxSize { return false }
+        if let source {
+            let name = item.downloadSource?.name ?? ""
+            let hit = name == source || item.whereFroms.contains { $0.localizedCaseInsensitiveContains(source) }
+            if !hit { return false }
+        }
+        if downloadedOnly && item.whereFroms.isEmpty { return false }
+        return true
     }
 
     var scopes: [Any] {

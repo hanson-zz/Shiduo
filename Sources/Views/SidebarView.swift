@@ -44,8 +44,21 @@ struct SidebarView: View {
             }
 
             Section("智能文件夹") {
-                Label("大文件", systemImage: "externaldrive")
-                    .tag(SidebarItem.largeFiles)
+                HStack {
+                    Label("大文件", systemImage: "externaldrive")
+                    Spacer()
+                    if store.largeFileCount > 0 {
+                        Text(store.largeFileCount > 999 ? "999+" : "\(store.largeFileCount)")
+                            .font(.caption.weight(.bold))
+                            .monospacedDigit()
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 1)
+                            .background(Capsule().fill(Color.red))
+                            .help("200 MB 以上的文件")
+                    }
+                }
+                .tag(SidebarItem.largeFiles)
                 Label("截图", systemImage: "camera.viewfinder")
                     .tag(SidebarItem.screenshots)
                 Label("下载来源", systemImage: "arrow.down.circle")
@@ -54,7 +67,7 @@ struct SidebarView: View {
             }
 
             Section("整理") {
-                Label("清理建议", systemImage: "sparkles")
+                Label("清理", systemImage: "sparkles")
                     .badge(cleanup.totalBytes > 0 ? Text(cleanup.totalBytes.byteText).foregroundColor(.green) : nil)
                     .tag(SidebarItem.cleanup)
                 Label("重复文件", systemImage: "doc.on.doc")
@@ -66,15 +79,27 @@ struct SidebarView: View {
 
             Section("位置") {
                 ForEach(locations) { location in
-                    Label(location.name, systemImage: location.symbol)
-                        .help(location.path)
-                        .tag(SidebarItem.pinned(location.path))
+                    Label {
+                        Text(location.name)
+                    } icon: {
+                        Image(nsImage: NSWorkspace.shared.icon(forFile: location.path))
+                            .resizable()
+                            .frame(width: 18, height: 18)
+                    }
+                    .help(location.path)
+                    .tag(SidebarItem.pinned(location.path))
                 }
             }
 
             Section {
                 ForEach(store.pinnedFolders, id: \.self) { path in
-                    Label((path as NSString).lastPathComponent, systemImage: "folder")
+                    Label {
+                        Text((path as NSString).lastPathComponent)
+                    } icon: {
+                        Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+                            .resizable()
+                            .frame(width: 18, height: 18)
+                    }
                         .help(path)
                         .tag(SidebarItem.pinned(path))
                         .contextMenu {

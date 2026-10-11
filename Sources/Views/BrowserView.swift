@@ -14,11 +14,19 @@ struct BrowserView: View {
     let showsOCRTools: Bool
 
     @State private var ocrFilter = ""
+    /// “来源”筛选：只看从某个来源下载的文件。
+    @State private var sourceFilter: String?
+
+    private var sourceGroups: [SourceGroup] { SourceGroup.make(from: store.items) }
 
     private var visible: [FileItem] {
+        var list = store.items
+        if let sourceFilter {
+            list = list.filter { $0.downloadSource?.id == sourceFilter }
+        }
         let needle = ocrFilter.trimmingCharacters(in: .whitespaces).lowercased()
-        guard showsOCRTools, !needle.isEmpty else { return store.items }
-        return store.items.filter { item in
+        guard showsOCRTools, !needle.isEmpty else { return list }
+        return list.filter { item in
             item.name.lowercased().contains(needle)
                 || (ocr.text(for: item)?.lowercased().contains(needle) ?? false)
         }
@@ -30,12 +38,19 @@ struct BrowserView: View {
                 ChipBar(query: query)
                 Divider()
             }
-            if showsOCRTools {
-                ocrBar
+            if showsOCRTools || !sourceGroups.isEmpty {
+                HStack(spacing: 12) {
+                    if showsOCRTools { ocrBar }
+                    if !sourceGroups.isEmpty { sourceMenu }
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
                 Divider()
             }
             content
         }
+        .onChange(of: store.selection) { sourceFilter = nil }
         .navigationTitle(title)
         .navigationSubtitle(subtitle)
     }
@@ -61,11 +76,31 @@ struct BrowserView: View {
         }
     }
 
+    private var sourceMenu: some View {
+        let groups = sourceGroups
+        let current = groups.first { $0.source.id == sourceFilter }
+        return Menu {
+            Button("全部来源") { sourceFilter = nil }
+            Divider()
+            ForEach(groups.prefix(40)) { group in
+                Button("\(group.source.name)（\(group.items.count)）") { sourceFilter = group.source.id }
+            }
+        } label: {
+            Label(current.map { "来源：\($0.source.name)" } ?? "来源：全部", systemImage: current?.source.symbol ?? "arrow.down.circle")
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(Capsule().fill(sourceFilter == nil ? Color.primary.opacity(0.06) : Color.accentColor.opacity(0.16)))
+        .help("按下载来源筛选")
+    }
+
     private var ocrBar: some View {
         HStack(spacing: 10) {
             Image(systemName: "text.viewfinder")
                 .foregroundStyle(.secondary)
-            TextField("按图中文字筛选（先点右边“识别文字”）", text: $ocrFilter)
+            TextField("按图中文字筛选", text: $ocrFilter)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 320)
             if let progress = ocr.batchProgress {
@@ -88,10 +123,7 @@ struct BrowserView: View {
                 }
                 .help("在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索")
             }
-            Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
     }
 }
 
@@ -168,8 +200,11 @@ struct FileCollectionView: View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: thumbnailSize + 28), spacing: 8)], spacing: 10) {
                 ForEach(sorted) { item in
-                    FileGridCell(item: item, size: CGFloat(thumbnailSize), selected: store.selectedIDs.contains(item.id))
-                        .onTapGesture(count: 2) { NSWorkspace.shared.open(item.url) }
+                    FileGridCell(
+                        item: item, size: CGFloat(thumbnailSize), selected: store.selectedIDs.contains(item.id),
+                        copyText: TextExtractor.canExtract(item) ? { store.copyText(targets(for: item)) } : nil
+                    )
+                        .onTapGesture(count: 2) { store.open(item, in: sorted) }
                         .onTapGesture { select(item) }
                         .contextMenu {
                             FileContextMenu(items: targets(for: item), preview: { previewURL = $0.url })
@@ -186,6 +221,24 @@ struct FileCollectionView: View {
             quickLookSelection()
             return .handled
         }
+        .onKeyPress(.leftArrow) { step(-1) }
+        .onKeyPress(.rightArrow) { step(1) }
+        .onKeyPress(.escape) {
+            guard previewURL != nil else { return .ignored }
+            previewURL = nil
+            return .handled
+        }
+    }
+
+    /// ← → 在文件之间移动；预览打开时跟着翻页。
+    private func step(_ offset: Int) -> KeyPress.Result {
+        let list = sorted
+        guard !list.isEmpty else { return .ignored }
+        let index = list.firstIndex { store.selectedIDs.contains($0.id) } ?? (offset > 0 ? -1 : list.count)
+        let target = min(max(index + offset, 0), list.count - 1)
+        store.selectedIDs = [list[target].id]
+        if previewURL != nil { previewURL = list[target].url }
+        return .handled
     }
 
     // MARK: 列表
@@ -220,7 +273,12 @@ struct FileCollectionView: View {
         .contextMenu(forSelectionType: String.self) { ids in
             FileContextMenu(items: resolve(ids), preview: { previewURL = $0.url })
         } primaryAction: { ids in
-            FileActions.open(resolve(ids))
+            let list = resolve(ids)
+            if list.count == 1, let item = list.first {
+                store.open(item, in: sorted)
+            } else {
+                FileActions.open(list)
+            }
         }
         .onKeyPress(.space) {
             quickLookSelection()
@@ -263,10 +321,30 @@ struct FileGridCell: View {
     let item: FileItem
     let size: CGFloat
     let selected: Bool
+    /// 图片和 PDF：鼠标移上去显示“拷贝文字”。
+    var copyText: (() -> Void)?
+
+    @State private var hovering = false
 
     var body: some View {
         VStack(spacing: 6) {
             ThumbnailView(url: item.url, size: size)
+                .overlay(alignment: .bottomTrailing) {
+                    if hovering, let copyText {
+                        Button(action: copyText) {
+                            Label("拷贝文字", systemImage: "text.viewfinder")
+                                .font(.caption.weight(.semibold))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(.regularMaterial))
+                                .overlay(Capsule().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.8))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(6)
+                        .help("识别并拷贝图中文字（⇧⌘C）")
+                        .transition(.opacity)
+                    }
+                }
             Text(item.name)
                 .font(.callout)
                 .lineLimit(2)
@@ -291,5 +369,7 @@ struct FileGridCell: View {
                 .strokeBorder(selected ? Color.accentColor.opacity(0.8) : Color.clear, lineWidth: 1.5)
         )
         .contentShape(Rectangle())
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
     }
 }

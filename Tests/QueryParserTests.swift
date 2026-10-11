@@ -108,4 +108,38 @@ final class QueryParserTests: XCTestCase {
         XCTAssertEqual(ext?.id, "extension")
         XCTAssertEqual(SourceCatalog.searchPatterns(for: "微信").first, "weixin.qq.com")
     }
+
+    func testMonthAndDevice() {
+        let q = parser.parse("8 月 iPhone 拍的视频")
+        XCTAssertEqual(q.kinds, [.category(.videos)])
+        XCTAssertEqual(q.device, "iPhone")
+        XCTAssertEqual(q.date?.label, "8 月")
+        XCTAssertEqual(q.text, "")
+
+        let e = parser.parse("videos from my iphone in august")
+        XCTAssertEqual(e.device, "iPhone")
+        XCTAssertEqual(e.date?.label, "8 月")
+        XCTAssertNil(e.source)
+    }
+
+    func testHalfYearAndBigArchives() {
+        let q = parser.parse("大于 1GB 半年前的压缩包")
+        XCTAssertEqual(q.minSize, 1_000_000_000)
+        XCTAssertEqual(q.date?.label, "半年以前")
+        XCTAssertEqual(q.date?.start, .distantPast)
+        XCTAssertEqual(q.kinds, [.category(.archives)])
+        XCTAssertEqual(q.text, "")
+    }
+
+    func testScreenshotWithText() {
+        let q = parser.parse("wifi 密码截图")
+        XCTAssertEqual(q.kinds, [.screenshot])
+        XCTAssertEqual(q.text, "wifi 密码")
+    }
+
+    func testMonthsAgoIsNotAMonth() {
+        let q = parser.parse("3个月前的截图")
+        XCTAssertEqual(q.date?.start, .distantPast)
+        XCTAssertEqual(q.kinds, [.screenshot])
+    }
 }

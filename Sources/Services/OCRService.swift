@@ -59,9 +59,13 @@ final class OCRStore: ObservableObject {
 
     /// 缓存里包含这段文字的文件路径。
     func paths(matching needle: String) -> [String] {
-        let lower = needle.lowercased()
+        // 每个词都出现即可；“wifi”也能匹配“Wi-Fi”。
+        func norm(_ s: String) -> String { s.lowercased().replacingOccurrences(of: "-", with: "") }
+        let words = needle.split(separator: " ").map { norm(String($0)) }.filter { !$0.isEmpty }
+        guard !words.isEmpty else { return [] }
         return texts.compactMap { key, value in
-            value.lowercased().contains(lower) ? String(key.split(separator: "|").first ?? "") : nil
+            let text = norm(value)
+            return words.allSatisfy { text.contains($0) } ? String(key.split(separator: "|").first ?? "") : nil
         }
     }
 
@@ -97,6 +101,39 @@ final class OCRStore: ObservableObject {
             save()
             batchProgress = nil
             batchStatus = "已识别 \(todo.count) 张图片"
+        }
+    }
+
+    /// 是否在后台自动识别截图和近期照片（默认开启）。
+    static var autoEnabled: Bool {
+        UserDefaults.standard.object(forKey: "autoOCR") as? Bool ?? true
+    }
+
+    @Published private(set) var autoRunning = false
+    private var autoTask: Task<Void, Never>?
+
+    /// 后台慢慢识别截图和近期照片，之后搜索就能搜到图里的字。
+    func autoRecognize(_ items: [FileItem], limit: Int = 400) {
+        guard Self.autoEnabled, autoTask == nil else { return }
+        var seen = Set<String>()
+        let todo = items.filter { item in
+            guard item.isImage, text(for: item) == nil, seen.insert(item.path).inserted else { return false }
+            return FileActions.isLocal(item.url)
+        }.prefix(limit)
+        guard !todo.isEmpty else { return }
+        autoRunning = true
+        autoTask = Task(priority: .background) {
+            var count = 0
+            for item in todo {
+                if Task.isCancelled { break }
+                await recognize(item, persist: false)
+                count += 1
+                if count % 20 == 0 { save() }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+            save()
+            autoRunning = false
+            autoTask = nil
         }
     }
 

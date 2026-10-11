@@ -1,4 +1,6 @@
 import AppKit
+import AVFoundation
+import ImageIO
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -28,6 +30,24 @@ enum Demo {
         let daysAgo: Double
         var from: [String] = []
         var screenshot = false
+        /// 放在哪个子文件夹里，显示成 ~/下载 这样的路径。
+        var folder: String? = nil
+        /// 和第几张示例图片画面相同（用来做重复文件和相似照片）。
+        var sameAs: Int? = nil
+        var variant = false
+
+        var dir: String {
+            if let folder { return folder }
+            if screenshot { return "桌面" }
+            if !from.isEmpty { return "下载" }
+            switch kind {
+            case .image: return "图片"
+            case .video: return "影片"
+            case .music: return "音乐"
+            case .pdf, .doc: return "文稿"
+            case .archive, .installer: return "下载"
+            }
+        }
     }
 
     enum Kind { case image, video, music, pdf, doc, archive, installer }
@@ -69,6 +89,16 @@ enum Demo {
         Spec(name: "WeChatMac.dmg", kind: .installer, size: 498_000_000, daysAgo: 40, from: ["https://dldir1.qq.com/weixin/mac/WeChatMac.dmg", "https://weixin.qq.com/"]),
         Spec(name: "Figma.dmg", kind: .installer, size: 312_000_000, daysAgo: 60, from: ["https://desktop.figma.com/mac/Figma.dmg", "https://www.figma.com/downloads/"]),
         Spec(name: "Python-3.13.pkg", kind: .installer, size: 71_000_000, daysAgo: 33, from: ["https://www.python.org/ftp/python/3.13.0/x.pkg"]),
+        // 重复文件：同一张图、同一份 PDF 在别处又存了一份。
+        Spec(name: "西湖日落.jpg", kind: .image, size: 4_820_000, daysAgo: 0.25, folder: "下载", sameAs: 0),
+        Spec(name: "海报 (1).png", kind: .image, size: 2_200_000, daysAgo: 3.2, folder: "桌面", sameAs: 5),
+        Spec(name: "年度报告 2026.pdf", kind: .pdf, size: 13_700_000, daysAgo: 6.1, folder: "桌面"),
+        // 相似照片：HEIC/JPEG 成对、编辑版、连拍。
+        Spec(name: "IMG_2041.HEIC", kind: .image, size: 2_400_000, daysAgo: 12, sameAs: 2),
+        Spec(name: "IMG_2041.JPG", kind: .image, size: 3_900_000, daysAgo: 12, sameAs: 2),
+        Spec(name: "猫咪午睡 (edited).jpg", kind: .image, size: 3_300_000, daysAgo: 0.4, sameAs: 1, variant: true),
+        Spec(name: "IMG_3301.jpg", kind: .image, size: 3_100_000, daysAgo: 15, sameAs: 3),
+        Spec(name: "IMG_3302.jpg", kind: .image, size: 3_150_000, daysAgo: 15, sameAs: 3, variant: true),
     ]
 
     /// 生成示例文件（已存在就跳过），返回对应的 FileItem。
@@ -77,8 +107,10 @@ enum Demo {
         try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
         var result: [FileItem] = []
         for (index, spec) in specs.enumerated() {
-            let url = folder.appendingPathComponent(spec.name)
-            if !fm.fileExists(atPath: url.path) { write(spec, index: index, to: url) }
+            let dir = folder.appendingPathComponent(spec.dir, isDirectory: true)
+            try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            let url = dir.appendingPathComponent(spec.name)
+            if !fm.fileExists(atPath: url.path) { write(spec, index: spec.sameAs ?? index, to: url) }
             let date = Date().addingTimeInterval(-spec.daysAgo * 86_400)
             let type = UTType(filenameExtension: url.pathExtension)
             let tree = type.map { [$0.identifier] + $0.supertypes.map(\.identifier) } ?? []
@@ -96,13 +128,21 @@ enum Demo {
         switch spec.kind {
         case .image:
             let colors = palettes[index % palettes.count]
-            let image = gradientImage(colors: colors, seed: index, screenshot: spec.screenshot)
-            if let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
-                let data = url.pathExtension == "png"
+            let image = gradientImage(colors: colors, seed: index, screenshot: spec.screenshot, variant: spec.variant)
+            if url.pathExtension.lowercased() == "heic" {
+                if let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+                   let dest = CGImageDestinationCreateWithURL(url as CFURL, "public.heic" as CFString, 1, nil) {
+                    CGImageDestinationAddImage(dest, cg, nil)
+                    CGImageDestinationFinalize(dest)
+                }
+            } else if let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
+                let data = url.pathExtension.lowercased() == "png"
                     ? rep.representation(using: .png, properties: [:])
                     : rep.representation(using: .jpeg, properties: [.compressionFactor: 0.85])
                 try? data?.write(to: url)
             }
+        case .video:
+            writeMovie(to: url, colors: palettes[(index + 3) % palettes.count], seed: index)
         case .pdf:
             writePDF(title: (spec.name as NSString).deletingPathExtension, to: url)
         default:
@@ -110,10 +150,10 @@ enum Demo {
         }
     }
 
-    private static func gradientImage(colors: [NSColor], seed: Int, screenshot: Bool) -> NSImage {
+    private static func gradientImage(colors: [NSColor], seed: Int, screenshot: Bool, variant: Bool = false) -> NSImage {
         let size = NSSize(width: 800, height: screenshot ? 500 : 600)
         return NSImage(size: size, flipped: false) { rect in
-            NSGradient(colors: colors)?.draw(in: rect, angle: CGFloat(30 + seed * 37 % 120))
+            NSGradient(colors: colors)?.draw(in: rect, angle: CGFloat(30 + seed * 37 % 120) + (variant ? 12 : 0))
             // 几个柔和的圆，看起来像照片的光斑。
             for i in 0..<5 {
                 let r = CGFloat(80 + (seed * 53 + i * 71) % 160)
@@ -132,6 +172,53 @@ enum Demo {
             }
             return true
         }
+    }
+
+    /// 一秒钟的小视频，让“视频”也有真实的缩略图。
+    private static func writeMovie(to url: URL, colors: [NSColor], seed: Int) {
+        let width = 640, height = 360
+        guard let writer = try? AVAssetWriter(outputURL: url, fileType: .mov) else { return }
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height,
+        ])
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
+            kCVPixelBufferWidthKey as String: width,
+            kCVPixelBufferHeightKey as String: height,
+        ])
+        guard writer.canAdd(input) else { return }
+        writer.add(input)
+        guard writer.startWriting() else { return }
+        writer.startSession(atSourceTime: .zero)
+        let image = gradientImage(colors: colors, seed: seed, screenshot: false)
+        guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+        for frame in 0..<10 {
+            var waited = 0
+            while !input.isReadyForMoreMediaData && waited < 200 {
+                Thread.sleep(forTimeInterval: 0.01)
+                waited += 1
+            }
+            guard let pool = adaptor.pixelBufferPool else { break }
+            var buffer: CVPixelBuffer?
+            CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer)
+            guard let buffer else { break }
+            CVPixelBufferLockBaseAddress(buffer, [])
+            if let ctx = CGContext(
+                data: CVPixelBufferGetBaseAddress(buffer), width: width, height: height,
+                bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
+                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
+            ) {
+                ctx.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
+            }
+            CVPixelBufferUnlockBaseAddress(buffer, [])
+            adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(frame), timescale: 10))
+        }
+        input.markAsFinished()
+        let done = DispatchSemaphore(value: 0)
+        writer.finishWriting { done.signal() }
+        _ = done.wait(timeout: .now() + 5)
     }
 
     private static func writePDF(title: String, to url: URL) {
@@ -212,14 +299,25 @@ extension LibraryStore {
         ]
         cleanup.hasScanned = true
 
-        let images = of(.images).filter { !$0.isScreenshot }
-        if images.count >= 4 {
-            duplicates.groups = [
-                FileGroup(id: "demo-dup-1", title: "2 份 · \(images[0].sizeText)", items: [images[0], images[1]]),
-                FileGroup(id: "demo-dup-2", title: "2 份 · \(images[2].sizeText)", items: [images[2], images[3]]),
-            ]
-            duplicates.hasScanned = true
+        func named(_ name: String) -> [FileItem] { all.filter { $0.name == name } }
+        duplicates.groups = [
+            FileGroup(id: "demo-dup-1", title: "", items: named("年度报告 2026.pdf").sorted { $0.sortDate > $1.sortDate }),
+            FileGroup(id: "demo-dup-2", title: "", items: named("西湖日落.jpg").sorted { $0.sortDate > $1.sortDate }),
+            FileGroup(id: "demo-dup-3", title: "", items: (named("海报.png") + named("海报 (1).png")).sorted { $0.sortDate > $1.sortDate }),
+        ].filter { $0.items.count > 1 }
+        duplicates.hasScanned = true
+        let similarSets = [
+            named("IMG_2041.HEIC") + named("IMG_2041.JPG"),
+            named("猫咪午睡.jpg") + named("猫咪午睡 (edited).jpg"),
+            named("IMG_3301.jpg") + named("IMG_3302.jpg"),
+        ]
+        similar.groups = similarSets.enumerated().compactMap { index, items in
+            guard items.count > 1 else { return nil }
+            let sorted = items.sorted { $0.sortDate > $1.sortDate }
+            return FileGroup(id: "demo-sim-\(index)", title: SimilarPhotoScanner.title(for: sorted), items: sorted)
         }
+        similar.hasScanned = true
+        largeFileCount = 10
     }
 
     func applyDemo(_ target: SidebarItem) {
@@ -260,8 +358,17 @@ extension LibraryStore {
         case "images": selection = .category(.images)
         case "downloads": selection = .downloads
         case "cleanup": selection = .cleanup
+        case "review":
+            selection = .cleanup
+            cleanupReview = .installers
         case "duplicates": selection = .duplicates
+        case "similar": selection = .similarPhotos
         case "search": applyDemoSearch("上周超过5MB的pdf")
+        case "music":
+            selection = .category(.music)
+            if let song = demoItems.first(where: { $0.category == .music }) {
+                player.play(song, in: demoItems)
+            }
         default: selection = .home
         }
         if let window = NSApp.windows.first(where: { $0.isVisible }) ?? NSApp.windows.first {

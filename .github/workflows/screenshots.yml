@@ -55,6 +55,9 @@ jobs:
           shoot downloads light downloads
           shoot cleanup light cleanup
           shoot duplicates light duplicates
+          shoot similar light similar
+          shoot review light review
+          shoot music light music
           ls -la docs/screenshots
 
       - name: 上传为构件

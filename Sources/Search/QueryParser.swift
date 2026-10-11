@@ -20,6 +20,7 @@ struct QueryParser {
             .replacingOccurrences(of: "，", with: " ")
             .replacingOccurrences(of: ",", with: " ") + " "
 
+        parseDevice(&s, into: &query)
         parseSource(&s, into: &query)
         parseSize(&s, into: &query)
         parseDate(&s, into: &query)
@@ -69,6 +70,28 @@ struct QueryParser {
         }
         if s.count == 1, let c = s.first, let d = digits[c] { return d }
         return nil
+    }
+
+    // MARK: - 拍摄设备
+
+    private func parseDevice(_ s: inout String, into q: inout SearchQuery) {
+        let devices: [(String, String)] = [
+            ("iphone", "iPhone"), ("ipad", "iPad"), ("canon|佳能", "Canon"), ("sony|索尼", "Sony"),
+            ("nikon|尼康", "Nikon"), ("fujifilm|fuji|富士", "Fujifilm"), ("dji|大疆", "DJI"), ("gopro", "GoPro"),
+        ]
+        for (alias, name) in devices {
+            let a = "(?<![a-z0-9])(?:\(alias))(?![a-z0-9])"
+            let patterns = [
+                "(?:用|从|来自)?\\s*" + a + "\\s*(?:手机|相机)?\\s*(?:上)?\\s*(?:拍的|拍摄的|拍下的|录的|拍)",
+                "(?:taken|shot|recorded)?\\s*(?:on|with|from)\\s+(?:my\\s+|an?\\s+)?" + a,
+            ]
+            for p in patterns {
+                if take(p, from: &s) != nil {
+                    q.device = name
+                    return
+                }
+            }
+        }
     }
 
     // MARK: - 来源
@@ -210,6 +233,17 @@ struct QueryParser {
             }
         }
 
+        // 半年
+        let sixMonthsAgo = calendar.date(byAdding: .month, value: -6, to: now) ?? now
+        if take("(?:最近|过去|近)\\s*半年|半年\\s*(?:内|以内|之内)|" + Self.word("(?:in the )?(?:last|past) (?:half a year|six months)"), from: &s) != nil {
+            q.date = DateRange(start: calendar.startOfDay(for: sixMonthsAgo), end: tomorrow, label: "最近半年")
+            return
+        }
+        if take("(?:超过|多于)?\\s*半年\\s*(?:前|以前|之前)|超过半年|" + Self.word("older than (?:half a year|six months)|(?:half a year|six months) ago"), from: &s) != nil {
+            q.date = DateRange(start: .distantPast, end: sixMonthsAgo, label: "半年以前")
+            return
+        }
+
         // 相对：N 天前 / 超过 N 天 / older than N days
         let older = [
             "(?:超过|多于|大于)\\s*" + cn + "\\s*" + cnUnit + "(?:前|以前|之前)?",
@@ -241,6 +275,31 @@ struct QueryParser {
             if take(pattern, from: &s) != nil, let range = interval(comp, offset: offset) {
                 q.date = DateRange(start: range.0, end: range.1, label: label)
                 return
+            }
+        }
+
+        // 某个月份：8 月、八月份、in august
+        var month: Int?
+        if let g = take("(?<![\\d一二三四五六七八九十个上下本这])(\\d{1,2}|十[一二]?|[一二三四五六七八九])\\s*月份?(?!\\s*(?:前|以前|之前|内|以内|之内))", from: &s),
+           g.count > 1, let m = Self.number(g[1]), (1...12).contains(m) {
+            month = m
+        } else {
+            let names = ["january", "february", "march", "april", "may", "june", "july",
+                         "august", "september", "october", "november", "december"]
+            let short = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sept?", "oct", "nov", "dec"]
+            for index in 0..<12 {
+                if take(Self.word("(?:in\\s+)?(?:\(names[index])|\(short[index]))"), from: &s) != nil {
+                    month = index + 1
+                    break
+                }
+            }
+        }
+        if let month {
+            var year = calendar.component(.year, from: now)
+            if month > calendar.component(.month, from: now) { year -= 1 }
+            if let start = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
+               let end = calendar.date(byAdding: .month, value: 1, to: start) {
+                q.date = DateRange(start: start, end: end, label: "\(month) 月")
             }
         }
     }

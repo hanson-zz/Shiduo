@@ -38,6 +38,7 @@ enum ChipField: Hashable {
     case maxSize
     case source
     case downloaded
+    case device
 }
 
 struct SearchChip: Identifiable, Hashable {
@@ -58,10 +59,12 @@ struct SearchQuery: Hashable {
     var source: String?
     /// 只要“下载来的”文件，不限来源。
     var downloadedOnly = false
+    /// 拍摄设备，例如 iPhone、Canon。
+    var device: String?
 
     var isEmpty: Bool {
         text.isEmpty && kinds.isEmpty && date == nil && minSize == nil && maxSize == nil
-            && source == nil && !downloadedOnly
+            && source == nil && !downloadedOnly && device == nil
     }
 
     static func sizeLabel(_ bytes: Int64) -> String {
@@ -77,16 +80,19 @@ struct SearchQuery: Hashable {
             result.append(SearchChip(field: .date, label: date.label, symbol: "calendar"))
         }
         if let minSize {
-            result.append(SearchChip(field: .minSize, label: "大于 \(Self.sizeLabel(minSize))", symbol: "arrow.up.circle"))
+            result.append(SearchChip(field: .minSize, label: "> \(Self.sizeLabel(minSize))", symbol: "arrow.up.circle"))
         }
         if let maxSize {
-            result.append(SearchChip(field: .maxSize, label: "小于 \(Self.sizeLabel(maxSize))", symbol: "arrow.down.circle"))
+            result.append(SearchChip(field: .maxSize, label: "< \(Self.sizeLabel(maxSize))", symbol: "arrow.down.circle"))
         }
         if let source {
             result.append(SearchChip(field: .source, label: "来自 \(source)", symbol: "globe"))
         }
         if downloadedOnly {
             result.append(SearchChip(field: .downloaded, label: "下载的文件", symbol: "arrow.down.circle"))
+        }
+        if let device {
+            result.append(SearchChip(field: .device, label: "\(device) 拍摄", symbol: "camera"))
         }
         if !text.isEmpty {
             result.append(SearchChip(field: .text, label: "“\(text)”", symbol: "textformat"))
@@ -103,6 +109,7 @@ struct SearchQuery: Hashable {
         case .maxSize: maxSize = nil
         case .source: source = nil
         case .downloaded: downloadedOnly = false
+        case .device: device = nil
         }
     }
 }
