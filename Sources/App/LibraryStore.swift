@@ -70,6 +70,8 @@ final class LibraryStore: ObservableObject {
     @Published var sourceGroups: [SourceGroup] = []
     /// 打开“下载来源”时默认选中的来源。
     @Published var downloadSourceFilter: String?
+    /// 演示模式的示例文件。
+    var demoItems: [FileItem] = []
     @Published var dashboardLoaded = false
 
     @Published var searchText = ""
@@ -112,6 +114,10 @@ final class LibraryStore: ObservableObject {
         loadTask?.cancel()
         selectedIDs = []
         let target = selection ?? .home
+        if Demo.isOn {
+            if target != .home { applyDemo(target) }
+            return
+        }
         loadTask = Task { await load(target) }
     }
 
@@ -145,6 +151,10 @@ final class LibraryStore: ObservableObject {
     }
 
     func refreshDashboard() async {
+        if Demo.isOn {
+            applyDemoDashboard()
+            return
+        }
         var totals: [FileCategory: CategoryTotal] = [:]
         var previews: [FileCategory: [FileItem]] = [:]
         for category in FileCategory.dashboard {

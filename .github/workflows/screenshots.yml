@@ -1,0 +1,70 @@
+name: 截图
+
+# 手动运行：用演示数据启动拾掇，自动截下各个页面，提交到 docs/screenshots。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 XcodeGen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: brew install --quiet xcodegen
+
+      - name: 构建
+        run: |
+          xcodegen generate
+          xcodebuild build -project Shiduo.xcodeproj -scheme Shiduo -configuration Release \
+            -derivedDataPath build CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="" \
+            > build.log 2>&1 || { grep -E "error:" build.log | head -80; exit 1; }
+          swiftc -O scripts/window-id.swift -o window-id
+
+      - name: 截图
+        run: |
+          set -x
+          BIN=build/Build/Products/Release/Shiduo.app/Contents/MacOS/Shiduo
+          mkdir -p docs/screenshots
+          # 关掉可能挡住窗口的东西
+          osascript -e 'tell application "System Events" to set visible of every process whose visible is true and name is not "Finder" to false' || true
+          shoot() {
+            local page=$1 mode=$2 out=$3
+            local extra=""
+            [ "$mode" = dark ] && extra="--dark"
+            "$BIN" --demo --page="$page" $extra &
+            local pid=$!
+            sleep 9
+            local wid
+            wid=$(./window-id Shiduo) || { kill $pid; return 1; }
+            screencapture -x -o -l "$wid" "docs/screenshots/$out.png"
+            kill $pid || true
+            sleep 2
+          }
+          shoot home light home
+          shoot home dark home-dark
+          shoot images light images
+          shoot search light search
+          shoot downloads light downloads
+          shoot cleanup light cleanup
+          shoot duplicates light duplicates
+          ls -la docs/screenshots
+
+      - name: 上传为构件
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: docs/screenshots
+
+      - name: 提交截图
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots
+          git commit -m "更新截图 [skip ci]" || exit 0
+          git push

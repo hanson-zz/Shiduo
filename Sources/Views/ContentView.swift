@@ -17,6 +17,10 @@ struct ContentView: View {
             if newValue.isEmpty { store.clearSearch() }
         }
         .task {
+            if Demo.isOn {
+                store.startDemo()
+                return
+            }
             await store.refreshDashboard()
             await store.checkForUpdatesOnLaunch()
         }
