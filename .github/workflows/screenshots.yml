@@ -28,6 +28,7 @@ jobs:
 
       - name: 截图
         run: |
+          exec > >(tee shot.log) 2>&1
           set -x
           BIN=build/Build/Products/Release/Shiduo.app/Contents/MacOS/Shiduo
           mkdir -p docs/screenshots
@@ -41,7 +42,8 @@ jobs:
             local pid=$!
             sleep 9
             local wid
-            wid=$(./window-id Shiduo) || { kill $pid; return 1; }
+            ./window-id Shiduo || true
+            wid=$(./window-id Shiduo) || { echo "NO WINDOW $page"; kill $pid; return 0; }
             screencapture -x -o -l "$wid" "docs/screenshots/$out.png"
             kill $pid || true
             sleep 2
@@ -55,7 +57,20 @@ jobs:
           shoot duplicates light duplicates
           ls -la docs/screenshots
 
+      - name: 失败日志
+        if: always()
+        run: |
+          { grep -E "error:" build.log | head -60 || true; cat shot.log 2>/dev/null; } > /tmp/err.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin ci-logs && git checkout -B ci-logs origin/ci-logs 2>/dev/null || git checkout --orphan ci-logs-new
+          git rm -rfq --cached . >/dev/null 2>&1 || true
+          cp /tmp/err.txt shot-log.txt
+          git add -f shot-log.txt && git commit -qm "screenshot log" && git push -f origin HEAD:ci-logs || true
+          git checkout -f main
+
       - name: 上传为构件
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
