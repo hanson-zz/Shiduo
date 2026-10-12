@@ -11,6 +11,8 @@ enum SidebarItem: Hashable {
     case similarPhotos
     case cleanup
     case chat(ChatApp)
+    case tag(String)
+    case storageMap
     case pinned(String)
 }
 
@@ -98,6 +100,9 @@ final class LibraryStore: ObservableObject {
     @Published var selectedIDs: Set<String> = []
     @Published var showInspector = false
     @Published var ocrItem: FileItem?
+    /// 正在批量重命名 / 转换的文件（非空时弹出对应面板）。
+    @Published var renameItems: [FileItem] = []
+    @Published var convertItems: [FileItem] = []
     @Published var pendingTrash: [FileItem] = []
     @Published var alertMessage: String?
     @Published var update: UpdateInfo?
@@ -150,7 +155,7 @@ final class LibraryStore: ObservableObject {
         case .home:
             await refreshDashboard()
             return
-        case .duplicates, .similarPhotos, .cleanup:
+        case .duplicates, .similarPhotos, .cleanup, .storageMap:
             items = []
             return
         default:
@@ -165,6 +170,7 @@ final class LibraryStore: ObservableObject {
         case .screenshots: result = await Queries.screenshots()
         case .downloads: result = await Queries.downloaded()
         case .pinned(let path): result = await Queries.folder(path)
+        case .tag(let name): result = await Queries.tagged(name)
         case .chat(let app):
             result = await chat.items(for: app)
             cleanup.updateChatCard()

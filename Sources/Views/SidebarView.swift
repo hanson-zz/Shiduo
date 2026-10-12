@@ -11,18 +11,27 @@ struct SidebarView: View {
         let name: String
         let symbol: String
         let path: String
+        let colors: [Color]
         var id: String { path }
     }
+
+    private static func rgb(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r, green: g, blue: b) }
 
     private var locations: [Location] {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return [
-            Location(name: "桌面", symbol: "menubar.dock.rectangle", path: home + "/Desktop"),
-            Location(name: "文稿", symbol: "doc", path: home + "/Documents"),
-            Location(name: "下载", symbol: "arrow.down.circle", path: home + "/Downloads"),
-            Location(name: "图片", symbol: "photo", path: home + "/Pictures"),
-            Location(name: "影片", symbol: "film", path: home + "/Movies"),
-            Location(name: "音乐", symbol: "music.note", path: home + "/Music"),
+            Location(name: "桌面", symbol: "menubar.dock.rectangle", path: home + "/Desktop",
+                     colors: [Self.rgb(0.40, 0.72, 1.00), Self.rgb(0.16, 0.47, 0.96)]),
+            Location(name: "文稿", symbol: "doc.text.fill", path: home + "/Documents",
+                     colors: [Self.rgb(1.00, 0.74, 0.30), Self.rgb(0.98, 0.52, 0.12)]),
+            Location(name: "下载", symbol: "arrow.down", path: home + "/Downloads",
+                     colors: [Self.rgb(0.40, 0.86, 0.50), Self.rgb(0.13, 0.66, 0.33)]),
+            Location(name: "图片", symbol: "photo.fill", path: home + "/Pictures",
+                     colors: [Self.rgb(1.00, 0.52, 0.66), Self.rgb(0.93, 0.27, 0.45)]),
+            Location(name: "影片", symbol: "film.fill", path: home + "/Movies",
+                     colors: [Self.rgb(0.70, 0.55, 1.00), Self.rgb(0.47, 0.31, 0.92)]),
+            Location(name: "音乐", symbol: "music.note", path: home + "/Music",
+                     colors: [Self.rgb(1.00, 0.45, 0.45), Self.rgb(0.90, 0.20, 0.30)]),
         ]
     }
 
@@ -76,6 +85,8 @@ struct SidebarView: View {
                     .tag(SidebarItem.duplicates)
                 Label("相似照片", systemImage: "photo.stack")
                     .tag(SidebarItem.similarPhotos)
+                Label("空间占用图", systemImage: "square.grid.3x3.square")
+                    .tag(SidebarItem.storageMap)
             }
 
             if !chat.installedApps.isEmpty {
@@ -98,12 +109,25 @@ struct SidebarView: View {
                     Label {
                         Text(location.name)
                     } icon: {
-                        Image(nsImage: NSWorkspace.shared.icon(forFile: location.path))
-                            .resizable()
-                            .frame(width: 18, height: 18)
+                        BadgeIcon(symbol: location.symbol, colors: location.colors)
                     }
                     .help(location.path)
                     .tag(SidebarItem.pinned(location.path))
+                }
+            }
+
+            Section("标签") {
+                ForEach(FinderTag.colorTags) { tag in
+                    Label {
+                        Text(tag.name)
+                    } icon: {
+                        Circle()
+                            .fill(tag.color)
+                            .frame(width: 11, height: 11)
+                            .overlay(Circle().strokeBorder(Color.white.opacity(0.7), lineWidth: 1))
+                            .frame(width: 20)
+                    }
+                    .tag(SidebarItem.tag(tag.name))
                 }
             }
 
@@ -112,9 +136,7 @@ struct SidebarView: View {
                     Label {
                         Text((path as NSString).lastPathComponent)
                     } icon: {
-                        Image(nsImage: NSWorkspace.shared.icon(forFile: path))
-                            .resizable()
-                            .frame(width: 18, height: 18)
+                        BadgeIcon(symbol: "folder.fill", colors: [Self.rgb(0.55, 0.70, 0.95), Self.rgb(0.35, 0.50, 0.85)])
                     }
                         .help(path)
                         .tag(SidebarItem.pinned(path))

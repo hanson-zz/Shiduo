@@ -23,6 +23,12 @@ struct ContentView: View {
         .sheet(item: $store.ocrItem) { item in
             OCRSheet(item: item)
         }
+        .sheet(isPresented: Binding(get: { !store.renameItems.isEmpty }, set: { if !$0 { store.renameItems = [] } })) {
+            RenameSheet(items: store.renameItems)
+        }
+        .sheet(isPresented: Binding(get: { !store.convertItems.isEmpty }, set: { if !$0 { store.convertItems = [] } })) {
+            ConvertSheet(items: store.convertItems)
+        }
         .confirmationDialog(
             trashTitle,
             isPresented: Binding(
@@ -125,6 +131,10 @@ struct DetailView: View {
                 DuplicatesView()
             case .cleanup:
                 CleanupView()
+            case .tag(let name):
+                BrowserView(title: "标签：\(name)", showsOCRTools: false)
+            case .storageMap:
+                StorageMapView()
             case .chat(let app):
                 BrowserView(title: "\(app.name)文件", showsOCRTools: false, chatApp: app)
             case .pinned(let path):

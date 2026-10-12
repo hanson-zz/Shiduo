@@ -48,6 +48,13 @@ struct FileContextMenu: View {
             store.selectedIDs = Set(items.map(\.id))
             store.showInspector = true
         }
+        TagMenu(items: items)
+        if items.contains(where: { !$0.isDirectory }) {
+            Button(items.count > 1 ? "批量重命名 \(items.count) 个文件…" : "重命名…") { store.renameItems = items }
+        }
+        if items.contains(where: ImageConverter.canConvert) {
+            Button("转换为 JPG / 压缩…") { store.convertItems = items.filter(ImageConverter.canConvert) }
+        }
         Divider()
         Button(items.count > 1 ? "拷贝 \(items.count) 个路径" : "拷贝路径") { FileActions.copyPaths(items) }
         if items.contains(where: TextExtractor.canExtract) {

@@ -187,6 +187,12 @@ enum Queries {
     }
 
     /// 固定文件夹：直接读磁盘，不依赖 Spotlight 索引。
+    static func tagged(_ name: String) async -> [FileItem] {
+        await SpotlightSearch.run(
+            predicate: NSPredicate(format: "kMDItemUserTags == %@", name), scopes: Scopes.home, maxItems: 5000
+        ).items
+    }
+
     static func folder(_ path: String) async -> [FileItem] {
         await Task.detached(priority: .userInitiated) { () -> [FileItem] in
             let url = URL(fileURLWithPath: path)
