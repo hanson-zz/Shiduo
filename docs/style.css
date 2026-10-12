@@ -1,0 +1,25 @@
+:root{--fg:#1d1d1f;--mut:#6e6e73;--bg:#f6f5f2;--card:#fff;--acc:#d9653b;--line:#e5e3de}
+@media (prefers-color-scheme:dark){:root{--fg:#f2f2f2;--mut:#a1a1a6;--bg:#141414;--card:#1e1e1e;--line:#2c2c2c}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;color:var(--fg);background:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+nav .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:var(--fg)}
+nav .brand img{width:34px;height:34px}nav .links a{margin-left:20px;color:var(--mut);font-size:15px}
+.hero{text-align:center;padding:48px 0 24px}.hero img.icon{width:112px}
+.hero h1{font-size:44px;line-height:1.15;margin:16px 0 8px}.hero p{font-size:19px;color:var(--mut);max-width:680px;margin:0 auto}
+.btns{margin:26px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:12px 22px;border-radius:12px;font-weight:600;background:var(--acc);color:#fff}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}.btn:hover{text-decoration:none;opacity:.9}
+.small{font-size:14px;color:var(--mut)}
+.shot{width:100%;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.18);margin:20px 0 10px}
+section{padding:40px 0}h2{font-size:30px;margin:0 0 18px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.card h3{margin:0 0 6px;font-size:18px}.card p{margin:0;color:var(--mut);font-size:15px}
+.card img{width:100%;border-radius:10px;margin-bottom:12px}
+.price{font-size:40px;font-weight:700;margin:6px 0}.price span{font-size:16px;color:var(--mut);font-weight:400}
+.card ul{padding-left:20px;margin:12px 0;color:var(--fg);font-size:15px}.card.pro{border:2px solid var(--acc)}
+footer{border-top:1px solid var(--line);padding:28px 0 50px;color:var(--mut);font-size:14px}
+footer a{color:var(--mut);margin-right:16px}
+.doc{max-width:760px}.doc h1{font-size:34px}.doc h2{text-align:left;font-size:22px;margin-top:30px}

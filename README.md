@@ -92,6 +92,7 @@
 | **外接磁盘**：侧边栏里直接浏览移动硬盘、U 盘，右键推出 | | ✅ |
 | **菜单栏小助手**：启动磁盘剩余空间、最近 5 个下载、快速搜索、打开清理 | | ✅ |
 
+- **价格：$9.90 美元，一次买断**，不是订阅，以后的 Pro 更新免费。付款由 Creem 处理。
 - 第一次打开任何 Pro 功能（或在设置里点「开始 7 天免费试用」）时开始 **7 天免费试用**，不需要注册账号。
 - 购买后在「设置 › 授权」里输入授权码激活；换 Mac 前可以先「解绑此 Mac」。
 - 授权码保存在系统钥匙串里。每 24 小时最多联网校验一次，没网时也能继续用 30 天。
@@ -163,6 +164,12 @@ README 里的截图由“截图”工作流生成：在 Actions 里手动运行�
 </p>
 
 问题和建议请发邮件到 694561981@qq.com，或在 [Issues](https://github.com/hanson-zz/Shiduo/issues) 里留言。
+
+## 隐私与条款
+
+- 官网：https://hanson-zz.github.io/Shiduo/
+- [隐私政策 Privacy Policy](https://hanson-zz.github.io/Shiduo/privacy.html) · [服务条款 Terms of Service](https://hanson-zz.github.io/Shiduo/terms.html) · [退款政策 Refund Policy](https://hanson-zz.github.io/Shiduo/refund.html)
+- 客服邮箱：694561981@qq.com
 
 ## 许可
 
