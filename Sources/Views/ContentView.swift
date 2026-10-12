@@ -17,8 +17,15 @@ struct ContentView: View {
                 return
             }
             QuickSearchController.shared.configure(store: store)
+            if !UserDefaults.standard.bool(forKey: "onboardingDone") { store.showOnboarding = true }
             await store.refreshDashboard()
             await store.checkForUpdatesOnLaunch()
+        }
+        .sheet(isPresented: $store.showOnboarding) {
+            OnboardingView(onSearch: { text in
+                store.searchText = text
+                store.submitSearch()
+            })
         }
         .sheet(item: $store.ocrItem) { item in
             OCRSheet(item: item)
@@ -89,6 +96,10 @@ struct DetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             TopBar()
+            if store.searchFieldFocused && store.searchText.isEmpty && store.activeQuery == nil {
+                SearchSuggestionStrip()
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
             Divider().opacity(0.6)
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -101,6 +112,7 @@ struct DetailView: View {
                 }
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.toast)
+            .animation(.easeOut(duration: 0.18), value: store.searchFieldFocused)
             .background(GlassBackdrop())
             .toolbarBackground(.hidden, for: .windowToolbar)
             .inspector(isPresented: $store.showInspector) {

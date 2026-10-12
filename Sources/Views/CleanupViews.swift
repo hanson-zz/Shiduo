@@ -33,9 +33,7 @@ struct CleanupView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("清理")
                             .font(.system(size: 34, weight: .bold, design: .rounded))
-                        Text(scanner.isRunning && !scanner.hasScanned
-                             ? "正在找可以放心清理的文件…"
-                             : (total > 0 ? "最多可以腾出 \(total.byteText)" : "没有需要清理的，很整齐"))
+                        Text("重复文件、旧安装包、被遗忘的下载，一次看清")
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -51,6 +49,8 @@ struct CleanupView: View {
                     .buttonStyle(.plain)
                     .disabled(scanner.isRunning)
                 }
+
+                FreeUpHero(bytes: total, scanning: scanner.isRunning || duplicates.isRunning)
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 16)], spacing: 16) {
                     DuplicatesTile()

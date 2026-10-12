@@ -77,6 +77,7 @@ struct ChipBar: View {
     let query: SearchQuery
 
     var body: some View {
+        HStack(spacing: 0) {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 Text("理解为")
@@ -103,6 +104,12 @@ struct ChipBar: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
+        }
+            Text(store.isLoading ? "正在搜索…" : "\(store.items.count) 个结果")
+                .font(.callout.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .padding(.trailing, 18)
         }
     }
 }

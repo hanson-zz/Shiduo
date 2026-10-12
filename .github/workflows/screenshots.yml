@@ -60,6 +60,11 @@ jobs:
           shoot similar light similar
           shoot review light review
           shoot music light music
+          shoot suggest light suggest
+          shoot onboarding light onboarding
+          shoot storagemap light storagemap
+          shoot rename light rename
+          shoot convert light convert
           ls -la docs/screenshots
 
       - name: 上传为构件

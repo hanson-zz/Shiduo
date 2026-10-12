@@ -24,6 +24,9 @@ struct HomeView: View {
                 ForEach(store.shelves) { shelf in
                     ShelfView(shelf: shelf)
                 }
+                PrivacyBadges()
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
                 if store.dashboardLoaded && store.totals.values.allSatisfy({ $0.count == 0 }) {
                     ContentUnavailableView(
                         "没有读到任何文件",

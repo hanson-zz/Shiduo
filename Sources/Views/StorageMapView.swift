@@ -13,7 +13,7 @@ struct StorageNode: Identifiable, Hashable {
 
 @MainActor
 final class StorageMapModel: ObservableObject {
-    @Published var root: URL = FileManager.default.homeDirectoryForCurrentUser
+    @Published var root: URL = Demo.isOn ? Demo.folder : FileManager.default.homeDirectoryForCurrentUser
     @Published var path: [URL] = []
     @Published var nodes: [StorageNode] = []
     @Published var isScanning = false
@@ -64,6 +64,10 @@ final class StorageMapModel: ObservableObject {
             if isHome && url.lastPathComponent == "Library" { continue }
             let v = try? url.resourceValues(forKeys: Set(keys))
             if v?.isSymbolicLink == true { continue }
+            if Demo.isOn, let fake = Demo.fakeSize(url) {
+                list.append(StorageNode(url: url, name: url.lastPathComponent, isDirectory: v?.isDirectory == true, size: fake, done: true))
+                continue
+            }
             let isDir = v?.isDirectory == true
             if isDir {
                 let cached = cache[url.path]

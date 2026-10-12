@@ -65,6 +65,16 @@ struct TopBar: View {
         .onChange(of: store.searchFocusRequest) {
             focused = true
         }
+        .onChange(of: focused) { _, isFocused in
+            if isFocused {
+                store.searchFieldFocused = true
+            } else {
+                // 稍等一下再收起，免得点示例时它先消失。
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    if !focused { store.searchFieldFocused = false }
+                }
+            }
+        }
         .onChange(of: store.searchText) { _, newValue in
             if newValue.isEmpty { store.clearSearch() }
         }

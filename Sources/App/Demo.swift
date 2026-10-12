@@ -101,6 +101,18 @@ enum Demo {
         Spec(name: "IMG_3302.jpg", kind: .image, size: 3_150_000, daysAgo: 15, sameAs: 3, variant: true),
     ]
 
+    /// 空间占用图在演示模式下用示例里写的大小（真实的示例文件都很小）。
+    static func fakeSize(_ url: URL) -> Int64? {
+        let parent = url.deletingLastPathComponent().standardizedFileURL.path
+        let root = folder.standardizedFileURL.path
+        if parent == root {
+            let sum = specs.filter { $0.dir == url.lastPathComponent }.reduce(Int64(0)) { $0 + $1.size }
+            return sum > 0 ? sum : nil
+        }
+        let dirName = url.deletingLastPathComponent().lastPathComponent
+        return specs.first { $0.dir == dirName && $0.name == url.lastPathComponent }?.size
+    }
+
     /// 生成示例文件（已存在就跳过），返回对应的 FileItem。
     static func makeItems() -> [FileItem] {
         let fm = FileManager.default
@@ -364,6 +376,15 @@ extension LibraryStore {
         case "duplicates": selection = .duplicates
         case "similar": selection = .similarPhotos
         case "search": applyDemoSearch("上周超过5MB的pdf")
+        case "suggest": searchFieldFocused = true
+        case "onboarding": showOnboarding = true
+        case "storagemap": selection = .storageMap
+        case "rename":
+            selection = .category(.images)
+            renameItems = Array(demoItems.filter { $0.category == .image && !$0.isScreenshot }.prefix(6))
+        case "convert":
+            selection = .category(.images)
+            convertItems = Array(demoItems.filter { $0.category == .image }.prefix(8))
         case "music":
             selection = .category(.music)
             if let song = demoItems.first(where: { $0.category == .music }) {

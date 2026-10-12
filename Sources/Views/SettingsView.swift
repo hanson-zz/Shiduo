@@ -84,6 +84,18 @@ struct SettingsView: View {
                 }
             }
 
+            Section("隐私与权限") {
+                PrivacyBadges()
+                LabeledContent("完全磁盘访问权限") {
+                    HStack {
+                        Text(FullDiskAccess.isGranted ? "已开启" : "未开启")
+                            .foregroundStyle(FullDiskAccess.isGranted ? .green : .orange)
+                        Button("打开系统设置") { FullDiskAccess.openSettings() }
+                    }
+                }
+                Button("重新查看欢迎引导") { store.showOnboarding = true }
+            }
+
             Section("关于") {
                 LabeledContent("版本", value: UpdateChecker.currentVersion)
                 LabeledContent("许可", value: "MIT 开源")

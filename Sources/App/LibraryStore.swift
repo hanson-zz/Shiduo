@@ -78,6 +78,10 @@ final class LibraryStore: ObservableObject {
     @Published var duplicatesTab: DuplicatesTab = .exact
     /// 底部的小提示，例如“已拷贝 3 张图片的文字”。
     @Published var toast: String?
+    /// 顶部搜索框是否获得焦点（用来显示搜索示例）。
+    @Published var searchFieldFocused = false
+    /// 手动打开欢迎引导（设置页「重新查看欢迎引导」）。
+    @Published var showOnboarding = false
     /// 每次改变都让顶部搜索框获得焦点（⌘F）。
     @Published var searchFocusRequest = 0
     @Published var largeFileCount = 0
