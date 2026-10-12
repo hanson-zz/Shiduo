@@ -78,6 +78,8 @@ final class LibraryStore: ObservableObject {
     @Published var duplicatesTab: DuplicatesTab = .exact
     /// 底部的小提示，例如“已拷贝 3 张图片的文字”。
     @Published var toast: String?
+    /// 刚拷贝的文字预览（标题, 内容）。
+    @Published var copiedPreview: CopiedPreview?
     /// 顶部搜索框是否获得焦点（用来显示搜索示例）。
     @Published var searchFieldFocused = false
     /// 手动打开欢迎引导（设置页「重新查看欢迎引导」）。
@@ -306,6 +308,14 @@ final class LibraryStore: ObservableObject {
         cleanupReview = kind
     }
 
+    func showCopied(_ preview: CopiedPreview) {
+        copiedPreview = preview
+        Task {
+            try? await Task.sleep(nanoseconds: 3_500_000_000)
+            if copiedPreview == preview { copiedPreview = nil }
+        }
+    }
+
     func showToast(_ text: String) {
         toast = text
         let current = text
@@ -351,9 +361,11 @@ final class LibraryStore: ObservableObject {
             if parts.isEmpty {
                 showToast("没有识别到文字")
             } else {
-                FileActions.copy(parts.joined(separator: "\n\n"))
+                let text = parts.joined(separator: "\n\n")
+                FileActions.copy(text)
                 let kind = targets.allSatisfy(\.isImage) ? "张图片" : "个文件"
-                showToast("已拷贝 \(parts.count) \(kind)的文字")
+                toast = nil
+                showCopied(CopiedPreview(title: "已拷贝 \(parts.count) \(kind)的文字", text: text))
             }
         }
     }
@@ -423,4 +435,11 @@ final class LibraryStore: ObservableObject {
             update = info
         }
     }
+}
+
+
+struct CopiedPreview: Equatable {
+    let id = UUID()
+    let title: String
+    let text: String
 }

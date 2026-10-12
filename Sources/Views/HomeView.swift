@@ -58,10 +58,18 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(greeting)
                     .font(.system(size: 34, weight: .bold, design: .rounded))
-                Text(totalCount > 0
-                     ? "这台 Mac 上有 \(totalCount) 个文件，共 \(totalBytes.byteText)"
-                     : "正在读取 Spotlight 索引…")
-                    .foregroundStyle(.secondary)
+                if totalCount > 0 {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        CountingNumber(value: Double(totalCount))
+                            .font(.system(size: 26, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Color.accentColor)
+                        Text("个文件，共 \(totalBytes.byteText)，每一类都有自己的货架")
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("正在读取 Spotlight 索引…")
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer()
             Button {

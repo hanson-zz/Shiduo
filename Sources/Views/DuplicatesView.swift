@@ -105,6 +105,13 @@ struct DuplicatesView: View {
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                     Text(groups.isEmpty ? "没有发现多余的副本，很整齐" : "\(allExtras.count) 个多余的副本，共 \(groups.count) 组")
                         .foregroundStyle(.white.opacity(0.7))
+                    Text(tab == .exact ? "完全相同 · SHA-256 指纹校验" : "画面相似 · Vision 本机比对")
+                        .font(.caption.weight(.bold))
+                        .tracking(0.8)
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Color.white))
                 } else {
                     Text("还没有扫描")
                         .font(.system(size: 30, weight: .bold, design: .rounded))

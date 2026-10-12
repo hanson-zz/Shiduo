@@ -105,7 +105,11 @@ struct DetailView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
             .overlay(alignment: .bottom) {
-                if let toast = store.toast {
+                if let preview = store.copiedPreview {
+                    CopiedTextCard(preview: preview)
+                        .padding(.bottom, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else if let toast = store.toast {
                     ToastView(text: toast)
                         .padding(.bottom, 24)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -113,6 +117,7 @@ struct DetailView: View {
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.toast)
             .animation(.easeOut(duration: 0.18), value: store.searchFieldFocused)
+            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.copiedPreview)
             .background(GlassBackdrop())
             .toolbarBackground(.hidden, for: .windowToolbar)
             .inspector(isPresented: $store.showInspector) {

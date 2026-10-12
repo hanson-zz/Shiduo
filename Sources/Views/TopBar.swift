@@ -139,3 +139,34 @@ struct ToastView: View {
         .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
     }
 }
+
+
+/// 拷贝文字后弹出的预览卡：看一眼拷了什么。
+struct CopiedTextCard: View {
+    @EnvironmentObject private var store: LibraryStore
+    let preview: CopiedPreview
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                Text(preview.title).font(.callout.weight(.semibold))
+                Spacer()
+                Text("\(preview.text.count) 字").font(.caption).foregroundStyle(.secondary)
+                Button { store.copiedPreview = nil } label: { Image(systemName: "xmark") }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+            }
+            Text(preview.text)
+                .font(.system(size: 14, weight: .medium))
+                .lineLimit(4)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(14)
+        .frame(width: 380)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.regularMaterial))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.8))
+        .shadow(color: .black.opacity(0.15), radius: 14, y: 5)
+    }
+}

@@ -17,6 +17,66 @@ struct DownloadSourcesView: View {
     private var siteGroups: [SourceGroup] { groups.filter { $0.source.id.hasPrefix("site:") } }
 
     var body: some View {
+        VStack(spacing: 0) {
+            if !groups.isEmpty { overview; Divider() }
+            split
+        }
+        .navigationTitle("下载来源")
+        .navigationSubtitle("\(groups.count) 个来源 · \(store.items.count) 个文件")
+        .onAppear {
+            if let id = store.downloadSourceFilter {
+                selectedSource = id
+                store.downloadSourceFilter = nil
+            }
+        }
+    }
+
+    /// 顶部总览：「N 个文件来自 M 个来源」和一排来源气泡。
+    private var overview: some View {
+        HStack(alignment: .center, spacing: 28) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("记得它从哪儿来")
+                    .font(.caption.weight(.bold))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.accentColor)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("\(store.items.count)")
+                        .font(.system(size: 44, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                    Text("个文件")
+                        .font(.title3.weight(.medium))
+                }
+                Text("来自 \(groups.count) 个来源")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
+            }
+            FlowLayout(spacing: 8) {
+                ForEach(groups.sorted { $0.items.count > $1.items.count }.prefix(14)) { group in
+                    Button {
+                        selectedSource = group.source.id
+                    } label: {
+                        HStack(spacing: 6) {
+                            Circle().fill(group.source.tint.color).frame(width: 7, height: 7)
+                            Text(group.source.name).fontWeight(.medium)
+                            Text("\(group.items.count)").foregroundStyle(.secondary).monospacedDigit()
+                        }
+                        .font(.callout)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(selectedSource == group.source.id ? group.source.tint.color.opacity(0.2) : Color.primary.opacity(0.05)))
+                        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8))
+                        .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+    }
+
+    private var split: some View {
         HSplitView {
             List(selection: $selectedSource) {
                 Label("全部来源（\(store.items.count)）", systemImage: "tray.full")
@@ -52,14 +112,6 @@ struct DownloadSourcesView: View {
             .frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle("下载来源")
-        .navigationSubtitle("\(groups.count) 个来源 · \(store.items.count) 个文件")
-        .onAppear {
-            if let id = store.downloadSourceFilter {
-                selectedSource = id
-                store.downloadSourceFilter = nil
-            }
-        }
     }
 
     private func row(_ group: SourceGroup) -> some View {

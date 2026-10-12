@@ -352,3 +352,29 @@ struct FreeUpHero: View {
         withAnimation(.easeOut(duration: shown == 0 ? 1.4 : 0.6)) { shown = Double(bytes) }
     }
 }
+
+
+/// 从 0 数上去的整数（带千位分隔）。
+struct CountingNumber: View {
+    let value: Double
+    @State private var shown: Double = 0
+
+    var body: some View {
+        CountingInt(value: shown)
+            .onAppear { withAnimation(.easeOut(duration: 1.2)) { shown = value } }
+            .onChange(of: value) { withAnimation(.easeOut(duration: 0.6)) { shown = value } }
+    }
+}
+
+struct CountingInt: View, Animatable {
+    var value: Double
+    var animatableData: Double {
+        get { value }
+        set { value = newValue }
+    }
+
+    var body: some View {
+        Text(Int(value.rounded()).formatted(.number))
+            .monospacedDigit()
+    }
+}
