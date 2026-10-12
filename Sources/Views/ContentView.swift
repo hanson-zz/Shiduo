@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var store: LibraryStore
+    @EnvironmentObject private var license: LicenseManager
 
     var body: some View {
         NavigationSplitView {
@@ -17,7 +18,13 @@ struct ContentView: View {
                 return
             }
             QuickSearchController.shared.configure(store: store)
+            CleanupReminder.shared.configure(store: store)
             if !UserDefaults.standard.bool(forKey: "onboardingDone") { store.showOnboarding = true }
+            // 拾掇 Pro：最多每 24 小时联网校验一次授权（不挡住首页加载）；之后马上自动整理一次，再每 10 分钟一次。
+            Task { @MainActor in
+                await license.revalidateIfNeeded()
+                store.organizer.start()
+            }
             await store.refreshDashboard()
             await store.checkForUpdatesOnLaunch()
         }
@@ -26,6 +33,10 @@ struct ContentView: View {
                 store.searchText = text
                 store.submitSearch()
             })
+        }
+        .sheet(isPresented: $license.showPaywall) {
+            PaywallView()
+                .environmentObject(license)
         }
         .sheet(item: $store.ocrItem) { item in
             OCRSheet(item: item)
@@ -156,6 +167,12 @@ struct DetailView: View {
                 BrowserView(title: "\(app.name)文件", showsOCRTools: false, chatApp: app)
             case .pinned(let path):
                 BrowserView(title: FileManager.default.displayName(atPath: path), showsOCRTools: false)
+            case .autoOrganize:
+                AutoOrganizeView()
+                    .proGated(.autoOrganize)
+            case .volume(let path):
+                BrowserView(title: FileManager.default.displayName(atPath: path), showsOCRTools: false)
+                    .proGated(.volumes)
             }
         }
     }

@@ -14,6 +14,10 @@ enum SidebarItem: Hashable {
     case tag(String)
     case storageMap
     case pinned(String)
+    /// Pro：自动整理规则。
+    case autoOrganize
+    /// Pro：外接磁盘（路径是挂载点）。
+    case volume(String)
 }
 
 enum DuplicatesTab: String, Hashable {
@@ -66,6 +70,8 @@ final class LibraryStore: ObservableObject {
             guard oldValue != selection else { return }
             activeQuery = nil
             searchText = ""
+            photoConcept = nil
+            lockedPhotoConcept = nil
             cleanupReview = nil
             if selection == .similarPhotos { duplicatesTab = .similar }
             if selection == .duplicates { duplicatesTab = .exact }
@@ -102,6 +108,12 @@ final class LibraryStore: ObservableObject {
 
     @Published var searchText = ""
     @Published var activeQuery: SearchQuery?
+    /// Pro：搜索词里认出的画面概念（「画面：猫」），结果里会加上画面符合的照片。
+    @Published var photoConcept: PhotoConcept?
+    /// 不是 Pro 时认出的画面概念：只显示一个「Pro：按画面内容搜索」的提示。
+    @Published var lockedPhotoConcept: PhotoConcept?
+    /// 用户点 × 去掉了画面条件，这次搜索不再加。
+    private var photoConceptRemoved = false
 
     @Published var selectedIDs: Set<String> = []
     @Published var showInspector = false
@@ -124,9 +136,16 @@ final class LibraryStore: ObservableObject {
     let player = MusicPlayer()
     let updater = Updater()
     let chat = ChatFilesStore.shared
+    // 拾掇 Pro
+    let license = LicenseManager.shared
+    let organizer = AutoOrganizer()
+    let volumes = VolumeMonitor()
+    let photos = PhotoContentStore()
 
     var libraryBytes: Int64 { totals.values.reduce(0) { $0 + $1.bytes } }
 
+    private var reminderScheduled = false
+    private var photosQueued = false
     private var known: [String: FileItem] = [:]
     private var loadTask: Task<Void, Never>?
 
@@ -161,7 +180,7 @@ final class LibraryStore: ObservableObject {
         case .home:
             await refreshDashboard()
             return
-        case .duplicates, .similarPhotos, .cleanup, .storageMap:
+        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize:
             items = []
             return
         default:
@@ -177,6 +196,7 @@ final class LibraryStore: ObservableObject {
         case .downloads: result = await Queries.downloaded()
         case .pinned(let path): result = await Queries.folder(path)
         case .tag(let name): result = await Queries.tagged(name)
+        case .volume(let path): result = await Queries.folder(path)
         case .chat(let app):
             result = await chat.items(for: app)
             cleanup.updateChatCard()
@@ -235,6 +255,17 @@ final class LibraryStore: ObservableObject {
         } else {
             cleanup.updateChatCard()
         }
+        // Pro：清理提醒里的「本周可腾出 X GB」用最新的扫描结果；后台识别近期照片的画面。
+        // 每次启动各做一次（回到首页也会调用 refreshDashboard）。
+        if !reminderScheduled {
+            reminderScheduled = true
+            await CleanupReminder.shared.reschedule()
+        }
+        if license.isPro && !photosQueued {
+            photosQueued = true
+            let images = await Queries.recentImages(limit: PhotoContentStore.limit)
+            photos.autoClassify(images)
+        }
     }
 
     func openDownloads(source: String?) {
@@ -252,6 +283,7 @@ final class LibraryStore: ObservableObject {
         }
         let query = QueryParser().parse(text)
         activeQuery = query.isEmpty ? SearchQuery(text: text) : query
+        photoConceptRemoved = false
         runSearch()
     }
 
@@ -268,9 +300,17 @@ final class LibraryStore: ObservableObject {
     }
 
     func clearSearch() {
+        photoConcept = nil
+        lockedPhotoConcept = nil
         guard activeQuery != nil else { return }
         activeQuery = nil
         reload()
+    }
+
+    /// 去掉「画面：猫」这个条件。
+    func removePhotoConcept() {
+        photoConceptRemoved = true
+        runSearch()
     }
 
     private func runSearch() {
@@ -279,6 +319,11 @@ final class LibraryStore: ObservableObject {
         selectedIDs = []
         items = []
         isLoading = true
+        // 画面内容（Pro）：「猫」「海边的照片」。
+        let concept = photoConceptRemoved ? nil : PhotoConcepts.match(query.text)
+        photoConcept = license.isPro ? concept : nil
+        lockedPhotoConcept = license.isPro ? nil : concept
+        let activeConcept = photoConcept
         loadTask = Task {
             var result = await Queries.search(query)
             // 截图里识别出的文字也能搜到。
@@ -288,6 +333,15 @@ final class LibraryStore: ObservableObject {
                     .filter { !existing.contains($0) && FileManager.default.fileExists(atPath: $0) }
                     .compactMap { FileItem(url: URL(fileURLWithPath: $0)) }
                     .filter { query.matchesFilters($0) }
+                result.append(contentsOf: extra)
+            }
+            if let activeConcept {
+                let existing = Set(result.map(\.path))
+                let extra = photos.paths(matching: activeConcept)
+                    .filter { !existing.contains($0) && FileManager.default.fileExists(atPath: $0) }
+                    .compactMap { FileItem(url: URL(fileURLWithPath: $0)) }
+                    .filter { query.matchesFilters($0) }
+                    .sorted { $0.sortDate > $1.sortDate }
                 result.append(contentsOf: extra)
             }
             guard !Task.isCancelled else { return }

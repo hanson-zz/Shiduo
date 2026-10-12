@@ -4,6 +4,9 @@ import SwiftUI
 struct ShiduoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var store = LibraryStore()
+    @StateObject private var license = LicenseManager.shared
+    /// Pro：菜单栏小助手（设置里打开，默认关闭）。
+    @AppStorage("menuBarEnabled") private var menuBarEnabled = false
 
     var body: some Scene {
         WindowGroup("拾掇") {
@@ -16,6 +19,10 @@ struct ShiduoApp: App {
                 .environmentObject(store.player)
                 .environmentObject(store.updater)
                 .environmentObject(store.chat)
+                .environmentObject(store.license)
+                .environmentObject(store.organizer)
+                .environmentObject(store.volumes)
+                .environmentObject(store.photos)
                 .frame(minWidth: 960, minHeight: 600)
         }
         .commands {
@@ -71,7 +78,24 @@ struct ShiduoApp: App {
                 .environmentObject(store)
                 .environmentObject(store.ocr)
                 .environmentObject(store.updater)
+                .environmentObject(store.license)
+                .environmentObject(store.photos)
         }
+
+        MenuBarExtra("拾掇", systemImage: "tray.full", isInserted: menuBarInserted) {
+            MenuBarContent()
+                .environmentObject(store)
+                .environmentObject(store.license)
+        }
+        .menuBarExtraStyle(.window)
+    }
+
+    /// 只有打开了开关、并且是 Pro（含试用）时才显示在菜单栏。
+    private var menuBarInserted: Binding<Bool> {
+        Binding(
+            get: { menuBarEnabled && license.isPro },
+            set: { menuBarEnabled = $0 }
+        )
     }
 }
 

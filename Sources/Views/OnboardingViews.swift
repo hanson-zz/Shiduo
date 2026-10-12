@@ -128,7 +128,7 @@ struct OnboardingView: View {
                       size: 72)
             Text(granted ? "已获得完全磁盘访问权限" : "开启完全磁盘访问权限")
                 .font(.system(size: 26, weight: .bold, design: .rounded))
-            Text("微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，拾掇不联网上传任何东西。")
+            Text("微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，文件从不上传；拾掇只在检查更新和激活授权时联网。")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 460)

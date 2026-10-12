@@ -9,7 +9,7 @@ struct UpdateInfo: Identifiable, Equatable {
     let zipURL: URL?
 }
 
-/// 检查更新。这是拾掇唯一会联网的地方：只访问 GitHub 上本项目的 Release。
+/// 检查更新：只访问 GitHub 上本项目的 Release。拾掇另外只在激活 / 校验 Pro 授权时联网（见 Sources/Pro/License.swift）。
 enum UpdateChecker {
     static let repoURL = URL(string: "https://github.com/hanson-zz/Shiduo")!
     static let apiURL = URL(string: "https://api.github.com/repos/hanson-zz/Shiduo/releases/latest")!

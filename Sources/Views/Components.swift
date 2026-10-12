@@ -101,6 +101,42 @@ struct ChipBar: View {
                     .padding(.vertical, 5)
                     .background(Capsule().fill(Color.accentColor.opacity(0.14)))
                 }
+                // 拾掇 Pro：按画面内容搜索。
+                if let concept = store.photoConcept {
+                    HStack(spacing: 5) {
+                        Image(systemName: "eye")
+                        Text("画面：\(concept.word)")
+                        Button {
+                            store.removePhotoConcept()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("不按画面内容搜索")
+                    }
+                    .font(.callout)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(Color.pink.opacity(0.14)))
+                    .help("在本机识别过的照片里，画面有「\(concept.word)」的也会列出来")
+                } else if store.lockedPhotoConcept != nil {
+                    Button {
+                        store.license.showPaywall = true
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "lock.fill")
+                            Text("Pro：按画面内容搜索")
+                        }
+                        .font(.callout)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Capsule().strokeBorder(Color.orange.opacity(0.6), lineWidth: 1))
+                        .foregroundStyle(.orange)
+                    }
+                    .buttonStyle(.plain)
+                    .help("拾掇 Pro 可以按照片画面搜索，比如「猫」「海边」「收据」")
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)

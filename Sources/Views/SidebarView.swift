@@ -5,6 +5,7 @@ struct SidebarView: View {
     @EnvironmentObject private var cleanup: CleanupScanner
     @EnvironmentObject private var duplicates: DuplicateScanner
     @EnvironmentObject private var chat: ChatFilesStore
+    @EnvironmentObject private var license: LicenseManager
 
     /// 常用位置，和访达侧边栏一样。
     private struct Location: Identifiable {
@@ -87,6 +88,13 @@ struct SidebarView: View {
                     .tag(SidebarItem.similarPhotos)
                 Label("空间占用图", systemImage: "square.grid.3x3.square")
                     .tag(SidebarItem.storageMap)
+                HStack {
+                    Label("自动整理", systemImage: "wand.and.stars")
+                    Spacer()
+                    ProBadge()
+                        .opacity(license.isPro ? 0.55 : 1)
+                }
+                .tag(SidebarItem.autoOrganize)
             }
 
             if !chat.installedApps.isEmpty {
@@ -115,6 +123,8 @@ struct SidebarView: View {
                     .tag(SidebarItem.pinned(location.path))
                 }
             }
+
+            VolumesSidebarSection()
 
             Section("标签") {
                 ForEach(FinderTag.colorTags) { tag in
