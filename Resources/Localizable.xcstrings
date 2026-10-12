@@ -27,6 +27,12 @@
             "state": "translated",
             "value": " · Last run %@"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · 上次 %@"
+          }
         }
       }
     },
@@ -73,6 +79,12 @@
             "state": "translated",
             "value": "%@ items"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 个项目"
+          }
         }
       }
     },
@@ -82,6 +94,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ available"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 可用"
           }
         }
       }
@@ -93,6 +111,12 @@
             "state": "translated",
             "value": "%@ downloaded. It installs when you quit Shiduo."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 已下载，退出拾掇时自动安装"
+          }
         }
       }
     },
@@ -102,6 +126,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ is already used by another app. Please pick a different shortcut."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 已被其他 App 占用，请换一个快捷键。"
           }
         }
       }
@@ -113,6 +143,12 @@
             "state": "translated",
             "value": "Shot on %@"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 拍摄"
+          }
         }
       }
     },
@@ -123,6 +159,12 @@
             "state": "translated",
             "value": "Over %@ ago"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@以前"
+          }
         }
       }
     },
@@ -132,6 +174,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ Files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@文件"
           }
         }
       }
@@ -286,6 +334,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件会改名，扩展名保持不变"
+          }
         }
       }
     },
@@ -308,6 +362,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件没能改名（可能被占用或没有权限）："
+          }
         }
       }
     },
@@ -329,6 +389,12 @@
                 }
               }
             }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个月"
           }
         }
       }
@@ -410,6 +476,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个结果"
+          }
         }
       }
     },
@@ -431,6 +503,12 @@
                 }
               }
             }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个项目"
           }
         }
       }
@@ -491,6 +569,12 @@
                 }
               }
             }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个项目只在 iCloud 云端或已不存在，已跳过。"
           }
         }
       }
@@ -628,6 +712,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 周"
+          }
         }
       }
     },
@@ -649,6 +739,12 @@
                 }
               }
             }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 天"
           }
         }
       }
@@ -672,6 +768,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 字"
+          }
         }
       }
     },
@@ -693,6 +795,12 @@
                 }
               }
             }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 年"
           }
         }
       }
@@ -792,6 +900,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 张相似的照片"
+          }
         }
       }
     },
@@ -801,6 +915,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Month %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 月"
           }
         }
       }
@@ -823,6 +943,12 @@
                 }
               }
             }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 页"
           }
         }
       }
@@ -855,6 +981,12 @@
             "state": "translated",
             "value": "Files larger than 200 MB"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "200 MB 以上的文件"
+          }
         }
       }
     },
@@ -864,6 +996,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Screenshots taken more than 30 days ago"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 天以前拍的截图"
           }
         }
       }
@@ -875,6 +1013,12 @@
             "state": "translated",
             "value": "screenshots older than 3 months"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3个月前的截图"
+          }
         }
       }
     },
@@ -884,6 +1028,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your 7-day trial has ended. Upgrade to Shiduo Pro to keep using this."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 天试用已经结束。升级到拾掇 Pro 就能继续使用。"
           }
         }
       }
@@ -898,6 +1048,12 @@
             "state": "translated",
             "value": "Apple silicon"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple 芯片"
+          }
         }
       }
     },
@@ -907,6 +1063,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Documents/Downloaded PDFs"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Documents/下载的 PDF"
           }
         }
       }
@@ -921,6 +1083,12 @@
             "state": "translated",
             "value": "Google Drive"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google 云端硬盘"
+          }
         }
       }
     },
@@ -931,6 +1099,12 @@
             "state": "translated",
             "value": "HEIC and JPEG pair"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HEIC 和 JPEG 成对"
+          }
         }
       }
     },
@@ -940,6 +1114,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "MIT open source · Pro features need a license"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIT 开源 · Pro 功能需授权"
           }
         }
       }
@@ -966,6 +1146,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro 试用中，还剩 %lld 天"
+          }
         }
       }
     },
@@ -976,6 +1162,12 @@
             "state": "translated",
             "value": "Pro: search by what’s in photos"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro：按画面内容搜索"
+          }
         }
       }
     },
@@ -985,6 +1177,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "QQ Mail"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QQ 邮箱"
           }
         }
       }
@@ -1076,6 +1274,12 @@
             "state": "translated",
             "value": "wifi password screenshot"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wifi 密码截图"
+          }
         }
       }
     },
@@ -1092,6 +1296,12 @@
             "state": "translated",
             "value": "“pdfs over 5MB last week”, “images from wechat”"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“上周超过5MB的pdf”“来自微信的图片”"
+          }
         }
       }
     },
@@ -1101,6 +1311,12 @@
           "stringUnit": {
             "state": "translated",
             "value": ".dmg and .pkg installers in Downloads and on the Desktop for more than 7 days"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包"
           }
         }
       }
@@ -1112,6 +1328,12 @@
             "state": "translated",
             "value": "Files in Downloads for over 30 days that you haven’t opened since"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“下载”里放了 30 天以上、之后再没打开过的文件"
+          }
         }
       }
     },
@@ -1121,6 +1343,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Third-party apps in Applications you haven’t opened in 6 months"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“应用程序”里半年以上没打开过的第三方应用"
           }
         }
       }
@@ -1135,6 +1363,12 @@
             "state": "translated",
             "value": "← → Previous / Next"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "← → 上一张 / 下一张"
+          }
         }
       }
     },
@@ -1144,6 +1378,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "↩ Open"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↩ 打开"
           }
         }
       }
@@ -1155,6 +1395,12 @@
             "state": "translated",
             "value": "⇧⌥ Space"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⇧⌥ 空格"
+          }
         }
       }
     },
@@ -1164,6 +1410,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "⌃⌥ Space"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌃⌥ 空格"
           }
         }
       }
@@ -1175,6 +1427,12 @@
             "state": "translated",
             "value": "⌘↩ Show in Finder"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘↩ 在访达中显示"
+          }
         }
       }
     },
@@ -1185,6 +1443,12 @@
             "state": "translated",
             "value": "⌥ Space"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥ 空格"
+          }
         }
       }
     },
@@ -1194,6 +1458,12 @@
           "stringUnit": {
             "state": "translated",
             "value": ", "
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "、"
           }
         }
       }
@@ -1221,6 +1491,12 @@
             "state": "translated",
             "value": "All set. WeChat / QQ files and the storage map now work fully."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一切就绪，微信 / QQ 专区和占用图都能完整工作了"
+          }
         }
       }
     },
@@ -1230,6 +1506,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Back"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一步"
           }
         }
       }
@@ -1241,6 +1523,12 @@
             "state": "translated",
             "value": "Previous (⌘←)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一首（⌘←）"
+          }
         }
       }
     },
@@ -1250,6 +1538,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last month"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上个月"
           }
         }
       }
@@ -1261,6 +1555,12 @@
             "state": "translated",
             "value": "Last week"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上周"
+          }
         }
       }
     },
@@ -1270,6 +1570,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "pdfs over 5MB last week"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上周超过5MB的pdf"
           }
         }
       }
@@ -1281,6 +1587,12 @@
             "state": "translated",
             "value": "Last opened"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次打开"
+          }
         }
       }
     },
@@ -1290,6 +1602,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last verified"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次校验"
           }
         }
       }
@@ -1301,6 +1619,12 @@
             "state": "translated",
             "value": "Next (⌘→)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一首（⌘→）"
+          }
         }
       }
     },
@@ -1310,6 +1634,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Good afternoon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下午好"
           }
         }
       }
@@ -1321,6 +1651,12 @@
             "state": "translated",
             "value": "Downloads"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载"
+          }
         }
       }
     },
@@ -1330,6 +1666,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Installers, screenshots and invoices in Downloads go where they belong"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载文件夹里的安装包、截图、发票自动归位"
           }
         }
       }
@@ -1341,6 +1683,12 @@
             "state": "translated",
             "value": "Couldn’t download the update"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载更新失败"
+          }
         }
       }
     },
@@ -1350,6 +1698,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Downloaded From"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载来源"
           }
         }
       }
@@ -1361,6 +1715,12 @@
             "state": "translated",
             "value": "Move downloaded PDFs to Documents"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载的 PDF 归到文稿"
+          }
         }
       }
     },
@@ -1370,6 +1730,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Downloaded files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载的文件"
           }
         }
       }
@@ -1381,6 +1747,12 @@
             "state": "translated",
             "value": "The downloaded update is incomplete"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载的更新包不完整"
+          }
         }
       }
     },
@@ -1390,6 +1762,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No cloud"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不上云"
           }
         }
       }
@@ -1401,6 +1779,12 @@
             "state": "translated",
             "value": "No uploads"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不上传"
+          }
         }
       }
     },
@@ -1410,6 +1794,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing is deleted outright. Everything goes to the Trash, so you can put it back anytime."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不会直接删除，都进废纸篓，随时可以放回原处。"
           }
         }
       }
@@ -1421,6 +1811,12 @@
             "state": "translated",
             "value": "Nothing is deleted outright. Everything goes to the Trash, so you can put it back anytime. Files that are only in iCloud are skipped."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。"
+          }
         }
       }
     },
@@ -1430,6 +1826,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apps you rarely use"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不常用的应用"
           }
         }
       }
@@ -1441,6 +1843,12 @@
             "state": "translated",
             "value": "Don’t search by photo content"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不按画面内容搜索"
+          }
         }
       }
     },
@@ -1450,6 +1858,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Any"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不限"
           }
         }
       }
@@ -1461,6 +1875,12 @@
             "state": "translated",
             "value": "Any age"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不限时间"
+          }
         }
       }
     },
@@ -1470,6 +1890,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Strict"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "严格"
           }
         }
       }
@@ -1481,6 +1907,12 @@
             "state": "translated",
             "value": "Home Folder"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人文件夹"
+          }
         }
       }
     },
@@ -1490,6 +1922,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个文件"
           }
         }
       }
@@ -1501,6 +1939,12 @@
             "state": "translated",
             "value": "files, %@ in total, each kind on its own shelf"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个文件，共 %@，每一类都有自己的货架"
+          }
         }
       }
     },
@@ -1510,6 +1954,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Good afternoon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中午好"
           }
         }
       }
@@ -1521,6 +1971,12 @@
             "state": "translated",
             "value": "Learn About Shiduo Pro"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "了解拾掇 Pro"
+          }
         }
       }
     },
@@ -1530,6 +1986,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Today"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天"
           }
         }
       }
@@ -1541,6 +2003,12 @@
             "state": "translated",
             "value": "This year"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今年"
+          }
         }
       }
     },
@@ -1550,6 +2018,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "photos this year"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今年的照片"
           }
         }
       }
@@ -1561,6 +2035,12 @@
             "state": "translated",
             "value": "Start at %lld"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从 %lld 开始"
+          }
         }
       }
     },
@@ -1570,6 +2050,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Never opened, or no record"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从未打开或无记录"
           }
         }
       }
@@ -1581,6 +2067,12 @@
             "state": "translated",
             "value": "Files you download from browsers, email and cloud drives remember where they came from. They’re grouped by source here."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从浏览器、邮箱、网盘下载的文件会记下来源，这里按来源分组显示。"
+          }
         }
       }
     },
@@ -1590,6 +2082,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "as List"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以列表显示"
           }
         }
       }
@@ -1601,6 +2099,12 @@
             "state": "translated",
             "value": "Later"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以后再说"
+          }
         }
       }
     },
@@ -1610,6 +2114,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "as Icons"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以图标显示"
           }
         }
       }
@@ -1621,6 +2131,12 @@
             "state": "translated",
             "value": "Digits"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "位数"
+          }
         }
       }
     },
@@ -1630,6 +2146,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Where"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "位置"
           }
         }
       }
@@ -1641,6 +2163,12 @@
             "state": "translated",
             "value": "Your files stay on this Mac"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的文件只留在这台 Mac 上"
+          }
         }
       }
     },
@@ -1650,6 +2178,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "e.g. dmg, pkg"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例如 dmg, pkg"
           }
         }
       }
@@ -1661,6 +2195,12 @@
             "state": "translated",
             "value": "e.g. invoice"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例如 发票"
+          }
         }
       }
     },
@@ -1670,6 +2210,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
           }
         }
       }
@@ -1681,6 +2227,12 @@
             "state": "translated",
             "value": "Save to"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存到"
+          }
         }
       }
     },
@@ -1691,6 +2243,12 @@
             "state": "translated",
             "value": "Original size"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保持原尺寸"
+          }
         }
       }
     },
@@ -1700,6 +2258,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keep"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留"
           }
         }
       }
@@ -1727,6 +2291,12 @@
             "state": "translated",
             "value": "Date Modified"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改日期"
+          }
         }
       }
     },
@@ -1736,6 +2306,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modified"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改时间"
           }
         }
       }
@@ -1747,6 +2323,12 @@
             "state": "translated",
             "value": "Stop"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止"
+          }
         }
       }
     },
@@ -1756,6 +2338,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Search the way you talk"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "像说话一样搜索"
           }
         }
       }
@@ -1767,6 +2355,12 @@
             "state": "translated",
             "value": "Free"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费版"
+          }
         }
       }
     },
@@ -1776,6 +2370,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Global quick search"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全局快速搜索"
           }
         }
       }
@@ -1787,6 +2387,12 @@
             "state": "translated",
             "value": "Select All"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全选"
+          }
         }
       }
     },
@@ -1796,6 +2402,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "All"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部"
           }
         }
       }
@@ -1807,6 +2419,12 @@
             "state": "translated",
             "value": "All Sources"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部来源"
+          }
         }
       }
     },
@@ -1816,6 +2434,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "All Sources (%lld)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部来源（%lld）"
           }
         }
       }
@@ -1827,6 +2451,12 @@
             "state": "translated",
             "value": "Move All to Trash"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部移到废纸篓"
+          }
         }
       }
     },
@@ -1836,6 +2466,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ total"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共 %@"
           }
         }
       }
@@ -1847,6 +2483,12 @@
             "state": "translated",
             "value": "About"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于"
+          }
         }
       }
     },
@@ -1856,6 +2498,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "About Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于拾掇"
           }
         }
       }
@@ -1867,6 +2515,12 @@
             "state": "translated",
             "value": "Shiduo keeps running after you close its window, so the shortcut always works. Drag results straight into Mail, Messages or any app."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。"
+          }
         }
       }
     },
@@ -1876,6 +2530,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close (Esc or Space)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭（Esc 或空格）"
           }
         }
       }
@@ -1887,6 +2547,12 @@
             "state": "translated",
             "value": "Other sources"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他来源"
+          }
         }
       }
     },
@@ -1896,6 +2562,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Other Websites"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他网站"
           }
         }
       }
@@ -1907,6 +2579,12 @@
             "state": "translated",
             "value": "Share with Friends"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享给朋友"
+          }
         }
       }
     },
@@ -1916,6 +2594,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "List"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "列表"
           }
         }
       }
@@ -1927,6 +2611,12 @@
             "state": "translated",
             "value": "Shiduo not in the list? Click +, then choose Shiduo in Applications"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "列表里没有拾掇？点 + 号，到「应用程序」里选择拾掇"
+          }
         }
       }
     },
@@ -1936,6 +2626,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Created"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创建时间"
           }
         }
       }
@@ -1947,6 +2643,12 @@
             "state": "translated",
             "value": "Delete rule"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除规则"
+          }
         }
       }
     },
@@ -1956,6 +2658,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Refresh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新"
           }
         }
       }
@@ -1967,6 +2675,12 @@
             "state": "translated",
             "value": "Day before yesterday"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前天"
+          }
         }
       }
     },
@@ -1976,6 +2690,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Go"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前往"
           }
         }
       }
@@ -1987,6 +2707,12 @@
             "state": "translated",
             "value": "Download"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前往下载"
+          }
         }
       }
     },
@@ -1996,6 +2722,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prefix"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前缀"
           }
         }
       }
@@ -2007,6 +2739,12 @@
             "state": "translated",
             "value": "Free space, recent downloads and quick search, one click away"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剩余空间、最近下载、快速搜索，一点就到"
+          }
         }
       }
     },
@@ -2016,6 +2754,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add prefix / suffix"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加前缀 / 后缀"
           }
         }
       }
@@ -2027,6 +2771,12 @@
             "state": "translated",
             "value": "Action"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动作"
+          }
         }
       }
     },
@@ -2036,6 +2786,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Over 6 months ago"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "半年以前"
           }
         }
       }
@@ -2047,6 +2803,12 @@
             "state": "translated",
             "value": "Archives"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩包"
+          }
         }
       }
     },
@@ -2056,6 +2818,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原名"
           }
         }
       }
@@ -2067,6 +2835,12 @@
             "state": "translated",
             "value": "Original and edited"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原图和编辑版"
+          }
         }
       }
     },
@@ -2076,6 +2850,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Next to the original"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原文件旁边"
           }
         }
       }
@@ -2087,6 +2867,12 @@
             "state": "translated",
             "value": "Star on GitHub"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去 GitHub 点星"
+          }
         }
       }
     },
@@ -2097,6 +2883,12 @@
             "state": "translated",
             "value": "Last year"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去年"
+          }
         }
       }
     },
@@ -2106,6 +2898,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove this filter"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去掉这个条件"
           }
         }
       }
@@ -2129,6 +2927,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发现 %lld 组相似照片"
+          }
         }
       }
     },
@@ -2151,6 +2955,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发现 %lld 组重复文件"
+          }
         }
       }
     },
@@ -2160,6 +2970,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send Feedback…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送反馈…"
           }
         }
       }
@@ -2171,6 +2987,12 @@
             "state": "translated",
             "value": "Cancel"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
+          }
         }
       }
     },
@@ -2180,6 +3002,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deselect All"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消全选"
           }
         }
       }
@@ -2191,6 +3019,12 @@
             "state": "translated",
             "value": "Unpin"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消固定"
+          }
         }
       }
     },
@@ -2200,6 +3034,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Files are only moved, never overwritten: a number is added if the name is taken. Files that are only in iCloud are skipped. Anything moved to the Trash can be put back anytime."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只移动、不覆盖：同名文件会自动加编号；只在 iCloud 云端的文件会跳过。移到废纸篓的随时可以放回。"
           }
         }
       }
@@ -2211,6 +3051,12 @@
             "state": "translated",
             "value": "Select text with the mouse and Control-click to copy. Phone numbers, links and email addresses are clickable."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点"
+          }
         }
       }
     },
@@ -2220,6 +3066,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Drag into any app"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可直接拖到其他 App"
           }
         }
       }
@@ -2231,6 +3083,12 @@
             "state": "translated",
             "value": "%@ to free up"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可腾出 %@"
+          }
         }
       }
     },
@@ -2240,6 +3098,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Control-click a link to copy it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右键点击链接可以拷贝。"
           }
         }
       }
@@ -2251,6 +3115,12 @@
             "state": "translated",
             "value": "Name"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名称"
+          }
         }
       }
     },
@@ -2260,6 +3130,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Name + number"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名称 + 序号"
           }
         }
       }
@@ -2271,6 +3147,12 @@
             "state": "translated",
             "value": "Name contains “%@”"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名称含「%@」"
+          }
         }
       }
     },
@@ -2280,6 +3162,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Name, e.g. “Trip”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名称，例如“旅行”"
           }
         }
       }
@@ -2291,6 +3179,12 @@
             "state": "translated",
             "value": "Suffix"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后缀"
+          }
         }
       }
     },
@@ -2300,6 +3194,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Startup Disk"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动磁盘"
           }
         }
       }
@@ -2311,6 +3211,12 @@
             "state": "translated",
             "value": "Enabled"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用"
+          }
         }
       }
     },
@@ -2320,6 +3226,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Monday"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周一"
           }
         }
       }
@@ -2331,6 +3243,12 @@
             "state": "translated",
             "value": "Wednesday"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周三"
+          }
         }
       }
     },
@@ -2340,6 +3258,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tuesday"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周二"
           }
         }
       }
@@ -2351,6 +3275,12 @@
             "state": "translated",
             "value": "Friday"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周五"
+          }
         }
       }
     },
@@ -2360,6 +3290,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saturday"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周六"
           }
         }
       }
@@ -2371,6 +3307,12 @@
             "state": "translated",
             "value": "Thursday"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周四"
+          }
         }
       }
     },
@@ -2380,6 +3322,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sunday"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周日"
           }
         }
       }
@@ -2391,6 +3339,12 @@
             "state": "translated",
             "value": "Bilibili"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "哔哩哔哩"
+          }
         }
       }
     },
@@ -2400,6 +3354,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pin"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定"
           }
         }
       }
@@ -2411,6 +3371,12 @@
             "state": "translated",
             "value": "Pin a folder"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定一个文件夹"
+          }
         }
       }
     },
@@ -2420,6 +3386,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pin Enclosing Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定所在文件夹"
           }
         }
       }
@@ -2431,6 +3403,12 @@
             "state": "translated",
             "value": "Pinned Folders"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定文件夹"
+          }
         }
       }
     },
@@ -2440,6 +3418,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pin Folder…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定文件夹…"
           }
         }
       }
@@ -2451,6 +3435,12 @@
             "state": "translated",
             "value": "Text in image"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图中文字"
+          }
         }
       }
     },
@@ -2460,6 +3450,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Icons"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图标"
           }
         }
       }
@@ -2471,6 +3467,12 @@
             "state": "translated",
             "value": "Images"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片"
+          }
         }
       }
     },
@@ -2480,6 +3482,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Star on GitHub"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 GitHub 上星标"
           }
         }
       }
@@ -2491,6 +3499,12 @@
             "state": "translated",
             "value": "View Source Code on GitHub"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 GitHub 上查看源代码"
+          }
         }
       }
     },
@@ -2500,6 +3514,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Turn on Shiduo in the Full Disk Access list"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在「完全磁盘访问权限」列表里打开「拾掇」的开关"
           }
         }
       }
@@ -2511,6 +3531,12 @@
             "state": "translated",
             "value": "Open Shiduo search from any app with a shortcut"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在任何 App 里按快捷键弹出拾掇搜索框"
+          }
         }
       }
     },
@@ -2520,6 +3546,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Press the shortcut in any app to open Shiduo’s search panel, or press ⌘F in the window. Try these:"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在任何应用里按下快捷键，弹出拾掇的搜索浮窗；窗口里按 ⌘F。试试这些："
           }
         }
       }
@@ -2531,6 +3563,12 @@
             "state": "translated",
             "value": "Browse external and USB drives right in the sidebar"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在侧边栏里直接浏览移动硬盘、U 盘"
+          }
         }
       }
     },
@@ -2540,6 +3578,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "See All Results in Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在拾掇中查看全部结果"
           }
         }
       }
@@ -2551,6 +3595,12 @@
             "state": "translated",
             "value": "Photos analyzed on this Mac that show “%@” are listed too"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在本机识别过的照片里，画面有「%@」的也会列出来"
+          }
         }
       }
     },
@@ -2560,6 +3610,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recognize text in all images here on this Mac (up to 500), so you can filter and search by it"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索"
           }
         }
       }
@@ -2571,6 +3627,12 @@
             "state": "translated",
             "value": "Show Shiduo in the menu bar (free space, recent downloads, quick search)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）"
+          }
         }
       }
     },
@@ -2580,6 +3642,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中显示"
           }
         }
       }
@@ -2591,6 +3659,12 @@
             "state": "translated",
             "value": "Show Shiduo in Finder"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中显示拾掇"
+          }
         }
       }
     },
@@ -2600,6 +3674,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "External Drives"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外接磁盘"
           }
         }
       }
@@ -2611,6 +3691,12 @@
             "state": "translated",
             "value": "Extra copies: %@"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多出 %@ 份"
+          }
         }
       }
     },
@@ -2620,6 +3706,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "archives over 100MB"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大于100MB的压缩包"
           }
         }
       }
@@ -2631,6 +3723,12 @@
             "state": "translated",
             "value": "Hi, I'm Hanson 👋\n\nI love making small, handy tools for the Mac 💻, and Shiduo is one of them. The core features are free and open source. It never goes online except to check for updates and activate a license, and it collects no data. It just wants to help you find files faster and keep things tidy 🧹.\n\nI build it in the evenings and on weekends. My hope is to have more time to polish it, fix more bugs, add the features people really want 🚀, and keep making more useful open-source tools 🌱.\n\nIf Shiduo has saved you time or freed up some space, feel free to buy me a coffee ☕. The amount doesn't matter. Every bit of support means you trust what I'm doing. And if sponsoring isn't for you, that's completely fine. Sharing it with a friend or starring it on GitHub means just as much to me 💖.\n\nThank you.\n\nBest,\nHanson"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大家好，我是 Hanson 👋\n\n我喜欢给 Mac 💻 做一些小而顺手的工具。拾掇就是其中之一：基础功能完全免费、开源，除了检查更新和激活授权从不联网、不收集任何数据，只想帮你把文件找得更快、理得更清爽 🧹。\n\n做它用的是下班和周末的时间。我的愿望是能有更多时间把它打磨好，修更多 bug，加大家真正想要的功能 🚀，也继续做更多有用的开源小工具 🌱。\n\n如果拾掇帮你省了时间、腾出了空间，欢迎请我喝杯咖啡 ☕。金额不重要，每一份支持都是对我的信任和鼓励。不方便赞助也完全没关系，分享给朋友、在 GitHub 上点个星，对我同样意义重大 💖。\n\n谢谢你。\n\n此致，\nHanson"
+          }
         }
       }
     },
@@ -2640,6 +3738,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Size"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大小"
           }
         }
       }
@@ -2651,6 +3755,12 @@
             "state": "translated",
             "value": "Large Files"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大文件"
+          }
         }
       }
     },
@@ -2660,6 +3770,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Big thumbnails, so you spot the one you want at a glance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大缩略图，一眼认出要找的那个"
           }
         }
       }
@@ -2671,6 +3787,12 @@
             "state": "translated",
             "value": "Quark Drive"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夸克网盘"
+          }
         }
       }
     },
@@ -2680,6 +3802,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "OK"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好"
           }
         }
       }
@@ -2691,6 +3819,12 @@
             "state": "translated",
             "value": "If macOS asks whether Shiduo may access data from other apps, click Allow.\nYou can also turn on Shiduo in System Settings › Privacy & Security › Full Disk Access, then click Rescan."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果系统询问“拾掇想访问其他 App 的数据”，请点“允许”。\n也可以在“系统设置 › 隐私与安全性 › 完全磁盘访问权限”里打开拾掇，然后点“重新扫描”。"
+          }
         }
       }
     },
@@ -2700,6 +3834,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Get space back safely: files only go to the Trash and can be put back anytime"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安全地拿回空间：只移到废纸篓，随时可以放回"
           }
         }
       }
@@ -2711,6 +3851,12 @@
             "state": "translated",
             "value": "Free up space safely"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安全地腾出空间"
+          }
         }
       }
     },
@@ -2720,6 +3866,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Installers"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装包"
           }
         }
       }
@@ -2731,6 +3883,12 @@
             "state": "translated",
             "value": "Identical"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全相同"
+          }
         }
       }
     },
@@ -2740,6 +3898,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Identical · checked by SHA-256 fingerprint"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全相同 · SHA-256 指纹校验"
           }
         }
       }
@@ -2751,6 +3915,12 @@
             "state": "translated",
             "value": "Exact copies, plus look-alike photos such as bursts, edited versions and HEIC/JPEG pairs"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全相同的副本，以及连拍、编辑版、HEIC/JPEG 成对这类看起来差不多的照片"
+          }
         }
       }
     },
@@ -2760,6 +3930,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Full Disk Access"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全磁盘访问权限"
           }
         }
       }
@@ -2771,6 +3947,12 @@
             "state": "translated",
             "value": "Done"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成"
+          }
         }
       }
     },
@@ -2781,6 +3963,12 @@
             "state": "translated",
             "value": "Cleanup reminders"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "定时清理提醒"
+          }
         }
       }
     },
@@ -2790,6 +3978,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loose"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "宽松"
           }
         }
       }
@@ -2813,6 +4007,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将 %lld 个多余的副本移到废纸篓？"
+          }
         }
       }
     },
@@ -2835,6 +4035,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将 %lld 个项目移到废纸篓？"
+          }
         }
       }
     },
@@ -2844,6 +4050,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move “%@” to the Trash?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将“%@”移到废纸篓？"
           }
         }
       }
@@ -2855,6 +4067,12 @@
             "state": "translated",
             "value": "RedNote"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小红书"
+          }
         }
       }
     },
@@ -2864,6 +4082,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dimensions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尺寸"
           }
         }
       }
@@ -2875,6 +4099,12 @@
             "state": "translated",
             "value": "Stopped"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已停止"
+          }
         }
       }
     },
@@ -2884,6 +4114,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Removed the “%@” tag"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已去掉“%@”标签"
           }
         }
       }
@@ -2907,6 +4143,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在本机分析 %lld 张"
+          }
         }
       }
     },
@@ -2929,6 +4171,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在本机识别 %lld 张图片，识别后搜索就能搜到图里的字。结果只保存在这台 Mac 上。"
+          }
         }
       }
     },
@@ -2938,6 +4186,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "On"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已开启"
           }
         }
       }
@@ -2961,6 +4215,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已把 %lld 个副本移到废纸篓"
+          }
         }
       }
     },
@@ -2983,6 +4243,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已把 %lld 个项目移到废纸篓"
+          }
         }
       }
     },
@@ -2992,6 +4258,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copied"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拷贝"
           }
         }
       }
@@ -3015,6 +4287,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拷贝 %lld 个文件的文字"
+          }
         }
       }
     },
@@ -3037,6 +4315,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拷贝 %lld 张图片的文字"
+          }
         }
       }
     },
@@ -3046,6 +4330,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copied all text in the image"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拷贝图中全部文字"
           }
         }
       }
@@ -3057,6 +4347,12 @@
             "state": "translated",
             "value": "Undone"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已撤销"
+          }
         }
       }
     },
@@ -3066,6 +4362,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Moved to the Trash. You can restore it anytime."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已移到废纸篓，可随时恢复"
           }
         }
       }
@@ -3077,6 +4379,12 @@
             "state": "translated",
             "value": "All cleaned up"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经清理完了"
+          }
         }
       }
     },
@@ -3086,6 +4394,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Already bought it or got a redeem code? Enter it here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经购买或收到兑换码？在这里输入"
           }
         }
       }
@@ -3135,6 +4449,12 @@
             "state": "translated",
             "value": "Full Disk Access is on"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已获得完全磁盘访问权限"
+          }
         }
       }
     },
@@ -3156,6 +4476,12 @@
                 }
               }
             }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已识别 %lld 张图片"
           }
         }
       }
@@ -3233,6 +4559,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已重命名 %lld 个文件"
+          }
         }
       }
     },
@@ -3242,6 +4574,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apps and Services"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用和服务"
           }
         }
       }
@@ -3253,6 +4591,12 @@
             "state": "translated",
             "value": "Applications"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用程序"
+          }
         }
       }
     },
@@ -3262,6 +4606,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "废纸篓"
           }
         }
       }
@@ -3273,6 +4623,12 @@
             "state": "translated",
             "value": "Turn on Full Disk Access"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启完全磁盘访问权限"
+          }
         }
       }
     },
@@ -3282,6 +4638,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start %lld-Day Free Trial"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始 %lld 天免费试用"
           }
         }
       }
@@ -3293,6 +4655,12 @@
             "state": "translated",
             "value": "Get Started"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始使用"
+          }
         }
       }
     },
@@ -3302,6 +4670,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start Scan"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始扫描"
           }
         }
       }
@@ -3313,6 +4687,12 @@
             "state": "translated",
             "value": "Convert"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始转换"
+          }
         }
       }
     },
@@ -3322,6 +4702,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Current version %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前版本 %@"
           }
         }
       }
@@ -3333,6 +4719,12 @@
             "state": "translated",
             "value": "Big videos you haven’t watched in a while"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "很久没看的大视频"
+          }
         }
       }
     },
@@ -3342,6 +4734,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "WeChat"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "微信"
           }
         }
       }
@@ -3353,6 +4751,12 @@
             "state": "translated",
             "value": "Large WeChat / QQ files"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "微信 / QQ 大文件"
+          }
         }
       }
     },
@@ -3362,6 +4766,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "WeChat / QQ files and the storage map need to read folders in your Library. The permission is only used to read files on this Mac, and nothing is ever uploaded. Shiduo only goes online to check for updates and activate a license."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，文件从不上传；拾掇只在检查更新和激活授权时联网。"
           }
         }
       }
@@ -3373,6 +4783,12 @@
             "state": "translated",
             "value": "Weibo"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "微博"
+          }
         }
       }
     },
@@ -3382,6 +4798,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shortcut"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键"
           }
         }
       }
@@ -3393,6 +4815,12 @@
             "state": "translated",
             "value": "Quick Search"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速搜索"
+          }
         }
       }
     },
@@ -3402,6 +4830,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quick Search Panel (%@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速搜索浮窗（%@）"
           }
         }
       }
@@ -3413,6 +4847,12 @@
             "state": "translated",
             "value": "Quick Look"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速查看"
+          }
         }
       }
     },
@@ -3422,6 +4862,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quick Look (Space or ⌘Y)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速查看（空格或 ⌘Y）"
           }
         }
       }
@@ -3433,6 +4879,12 @@
             "state": "translated",
             "value": "Screenshots"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截图"
+          }
         }
       }
     },
@@ -3442,6 +4894,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开"
           }
         }
       }
@@ -3453,6 +4911,12 @@
             "state": "translated",
             "value": "Open Full Disk Access Settings"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开完全磁盘访问权限设置"
+          }
         }
       }
     },
@@ -3462,6 +4926,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Clean Up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开清理"
           }
         }
       }
@@ -3473,6 +4943,12 @@
             "state": "translated",
             "value": "Open System Settings"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开系统设置"
+          }
         }
       }
     },
@@ -3482,6 +4958,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Storage Map for This Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开这个文件夹的占用图"
           }
         }
       }
@@ -3493,6 +4975,12 @@
             "state": "translated",
             "value": "Extensions"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扩展名"
+          }
         }
       }
     },
@@ -3502,6 +4990,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scanning…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫描中…"
           }
         }
       }
@@ -3513,6 +5007,12 @@
             "state": "translated",
             "value": "Rename %lld Files"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批量重命名 %lld 个文件"
+          }
         }
       }
     },
@@ -3522,6 +5022,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rename %lld Files…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批量重命名 %lld 个文件…"
           }
         }
       }
@@ -3533,6 +5039,12 @@
             "state": "translated",
             "value": "Shiduo lays out the photos, videos, music and documents on your Mac by kind, finds anything from a single sentence, and helps you free up space along the way."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把 Mac 上的照片、视频、音乐、文稿按类别摆好，一句话就能找到，顺手把空间腾出来。"
+          }
         }
       }
     },
@@ -3542,6 +5054,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Highlight all selectable text in the image"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把图里能选的文字都标出来"
           }
         }
       }
@@ -3553,6 +5071,12 @@
             "state": "translated",
             "value": "Move the files marked “Trash” to the Trash"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把标着“废纸篓”的文件移到废纸篓"
+          }
         }
       }
     },
@@ -3562,6 +5086,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Capture time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拍摄时间"
           }
         }
       }
@@ -3573,6 +5103,12 @@
             "state": "translated",
             "value": "Copy"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝"
+          }
         }
       }
     },
@@ -3582,6 +5118,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copy %lld Paths"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝 %lld 个路径"
           }
         }
       }
@@ -3593,6 +5135,12 @@
             "state": "translated",
             "value": "Copy All Text"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝全部文字"
+          }
         }
       }
     },
@@ -3602,6 +5150,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copy Text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝文字"
           }
         }
       }
@@ -3613,6 +5167,12 @@
             "state": "translated",
             "value": "Copy Path"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝路径"
+          }
         }
       }
     },
@@ -3622,6 +5182,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copy Email Address"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝邮箱"
           }
         }
       }
@@ -3633,6 +5199,12 @@
             "state": "translated",
             "value": "Copy Link"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝链接"
+          }
         }
       }
     },
@@ -3642,6 +5214,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇"
           }
         }
       }
@@ -3653,6 +5231,12 @@
             "state": "translated",
             "value": "Shiduo Pro"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro"
+          }
         }
       }
     },
@@ -3662,6 +5246,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shiduo Pro features"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 功能"
           }
         }
       }
@@ -3673,6 +5263,12 @@
             "state": "translated",
             "value": "Shiduo Pro can search photos by what’s in them, like “cat”, “beach” or “receipt”"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 可以按照片画面搜索，比如「猫」「海边」「收据」"
+          }
         }
       }
     },
@@ -3682,6 +5278,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shiduo Pro is active"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 已激活"
           }
         }
       }
@@ -3693,6 +5295,12 @@
             "state": "translated",
             "value": "Shiduo: a free, open-source file companion for Mac. Find files by sight, search text inside images, and clean up duplicates and big files."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。"
+          }
         }
       }
     },
@@ -3702,6 +5310,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shiduo relies on the Spotlight index. Make sure file indexing isn’t turned off in System Settings ▸ Spotlight."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇依赖 Spotlight 索引。请确认“系统设置 ▸ Spotlight”中没有关闭文件索引。"
           }
         }
       }
@@ -3713,6 +5327,12 @@
             "state": "translated",
             "value": "Shiduo feedback"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇反馈"
+          }
         }
       }
     },
@@ -3722,6 +5342,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shiduo goes online for only two things: checking for updates (it only visits this project’s releases on GitHub) and activating a license (it only sends the license key to the license server). Your files are never uploaded."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇只在两处联网：检查更新（只访问 GitHub 上本项目的发布页）和激活授权（只把授权码发给授权服务器校验）。你的文件从不上传。"
           }
         }
       }
@@ -3733,6 +5359,12 @@
             "state": "translated",
             "value": "While Shiduo is open, rules run every 10 minutes"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇开着时，每 10 分钟按规则整理一次"
+          }
         }
       }
     },
@@ -3742,6 +5374,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A new version of Shiduo is available"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇有新版本"
           }
         }
       }
@@ -3753,6 +5391,12 @@
             "state": "translated",
             "value": "Shiduo Converted"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇转换"
+          }
         }
       }
     },
@@ -3762,6 +5406,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shiduo: time for a cleanup"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇：该清理一下了"
           }
         }
       }
@@ -3773,6 +5423,12 @@
             "state": "translated",
             "value": "Filter by download source"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按下载来源筛选"
+          }
         }
       }
     },
@@ -3782,6 +5438,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "By Name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按名称"
           }
         }
       }
@@ -3793,6 +5455,12 @@
             "state": "translated",
             "value": "Filter by text in images"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按图中文字筛选"
+          }
         }
       }
     },
@@ -3802,6 +5470,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compares size and SHA-256 fingerprint. Only files with identical content count as duplicates."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按大小和 SHA-256 指纹比对，只有内容完全相同才算重复"
           }
         }
       }
@@ -3813,6 +5487,12 @@
             "state": "translated",
             "value": "By Size (Largest First)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按大小（大的在前）"
+          }
         }
       }
     },
@@ -3822,6 +5502,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "By Date (Newest First)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按日期（新的在前）"
           }
         }
       }
@@ -3833,6 +5519,12 @@
             "state": "translated",
             "value": "Search photos by content"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按画面内容搜索照片"
+          }
         }
       }
     },
@@ -3842,6 +5534,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "By Kind"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按种类"
           }
         }
       }
@@ -3853,6 +5551,12 @@
             "state": "translated",
             "value": "Before switching to a new Mac, deactivate here so the activation is free for the new one."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "换新 Mac 前先在这里解绑，激活名额会留给新的 Mac。"
+          }
         }
       }
     },
@@ -3862,6 +5566,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "License"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权"
           }
         }
       }
@@ -3873,6 +5583,12 @@
             "state": "translated",
             "value": "Activation failed. Please try again later."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权失败，请稍后再试。"
+          }
         }
       }
     },
@@ -3882,6 +5598,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Activation failed: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权失败：%@"
           }
         }
       }
@@ -3893,6 +5615,12 @@
             "state": "translated",
             "value": "License key"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权码"
+          }
         }
       }
     },
@@ -3902,6 +5630,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "That license key isn’t valid. Check that you copied all of it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权码不正确，请检查是否完整复制。"
           }
         }
       }
@@ -3913,6 +5647,12 @@
             "state": "translated",
             "value": "License key or redeem code (SDG-XXXX-XXXX-XXXX)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权码或兑换码（SDG-XXXX-XXXX-XXXX）"
+          }
         }
       }
     },
@@ -3922,6 +5662,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sort"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "排序"
           }
         }
       }
@@ -3933,6 +5679,12 @@
             "state": "translated",
             "value": "Eject"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推出"
+          }
         }
       }
     },
@@ -3942,6 +5694,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Spread the word"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推广"
           }
         }
       }
@@ -3953,6 +5711,12 @@
             "state": "translated",
             "value": "Notice"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
         }
       }
     },
@@ -3962,6 +5726,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remind me on"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提醒时间"
           }
         }
       }
@@ -3973,6 +5743,12 @@
             "state": "translated",
             "value": "Search “cat”, “beach” or “receipt”, with photos analyzed on this Mac"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜「猫」「海边」「收据」，在本机识别照片画面"
+          }
         }
       }
     },
@@ -3982,6 +5758,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Search"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索"
           }
         }
       }
@@ -3993,6 +5775,12 @@
             "state": "translated",
             "value": "When you search for things like “cat”, “beach photos” or “receipt”, Shiduo also checks what’s in your latest %lld photos. Analysis happens only on this Mac."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索「猫」「海边的照片」「收据」时，也会按画面内容找最近的 %lld 张照片。识别只在本机进行。"
+          }
         }
       }
     },
@@ -4002,6 +5790,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Search files, like “pdfs from last week” or “invoice”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索文件，比如“上周的pdf”“nianbao”"
           }
         }
       }
@@ -4013,6 +5807,12 @@
             "state": "translated",
             "value": "Search Results"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索结果"
+          }
         }
       }
     },
@@ -4022,6 +5822,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Search, or try “pdfs over 5MB last week”…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索，或试试“上周超过5MB的pdf”…"
           }
         }
       }
@@ -4033,6 +5839,12 @@
             "state": "translated",
             "value": "Undo"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撤销"
+          }
         }
       }
     },
@@ -4042,6 +5854,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Controls"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "播放"
           }
         }
       }
@@ -4053,6 +5871,12 @@
             "state": "translated",
             "value": "Play / Pause (⌘Space)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "播放 / 暂停（⌘空格）"
+          }
         }
       }
     },
@@ -4062,6 +5886,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alipay"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支付宝"
           }
         }
       }
@@ -4073,6 +5903,12 @@
             "state": "translated",
             "value": "Support Shiduo"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持拾掇"
+          }
         }
       }
     },
@@ -4082,6 +5918,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Support Shiduo…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持拾掇…"
           }
         }
       }
@@ -4105,6 +5947,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放进文件夹超过 %lld 天"
+          }
         }
       }
     },
@@ -4114,6 +5962,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Organize"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "整理"
           }
         }
       }
@@ -4125,6 +5979,12 @@
             "state": "translated",
             "value": "Files"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件"
+          }
         }
       }
     },
@@ -4134,6 +5994,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Name contains"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件名包含"
           }
         }
       }
@@ -4145,6 +6011,12 @@
             "state": "translated",
             "value": "Folder"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹"
+          }
         }
       }
     },
@@ -4154,6 +6026,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "File type"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件类型"
           }
         }
       }
@@ -4165,6 +6043,12 @@
             "state": "translated",
             "value": "Text recognition"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字识别"
+          }
         }
       }
     },
@@ -4174,6 +6058,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Documents"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文稿"
           }
         }
       }
@@ -4185,6 +6075,12 @@
             "state": "translated",
             "value": "New Rule"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建规则"
+          }
         }
       }
     },
@@ -4194,6 +6090,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "New rule"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新规则"
           }
         }
       }
@@ -4205,6 +6107,12 @@
             "state": "translated",
             "value": "Method"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "方式"
+          }
         }
       }
     },
@@ -4214,6 +6122,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Couldn’t eject “%@”. An app may still be using files on it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法推出「%@」：可能还有 App 正在使用上面的文件。"
           }
         }
       }
@@ -4225,6 +6139,12 @@
             "state": "translated",
             "value": "Can’t undo: the file is no longer where it was moved to"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法撤销：文件已经不在原来移去的位置"
+          }
         }
       }
     },
@@ -4234,6 +6154,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Can’t reach the license server. Check your connection and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法连接授权服务器，请检查网络后再试。"
           }
         }
       }
@@ -4245,6 +6171,12 @@
             "state": "translated",
             "value": "No account"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无需账号"
+          }
         }
       }
     },
@@ -4254,6 +6186,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move old installers to the Trash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧安装包移到废纸篓"
           }
         }
       }
@@ -4265,6 +6203,12 @@
             "state": "translated",
             "value": "Old screenshots"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧截图"
+          }
         }
       }
     },
@@ -4274,6 +6218,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Good morning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "早上好"
           }
         }
       }
@@ -4285,6 +6235,12 @@
             "state": "translated",
             "value": "Duration"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时长"
+          }
         }
       }
     },
@@ -4294,6 +6250,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yesterday"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "昨天"
           }
         }
       }
@@ -4305,6 +6267,12 @@
             "state": "translated",
             "value": "Show or hide info"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示或隐藏简介"
+          }
         }
       }
     },
@@ -4314,6 +6282,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show All Text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示所有文字"
           }
         }
       }
@@ -4325,6 +6299,12 @@
             "state": "translated",
             "value": "View"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示方式"
+          }
         }
       }
     },
@@ -4334,6 +6314,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show Info"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示简介"
           }
         }
       }
@@ -4345,6 +6331,12 @@
             "state": "translated",
             "value": "Good evening"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "晚上好"
+          }
         }
       }
     },
@@ -4354,6 +6346,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Smart Folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "智能文件夹"
           }
         }
       }
@@ -4365,6 +6363,12 @@
             "state": "translated",
             "value": "Updates"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新"
+          }
         }
       }
     },
@@ -4374,6 +6378,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Replace with (leave empty to remove)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换为（留空表示删除）"
           }
         }
       }
@@ -4385,6 +6395,12 @@
             "state": "translated",
             "value": "Replace text"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换文字"
+          }
         }
       }
     },
@@ -4394,6 +6410,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Up to %@ to free up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最多可腾出 %@"
           }
         }
       }
@@ -4421,6 +6443,12 @@
             "state": "translated",
             "value": "Recent"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近"
+          }
         }
       }
     },
@@ -4430,6 +6458,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近 %@"
           }
         }
       }
@@ -4441,6 +6475,12 @@
             "state": "translated",
             "value": "Recent Downloads"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近下载"
+          }
         }
       }
     },
@@ -4450,6 +6490,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recents"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近使用"
           }
         }
       }
@@ -4461,6 +6507,12 @@
             "state": "translated",
             "value": "Last 6 months"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近半年"
+          }
         }
       }
     },
@@ -4470,6 +6522,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recent Screenshots"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近截图"
           }
         }
       }
@@ -4481,6 +6539,12 @@
             "state": "translated",
             "value": "Recently Opened Documents"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近打开的文稿"
+          }
         }
       }
     },
@@ -4490,6 +6554,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recent Images"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近的图片"
           }
         }
       }
@@ -4501,6 +6571,12 @@
             "state": "translated",
             "value": "Recent activity"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近的整理记录"
+          }
         }
       }
     },
@@ -4510,6 +6586,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Untitled rule"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名规则"
           }
         }
       }
@@ -4521,6 +6603,12 @@
             "state": "translated",
             "value": "Off"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未开启"
+          }
         }
       }
     },
@@ -4530,6 +6618,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not selected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未选择"
           }
         }
       }
@@ -4541,6 +6635,12 @@
             "state": "translated",
             "value": "No File Selected"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未选择文件"
+          }
         }
       }
     },
@@ -4550,6 +6650,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "This week"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本周"
           }
         }
       }
@@ -4561,6 +6667,12 @@
             "state": "translated",
             "value": "You can free up %@ this week. Click to open Clean Up."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本周可腾出 %@，点这里打开清理。"
+          }
         }
       }
     },
@@ -4570,6 +6682,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "This month"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本月"
           }
         }
       }
@@ -4581,6 +6699,12 @@
             "state": "translated",
             "value": "Conditions (all must match)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "条件（全部满足才执行）"
+          }
         }
       }
     },
@@ -4590,6 +6714,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Source: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源：%@"
           }
         }
       }
@@ -4601,6 +6731,12 @@
             "state": "translated",
             "value": "Source: All"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源：全部"
+          }
         }
       }
     },
@@ -4610,6 +6746,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "From %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自 %@"
           }
         }
       }
@@ -4633,6 +6775,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自 %lld 个来源"
+          }
         }
       }
     },
@@ -4642,6 +6790,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "images from wechat"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自微信的图片"
           }
         }
       }
@@ -4653,6 +6807,12 @@
             "state": "translated",
             "value": "Find"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查找"
+          }
         }
       }
     },
@@ -4662,6 +6822,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "See All"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看全部"
           }
         }
       }
@@ -4673,6 +6839,12 @@
             "state": "translated",
             "value": "Tags"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标签"
+          }
         }
       }
     },
@@ -4682,6 +6854,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tag: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标签：%@"
           }
         }
       }
@@ -4693,6 +6871,12 @@
             "state": "translated",
             "value": "Format"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "格式"
+          }
         }
       }
     },
@@ -4702,6 +6886,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desktop"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面"
           }
         }
       }
@@ -4713,6 +6903,12 @@
             "state": "translated",
             "value": "“Shiduo Converted” folder on the Desktop"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面上的“拾掇转换”文件夹"
+          }
         }
       }
     },
@@ -4722,6 +6918,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Couldn’t check for updates. Please try again later."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查失败，请稍后再试"
           }
         }
       }
@@ -4733,6 +6935,12 @@
             "state": "translated",
             "value": "Welcome to Shiduo"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "欢迎使用拾掇"
+          }
         }
       }
     },
@@ -4742,6 +6950,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Downloading %@…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在下载 %@…"
           }
         }
       }
@@ -4765,6 +6979,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在分析 %lld 张照片…"
+          }
         }
       }
     },
@@ -4774,6 +6994,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scanning…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在扫描…"
           }
         }
       }
@@ -4785,6 +7011,12 @@
             "state": "translated",
             "value": "Looking for files to clean up…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在找可以清理的文件…"
+          }
         }
       }
     },
@@ -4794,6 +7026,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Searching…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在搜索…"
           }
         }
       }
@@ -4805,6 +7043,12 @@
             "state": "translated",
             "value": "Recognizing text on this Mac…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在本机识别文字…"
+          }
         }
       }
     },
@@ -4814,6 +7058,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Searching…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在查找…"
           }
         }
       }
@@ -4825,6 +7075,12 @@
             "state": "translated",
             "value": "Finding candidates…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在查找候选文件…"
+          }
         }
       }
     },
@@ -4834,6 +7090,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Checking…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查…"
           }
         }
       }
@@ -4857,6 +7119,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在比对 %lld 个文件…"
+          }
         }
       }
     },
@@ -4867,6 +7135,12 @@
             "state": "translated",
             "value": "Comparing, just a moment…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在比对，稍等一下…"
+          }
         }
       }
     },
@@ -4876,6 +7150,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calculating sizes…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在计算大小…"
           }
         }
       }
@@ -4915,6 +7195,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在识别 %lld 个文件的文字…"
+          }
         }
       }
     },
@@ -4924,6 +7210,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recognizing text in the image…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在识别图中文字…"
           }
         }
       }
@@ -4935,6 +7227,12 @@
             "state": "translated",
             "value": "Recognizing text…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在识别文字…"
+          }
         }
       }
     },
@@ -4944,6 +7242,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading the Spotlight index…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取 Spotlight 索引…"
           }
         }
       }
@@ -4955,6 +7259,12 @@
             "state": "translated",
             "value": "Reading download history…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取下载记录…"
+          }
         }
       }
     },
@@ -4964,6 +7274,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading recent photos…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取最近的照片…"
           }
         }
       }
@@ -4991,6 +7307,12 @@
             "state": "translated",
             "value": "A weekly note on how much space you can free up"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每周提醒一次：本周可以腾出多少空间"
+          }
         }
       }
     },
@@ -5000,6 +7322,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remind me to clean up every week"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每周提醒我清理"
           }
         }
       }
@@ -5011,6 +7339,12 @@
             "state": "translated",
             "value": "Check for updates daily"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每天检查一次新版本"
+          }
         }
       }
     },
@@ -5020,6 +7354,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Every kind of file gets its own shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每类文件都有自己的货架"
           }
         }
       }
@@ -5031,6 +7371,12 @@
             "state": "translated",
             "value": "Files marked “Keep” in each group stay put. You can restore anything from the Trash."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每组标着“保留”的文件不会动。随时可以从废纸篓里恢复。"
+          }
         }
       }
     },
@@ -5040,6 +7386,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keep at least one in each group"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每组至少保留一张"
           }
         }
       }
@@ -5051,6 +7403,12 @@
             "state": "translated",
             "value": "No Download Sources"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有下载来源记录"
+          }
         }
       }
     },
@@ -5060,6 +7418,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No extra copies. Nice and tidy."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有发现多余的副本，很整齐"
           }
         }
       }
@@ -5071,6 +7435,12 @@
             "state": "translated",
             "value": "No similar photos found"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有发现相似的照片"
+          }
         }
       }
     },
@@ -5080,6 +7450,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No duplicates found"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有发现重复"
           }
         }
       }
@@ -5091,6 +7467,12 @@
             "state": "translated",
             "value": "No duplicates found"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有发现重复文件"
+          }
         }
       }
     },
@@ -5100,6 +7482,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No %@ Files Found"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有找到%@文件"
           }
         }
       }
@@ -5111,6 +7499,12 @@
             "state": "translated",
             "value": "No Matching Files"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有找到匹配的文件"
+          }
         }
       }
     },
@@ -5120,6 +7514,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No recent downloads"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有最近下载的文件"
           }
         }
       }
@@ -5131,6 +7531,12 @@
             "state": "translated",
             "value": "No text found"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有识别到文字"
+          }
         }
       }
     },
@@ -5140,6 +7546,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No text found."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有识别到文字。"
           }
         }
       }
@@ -5151,6 +7563,12 @@
             "state": "translated",
             "value": "No Files Found"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有读到任何文件"
+          }
         }
       }
     },
@@ -5160,6 +7578,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing to clean up. Nice and tidy."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有需要清理的，很整齐"
           }
         }
       }
@@ -5171,6 +7595,12 @@
             "state": "translated",
             "value": "Couldn’t change login items: %@. You can add Shiduo yourself in System Settings › General › Login Items."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能修改登录项：%@。可以在“系统设置 › 通用 › 登录项”里手动添加拾掇。"
+          }
         }
       }
     },
@@ -5180,6 +7610,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Browser extensions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览器扩展"
           }
         }
       }
@@ -5191,6 +7627,12 @@
             "state": "translated",
             "value": "Add Folder…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加文件夹…"
+          }
         }
       }
     },
@@ -5200,6 +7642,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Added"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加时间"
           }
         }
       }
@@ -5211,6 +7659,12 @@
             "state": "translated",
             "value": "Clean Up"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理"
+          }
         }
       }
     },
@@ -5220,6 +7674,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Clean up · space to free"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理 · 可以腾出"
           }
         }
       }
@@ -5231,6 +7691,12 @@
             "state": "translated",
             "value": "Clean Up Large Files"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理大文件"
+          }
         }
       }
     },
@@ -5240,6 +7706,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Clear"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空记录"
           }
         }
       }
@@ -5251,6 +7723,12 @@
             "state": "translated",
             "value": "Clear"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除"
+          }
         }
       }
     },
@@ -5260,6 +7738,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Clear search"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除搜索"
           }
         }
       }
@@ -5271,6 +7755,12 @@
             "state": "translated",
             "value": "Clear Recognized Text"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除识别缓存"
+          }
         }
       }
     },
@@ -5280,6 +7770,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Presentations"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "演示文稿"
           }
         }
       }
@@ -5291,6 +7787,12 @@
             "state": "translated",
             "value": "Activate"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "激活"
+          }
         }
       }
     },
@@ -5300,6 +7802,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Click Start Scan to search on this Mac"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点“开始扫描”在本机查找"
           }
         }
       }
@@ -5311,6 +7819,12 @@
             "state": "translated",
             "value": "Click to switch between Keep and Trash\n%@"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点一下切换“保留 / 废纸篓”\n%@"
+          }
         }
       }
     },
@@ -5320,6 +7834,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Click Open System Settings below"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点下面的「打开系统设置」"
           }
         }
       }
@@ -5331,6 +7851,12 @@
             "state": "translated",
             "value": "Click to scan"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点按扫描"
+          }
         }
       }
     },
@@ -5340,6 +7866,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Click thumbnails to choose files to remove"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点缩略图选择要移除的文件"
           }
         }
       }
@@ -5351,6 +7883,12 @@
             "state": "translated",
             "value": "Photo content recognition"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片画面识别"
+          }
         }
       }
     },
@@ -5360,6 +7898,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Photos use the capture time recorded by the camera, or the creation date if there isn’t one. Files from the same second get _2 added."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片读取相机记录的拍摄时间；没有记录的按创建时间。同一秒的会自动加 _2。"
           }
         }
       }
@@ -5371,6 +7915,12 @@
             "state": "translated",
             "value": "Version"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本"
+          }
         }
       }
     },
@@ -5380,6 +7930,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Status"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态"
           }
         }
       }
@@ -5391,6 +7947,12 @@
             "state": "translated",
             "value": "Everything Shiduo does today stays free forever. Pro adds a few more helpers, and everything still happens only on this Mac."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。"
+          }
         }
       }
     },
@@ -5400,6 +7962,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Understood as"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "理解为"
           }
         }
       }
@@ -5411,6 +7979,12 @@
             "state": "translated",
             "value": "Uses Vision to compare your latest 800 photos"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Vision 比较最近 800 张照片的画面"
+          }
         }
       }
     },
@@ -5420,6 +7994,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scan with WeChat. Any amount is welcome."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用微信扫一扫，金额随意"
           }
         }
       }
@@ -5431,6 +8011,12 @@
             "state": "translated",
             "value": "Scan with Alipay. Any amount is welcome."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用支付宝扫一扫，金额随意"
+          }
         }
       }
     },
@@ -5440,6 +8026,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Used installers"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用过的安装包"
           }
         }
       }
@@ -5451,6 +8043,12 @@
             "state": "translated",
             "value": "Quality"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画质"
+          }
         }
       }
     },
@@ -5460,6 +8058,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "At 85% quality the difference is barely visible, and files are usually a fraction of the PNG size."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画质 85% 时肉眼几乎看不出差别，体积通常只有 PNG 的几分之一。"
           }
         }
       }
@@ -5471,6 +8075,12 @@
             "state": "translated",
             "value": "Look alike · compared on this Mac with Vision"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面相似 · Vision 本机比对"
+          }
         }
       }
     },
@@ -5480,6 +8090,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shows: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面：%@"
           }
         }
       }
@@ -5491,6 +8107,12 @@
             "state": "translated",
             "value": "Open Shiduo at login"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录时自动打开拾掇"
+          }
         }
       }
     },
@@ -5500,6 +8122,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Baidu Netdisk"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "百度网盘"
           }
         }
       }
@@ -5511,6 +8139,12 @@
             "state": "translated",
             "value": "Watch"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "监视"
+          }
         }
       }
     },
@@ -5520,6 +8154,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Watch folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "监视文件夹"
           }
         }
       }
@@ -5531,6 +8171,12 @@
             "state": "translated",
             "value": "Destination"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标文件夹"
+          }
         }
       }
     },
@@ -5540,6 +8186,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Similar Photos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相似照片"
           }
         }
       }
@@ -5551,6 +8203,12 @@
             "state": "translated",
             "value": "Camera"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机"
+          }
         }
       }
     },
@@ -5560,6 +8218,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kind"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "种类"
           }
         }
       }
@@ -5571,6 +8235,12 @@
             "state": "translated",
             "value": "Move to “%@”"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到「%@」"
+          }
         }
       }
     },
@@ -5580,6 +8250,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move to Trash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到废纸篓"
           }
         }
       }
@@ -5591,6 +8267,12 @@
             "state": "translated",
             "value": "Move to Trash…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到废纸篓…"
+          }
         }
       }
     },
@@ -5600,6 +8282,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move to folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到文件夹"
           }
         }
       }
@@ -5611,6 +8299,12 @@
             "state": "translated",
             "value": "Move Here"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到这里"
+          }
         }
       }
     },
@@ -5620,6 +8314,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除"
           }
         }
       }
@@ -5631,6 +8331,12 @@
             "state": "translated",
             "value": "Remove Selected"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除所选"
+          }
         }
       }
     },
@@ -5640,6 +8346,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not Now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍后再说"
           }
         }
       }
@@ -5651,6 +8363,12 @@
             "state": "translated",
             "value": "Select text when previewing images with Space"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格预览图片时可以直接划选文字"
+          }
         }
       }
     },
@@ -5660,6 +8378,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Storage Map"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空间占用图"
           }
         }
       }
@@ -5671,6 +8395,12 @@
             "state": "translated",
             "value": "Run Now"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即整理"
+          }
         }
       }
     },
@@ -5680,6 +8410,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Check Now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即检查"
           }
         }
       }
@@ -5691,6 +8427,12 @@
             "state": "translated",
             "value": "Relaunch Now"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即重新打开"
+          }
         }
       }
     },
@@ -5700,6 +8442,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Info"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "简介"
           }
         }
       }
@@ -5711,6 +8459,12 @@
             "state": "translated",
             "value": "Type"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "类型"
+          }
         }
       }
     },
@@ -5720,6 +8474,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "If macOS asks to quit and reopen, you can click Later. This page refreshes when you come back."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统提示退出重开时，点「稍后」也可以，回到这里会自动刷新"
           }
         }
       }
@@ -5731,6 +8491,12 @@
             "state": "translated",
             "value": "Shiduo isn’t allowed to send notifications. Turn them on in System Settings › Notifications › Shiduo."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统没有允许拾掇发通知：请到「系统设置 › 通知 › 拾掇」里打开。"
+          }
         }
       }
     },
@@ -5740,6 +8506,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Counting…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "统计中…"
           }
         }
       }
@@ -5751,6 +8523,12 @@
             "state": "translated",
             "value": "Continue"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
         }
       }
     },
@@ -5760,6 +8538,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑"
           }
         }
       }
@@ -5771,6 +8555,12 @@
             "state": "translated",
             "value": "Thumbnail size"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缩略图大小"
+          }
         }
       }
     },
@@ -5780,6 +8570,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "NetEase Mail"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网易邮箱"
           }
         }
       }
@@ -5791,6 +8587,12 @@
             "state": "translated",
             "value": "Website"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网站"
+          }
         }
       }
     },
@@ -5800,6 +8602,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chat Files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "聊天文件"
           }
         }
       }
@@ -5811,6 +8619,12 @@
             "state": "translated",
             "value": "Files and videos over 20 MB received in chats. Once removed, they won’t open in the chat anymore."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了"
+          }
         }
       }
     },
@@ -5820,6 +8634,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Contact us"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "联系我们"
           }
         }
       }
@@ -5831,6 +8651,12 @@
             "state": "translated",
             "value": "Download automatically and install when Shiduo quits"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动下载，退出拾掇时安装"
+          }
         }
       }
     },
@@ -5840,6 +8666,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Auto Organize"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动整理"
           }
         }
       }
@@ -5851,6 +8683,12 @@
             "state": "translated",
             "value": "Auto-organize rules"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动整理规则"
+          }
         }
       }
     },
@@ -5860,6 +8698,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recognize text in screenshots and recent photos automatically"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动识别截图和近期照片里的文字"
           }
         }
       }
@@ -5871,6 +8715,12 @@
             "state": "translated",
             "value": "Add at least one condition to turn this on"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "至少设置一个条件才会生效"
+          }
         }
       }
     },
@@ -5880,6 +8730,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Set at least one condition so the whole folder doesn’t get moved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "至少设置一个条件，避免把整个文件夹都搬走。"
           }
         }
       }
@@ -5891,6 +8747,12 @@
             "state": "translated",
             "value": "Take a minute to see what you can clean up."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "花一分钟看看有哪些可以清理的文件。"
+          }
         }
       }
     },
@@ -5900,6 +8762,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Menu bar helper"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "菜单栏小助手"
           }
         }
       }
@@ -5911,6 +8779,12 @@
             "state": "translated",
             "value": "Spreadsheets"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表格"
+          }
         }
       }
     },
@@ -5920,6 +8794,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Forgotten downloads"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "被遗忘的下载"
           }
         }
       }
@@ -5931,6 +8811,12 @@
             "state": "translated",
             "value": "Videos"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频"
+          }
         }
       }
     },
@@ -5940,6 +8826,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deactivate This Mac"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解绑此 Mac"
           }
         }
       }
@@ -5951,6 +8843,12 @@
             "state": "translated",
             "value": "Calculating…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计算中…"
+          }
         }
       }
     },
@@ -5960,6 +8858,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Where it came from"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记得它从哪儿来"
           }
         }
       }
@@ -5971,6 +8875,12 @@
             "state": "translated",
             "value": "License"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "许可"
+          }
         }
       }
     },
@@ -5980,6 +8890,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recognize Text in Image…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别图中文字…"
           }
         }
       }
@@ -5991,6 +8907,12 @@
             "state": "translated",
             "value": "Recognition happens on this Mac. Nothing is uploaded."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别在本机完成，不会上传。"
+          }
         }
       }
     },
@@ -6000,6 +8922,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recognize and copy text in images (⇧⌘C)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别并拷贝图中文字（⇧⌘C）"
           }
         }
       }
@@ -6011,6 +8939,12 @@
             "state": "translated",
             "value": "Recognize Text"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别文字"
+          }
         }
       }
     },
@@ -6020,6 +8954,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trial ended"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试用已结束"
           }
         }
       }
@@ -6031,6 +8971,12 @@
             "state": "translated",
             "value": "Try"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试试"
+          }
         }
       }
     },
@@ -6040,6 +8986,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Try removing a filter."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试试去掉一个筛选条件。"
           }
         }
       }
@@ -6051,6 +9003,12 @@
             "state": "translated",
             "value": "Language / 语言"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "语言 / Language"
+          }
         }
       }
     },
@@ -6060,6 +9018,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Too many requests. Please try again later."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求太频繁，请稍后再试。"
           }
         }
       }
@@ -6071,6 +9035,12 @@
             "state": "translated",
             "value": "Please enter a license key."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入授权码。"
+          }
         }
       }
     },
@@ -6080,6 +9050,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose a destination folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请选择目标文件夹"
           }
         }
       }
@@ -6091,6 +9067,12 @@
             "state": "translated",
             "value": "Choose a destination folder."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请选择目标文件夹。"
+          }
         }
       }
     },
@@ -6100,6 +9082,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Click Rescan after changing this"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "调整后点“重新扫描”生效"
           }
         }
       }
@@ -6111,6 +9099,12 @@
             "state": "translated",
             "value": "Buy"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "购买"
+          }
         }
       }
     },
@@ -6120,6 +9114,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Buy Shiduo Pro…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "购买拾掇 Pro…"
           }
         }
       }
@@ -6131,6 +9131,12 @@
             "state": "translated",
             "value": "Library"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "资料库"
+          }
         }
       }
     },
@@ -6141,6 +9147,12 @@
             "state": "translated",
             "value": "Library size"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "资料库大小"
+          }
         }
       }
     },
@@ -6150,6 +9162,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sponsor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "赞助"
           }
         }
       }
@@ -6173,6 +9191,12 @@
               }
             }
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超过 %lld 天"
+          }
         }
       }
     },
@@ -6182,6 +9206,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Videos over 200 MB not opened in 90 days"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超过 200 MB、90 天没打开的视频"
           }
         }
       }
@@ -6193,6 +9223,12 @@
             "state": "translated",
             "value": "videos over 1GB"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超过1GB的视频"
+          }
         }
       }
     },
@@ -6202,6 +9238,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "System Default"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随系统"
           }
         }
       }
@@ -6213,6 +9255,12 @@
             "state": "translated",
             "value": "Convert to JPG"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转换为 JPG"
+          }
         }
       }
     },
@@ -6222,6 +9270,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Convert to JPG / Compress…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转换为 JPG / 压缩…"
           }
         }
       }
@@ -6233,6 +9287,12 @@
             "state": "translated",
             "value": "Type a file name, or describe what you want"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入文件名、拼音首字母，或者一句话"
+          }
         }
       }
     },
@@ -6242,6 +9302,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Back"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回上一层"
           }
         }
       }
@@ -6253,6 +9319,12 @@
             "state": "translated",
             "value": "Still looking. This number will keep growing…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还在找，数字会继续变大…"
+          }
         }
       }
     },
@@ -6262,6 +9334,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No pinned folders yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有固定文件夹。"
           }
         }
       }
@@ -6273,6 +9351,12 @@
             "state": "translated",
             "value": "Not scanned yet"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有扫描"
+          }
         }
       }
     },
@@ -6282,6 +9366,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No rules yet. Click New Rule, for example to move installers in Downloads to the Trash automatically."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有规则。点「新建规则」，比如把下载文件夹里的安装包自动移到废纸篓。"
           }
         }
       }
@@ -6293,6 +9383,12 @@
             "state": "translated",
             "value": "This license key isn’t for Shiduo Pro."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个授权码不属于拾掇 Pro。"
+          }
         }
       }
     },
@@ -6302,6 +9398,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "This license key has been disabled."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个授权码已被停用。"
           }
         }
       }
@@ -6313,6 +9415,12 @@
             "state": "translated",
             "value": "This license key has expired."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个授权码已过期。"
+          }
         }
       }
     },
@@ -6322,6 +9430,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "This license key has no activations left. In Shiduo’s settings on your old Mac, choose Deactivate This Mac, then try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个授权码的激活次数已用完。请先在旧 Mac 的拾掇设置里「解绑此 Mac」，再来激活。"
           }
         }
       }
@@ -6333,6 +9447,12 @@
             "state": "translated",
             "value": "This Folder Is Empty"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件夹是空的"
+          }
         }
       }
     },
@@ -6342,6 +9462,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Text in these images has already been recognized"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些图片都已经识别过了"
           }
         }
       }
@@ -6353,6 +9479,12 @@
             "state": "translated",
             "value": "This Mac doesn’t support Live Text. Use Copy Text (⇧⌘C) instead."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）"
+          }
         }
       }
     },
@@ -6362,6 +9494,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No text found in this image"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这张图里没有识别到文字"
           }
         }
       }
@@ -6373,6 +9511,12 @@
             "state": "translated",
             "value": "This is a Shiduo Pro feature."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这是拾掇 Pro 的功能。"
+          }
         }
       }
     },
@@ -6382,6 +9526,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "No Files Here Yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这里还没有文件"
           }
         }
       }
@@ -6393,6 +9543,12 @@
             "state": "translated",
             "value": "Select a file to see its info."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选中一个文件查看简介。"
+          }
         }
       }
     },
@@ -6402,6 +9558,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "There are no images or PDFs in the selection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选中的文件里没有图片或 PDF"
           }
         }
       }
@@ -6413,6 +9575,12 @@
             "state": "translated",
             "value": "Choose…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择…"
+          }
         }
       }
     },
@@ -6422,6 +9590,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose Folder…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择文件夹…"
           }
         }
       }
@@ -6433,6 +9607,12 @@
             "state": "translated",
             "value": "Email"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "邮箱"
+          }
         }
       }
     },
@@ -6442,6 +9622,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rename"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名"
           }
         }
       }
@@ -6453,6 +9639,12 @@
             "state": "translated",
             "value": "Rename…"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名…"
+          }
         }
       }
     },
@@ -6462,6 +9654,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duplicates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重复文件"
           }
         }
       }
@@ -6473,6 +9671,12 @@
             "state": "translated",
             "value": "Duplicates, old installers and big WeChat files, moved only to the Trash"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重复文件、旧安装包、微信大文件，只移到废纸篓"
+          }
         }
       }
     },
@@ -6482,6 +9686,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duplicates, old installers and forgotten downloads, all in one place"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重复文件、旧安装包、被遗忘的下载，一次看清"
           }
         }
       }
@@ -6493,6 +9703,12 @@
             "state": "translated",
             "value": "Takes effect after Shiduo relaunches."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新打开拾掇后生效。"
+          }
         }
       }
     },
@@ -6502,6 +9718,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rescan"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新扫描"
           }
         }
       }
@@ -6513,6 +9735,12 @@
             "state": "translated",
             "value": "Show Welcome Guide Again"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新查看欢迎引导"
+          }
         }
       }
     },
@@ -6522,6 +9750,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recount"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新统计"
           }
         }
       }
@@ -6533,6 +9767,12 @@
             "state": "translated",
             "value": "Recalculate"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新计算"
+          }
         }
       }
     },
@@ -6542,6 +9782,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "DingTalk"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "钉钉"
           }
         }
       }
@@ -6553,6 +9799,12 @@
             "state": "translated",
             "value": "Long edge 1280 px (for email)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长边 1280 像素（发邮件）"
+          }
         }
       }
     },
@@ -6562,6 +9814,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Long edge 2000 px (good for messaging)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长边 2000 像素（发微信够用）"
           }
         }
       }
@@ -6573,6 +9831,12 @@
             "state": "translated",
             "value": "Long edge 3000 px (high quality)"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长边 3000 像素（高清）"
+          }
         }
       }
     },
@@ -6582,6 +9846,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alibaba Cloud Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阿里云盘"
           }
         }
       }
@@ -6593,6 +9863,12 @@
             "state": "translated",
             "value": "You can restore them from the Trash anytime. Files that are only in iCloud are skipped."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。"
+          }
         }
       }
     },
@@ -6602,6 +9878,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Press %@ to search anytime"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "随时按 %@ 搜索"
           }
         }
       }
@@ -6613,6 +9895,12 @@
             "state": "translated",
             "value": "Privacy and permissions"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私与权限"
+          }
         }
       }
     },
@@ -6622,6 +9910,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hide Text Boxes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏文字框"
           }
         }
       }
@@ -6633,6 +9927,12 @@
             "state": "translated",
             "value": "Hide Info"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏简介"
+          }
         }
       }
     },
@@ -6642,6 +9942,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Music"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音乐"
           }
         }
       }
@@ -6653,6 +9959,12 @@
             "state": "translated",
             "value": "Pages"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "页数"
+          }
         }
       }
     },
@@ -6662,6 +9974,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览"
           }
         }
       }
@@ -6673,6 +9991,12 @@
             "state": "translated",
             "value": "Feishu"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "飞书"
+          }
         }
       }
     },
@@ -6683,6 +10007,12 @@
             "state": "translated",
             "value": "Home"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "首页"
+          }
         }
       }
     },
@@ -6692,6 +10022,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "(no conditions yet)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（还没有条件）"
           }
         }
       }
@@ -6714,6 +10050,12 @@
                 }
               }
             }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "，%lld 张失败"
           }
         }
       }

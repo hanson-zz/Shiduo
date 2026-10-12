@@ -23,3 +23,10 @@ section{padding:40px 0}h2{font-size:30px;margin:0 0 18px;text-align:center}
 footer{border-top:1px solid var(--line);padding:28px 0 50px;color:var(--mut);font-size:14px}
 footer a{color:var(--mut);margin-right:16px}
 .doc{max-width:760px}.doc h1{font-size:34px}.doc h2{text-align:left;font-size:22px;margin-top:30px}
+/* 中文 / EN */
+html[data-lang="zh"] [data-l="en"],html:not([data-lang="zh"]) [data-l="zh"]{display:none!important}
+nav .links{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.lang-toggle{margin-left:20px;display:inline-flex;padding:2px;border:1px solid var(--line);border-radius:999px;background:var(--card);cursor:pointer;font:600 13px/1 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:var(--mut)}
+.lang-toggle span{padding:6px 10px;border-radius:999px}
+html[data-lang="zh"] .lang-toggle .zh,html:not([data-lang="zh"]) .lang-toggle .en{background:var(--acc);color:#fff}
+@media (max-width:560px){nav{flex-wrap:wrap;gap:8px}nav .links a{margin-left:12px}.lang-toggle{margin-left:12px}}

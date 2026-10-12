@@ -31,22 +31,19 @@ jobs:
           APP=build/Build/Products/Release/Shiduo.app
           cat > check.swift <<'SWIFT'
           import Foundation
+          // 用本进程的语言设置（-AppleLanguages）去查 App 的字符串表，和 App 自己的查找逻辑（含回退）一致。
           let b = Bundle(path: CommandLine.arguments[1])!
-          for lang in ["en", "zh-Hans"] {
-              guard let p = b.path(forResource: lang, ofType: "lproj"), let lb = Bundle(path: p) else { print("NO LPROJ \(lang)"); continue }
-              func t(_ k: String) -> String { lb.localizedString(forKey: k, value: "<<MISSING>>", table: nil) }
-              print("== \(lang)")
-              print(String.localizedStringWithFormat(t("%lld 个项目"), 1), "|", String.localizedStringWithFormat(t("%lld 个项目"), 5))
-              print(String.localizedStringWithFormat(t("%lld 个项目 · %@"), 1, "2 MB"), "|", String.localizedStringWithFormat(t("%lld 个项目 · %@"), 3, "2 MB"))
-              print(String.localizedStringWithFormat(t("%lld 个多余的副本，共 %lld 组"), 1, 1), "|", String.localizedStringWithFormat(t("%lld 个多余的副本，共 %lld 组"), 4, 2))
-              print(String.localizedStringWithFormat(t("已转换 %lld 张，%@ → %@"), 1, "5 MB", "1 MB"))
-              print(String.localizedStringWithFormat(t("%@：%@ → %@"), "Downloads", "PDF", "Trash"))
-              print(t("清理"), "|", t("sidebar.pictures"), "|", t("kind.file"), "|", t("语言 / Language"))
-              print(lb.localizedString(forKey: "CFBundleDisplayName", value: "<<MISSING>>", table: "InfoPlist"))
-          }
+          func t(_ k: String) -> String { b.localizedString(forKey: k, value: nil, table: nil) }
+          print("== preferred:", b.preferredLocalizations)
+          print(String.localizedStringWithFormat(t("%lld 个项目"), 1), "|", String.localizedStringWithFormat(t("%lld 个项目"), 5))
+          print(String.localizedStringWithFormat(t("%lld 个多余的副本，共 %lld 组"), 4, 2))
+          print(t("清理"), "|", t("sidebar.pictures"), "|", t("kind.file"), "|", t("跟随系统"), "|", t("首页"))
+          print(b.localizedString(forKey: "CFBundleDisplayName", value: nil, table: "InfoPlist"))
           SWIFT
           sed -i '' 's/^          //' check.swift
-          swiftc check.swift -o check && ./check "$APP" > check.txt 2>&1 || true
+          swiftc check.swift -o check
+          : > check.txt
+          for L in en zh-Hans fr zh-Hant; do ./check "$APP" -AppleLanguages "($L)" >> check.txt 2>&1 || true; done
           ls "$APP/Contents/Resources" >> check.txt
           cat check.txt
       - name: 推到 loc-export 分支

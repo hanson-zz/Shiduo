@@ -1,6 +1,6 @@
 name: 截图
 
-# 手动运行：用演示数据启动拾掇，自动截下各个页面，提交到 docs/screenshots。
+# 手动运行：用演示数据启动拾掇，自动截下各个页面（中文和英文各一套），提交到 docs/screenshots 和 docs/screenshots/en。
 on:
   workflow_dispatch:
 
@@ -34,38 +34,33 @@ jobs:
           mkdir -p docs/screenshots
           # 关掉可能挡住窗口的东西
           osascript -e 'tell application "System Events" to set visible of every process whose visible is true and name is not "Finder" to false' || true
+          # shoot <page> <light|dark> <输出名> [zh|en]：中文图存 docs/screenshots，英文图存 docs/screenshots/en。
           shoot() {
-            local page=$1 mode=$2 out=$3
-            local extra=""
+            local page=$1 mode=$2 out=$3 lang=${4:-zh}
+            local extra="" dir=docs/screenshots langarg="zh-Hans"
             [ "$mode" = dark ] && extra="--dark"
-            "$BIN" --demo --page="$page" $extra &
+            if [ "$lang" = en ]; then dir=docs/screenshots/en; langarg="en"; fi
+            mkdir -p "$dir"
+            "$BIN" --demo --page="$page" $extra -AppleLanguages "($langarg)" &
             local pid=$!
             sleep 9
             local wid
             ./window-id $pid || true
-            wid=$(./window-id $pid) || { echo "NO WINDOW $page"; kill $pid; return 0; }
-            screencapture -x -o -l "$wid" "docs/screenshots/$out.png"
+            wid=$(./window-id $pid) || { echo "NO WINDOW $page $lang"; kill $pid; return 0; }
+            screencapture -x -o -l "$wid" "$dir/$out.png"
             kill $pid || true
             sleep 2
           }
-          shoot home light warmup   # 冷启动预热，首张截图常停在加载中
-          rm -f docs/screenshots/warmup.png
-          shoot home light home
-          shoot home dark home-dark
-          shoot images light images
-          shoot search light search
-          shoot downloads light downloads
-          shoot cleanup light cleanup
-          shoot duplicates light duplicates
-          shoot similar light similar
-          shoot review light review
-          shoot music light music
-          shoot suggest light suggest
-          shoot onboarding light onboarding
-          shoot storagemap light storagemap
-          shoot rename light rename
-          shoot convert light convert
-          ls -la docs/screenshots
+          PAGES="home:light:home home:dark:home-dark images:light:images search:light:search downloads:light:downloads cleanup:light:cleanup duplicates:light:duplicates similar:light:similar review:light:review music:light:music suggest:light:suggest onboarding:light:onboarding storagemap:light:storagemap rename:light:rename convert:light:convert"
+          for lang in zh en; do
+            shoot home light warmup $lang   # 冷启动预热，首张截图常停在加载中
+            rm -f docs/screenshots/warmup.png docs/screenshots/en/warmup.png
+            for spec in $PAGES; do
+              IFS=: read -r page mode out <<< "$spec"
+              shoot "$page" "$mode" "$out" "$lang"
+            done
+          done
+          ls -la docs/screenshots docs/screenshots/en
 
       - name: 上传为构件
         if: always()
