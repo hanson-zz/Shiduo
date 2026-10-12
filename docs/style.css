@@ -30,3 +30,11 @@ nav .links{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-e
 .lang-toggle span{padding:6px 10px;border-radius:999px}
 html[data-lang="zh"] .lang-toggle .zh,html:not([data-lang="zh"]) .lang-toggle .en{background:var(--acc);color:#fff}
 @media (max-width:560px){nav{flex-wrap:wrap;gap:8px}nav .links a{margin-left:12px}.lang-toggle{margin-left:12px}}
+.early{display:inline-flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:16px;margin-bottom:22px}
+.early:hover{text-decoration:none;border-color:var(--acc)}
+.early .tag{background:rgba(52,168,113,.16);color:#2f9e6a;font-weight:600;padding:4px 12px;border-radius:999px}
+.early s,.price s.was{color:var(--mut);font-weight:400}.price s.was{font-size:22px}
+.code{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 4px;font-size:14px;color:var(--mut)}
+.codebtn{font:600 14px ui-monospace,monospace;letter-spacing:.5px;padding:4px 10px;border-radius:8px;border:1px dashed var(--acc);background:transparent;color:var(--acc);cursor:pointer}
+.codebtn.ok::after{content:" ✓"}
+.hero{display:flex;flex-direction:column;align-items:center}
