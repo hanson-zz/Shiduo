@@ -96,7 +96,7 @@ struct InspectorView: View {
                     if let modified = item.modified { InfoRow(title: String(localized: "修改时间"), value: modified.shortText) }
                     if let added = item.added { InfoRow(title: String(localized: "添加时间"), value: added.shortText) }
                     InfoRow(title: String(localized: "上次打开"), value: item.lastUsed?.shortText ?? String(localized: "从未打开或无记录"))
-                    InfoRow(title: String(localized: "位置"), value: item.url.deletingLastPathComponent().path)
+                    InfoRow(title: String(localized: "inspector.where", defaultValue: "位置"), value: item.url.deletingLastPathComponent().path)
                     if !item.whereFroms.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("下载来源")

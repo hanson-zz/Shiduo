@@ -24,6 +24,31 @@ jobs:
             SWIFT_EMIT_LOC_STRINGS=YES CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="" \
             > export.log 2>&1 || true
           ls -R out | head -50 || true
+      - name: 构建并检查英文字符串
+        run: |
+          xcodebuild build -project Shiduo.xcodeproj -scheme Shiduo -configuration Release -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="" > build.log 2>&1 || { grep -E "error:" build.log | head -40 > check.txt; exit 0; }
+          APP=build/Build/Products/Release/Shiduo.app
+          cat > check.swift <<'SWIFT'
+          import Foundation
+          let b = Bundle(path: CommandLine.arguments[1])!
+          for lang in ["en", "zh-Hans"] {
+              guard let p = b.path(forResource: lang, ofType: "lproj"), let lb = Bundle(path: p) else { print("NO LPROJ \(lang)"); continue }
+              func t(_ k: String) -> String { lb.localizedString(forKey: k, value: "<<MISSING>>", table: nil) }
+              print("== \(lang)")
+              print(String.localizedStringWithFormat(t("%lld 个项目"), 1), "|", String.localizedStringWithFormat(t("%lld 个项目"), 5))
+              print(String.localizedStringWithFormat(t("%lld 个项目 · %@"), 1, "2 MB"), "|", String.localizedStringWithFormat(t("%lld 个项目 · %@"), 3, "2 MB"))
+              print(String.localizedStringWithFormat(t("%lld 个多余的副本，共 %lld 组"), 1, 1), "|", String.localizedStringWithFormat(t("%lld 个多余的副本，共 %lld 组"), 4, 2))
+              print(String.localizedStringWithFormat(t("已转换 %lld 张，%@ → %@"), 1, "5 MB", "1 MB"))
+              print(String.localizedStringWithFormat(t("%@：%@ → %@"), "Downloads", "PDF", "Trash"))
+              print(t("清理"), "|", t("sidebar.pictures"), "|", t("kind.file"), "|", t("语言 / Language"))
+              print(lb.localizedString(forKey: "CFBundleDisplayName", value: "<<MISSING>>", table: "InfoPlist"))
+          }
+          SWIFT
+          sed -i '' 's/^          //' check.swift
+          swiftc check.swift -o check && ./check "$APP" > check.txt 2>&1 || true
+          ls "$APP/Contents/Resources" >> check.txt
+          cat check.txt
       - name: 推到 loc-export 分支
         if: always()
         run: |
@@ -31,6 +56,7 @@ jobs:
           cp -R out "$D/out" 2>/dev/null || true
           grep -nE "error:|warning:" export.log | head -200 > "$D/export-errors.txt" || true
           tail -50 export.log > "$D/export-tail.txt" || true
+          cp check.txt "$D/check.txt" 2>/dev/null || true
           cd "$D" && git init -q
           git config user.name "ci"; git config user.email "ci@users.noreply.github.com"
           git add -A && git commit -qm "loc export ${{ github.run_id }}"

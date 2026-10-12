@@ -35,7 +35,7 @@ enum Support {
         NSPasteboard.general.setString(text, forType: .string)
     }
 
-    static let sponsorLetter = """
+    static var sponsorLetter: String { String(localized: """
     大家好，我是 Hanson 👋
 
     我喜欢给 Mac 💻 做一些小而顺手的工具。拾掇就是其中之一：基础功能完全免费、开源，除了检查更新和激活授权从不联网、不收集任何数据，只想帮你把文件找得更快、理得更清爽 🧹。
@@ -48,7 +48,7 @@ enum Support {
 
     此致，
     Hanson
-    """
+    """) }
 }
 
 /// 设置里的「联系我们」+「推广」+「发送反馈」三块。
