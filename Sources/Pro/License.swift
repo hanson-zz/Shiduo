@@ -11,10 +11,10 @@ enum LicenseConfig {
     // 而是调用 server/license-relay 里的 Cloudflare Worker 中转。
 
     // TODO: 在 Creem 建好产品后填入产品 ID（prod_xxx）。为空时不检查（中转服务也会检查）。
-    static let productID = ""
+    static let productID = "prod_632G8EgQJWLL6m9M5JaBXv"
 
     // TODO: 换成 Creem 产品的结账链接。
-    static let buyURL = URL(string: "https://www.creem.io")!
+    static let buyURL = URL(string: "https://www.creem.io/payment/prod_632G8EgQJWLL6m9M5JaBXv")!
 
     // TODO: 部署 Worker 后换成真实地址。
     static let apiBase = "https://shiduo-license.workers.dev/v1/licenses/"

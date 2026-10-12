@@ -3,7 +3,7 @@ main = "worker.js"
 compatibility_date = "2026-10-01"
 
 [vars]
-PRODUCT_ID = ""
+PRODUCT_ID = "prod_632G8EgQJWLL6m9M5JaBXv"
 
 # 兑换码存储：在 Cloudflare ▸ 存储和数据库 ▸ KV 新建命名空间，再在 Worker ▸ 设置 ▸ 绑定 里以 GIFTS 绑定。
 # [[kv_namespaces]]
