@@ -166,10 +166,10 @@ struct LicenseKeyField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("已经购买？输入授权码")
+            Text("已经购买或收到兑换码？在这里输入")
                 .font(.callout.weight(.medium))
             HStack(spacing: 8) {
-                TextField("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", text: $key)
+                TextField("授权码或兑换码（SDG-XXXX-XXXX-XXXX）", text: $key)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(activate)
                     .disabled(license.isWorking)
