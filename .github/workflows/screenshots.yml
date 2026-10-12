@@ -41,13 +41,20 @@ jobs:
             [ "$mode" = dark ] && extra="--dark"
             if [ "$lang" = en ]; then dir=docs/screenshots/en; langarg="en"; fi
             mkdir -p "$dir"
-            "$BIN" --demo --page="$page" $extra -AppleLanguages "($langarg)" &
+            "$BIN" -AppleLanguages "($langarg)" --demo --page="$page" $extra &
             local pid=$!
             sleep 9
             local wid
-            ./window-id $pid || true
+            ./window-id $pid --list || true
             wid=$(./window-id $pid) || { echo "NO WINDOW $page $lang"; kill $pid; return 0; }
             screencapture -x -o -l "$wid" "$dir/$out.png"
+            # 偶尔会截到一条很矮的窗口（例如标题栏），再等一会儿重截一次。
+            if [ "$(sips -g pixelHeight "$dir/$out.png" | awk '/pixelHeight/{print $2}')" -lt 200 ]; then
+              echo "TOO SMALL $page $lang, retrying"
+              sleep 6
+              ./window-id $pid --list || true
+              wid=$(./window-id $pid) && screencapture -x -o -l "$wid" "$dir/$out.png"
+            fi
             kill $pid || true
             sleep 2
           }

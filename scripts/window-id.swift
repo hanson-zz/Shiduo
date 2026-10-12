@@ -4,6 +4,12 @@ import Foundation
 
 let pid = Int(CommandLine.arguments.dropFirst().first ?? "") ?? -1
 let list = CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID) as? [[String: Any]] ?? []
+// window-id <pid> --list：把这个进程的所有窗口打印到 stderr，排查截错窗口时用。
+if CommandLine.arguments.contains("--list") {
+    for info in list where (info[kCGWindowOwnerPID as String] as? Int) == pid {
+        FileHandle.standardError.write("  id=\(info[kCGWindowNumber as String] ?? "?") layer=\(info[kCGWindowLayer as String] ?? "?") onscreen=\(info[kCGWindowIsOnscreen as String] ?? "?") name=\(info[kCGWindowName as String] ?? "") \(info[kCGWindowBounds as String] ?? "")\n".data(using: .utf8)!)
+    }
+}
 func width(_ info: [String: Any]) -> CGFloat {
     (info[kCGWindowBounds as String] as? [String: CGFloat])?["Width"] ?? 0
 }
