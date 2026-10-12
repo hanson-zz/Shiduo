@@ -17,8 +17,8 @@ enum ImageConverter {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .sameFolder: return "原文件旁边"
-            case .desktopFolder: return "桌面上的“拾掇转换”文件夹"
+            case .sameFolder: return String(localized: "原文件旁边")
+            case .desktopFolder: return String(localized: "桌面上的“拾掇转换”文件夹")
             }
         }
     }
@@ -132,7 +132,7 @@ struct ConvertSheet: View {
         Task {
             var out: [URL] = []
             var failed = 0
-            let desktop = URL(fileURLWithPath: Folders.desktop).appendingPathComponent("拾掇转换")
+            let desktop = URL(fileURLWithPath: Folders.desktop).appendingPathComponent(String(localized: "拾掇转换"))
             if dest == .desktopFolder {
                 try? FileManager.default.createDirectory(at: desktop, withIntermediateDirectories: true)
             }
@@ -149,8 +149,8 @@ struct ConvertSheet: View {
             }
             dismiss()
             if !out.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(out) }
-            var message = "已转换 \(out.count) 张，\(originalBytes.byteText) → \(newBytes.byteText)"
-            if failed > 0 { message += "，\(failed) 张失败" }
+            var message = String(localized: "已转换 \(out.count) 张，\(originalBytes.byteText) → \(newBytes.byteText)")
+            if failed > 0 { message += String(localized: "，\(failed) 张失败") }
             store.showToast(message)
             store.reload()
         }

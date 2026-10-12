@@ -9,11 +9,11 @@ enum RenameMode: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .sequence: return "名称 + 序号"
-        case .date: return "修改日期"
-        case .captureTime: return "拍摄时间"
-        case .replace: return "替换文字"
-        case .affix: return "加前缀 / 后缀"
+        case .sequence: return String(localized: "名称 + 序号")
+        case .date: return String(localized: "修改日期")
+        case .captureTime: return String(localized: "拍摄时间")
+        case .replace: return String(localized: "替换文字")
+        case .affix: return String(localized: "加前缀 / 后缀")
         }
     }
 }
@@ -157,7 +157,7 @@ struct RenameSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(items.count > 1 ? "批量重命名 \(items.count) 个文件" : "重命名")
+            Text(items.count > 1 ? String(localized: "批量重命名 \(items.count) 个文件") : String(localized: "重命名"))
                 .font(.title2.bold())
             Picker("方式", selection: $mode) {
                 ForEach(RenameMode.allCases) { Text($0.title).tag($0) }
@@ -280,9 +280,9 @@ struct RenameSheet: View {
         let outcome = Renamer.apply(plans)
         dismiss()
         if !outcome.failed.isEmpty {
-            store.alertMessage = "\(outcome.failed.count) 个文件没能改名（可能被占用或没有权限）：" + outcome.failed.prefix(5).joined(separator: "、")
+            store.alertMessage = String(localized: "\(outcome.failed.count) 个文件没能改名（可能被占用或没有权限）：") + outcome.failed.prefix(5).joined(separator: String(localized: "、"))
         }
-        store.showToast("已重命名 \(outcome.done.count) 个文件")
+        store.showToast(String(localized: "已重命名 \(outcome.done.count) 个文件"))
         store.reload()
     }
 }

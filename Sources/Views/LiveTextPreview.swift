@@ -67,13 +67,13 @@ struct LiveTextPreview: View {
             Button {
                 highlight.toggle()
             } label: {
-                Label(highlight ? "隐藏文字框" : "显示所有文字", systemImage: "text.viewfinder")
+                Label(highlight ? String(localized: "隐藏文字框") : String(localized: "显示所有文字"), systemImage: "text.viewfinder")
             }
             .disabled(transcript.isEmpty)
             .help("把图里能选的文字都标出来")
             Button {
                 FileActions.copy(transcript)
-                store.showToast("已拷贝图中全部文字")
+                store.showToast(String(localized: "已拷贝图中全部文字"))
             } label: {
                 Label("拷贝全部文字", systemImage: "doc.on.doc")
             }
@@ -117,10 +117,10 @@ enum LiveTextStatus: Equatable {
 
     var text: String {
         switch self {
-        case .analyzing: return "正在识别图中文字…"
-        case .ready: return "可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点"
-        case .noText: return "这张图里没有识别到文字"
-        case .unsupported: return "这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）"
+        case .analyzing: return String(localized: "正在识别图中文字…")
+        case .ready: return String(localized: "可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点")
+        case .noText: return String(localized: "这张图里没有识别到文字")
+        case .unsupported: return String(localized: "这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）")
         }
     }
 

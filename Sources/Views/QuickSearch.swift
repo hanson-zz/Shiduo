@@ -260,7 +260,7 @@ struct QuickSearchView: View {
                 Image(systemName: model.text.isEmpty ? "sparkle.magnifyingglass" : "doc.questionmark")
                     .font(.largeTitle)
                     .foregroundStyle(.tertiary)
-                Text(model.text.isEmpty ? "输入文件名、拼音首字母，或者一句话" : (model.isSearching ? "正在查找…" : "没有找到匹配的文件"))
+                Text(model.text.isEmpty ? String(localized: "输入文件名、拼音首字母，或者一句话") : (model.isSearching ? String(localized: "正在查找…") : String(localized: "没有找到匹配的文件")))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

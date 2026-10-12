@@ -21,9 +21,11 @@ struct SettingsView: View {
     @AppStorage(CleanupReminder.enabledKey) private var reminderEnabled = false
     @AppStorage(CleanupReminder.weekdayKey) private var reminderWeekday = 7
     @AppStorage(CleanupReminder.hourKey) private var reminderHour = 10
+    @State private var language = AppLanguage.current
 
     var body: some View {
         Form {
+            languageSection
             licenseSection
             proSection
 
@@ -58,7 +60,7 @@ struct SettingsView: View {
                             loginItem = LoginItem.isEnabled
                         }
                     }
-                Text(hotKeyMessage ?? "关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。")
+                Text(hotKeyMessage ?? String(localized: "关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。"))
                     .font(.caption)
                     .foregroundStyle(hotKeyMessage == nil ? Color.secondary : Color.orange)
             }
@@ -100,7 +102,7 @@ struct SettingsView: View {
                 PrivacyBadges()
                 LabeledContent("完全磁盘访问权限") {
                     HStack {
-                        Text(FullDiskAccess.isGranted ? "已开启" : "未开启")
+                        Text(FullDiskAccess.isGranted ? String(localized: "已开启") : String(localized: "未开启"))
                             .foregroundStyle(FullDiskAccess.isGranted ? .green : .orange)
                         Button("打开系统设置") { FullDiskAccess.openSettings() }
                     }
@@ -110,13 +112,34 @@ struct SettingsView: View {
 
             Section("关于") {
                 LabeledContent("版本", value: UpdateChecker.currentVersion)
-                LabeledContent("许可", value: "MIT 开源 · Pro 功能需授权")
+                LabeledContent(String(localized: "许可"), value: String(localized: "MIT 开源 · Pro 功能需授权"))
             }
 
             SupportSections()
         }
         .formStyle(.grouped)
         .frame(width: 560, height: 720)
+    }
+
+    // MARK: - 语言
+
+    private var languageSection: some View {
+        Section {
+            // 标题保留中英双语，界面语言不对时也能找到这里。
+            Picker("语言 / Language", selection: $language) {
+                ForEach(AppLanguage.allCases) { Text($0.title).tag($0) }
+            }
+            .onChange(of: language) { language.apply() }
+            if language != AppLanguage.atLaunch {
+                HStack {
+                    Text("重新打开拾掇后生效。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("立即重新打开") { AppLanguage.relaunch() }
+                }
+            }
+        }
     }
 
     // MARK: - 拾掇 Pro
@@ -230,15 +253,15 @@ struct SettingsView: View {
     }
 
     private func applyHotKey() {
-        hotKeyMessage = HotKeyCenter.shared.apply() ? nil : "\(hotKey.title) 已被其他 App 占用，请换一个快捷键。"
+        hotKeyMessage = HotKeyCenter.shared.apply() ? nil : String(localized: "\(hotKey.title) 已被其他 App 占用，请换一个快捷键。")
     }
 
     private var statusText: String {
         switch updater.state {
-        case .idle: return "当前版本 \(UpdateChecker.currentVersion)"
-        case .checking: return "正在检查…"
-        case .downloading(let v): return "正在下载 \(v)…"
-        case .ready(let v): return "\(v) 已下载，退出拾掇时自动安装"
+        case .idle: return String(localized: "当前版本 \(UpdateChecker.currentVersion)")
+        case .checking: return String(localized: "正在检查…")
+        case .downloading(let v): return String(localized: "正在下载 \(v)…")
+        case .ready(let v): return String(localized: "\(v) 已下载，退出拾掇时自动安装")
         case .failed(let message): return message
         }
     }

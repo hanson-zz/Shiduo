@@ -5,7 +5,7 @@ import AppKit
 enum Support {
     static let email = "694561981@qq.com"
     static let repoURL = UpdateChecker.repoURL
-    static let shareText = "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。"
+    static let shareText = String(localized: "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。")
 
     static func mailURL(subject: String, body: String = "") -> URL {
         var c = URLComponents()
@@ -19,12 +19,12 @@ enum Support {
     static var feedbackURL: URL {
         let os = ProcessInfo.processInfo.operatingSystemVersionString
         #if arch(arm64)
-        let chip = "Apple 芯片"
+        let chip = String(localized: "Apple 芯片")
         #else
         let chip = "Intel"
         #endif
-        let body = "\n\n\n——\n拾掇 \(UpdateChecker.currentVersion) · macOS \(os) · \(chip)"
-        return mailURL(subject: "拾掇反馈", body: body)
+        let body = String(localized: "\n\n\n——\n拾掇 \(UpdateChecker.currentVersion) · macOS \(os) · \(chip)")
+        return mailURL(subject: String(localized: "拾掇反馈"), body: body)
     }
 
     static func openFeedback() { NSWorkspace.shared.open(feedbackURL) }
@@ -62,7 +62,7 @@ struct SupportSections: View {
                     .contextMenu { Button("拷贝链接") { Support.copy(Support.repoURL.absoluteString) } }
             }
             LabeledContent("邮箱") {
-                Link(Support.email, destination: Support.mailURL(subject: "关于拾掇"))
+                Link(Support.email, destination: Support.mailURL(subject: String(localized: "关于拾掇")))
                     .contextMenu { Button("拷贝邮箱") { Support.copy(Support.email) } }
             }
         } header: {
@@ -152,7 +152,7 @@ struct SponsorView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
 
-                Text("用\(method == 0 ? "微信" : "支付宝")扫一扫，金额随意")
+                Text(method == 0 ? String(localized: "用微信扫一扫，金额随意") : String(localized: "用支付宝扫一扫，金额随意"))
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

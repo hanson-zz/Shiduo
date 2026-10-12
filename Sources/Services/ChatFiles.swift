@@ -10,7 +10,7 @@ enum ChatApp: String, CaseIterable, Identifiable, Hashable {
 
     var name: String {
         switch self {
-        case .wechat: return "微信"
+        case .wechat: return String(localized: "微信")
         case .qq: return "QQ"
         }
     }
@@ -68,10 +68,10 @@ enum ChatFileKind: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .all: return "全部"
-        case .files: return "文件"
-        case .images: return "图片"
-        case .videos: return "视频"
+        case .all: return String(localized: "全部")
+        case .files: return String(localized: "文件")
+        case .images: return String(localized: "图片")
+        case .videos: return String(localized: "视频")
         }
     }
 

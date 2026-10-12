@@ -21,17 +21,17 @@ struct SidebarView: View {
     private var locations: [Location] {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return [
-            Location(name: "桌面", symbol: "menubar.dock.rectangle", path: home + "/Desktop",
+            Location(name: String(localized: "桌面"), symbol: "menubar.dock.rectangle", path: home + "/Desktop",
                      colors: [Self.rgb(0.40, 0.72, 1.00), Self.rgb(0.16, 0.47, 0.96)]),
-            Location(name: "文稿", symbol: "doc.text.fill", path: home + "/Documents",
+            Location(name: String(localized: "文稿"), symbol: "doc.text.fill", path: home + "/Documents",
                      colors: [Self.rgb(1.00, 0.74, 0.30), Self.rgb(0.98, 0.52, 0.12)]),
-            Location(name: "下载", symbol: "arrow.down", path: home + "/Downloads",
+            Location(name: String(localized: "下载"), symbol: "arrow.down", path: home + "/Downloads",
                      colors: [Self.rgb(0.40, 0.86, 0.50), Self.rgb(0.13, 0.66, 0.33)]),
-            Location(name: "图片", symbol: "photo.fill", path: home + "/Pictures",
+            Location(name: String(localized: "sidebar.pictures", defaultValue: "图片"), symbol: "photo.fill", path: home + "/Pictures",
                      colors: [Self.rgb(1.00, 0.52, 0.66), Self.rgb(0.93, 0.27, 0.45)]),
-            Location(name: "影片", symbol: "film.fill", path: home + "/Movies",
+            Location(name: String(localized: "sidebar.movies", defaultValue: "影片"), symbol: "film.fill", path: home + "/Movies",
                      colors: [Self.rgb(0.70, 0.55, 1.00), Self.rgb(0.47, 0.31, 0.92)]),
-            Location(name: "音乐", symbol: "music.note", path: home + "/Music",
+            Location(name: String(localized: "音乐"), symbol: "music.note", path: home + "/Music",
                      colors: [Self.rgb(1.00, 0.45, 0.45), Self.rgb(0.90, 0.20, 0.30)]),
         ]
     }

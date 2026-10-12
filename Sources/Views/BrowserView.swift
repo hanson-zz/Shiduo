@@ -67,7 +67,7 @@ struct BrowserView: View {
 
     private var subtitle: String {
         let bytes = visible.reduce(Int64(0)) { $0 + $1.size }
-        return "\(visible.count) 个项目 · \(bytes.byteText)"
+        return String(localized: "\(visible.count) 个项目 · \(bytes.byteText)")
     }
 
     @ViewBuilder
@@ -89,9 +89,9 @@ struct BrowserView: View {
             }
         } else if visible.isEmpty {
             ContentUnavailableView(
-                store.activeQuery != nil ? "没有找到匹配的文件" : "这里还没有文件",
+                store.activeQuery != nil ? String(localized: "没有找到匹配的文件") : String(localized: "这里还没有文件"),
                 systemImage: store.activeQuery != nil ? "magnifyingglass" : "tray",
-                description: Text(store.activeQuery != nil ? "试试去掉一个筛选条件。" : "")
+                description: Text(store.activeQuery != nil ? String(localized: "试试去掉一个筛选条件。") : "")
             )
         } else {
             FileCollectionView(items: visible)
@@ -108,7 +108,7 @@ struct BrowserView: View {
                 Button("\(group.source.name)（\(group.items.count)）") { sourceFilter = group.source.id }
             }
         } label: {
-            Label(current.map { "来源：\($0.source.name)" } ?? "来源：全部", systemImage: current?.source.symbol ?? "arrow.down.circle")
+            Label(current.map { String(localized: "来源：\($0.source.name)") } ?? String(localized: "来源：全部"), systemImage: current?.source.symbol ?? "arrow.down.circle")
         }
         .menuStyle(.borderlessButton)
         .fixedSize()

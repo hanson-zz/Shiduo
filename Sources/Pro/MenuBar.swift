@@ -6,7 +6,7 @@ struct MenuBarContent: View {
     @State private var recent: [FileItem] = []
     @State private var free: Int64 = 0
     @State private var total: Int64 = 0
-    @State private var diskName = "启动磁盘"
+    @State private var diskName = String(localized: "启动磁盘")
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

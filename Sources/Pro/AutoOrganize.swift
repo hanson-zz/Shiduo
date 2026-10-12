@@ -66,7 +66,7 @@ struct OrganizeRule: Codable, Identifiable, Hashable {
     }
 
     static func folderName(_ path: String?) -> String {
-        guard let path, !path.isEmpty else { return "未选择" }
+        guard let path, !path.isEmpty else { return String(localized: "未选择") }
         return FileManager.default.displayName(atPath: path)
     }
 
@@ -75,23 +75,23 @@ struct OrganizeRule: Codable, Identifiable, Hashable {
         if let c = category.flatMap(FileCategory.init(rawValue:)) { parts.append(c.title) }
         if !extensions.isEmpty { parts.append(extensions.map { "." + $0 }.joined(separator: " ")) }
         let needle = nameContains.trimmingCharacters(in: .whitespaces)
-        if !needle.isEmpty { parts.append("名称含「\(needle)」") }
-        if let source = sourceID.flatMap(SourceCatalog.source(id:)) { parts.append("来自 \(source.name)") }
-        if let days = olderThanDays, days > 0 { parts.append("超过 \(days) 天") }
-        let condition = parts.isEmpty ? "（还没有条件）" : parts.joined(separator: " · ")
-        let target = action == .trash ? "移到废纸篓" : "移到「\(Self.folderName(destination))」"
-        return "\(Self.folderName(watchFolder))：\(condition) → \(target)"
+        if !needle.isEmpty { parts.append(String(localized: "名称含「\(needle)」")) }
+        if let source = sourceID.flatMap(SourceCatalog.source(id:)) { parts.append(String(localized: "来自 \(source.name)")) }
+        if let days = olderThanDays, days > 0 { parts.append(String(localized: "超过 \(days) 天")) }
+        let condition = parts.isEmpty ? String(localized: "（还没有条件）") : parts.joined(separator: " · ")
+        let target = action == .trash ? String(localized: "移到废纸篓") : String(localized: "移到「\(Self.folderName(destination))」")
+        return String(localized: "\(Self.folderName(watchFolder))：\(condition) → \(target)")
     }
 
     /// 第一次打开时给两条示例规则，默认关闭，用户打开开关才会生效。
     static var examples: [OrganizeRule] {
         let home = NSHomeDirectory() as NSString
         return [
-            OrganizeRule(name: "旧安装包移到废纸篓", enabled: false, watchFolder: Folders.downloads,
+            OrganizeRule(name: String(localized: "旧安装包移到废纸篓"), enabled: false, watchFolder: Folders.downloads,
                          extensions: ["dmg", "pkg"], olderThanDays: 14, action: .trash),
-            OrganizeRule(name: "下载的 PDF 归到文稿", enabled: false, watchFolder: Folders.downloads,
+            OrganizeRule(name: String(localized: "下载的 PDF 归到文稿"), enabled: false, watchFolder: Folders.downloads,
                          extensions: ["pdf"], olderThanDays: 3, action: .move,
-                         destination: home.appendingPathComponent("Documents/下载的 PDF")),
+                         destination: home.appendingPathComponent(String(localized: "Documents/下载的 PDF"))),
         ]
     }
 }
@@ -385,7 +385,7 @@ struct AutoOrganizeView: View {
             .buttonStyle(.plain)
             .disabled(organizer.isRunning)
             Button {
-                editing = OrganizeRule(name: "新规则", watchFolder: OrganizeRule.defaultWatchFolder)
+                editing = OrganizeRule(name: String(localized: "新规则"), watchFolder: OrganizeRule.defaultWatchFolder)
             } label: {
                 Label("新建规则", systemImage: "plus")
                     .glassCapsule(tint: .accentColor)
@@ -395,9 +395,9 @@ struct AutoOrganizeView: View {
     }
 
     private var subtitle: String {
-        var text = "拾掇开着时，每 10 分钟按规则整理一次"
+        var text = String(localized: "拾掇开着时，每 10 分钟按规则整理一次")
         if let last = organizer.lastRun {
-            text += " · 上次 \(last.formatted(date: .omitted, time: .shortened))"
+            text += String(localized: " · 上次 \(last.formatted(date: .omitted, time: .shortened))")
         }
         return text
     }
@@ -417,7 +417,7 @@ struct AutoOrganizeView: View {
                     ForEach(organizer.log) { entry in
                         LogRow(entry: entry) {
                             if !organizer.undo(entry) {
-                                store.showToast("无法撤销：文件已经不在原来移去的位置")
+                                store.showToast(String(localized: "无法撤销：文件已经不在原来移去的位置"))
                             }
                         }
                         if entry.id != organizer.log.last?.id {
@@ -449,7 +449,7 @@ private struct RuleRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                 if !rule.isRunnable {
-                    Text(rule.hasCondition ? "请选择目标文件夹" : "至少设置一个条件才会生效")
+                    Text(rule.hasCondition ? String(localized: "请选择目标文件夹") : String(localized: "至少设置一个条件才会生效"))
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
@@ -475,7 +475,7 @@ private struct LogRow: View {
     let onUndo: () -> Void
 
     private var target: String {
-        if entry.action == .trash { return "废纸篓" }
+        if entry.action == .trash { return String(localized: "废纸篓") }
         guard let to = entry.to else { return "--" }
         return FileManager.default.displayName(atPath: (to as NSString).deletingLastPathComponent)
     }
@@ -522,7 +522,7 @@ struct RuleEditor: View {
 
     private var result: OrganizeRule {
         var rule = draft
-        rule.name = rule.name.trimmingCharacters(in: .whitespaces).isEmpty ? "未命名规则" : rule.name
+        rule.name = rule.name.trimmingCharacters(in: .whitespaces).isEmpty ? String(localized: "未命名规则") : rule.name
         rule.extensions = Self.parseExtensions(extensionsText)
         rule.nameContains = rule.nameContains.trimmingCharacters(in: .whitespaces)
         if rule.action == .trash { rule.destination = nil }
@@ -555,7 +555,7 @@ struct RuleEditor: View {
                             Text(OrganizeRule.folderName(draft.watchFolder))
                                 .help(draft.watchFolder)
                             Button("选择…") {
-                                if let path = Self.chooseFolder(prompt: "监视") { draft.watchFolder = path }
+                                if let path = Self.chooseFolder(prompt: String(localized: "监视")) { draft.watchFolder = path }
                             }
                         }
                     }
@@ -577,7 +577,7 @@ struct RuleEditor: View {
                         }
                     }
                     Stepper(value: days, in: 0...365) {
-                        Text(days.wrappedValue == 0 ? "不限时间" : "放进文件夹超过 \(days.wrappedValue) 天")
+                        Text(days.wrappedValue == 0 ? String(localized: "不限时间") : String(localized: "放进文件夹超过 \(days.wrappedValue) 天"))
                     }
                 } header: {
                     Text("条件（全部满足才执行）")
@@ -595,7 +595,7 @@ struct RuleEditor: View {
                                 Text(OrganizeRule.folderName(draft.destination))
                                     .help(draft.destination ?? "")
                                 Button("选择…") {
-                                    if let path = Self.chooseFolder(prompt: "移到这里") { draft.destination = path }
+                                    if let path = Self.chooseFolder(prompt: String(localized: "移到这里")) { draft.destination = path }
                                 }
                             }
                         }
@@ -603,7 +603,7 @@ struct RuleEditor: View {
                 }
 
                 if !result.isRunnable {
-                    Text(result.hasCondition ? "请选择目标文件夹。" : "至少设置一个条件，避免把整个文件夹都搬走。")
+                    Text(result.hasCondition ? String(localized: "请选择目标文件夹。") : String(localized: "至少设置一个条件，避免把整个文件夹都搬走。"))
                         .font(.callout)
                         .foregroundStyle(.orange)
                 }

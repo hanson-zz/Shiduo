@@ -19,7 +19,50 @@ enum Demo {
             .map { String($0.dropFirst("--page=".count)) } ?? "home"
     }
 
-    static let folder: URL = FileManager.default.temporaryDirectory.appendingPathComponent("ShiduoDemo", isDirectory: true)
+    static let folder: URL = FileManager.default.temporaryDirectory
+        .appendingPathComponent(english ? "ShiduoDemo-en" : "ShiduoDemo", isDirectory: true)
+
+    /// 界面是英文时（例如用 -AppleLanguages "(en)" 启动），示例文件也用英文名，方便截英文图。
+    static let english = Bundle.main.preferredLocalizations.first?.hasPrefix("en") ?? false
+
+    static func n(_ zh: String) -> String { english ? (englishNames[zh] ?? zh) : zh }
+
+    private static let englishNames: [String: String] = [
+        "西湖日落.jpg": "West Lake Sunset.jpg",
+        "猫咪午睡.jpg": "Cat Nap.jpg",
+        "海边.jpg": "Seaside.jpg",
+        "生日蛋糕.jpg": "Birthday Cake.jpg",
+        "设计稿-首页.png": "Design - Home.png",
+        "海报.png": "Poster.png",
+        "AI 插画.png": "AI Illustration.png",
+        "微信图片_20261009.jpg": "WeChat Image_20261009.jpg",
+        "小红书收藏.jpg": "Saved from RedNote.jpg",
+        "截屏 2026-10-11 上午9.41.png": "Screenshot 2026-10-11 at 9.41 AM.png",
+        "截屏 2026-10-10 下午3.12.png": "Screenshot 2026-10-10 at 3.12 PM.png",
+        "截屏 2026-08-02 上午11.05.png": "Screenshot 2026-08-02 at 11.05 AM.png",
+        "截屏 2026-07-21 下午8.30.png": "Screenshot 2026-07-21 at 8.30 PM.png",
+        "旅行 Vlog.mov": "Travel Vlog.mov",
+        "会议录屏.mov": "Meeting Recording.mov",
+        "毕业典礼.mp4": "Graduation.mp4",
+        "晨间散步.mp3": "Morning Walk.mp3",
+        "钢琴练习.m4a": "Piano Practice.m4a",
+        "年度报告 2026.pdf": "Annual Report 2026.pdf",
+        "租房合同.pdf": "Lease Agreement.pdf",
+        "论文初稿 v4.pdf": "Thesis Draft v4.pdf",
+        "品牌手册.pdf": "Brand Guide.pdf",
+        "发票-十月.pdf": "Invoice - October.pdf",
+        "季度复盘.docx": "Quarterly Review.docx",
+        "项目素材.zip": "Project Assets.zip",
+        "照片备份.zip": "Photo Backup.zip",
+        "海报 (1).png": "Poster (1).png",
+        "猫咪午睡 (edited).jpg": "Cat Nap (edited).jpg",
+        "桌面": "Desktop",
+        "下载": "Downloads",
+        "图片": "Pictures",
+        "影片": "Movies",
+        "音乐": "Music",
+        "文稿": "Documents",
+    ]
 
     // MARK: - 示例文件
 
@@ -38,14 +81,14 @@ enum Demo {
 
         var dir: String {
             if let folder { return folder }
-            if screenshot { return "桌面" }
-            if !from.isEmpty { return "下载" }
+            if screenshot { return Demo.n("桌面") }
+            if !from.isEmpty { return Demo.n("下载") }
             switch kind {
-            case .image: return "图片"
-            case .video: return "影片"
-            case .music: return "音乐"
-            case .pdf, .doc: return "文稿"
-            case .archive, .installer: return "下载"
+            case .image: return Demo.n("图片")
+            case .video: return Demo.n("影片")
+            case .music: return Demo.n("音乐")
+            case .pdf, .doc: return Demo.n("文稿")
+            case .archive, .installer: return Demo.n("下载")
             }
         }
     }
@@ -59,44 +102,44 @@ enum Demo {
     ]
 
     static let specs: [Spec] = [
-        Spec(name: "西湖日落.jpg", kind: .image, size: 4_820_000, daysAgo: 0.2),
-        Spec(name: "猫咪午睡.jpg", kind: .image, size: 3_150_000, daysAgo: 0.5),
-        Spec(name: "海边.jpg", kind: .image, size: 5_600_000, daysAgo: 1),
-        Spec(name: "生日蛋糕.jpg", kind: .image, size: 2_900_000, daysAgo: 2),
-        Spec(name: "设计稿-首页.png", kind: .image, size: 1_800_000, daysAgo: 2.5, from: ["https://www.figma.com/file/abc"]),
-        Spec(name: "海报.png", kind: .image, size: 2_200_000, daysAgo: 3, from: ["https://static.canva.cn/x.png", "https://www.canva.cn/design/abc"]),
-        Spec(name: "AI 插画.png", kind: .image, size: 2_600_000, daysAgo: 1.5, from: ["https://files.oaiusercontent.com/x.png", "https://chatgpt.com/c/abc"]),
-        Spec(name: "微信图片_20261009.jpg", kind: .image, size: 860_000, daysAgo: 2, from: ["https://wx.qq.com/cgi-bin/x"]),
-        Spec(name: "小红书收藏.jpg", kind: .image, size: 740_000, daysAgo: 4, from: ["https://sns-img.xhscdn.com/x.jpg", "https://www.xiaohongshu.com/explore/abc"]),
-        Spec(name: "截屏 2026-10-11 上午9.41.png", kind: .image, size: 1_100_000, daysAgo: 0.1, screenshot: true),
-        Spec(name: "截屏 2026-10-10 下午3.12.png", kind: .image, size: 920_000, daysAgo: 1, screenshot: true),
-        Spec(name: "截屏 2026-08-02 上午11.05.png", kind: .image, size: 1_300_000, daysAgo: 70, screenshot: true),
-        Spec(name: "截屏 2026-07-21 下午8.30.png", kind: .image, size: 1_050_000, daysAgo: 82, screenshot: true),
-        Spec(name: "旅行 Vlog.mov", kind: .video, size: 1_820_000_000, daysAgo: 120),
-        Spec(name: "会议录屏.mov", kind: .video, size: 640_000_000, daysAgo: 5),
-        Spec(name: "毕业典礼.mp4", kind: .video, size: 980_000_000, daysAgo: 200),
-        Spec(name: "晨间散步.mp3", kind: .music, size: 8_400_000, daysAgo: 10),
-        Spec(name: "钢琴练习.m4a", kind: .music, size: 5_100_000, daysAgo: 20),
-        Spec(name: "年度报告 2026.pdf", kind: .pdf, size: 13_700_000, daysAgo: 6, from: ["https://mail-attachment.googleusercontent.com/x", "https://mail.google.com/mail/u/0/"]),
-        Spec(name: "租房合同.pdf", kind: .pdf, size: 6_100_000, daysAgo: 7, from: ["https://mail.qq.com/cgi-bin/download"]),
-        Spec(name: "论文初稿 v4.pdf", kind: .pdf, size: 8_600_000, daysAgo: 8),
-        Spec(name: "品牌手册.pdf", kind: .pdf, size: 9_400_000, daysAgo: 9, from: ["https://www.feishu.cn/file/abc"]),
-        Spec(name: "发票-十月.pdf", kind: .pdf, size: 420_000, daysAgo: 3, from: ["https://mail.163.com/js6/read"]),
-        Spec(name: "季度复盘.docx", kind: .doc, size: 2_300_000, daysAgo: 4, from: ["https://www.dingtalk.com/file"]),
-        Spec(name: "项目素材.zip", kind: .archive, size: 380_000_000, daysAgo: 45, from: ["https://pan.baidu.com/s/abc"]),
-        Spec(name: "照片备份.zip", kind: .archive, size: 1_200_000_000, daysAgo: 90, from: ["https://www.alipan.com/s/abc"]),
+        Spec(name: n("西湖日落.jpg"), kind: .image, size: 4_820_000, daysAgo: 0.2),
+        Spec(name: n("猫咪午睡.jpg"), kind: .image, size: 3_150_000, daysAgo: 0.5),
+        Spec(name: n("海边.jpg"), kind: .image, size: 5_600_000, daysAgo: 1),
+        Spec(name: n("生日蛋糕.jpg"), kind: .image, size: 2_900_000, daysAgo: 2),
+        Spec(name: n("设计稿-首页.png"), kind: .image, size: 1_800_000, daysAgo: 2.5, from: ["https://www.figma.com/file/abc"]),
+        Spec(name: n("海报.png"), kind: .image, size: 2_200_000, daysAgo: 3, from: ["https://static.canva.cn/x.png", "https://www.canva.cn/design/abc"]),
+        Spec(name: n("AI 插画.png"), kind: .image, size: 2_600_000, daysAgo: 1.5, from: ["https://files.oaiusercontent.com/x.png", "https://chatgpt.com/c/abc"]),
+        Spec(name: n("微信图片_20261009.jpg"), kind: .image, size: 860_000, daysAgo: 2, from: ["https://wx.qq.com/cgi-bin/x"]),
+        Spec(name: n("小红书收藏.jpg"), kind: .image, size: 740_000, daysAgo: 4, from: ["https://sns-img.xhscdn.com/x.jpg", "https://www.xiaohongshu.com/explore/abc"]),
+        Spec(name: n("截屏 2026-10-11 上午9.41.png"), kind: .image, size: 1_100_000, daysAgo: 0.1, screenshot: true),
+        Spec(name: n("截屏 2026-10-10 下午3.12.png"), kind: .image, size: 920_000, daysAgo: 1, screenshot: true),
+        Spec(name: n("截屏 2026-08-02 上午11.05.png"), kind: .image, size: 1_300_000, daysAgo: 70, screenshot: true),
+        Spec(name: n("截屏 2026-07-21 下午8.30.png"), kind: .image, size: 1_050_000, daysAgo: 82, screenshot: true),
+        Spec(name: n("旅行 Vlog.mov"), kind: .video, size: 1_820_000_000, daysAgo: 120),
+        Spec(name: n("会议录屏.mov"), kind: .video, size: 640_000_000, daysAgo: 5),
+        Spec(name: n("毕业典礼.mp4"), kind: .video, size: 980_000_000, daysAgo: 200),
+        Spec(name: n("晨间散步.mp3"), kind: .music, size: 8_400_000, daysAgo: 10),
+        Spec(name: n("钢琴练习.m4a"), kind: .music, size: 5_100_000, daysAgo: 20),
+        Spec(name: n("年度报告 2026.pdf"), kind: .pdf, size: 13_700_000, daysAgo: 6, from: ["https://mail-attachment.googleusercontent.com/x", "https://mail.google.com/mail/u/0/"]),
+        Spec(name: n("租房合同.pdf"), kind: .pdf, size: 6_100_000, daysAgo: 7, from: ["https://mail.qq.com/cgi-bin/download"]),
+        Spec(name: n("论文初稿 v4.pdf"), kind: .pdf, size: 8_600_000, daysAgo: 8),
+        Spec(name: n("品牌手册.pdf"), kind: .pdf, size: 9_400_000, daysAgo: 9, from: ["https://www.feishu.cn/file/abc"]),
+        Spec(name: n("发票-十月.pdf"), kind: .pdf, size: 420_000, daysAgo: 3, from: ["https://mail.163.com/js6/read"]),
+        Spec(name: n("季度复盘.docx"), kind: .doc, size: 2_300_000, daysAgo: 4, from: ["https://www.dingtalk.com/file"]),
+        Spec(name: n("项目素材.zip"), kind: .archive, size: 380_000_000, daysAgo: 45, from: ["https://pan.baidu.com/s/abc"]),
+        Spec(name: n("照片备份.zip"), kind: .archive, size: 1_200_000_000, daysAgo: 90, from: ["https://www.alipan.com/s/abc"]),
         Spec(name: "source-code.zip", kind: .archive, size: 24_000_000, daysAgo: 12, from: ["https://codeload.github.com/x", "https://github.com/hanson-zz/Shiduo"]),
         Spec(name: "WeChatMac.dmg", kind: .installer, size: 498_000_000, daysAgo: 40, from: ["https://dldir1.qq.com/weixin/mac/WeChatMac.dmg", "https://weixin.qq.com/"]),
         Spec(name: "Figma.dmg", kind: .installer, size: 312_000_000, daysAgo: 60, from: ["https://desktop.figma.com/mac/Figma.dmg", "https://www.figma.com/downloads/"]),
         Spec(name: "Python-3.13.pkg", kind: .installer, size: 71_000_000, daysAgo: 33, from: ["https://www.python.org/ftp/python/3.13.0/x.pkg"]),
         // 重复文件：同一张图、同一份 PDF 在别处又存了一份。
-        Spec(name: "西湖日落.jpg", kind: .image, size: 4_820_000, daysAgo: 0.25, folder: "下载", sameAs: 0),
-        Spec(name: "海报 (1).png", kind: .image, size: 2_200_000, daysAgo: 3.2, folder: "桌面", sameAs: 5),
-        Spec(name: "年度报告 2026.pdf", kind: .pdf, size: 13_700_000, daysAgo: 6.1, folder: "桌面"),
+        Spec(name: n("西湖日落.jpg"), kind: .image, size: 4_820_000, daysAgo: 0.25, folder: n("下载"), sameAs: 0),
+        Spec(name: n("海报 (1).png"), kind: .image, size: 2_200_000, daysAgo: 3.2, folder: n("桌面"), sameAs: 5),
+        Spec(name: n("年度报告 2026.pdf"), kind: .pdf, size: 13_700_000, daysAgo: 6.1, folder: n("桌面")),
         // 相似照片：HEIC/JPEG 成对、编辑版、连拍。
         Spec(name: "IMG_2041.HEIC", kind: .image, size: 2_400_000, daysAgo: 12, sameAs: 2),
         Spec(name: "IMG_2041.JPG", kind: .image, size: 3_900_000, daysAgo: 12, sameAs: 2),
-        Spec(name: "猫咪午睡 (edited).jpg", kind: .image, size: 3_300_000, daysAgo: 0.4, sameAs: 1, variant: true),
+        Spec(name: n("猫咪午睡 (edited).jpg"), kind: .image, size: 3_300_000, daysAgo: 0.4, sameAs: 1, variant: true),
         Spec(name: "IMG_3301.jpg", kind: .image, size: 3_100_000, daysAgo: 15, sameAs: 3),
         Spec(name: "IMG_3302.jpg", kind: .image, size: 3_150_000, daysAgo: 15, sameAs: 3, variant: true),
     ]
@@ -294,9 +337,9 @@ extension LibraryStore {
         sourceGroups = SourceGroup.make(from: all)
         let byDate = all.sorted { $0.sortDate > $1.sortDate }
         shelves = [
-            Shelf(id: "screenshots", title: "最近截图", symbol: "camera.viewfinder",
+            Shelf(id: "screenshots", title: String(localized: "最近截图"), symbol: "camera.viewfinder",
                   items: byDate.filter(\.isScreenshot), target: .screenshots),
-            Shelf(id: "images", title: "最近的图片", symbol: "photo",
+            Shelf(id: "images", title: String(localized: "最近的图片"), symbol: "photo",
                   items: byDate.filter { $0.isImage && !$0.isScreenshot }, target: .category(.images)),
         ]
         dashboardLoaded = true
@@ -313,14 +356,14 @@ extension LibraryStore {
 
         func named(_ name: String) -> [FileItem] { all.filter { $0.name == name } }
         duplicates.groups = [
-            FileGroup(id: "demo-dup-1", title: "", items: named("年度报告 2026.pdf").sorted { $0.sortDate > $1.sortDate }),
-            FileGroup(id: "demo-dup-2", title: "", items: named("西湖日落.jpg").sorted { $0.sortDate > $1.sortDate }),
-            FileGroup(id: "demo-dup-3", title: "", items: (named("海报.png") + named("海报 (1).png")).sorted { $0.sortDate > $1.sortDate }),
+            FileGroup(id: "demo-dup-1", title: "", items: named(Demo.n("年度报告 2026.pdf")).sorted { $0.sortDate > $1.sortDate }),
+            FileGroup(id: "demo-dup-2", title: "", items: named(Demo.n("西湖日落.jpg")).sorted { $0.sortDate > $1.sortDate }),
+            FileGroup(id: "demo-dup-3", title: "", items: (named(Demo.n("海报.png")) + named(Demo.n("海报 (1).png"))).sorted { $0.sortDate > $1.sortDate }),
         ].filter { $0.items.count > 1 }
         duplicates.hasScanned = true
         let similarSets = [
             named("IMG_2041.HEIC") + named("IMG_2041.JPG"),
-            named("猫咪午睡.jpg") + named("猫咪午睡 (edited).jpg"),
+            named(Demo.n("猫咪午睡.jpg")) + named(Demo.n("猫咪午睡 (edited).jpg")),
             named("IMG_3301.jpg") + named("IMG_3302.jpg"),
         ]
         similar.groups = similarSets.enumerated().compactMap { index, items in
@@ -375,7 +418,7 @@ extension LibraryStore {
             cleanupReview = .installers
         case "duplicates": selection = .duplicates
         case "similar": selection = .similarPhotos
-        case "search": applyDemoSearch("上周超过5MB的pdf")
+        case "search": applyDemoSearch(Demo.english ? "pdfs over 5MB last week" : "上周超过5MB的pdf")
         case "suggest": searchFieldFocused = true
         case "onboarding": showOnboarding = true
         case "storagemap": selection = .storageMap

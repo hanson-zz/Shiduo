@@ -27,7 +27,7 @@ final class CleanupReminder: ObservableObject {
 
     /// 周几的中文名，下标是 Calendar 的 weekday。
     nonisolated static let weekdayNames: [Int: String] = [
-        2: "周一", 3: "周二", 4: "周三", 5: "周四", 6: "周五", 7: "周六", 1: "周日",
+        2: String(localized: "周一"), 3: String(localized: "周二"), 4: String(localized: "周三"), 5: String(localized: "周四"), 6: String(localized: "周五"), 7: String(localized: "周六"), 1: String(localized: "周日"),
     ]
     nonisolated static let weekdayOrder = [2, 3, 4, 5, 6, 7, 1]
 
@@ -54,10 +54,10 @@ final class CleanupReminder: ObservableObject {
 
         let bytes = store?.cleanup.totalBytes ?? 0
         let content = UNMutableNotificationContent()
-        content.title = "拾掇：该清理一下了"
+        content.title = String(localized: "拾掇：该清理一下了")
         content.body = bytes > 0
-            ? "本周可腾出 \(bytes.byteText)，点这里打开清理。"
-            : "花一分钟看看有哪些可以清理的文件。"
+            ? String(localized: "本周可腾出 \(bytes.byteText)，点这里打开清理。")
+            : String(localized: "花一分钟看看有哪些可以清理的文件。")
         content.sound = .default
 
         var components = DateComponents()

@@ -39,7 +39,7 @@ final class DuplicateScanner: ObservableObject {
     func cancel() {
         task?.cancel()
         isRunning = false
-        status = "已停止"
+        status = String(localized: "已停止")
     }
 
     func remove(paths: Set<String>) {
@@ -54,13 +54,13 @@ final class DuplicateScanner: ObservableObject {
         isRunning = true
         progress = 0
         groups = []
-        status = "正在查找候选文件…"
+        status = String(localized: "正在查找候选文件…")
         let candidates = await SpotlightSearch.run(
             predicate: P.all([P.sizeAtLeast(minSize), P.notFolder]),
             scopes: Scopes.home, maxItems: 30_000, sortKey: "kMDItemFSSize"
         ).items.filter { !$0.isDirectory }
         if Task.isCancelled { return }
-        status = "正在比对 \(candidates.count) 个文件…"
+        status = String(localized: "正在比对 \(candidates.count) 个文件…")
 
         let found = await Task.detached(priority: .utility) { () -> [[FileItem]] in
             DuplicateScanner.findDuplicates(candidates) { value in
@@ -73,10 +73,10 @@ final class DuplicateScanner: ObservableObject {
             let sorted = items.sorted { $0.sortDate > $1.sortDate }
             let size = sorted.first?.sizeText ?? ""
             return FileGroup(id: "dup-\(index)-\(sorted.first?.path ?? "")",
-                             title: "\(sorted.count) 份相同的文件 · 每份 \(size)",
+                             title: String(localized: "\(sorted.count) 份相同的文件 · 每份 \(size)"),
                              items: sorted)
         }
-        status = groups.isEmpty ? "没有发现重复文件" : "发现 \(groups.count) 组重复文件"
+        status = groups.isEmpty ? String(localized: "没有发现重复文件") : String(localized: "发现 \(groups.count) 组重复文件")
         progress = 1
         isRunning = false
         hasScanned = true
@@ -156,7 +156,7 @@ final class SimilarPhotoScanner: ObservableObject {
     func cancel() {
         task?.cancel()
         isRunning = false
-        status = "已停止"
+        status = String(localized: "已停止")
     }
 
     func remove(paths: Set<String>) {
@@ -171,13 +171,13 @@ final class SimilarPhotoScanner: ObservableObject {
         isRunning = true
         progress = 0
         groups = []
-        status = "正在读取最近的照片…"
+        status = String(localized: "正在读取最近的照片…")
         let images = await SpotlightSearch.run(
             predicate: FileCategory.images.predicate(), scopes: Scopes.home,
             maxItems: limit, sortKey: "kMDItemFSContentChangeDate"
         ).items.filter { $0.size > 20_000 }
         if Task.isCancelled { return }
-        status = "正在分析 \(images.count) 张照片…"
+        status = String(localized: "正在分析 \(images.count) 张照片…")
         let maxDistance = Float(threshold)
 
         let clusters = await Task.detached(priority: .utility) { () -> [[FileItem]] in
@@ -195,7 +195,7 @@ final class SimilarPhotoScanner: ObservableObject {
                              title: SimilarPhotoScanner.title(for: sorted),
                              items: sorted)
         }
-        status = groups.isEmpty ? "没有发现相似的照片" : "发现 \(groups.count) 组相似照片"
+        status = groups.isEmpty ? String(localized: "没有发现相似的照片") : String(localized: "发现 \(groups.count) 组相似照片")
         progress = 1
         isRunning = false
         hasScanned = true
@@ -247,10 +247,10 @@ final class SimilarPhotoScanner: ObservableObject {
         let exts = Set(items.map(\.ext))
         let keys = Set(items.map(baseKey))
         if exts.contains("heic") && (exts.contains("jpg") || exts.contains("jpeg")) && keys.count == 1 {
-            return "HEIC 和 JPEG 成对"
+            return String(localized: "HEIC 和 JPEG 成对")
         }
-        if keys.count == 1 { return "原图和编辑版" }
-        return "\(items.count) 张相似的照片"
+        if keys.count == 1 { return String(localized: "原图和编辑版") }
+        return String(localized: "\(items.count) 张相似的照片")
     }
 
     nonisolated static func featurePrint(_ url: URL) -> VNFeaturePrintObservation? {
@@ -324,23 +324,23 @@ enum CleanupKind: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .installers: return "用过的安装包"
-        case .oldDownloads: return "被遗忘的下载"
-        case .oldScreenshots: return "旧截图"
-        case .bigOldVideos: return "很久没看的大视频"
-        case .unusedApps: return "不常用的应用"
-        case .chatFiles: return "微信 / QQ 大文件"
+        case .installers: return String(localized: "用过的安装包")
+        case .oldDownloads: return String(localized: "被遗忘的下载")
+        case .oldScreenshots: return String(localized: "旧截图")
+        case .bigOldVideos: return String(localized: "很久没看的大视频")
+        case .unusedApps: return String(localized: "不常用的应用")
+        case .chatFiles: return String(localized: "微信 / QQ 大文件")
         }
     }
 
     var detail: String {
         switch self {
-        case .installers: return "“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包"
-        case .oldDownloads: return "“下载”里放了 30 天以上、之后再没打开过的文件"
-        case .oldScreenshots: return "30 天以前拍的截图"
-        case .bigOldVideos: return "超过 200 MB、90 天没打开的视频"
-        case .unusedApps: return "“应用程序”里半年以上没打开过的第三方应用"
-        case .chatFiles: return "聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了"
+        case .installers: return String(localized: "“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包")
+        case .oldDownloads: return String(localized: "“下载”里放了 30 天以上、之后再没打开过的文件")
+        case .oldScreenshots: return String(localized: "30 天以前拍的截图")
+        case .bigOldVideos: return String(localized: "超过 200 MB、90 天没打开的视频")
+        case .unusedApps: return String(localized: "“应用程序”里半年以上没打开过的第三方应用")
+        case .chatFiles: return String(localized: "聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了")
         }
     }
 

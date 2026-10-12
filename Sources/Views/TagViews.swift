@@ -59,7 +59,7 @@ struct TagMenu: View {
                 let has = current.contains(tag.name)
                 Button {
                     let n = FinderTag.set(tag.name, on: !has, for: items.map(\.url))
-                    store.showToast(has ? "已去掉“\(tag.name)”标签" : "已给 \(n) 个项目加上“\(tag.name)”标签")
+                    store.showToast(has ? String(localized: "已去掉“\(tag.name)”标签") : String(localized: "已给 \(n) 个项目加上“\(tag.name)”标签"))
                     if case .tag = store.selection { store.reload() }
                 } label: {
                     Label {

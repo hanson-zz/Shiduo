@@ -232,10 +232,10 @@ final class LibraryStore: ObservableObject {
         let all = downloads + screenshots + documents + images
         remember(all)
         shelves = [
-            Shelf(id: "downloads", title: "最近下载", symbol: "arrow.down.circle", items: downloads, target: .downloads),
-            Shelf(id: "screenshots", title: "最近截图", symbol: "camera.viewfinder", items: screenshots, target: .screenshots),
-            Shelf(id: "documents", title: "最近打开的文稿", symbol: "doc.text", items: documents, target: .category(.documents)),
-            Shelf(id: "images", title: "最近的图片", symbol: "photo", items: images, target: .category(.images)),
+            Shelf(id: "downloads", title: String(localized: "最近下载"), symbol: "arrow.down.circle", items: downloads, target: .downloads),
+            Shelf(id: "screenshots", title: String(localized: "最近截图"), symbol: "camera.viewfinder", items: screenshots, target: .screenshots),
+            Shelf(id: "documents", title: String(localized: "最近打开的文稿"), symbol: "doc.text", items: documents, target: .category(.documents)),
+            Shelf(id: "images", title: String(localized: "最近的图片"), symbol: "photo", items: images, target: .category(.images)),
         ].filter { !$0.items.isEmpty }
         dashboardLoaded = true
         let downloaded = await Queries.downloaded(limit: 3000)
@@ -394,10 +394,10 @@ final class LibraryStore: ObservableObject {
     func copyText(_ list: [FileItem]) {
         let targets = list.filter(TextExtractor.canExtract)
         guard !targets.isEmpty else {
-            showToast("选中的文件里没有图片或 PDF")
+            showToast(String(localized: "选中的文件里没有图片或 PDF"))
             return
         }
-        showToast(targets.count == 1 ? "正在识别文字…" : "正在识别 \(targets.count) 个文件的文字…")
+        showToast(targets.count == 1 ? String(localized: "正在识别文字…") : String(localized: "正在识别 \(targets.count) 个文件的文字…"))
         Task {
             var parts: [String] = []
             for item in targets {
@@ -409,17 +409,19 @@ final class LibraryStore: ObservableObject {
                 }
                 let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
-                    parts.append(targets.count > 1 ? "【\(item.name)】\n\(trimmed)" : trimmed)
+                    parts.append(targets.count > 1 ? String(localized: "【\(item.name)】\n\(trimmed)") : trimmed)
                 }
             }
             if parts.isEmpty {
-                showToast("没有识别到文字")
+                showToast(String(localized: "没有识别到文字"))
             } else {
                 let text = parts.joined(separator: "\n\n")
                 FileActions.copy(text)
-                let kind = targets.allSatisfy(\.isImage) ? "张图片" : "个文件"
+                let title = targets.allSatisfy(\.isImage)
+                    ? String(localized: "已拷贝 \(parts.count) 张图片的文字")
+                    : String(localized: "已拷贝 \(parts.count) 个文件的文字")
                 toast = nil
-                showCopied(CopiedPreview(title: "已拷贝 \(parts.count) \(kind)的文字", text: text))
+                showCopied(CopiedPreview(title: title, text: text))
             }
         }
     }
@@ -441,7 +443,7 @@ final class LibraryStore: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = true
-        panel.prompt = "固定"
+        panel.prompt = String(localized: "固定")
         if panel.runModal() == .OK {
             for url in panel.urls { pin(url.path) }
         }
@@ -471,11 +473,11 @@ final class LibraryStore: ObservableObject {
 
         var notes: [String] = []
         if !outcome.skipped.isEmpty {
-            notes.append("\(outcome.skipped.count) 个项目只在 iCloud 云端或已不存在，已跳过。")
+            notes.append(String(localized: "\(outcome.skipped.count) 个项目只在 iCloud 云端或已不存在，已跳过。"))
         }
         if !outcome.failed.isEmpty {
-            let names = outcome.failed.prefix(5).map(\.lastPathComponent).joined(separator: "、")
-            notes.append("\(outcome.failed.count) 个项目无法移到废纸篓（可能需要管理员权限）：\(names)")
+            let names = outcome.failed.prefix(5).map(\.lastPathComponent).joined(separator: String(localized: "、"))
+            notes.append(String(localized: "\(outcome.failed.count) 个项目无法移到废纸篓（可能需要管理员权限）：\(names)"))
         }
         if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
         return moved.count

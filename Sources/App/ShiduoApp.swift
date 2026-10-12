@@ -43,7 +43,7 @@ struct ShiduoApp: App {
                     .keyboardShortcut("1", modifiers: .command)
                 Button("以列表显示") { UserDefaults.standard.set(ViewMode.list.rawValue, forKey: "viewMode") }
                     .keyboardShortcut("2", modifiers: .command)
-                Button(store.showInspector ? "隐藏简介" : "显示简介") { store.showInspector.toggle() }
+                Button(store.showInspector ? String(localized: "隐藏简介") : String(localized: "显示简介")) { store.showInspector.toggle() }
                     .keyboardShortcut("i", modifiers: .command)
                 Divider()
                 Button("刷新") { store.reload() }

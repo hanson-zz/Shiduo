@@ -198,7 +198,14 @@ struct QueryParser {
     private func ago(_ n: Int, _ unit: String) -> (Date, String) {
         let (comp, factor, label) = component(unit)
         let date = calendar.date(byAdding: comp, value: -n * factor, to: now) ?? now
-        return (date, "\(n) \(label)")
+        let text: String
+        switch label {
+        case "周": text = String(localized: "\(n) 周")
+        case "个月": text = String(localized: "\(n) 个月")
+        case "年": text = String(localized: "\(n) 年")
+        default: text = String(localized: "\(n) 天")
+        }
+        return (date, text)
     }
 
     private func interval(_ comp: Calendar.Component, offset: Int) -> (Date, Date)? {
@@ -228,7 +235,7 @@ struct QueryParser {
         for p in recent {
             if let g = take(p, from: &s), g.count > 2, let n = Self.number(g[1]) {
                 let (start, label) = ago(n, g[2])
-                q.date = DateRange(start: calendar.startOfDay(for: start), end: tomorrow, label: "最近 \(label)")
+                q.date = DateRange(start: calendar.startOfDay(for: start), end: tomorrow, label: String(localized: "最近 \(label)"))
                 return
             }
         }
@@ -236,11 +243,11 @@ struct QueryParser {
         // 半年
         let sixMonthsAgo = calendar.date(byAdding: .month, value: -6, to: now) ?? now
         if take("(?:最近|过去|近)\\s*半年|半年\\s*(?:内|以内|之内)|" + Self.word("(?:in the )?(?:last|past) (?:half a year|six months)"), from: &s) != nil {
-            q.date = DateRange(start: calendar.startOfDay(for: sixMonthsAgo), end: tomorrow, label: "最近半年")
+            q.date = DateRange(start: calendar.startOfDay(for: sixMonthsAgo), end: tomorrow, label: String(localized: "最近半年"))
             return
         }
         if take("(?:超过|多于)?\\s*半年\\s*(?:前|以前|之前)|超过半年|" + Self.word("older than (?:half a year|six months)|(?:half a year|six months) ago"), from: &s) != nil {
-            q.date = DateRange(start: .distantPast, end: sixMonthsAgo, label: "半年以前")
+            q.date = DateRange(start: .distantPast, end: sixMonthsAgo, label: String(localized: "半年以前"))
             return
         }
 
@@ -254,22 +261,22 @@ struct QueryParser {
         for p in older {
             if let g = take(p, from: &s), g.count > 2, let n = Self.number(g[1]) {
                 let (end, label) = ago(n, g[2])
-                q.date = DateRange(start: .distantPast, end: end, label: "\(label)以前")
+                q.date = DateRange(start: .distantPast, end: end, label: String(localized: "\(label)以前"))
                 return
             }
         }
 
         // 固定说法
         let named: [(String, Calendar.Component, Int, String)] = [
-            ("前天", .day, -2, "前天"),
-            ("今天|" + Self.word("today"), .day, 0, "今天"),
-            ("昨天|" + Self.word("yesterday"), .day, -1, "昨天"),
-            ("本周|这周|这个星期|这星期|这礼拜|" + Self.word("this week"), .weekOfYear, 0, "本周"),
-            ("上周|上个星期|上星期|上礼拜|上个礼拜|" + Self.word("last week"), .weekOfYear, -1, "上周"),
-            ("本月|这个月|" + Self.word("this month"), .month, 0, "本月"),
-            ("上个月|上月|" + Self.word("last month"), .month, -1, "上个月"),
-            ("今年|" + Self.word("this year"), .year, 0, "今年"),
-            ("去年|" + Self.word("last year"), .year, -1, "去年"),
+            ("前天", .day, -2, String(localized: "前天")),
+            ("今天|" + Self.word("today"), .day, 0, String(localized: "今天")),
+            ("昨天|" + Self.word("yesterday"), .day, -1, String(localized: "昨天")),
+            ("本周|这周|这个星期|这星期|这礼拜|" + Self.word("this week"), .weekOfYear, 0, String(localized: "本周")),
+            ("上周|上个星期|上星期|上礼拜|上个礼拜|" + Self.word("last week"), .weekOfYear, -1, String(localized: "上周")),
+            ("本月|这个月|" + Self.word("this month"), .month, 0, String(localized: "本月")),
+            ("上个月|上月|" + Self.word("last month"), .month, -1, String(localized: "上个月")),
+            ("今年|" + Self.word("this year"), .year, 0, String(localized: "今年")),
+            ("去年|" + Self.word("last year"), .year, -1, String(localized: "去年")),
         ]
         for (pattern, comp, offset, label) in named {
             if take(pattern, from: &s) != nil, let range = interval(comp, offset: offset) {
@@ -299,7 +306,7 @@ struct QueryParser {
             if month > calendar.component(.month, from: now) { year -= 1 }
             if let start = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
                let end = calendar.date(byAdding: .month, value: 1, to: start) {
-                q.date = DateRange(start: start, end: end, label: "\(month) 月")
+                q.date = DateRange(start: start, end: end, label: String(localized: "\(month) 月"))
             }
         }
     }
@@ -310,11 +317,11 @@ struct QueryParser {
         let w = Self.word
         let table: [(String, KindFilter)] = [
             ("截图|截屏|屏幕快照|" + w("screenshots?|screen shots?|screen captures?"), .screenshot),
-            ("安装包|" + w("installers?"), .extensions(["dmg", "pkg"], label: "安装包")),
+            ("安装包|" + w("installers?"), .extensions(["dmg", "pkg"], label: String(localized: "安装包"))),
             (w("pdfs?"), .extensions(["pdf"], label: "PDF")),
             (w("word|docx?"), .extensions(["doc", "docx"], label: "Word")),
-            ("表格|" + w("excel|xlsx?|csv|spreadsheets?|numbers"), .extensions(["xls", "xlsx", "csv", "numbers"], label: "表格")),
-            ("幻灯片|演示文稿|" + w("ppt|pptx|keynote|slides|presentations?"), .extensions(["ppt", "pptx", "key"], label: "演示文稿")),
+            ("表格|" + w("excel|xlsx?|csv|spreadsheets?|numbers"), .extensions(["xls", "xlsx", "csv", "numbers"], label: String(localized: "表格"))),
+            ("幻灯片|演示文稿|" + w("ppt|pptx|keynote|slides|presentations?"), .extensions(["ppt", "pptx", "key"], label: String(localized: "演示文稿"))),
             (w("png"), .extensions(["png"], label: "PNG")),
             (w("jpe?g"), .extensions(["jpg", "jpeg"], label: "JPEG")),
             (w("heic"), .extensions(["heic"], label: "HEIC")),

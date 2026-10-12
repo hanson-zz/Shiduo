@@ -34,21 +34,21 @@ enum ProFeature: CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .autoOrganize: return "自动整理规则"
-        case .cleanupReminder: return "定时清理提醒"
-        case .photoSearch: return "按画面内容搜索照片"
-        case .volumes: return "外接磁盘"
-        case .menuBar: return "菜单栏小助手"
+        case .autoOrganize: return String(localized: "自动整理规则")
+        case .cleanupReminder: return String(localized: "定时清理提醒")
+        case .photoSearch: return String(localized: "按画面内容搜索照片")
+        case .volumes: return String(localized: "外接磁盘")
+        case .menuBar: return String(localized: "菜单栏小助手")
         }
     }
 
     var detail: String {
         switch self {
-        case .autoOrganize: return "下载文件夹里的安装包、截图、发票自动归位"
-        case .cleanupReminder: return "每周提醒一次：本周可以腾出多少空间"
-        case .photoSearch: return "搜「猫」「海边」「收据」，在本机识别照片画面"
-        case .volumes: return "在侧边栏里直接浏览移动硬盘、U 盘"
-        case .menuBar: return "剩余空间、最近下载、快速搜索，一点就到"
+        case .autoOrganize: return String(localized: "下载文件夹里的安装包、截图、发票自动归位")
+        case .cleanupReminder: return String(localized: "每周提醒一次：本周可以腾出多少空间")
+        case .photoSearch: return String(localized: "搜「猫」「海边」「收据」，在本机识别照片画面")
+        case .volumes: return String(localized: "在侧边栏里直接浏览移动硬盘、U 盘")
+        case .menuBar: return String(localized: "剩余空间、最近下载、快速搜索，一点就到")
         }
     }
 
@@ -244,7 +244,7 @@ struct ProLockedView: View {
             }
             Text(feature.detail)
                 .foregroundStyle(.secondary)
-            Text(license.state == .expiredTrial ? "7 天试用已经结束。升级到拾掇 Pro 就能继续使用。" : "这是拾掇 Pro 的功能。")
+            Text(license.state == .expiredTrial ? String(localized: "7 天试用已经结束。升级到拾掇 Pro 就能继续使用。") : String(localized: "这是拾掇 Pro 的功能。"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
             Button {

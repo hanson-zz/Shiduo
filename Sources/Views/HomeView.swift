@@ -46,10 +46,10 @@ struct HomeView: View {
 
     private var greeting: String {
         switch Calendar.current.component(.hour, from: Date()) {
-        case 5..<11: return "早上好"
-        case 11..<14: return "中午好"
-        case 14..<18: return "下午好"
-        default: return "晚上好"
+        case 5..<11: return String(localized: "早上好")
+        case 11..<14: return String(localized: "中午好")
+        case 14..<18: return String(localized: "下午好")
+        default: return String(localized: "晚上好")
         }
     }
 
@@ -87,7 +87,7 @@ struct HomeView: View {
 
     private var library: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHeader(title: "资料库", count: FileCategory.dashboard.count)
+            SectionHeader(title: String(localized: "资料库"), count: FileCategory.dashboard.count)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 16)], spacing: 16) {
                 ForEach(FileCategory.dashboard) { category in
                     LibraryTile(category: category, total: store.totals[category], previews: store.previews[category] ?? [])
@@ -102,17 +102,17 @@ struct HomeView: View {
     private var cleanupSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(
-                title: "清理",
-                badge: reclaimable > 0 ? "最多可腾出 \(reclaimable.byteText)" : nil,
+                title: String(localized: "清理"),
+                badge: reclaimable > 0 ? String(localized: "最多可腾出 \(reclaimable.byteText)") : nil,
                 action: { store.selection = .cleanup }
             )
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 16)], spacing: 16) {
                 DuplicatesTile()
                     .onTapGesture { store.selection = .duplicates }
                 if cleanup.isRunning && cleanup.cards.isEmpty {
-                    placeholderTile("正在找可以清理的文件…")
+                    placeholderTile(String(localized: "正在找可以清理的文件…"))
                 } else if cleanup.hasScanned && cleanupCards.isEmpty {
-                    placeholderTile("没有需要清理的，很整齐")
+                    placeholderTile(String(localized: "没有需要清理的，很整齐"))
                 }
                 ForEach(cleanupCards.prefix(3)) { card in
                     CleanupTile(card: card)
@@ -138,7 +138,7 @@ struct HomeView: View {
 
     private var sourcesSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHeader(title: "下载来源", count: store.sourceGroups.count, action: { store.openDownloads(source: nil) })
+            SectionHeader(title: String(localized: "下载来源"), count: store.sourceGroups.count, action: { store.openDownloads(source: nil) })
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 14)], spacing: 14) {
                 ForEach(store.sourceGroups.prefix(8)) { group in
                     SourceTile(group: group)
@@ -172,7 +172,7 @@ struct LibraryTile: View {
             Text(category.title)
                 .font(.system(.title3, design: .rounded).weight(.semibold))
             HStack(spacing: 6) {
-                Text(total.map { "\($0.count) 个项目" } ?? "统计中…")
+                Text(total.map { String(localized: "\($0.count) 个项目") } ?? String(localized: "统计中…"))
                 Text("·")
                 Text(total.map { $0.bytes.byteText } ?? "")
             }
@@ -251,12 +251,12 @@ struct DuplicatesTile: View {
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                 } else {
-                    Text(scanner.isRunning ? "扫描中…" : "点按扫描")
+                    Text(scanner.isRunning ? String(localized: "扫描中…") : String(localized: "点按扫描"))
                         .font(.system(size: 22, weight: .semibold, design: .rounded))
                 }
                 Spacer()
                 HStack(spacing: 3) {
-                    Text(scanner.hasScanned ? "多出 \(extraCopies.formatted()) 份" : "")
+                    Text(scanner.hasScanned ? String(localized: "多出 \(extraCopies.formatted()) 份") : "")
                     Image(systemName: "chevron.right")
                 }
                 .font(.callout)

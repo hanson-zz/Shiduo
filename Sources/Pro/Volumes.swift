@@ -68,7 +68,7 @@ final class VolumeMonitor: ObservableObject {
             refresh()
             return nil
         } catch {
-            return "无法推出「\(volume.name)」：可能还有 App 正在使用上面的文件。"
+            return String(localized: "无法推出「\(volume.name)」：可能还有 App 正在使用上面的文件。")
         }
     }
 }

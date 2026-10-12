@@ -33,7 +33,7 @@ struct PrivacyBadges: View {
                 Text("你的文件只留在这台 Mac 上")
                     .fontWeight(.medium)
             }
-            ForEach(["无需账号", "不上云", "不上传"], id: \.self) { text in
+            ForEach([String(localized: "无需账号"), String(localized: "不上云"), String(localized: "不上传")], id: \.self) { text in
                 Text(text)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.accentColor)
@@ -81,7 +81,7 @@ struct OnboardingView: View {
                     Button("上一步") { withAnimation { page -= 1 } }
                 }
                 if page < 2 {
-                    Button(page == 1 && !granted ? "稍后再说" : "继续") { withAnimation { page += 1 } }
+                    Button(page == 1 && !granted ? String(localized: "稍后再说") : String(localized: "继续")) { withAnimation { page += 1 } }
                         .keyboardShortcut(.defaultAction)
                 } else {
                     Button("开始使用") { finish() }
@@ -111,9 +111,9 @@ struct OnboardingView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 440)
             VStack(alignment: .leading, spacing: 12) {
-                feature("square.grid.2x2.fill", .blue, "每类文件都有自己的货架", "大缩略图，一眼认出要找的那个")
-                feature("text.magnifyingglass", .purple, "像说话一样搜索", "“上周超过5MB的pdf”“来自微信的图片”")
-                feature("sparkles", .orange, "安全地腾出空间", "重复文件、旧安装包、微信大文件，只移到废纸篓")
+                feature("square.grid.2x2.fill", .blue, String(localized: "每类文件都有自己的货架"), String(localized: "大缩略图，一眼认出要找的那个"))
+                feature("text.magnifyingglass", .purple, String(localized: "像说话一样搜索"), String(localized: "“上周超过5MB的pdf”“来自微信的图片”"))
+                feature("sparkles", .orange, String(localized: "安全地腾出空间"), String(localized: "重复文件、旧安装包、微信大文件，只移到废纸篓"))
             }
             .padding(.top, 6)
             PrivacyBadges()
@@ -126,7 +126,7 @@ struct OnboardingView: View {
             BadgeIcon(symbol: granted ? "checkmark.shield.fill" : "lock.shield.fill",
                       colors: granted ? [.green.opacity(0.8), .green] : [Color(red: 0.4, green: 0.7, blue: 1), .blue],
                       size: 72)
-            Text(granted ? "已获得完全磁盘访问权限" : "开启完全磁盘访问权限")
+            Text(granted ? String(localized: "已获得完全磁盘访问权限") : String(localized: "开启完全磁盘访问权限"))
                 .font(.system(size: 26, weight: .bold, design: .rounded))
             Text("微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，文件从不上传；拾掇只在检查更新和激活授权时联网。")
                 .multilineTextAlignment(.center)
@@ -134,10 +134,10 @@ struct OnboardingView: View {
                 .frame(maxWidth: 460)
             if !granted {
                 VStack(alignment: .leading, spacing: 10) {
-                    step(1, "点下面的「打开系统设置」")
-                    step(2, "在「完全磁盘访问权限」列表里打开「拾掇」的开关")
-                    step(3, "列表里没有拾掇？点 + 号，到「应用程序」里选择拾掇")
-                    step(4, "系统提示退出重开时，点「稍后」也可以，回到这里会自动刷新")
+                    step(1, String(localized: "点下面的「打开系统设置」"))
+                    step(2, String(localized: "在「完全磁盘访问权限」列表里打开「拾掇」的开关"))
+                    step(3, String(localized: "列表里没有拾掇？点 + 号，到「应用程序」里选择拾掇"))
+                    step(4, String(localized: "系统提示退出重开时，点「稍后」也可以，回到这里会自动刷新"))
                 }
                 .padding(16)
                 .glassCard()
@@ -206,8 +206,8 @@ struct OnboardingView: View {
 /// 搜索示例：点一下就搜。
 struct SuggestionChips: View {
     static let examples = [
-        "上周超过5MB的pdf", "来自微信的图片", "超过1GB的视频", "3个月前的截图",
-        "今年的照片", "大于100MB的压缩包", "wifi 密码截图", "nianbao",
+        String(localized: "上周超过5MB的pdf"), String(localized: "来自微信的图片"), String(localized: "超过1GB的视频"), String(localized: "3个月前的截图"),
+        String(localized: "今年的照片"), String(localized: "大于100MB的压缩包"), String(localized: "wifi 密码截图"), "nianbao",
     ]
     var onPick: (String) -> Void
 
@@ -324,7 +324,7 @@ struct FreeUpHero: View {
                 .contentTransition(.numericText())
             HStack(spacing: 8) {
                 if scanning { ProgressView().controlSize(.small).tint(.white) }
-                Text(scanning ? "还在找，数字会继续变大…" : (bytes > 0 ? "安全地拿回空间：只移到废纸篓，随时可以放回" : "没有需要清理的，很整齐"))
+                Text(scanning ? String(localized: "还在找，数字会继续变大…") : (bytes > 0 ? String(localized: "安全地拿回空间：只移到废纸篓，随时可以放回") : String(localized: "没有需要清理的，很整齐")))
                     .font(.callout.weight(.medium))
                     .foregroundStyle(.white.opacity(0.9))
             }

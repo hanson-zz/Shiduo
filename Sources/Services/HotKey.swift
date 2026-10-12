@@ -13,9 +13,9 @@ enum QuickSearchHotKey: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .optionSpace: return "⌥ 空格"
-        case .controlOptionSpace: return "⌃⌥ 空格"
-        case .shiftOptionSpace: return "⇧⌥ 空格"
+        case .optionSpace: return String(localized: "⌥ 空格")
+        case .controlOptionSpace: return String(localized: "⌃⌥ 空格")
+        case .shiftOptionSpace: return String(localized: "⇧⌥ 空格")
         case .optionCommandK: return "⌥⌘ K"
         }
     }
@@ -99,7 +99,7 @@ enum LoginItem {
             }
             return nil
         } catch {
-            return "没能修改登录项：\(error.localizedDescription)。可以在“系统设置 › 通用 › 登录项”里手动添加拾掇。"
+            return String(localized: "没能修改登录项：\(error.localizedDescription)。可以在“系统设置 › 通用 › 登录项”里手动添加拾掇。")
         }
     }
 }

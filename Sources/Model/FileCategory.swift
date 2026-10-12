@@ -17,13 +17,13 @@ enum FileCategory: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .recents: return "最近使用"
-        case .images: return "图片"
-        case .videos: return "视频"
-        case .music: return "音乐"
-        case .documents: return "文稿"
-        case .archives: return "压缩包"
-        case .apps: return "应用程序"
+        case .recents: return String(localized: "最近使用")
+        case .images: return String(localized: "图片")
+        case .videos: return String(localized: "视频")
+        case .music: return String(localized: "音乐")
+        case .documents: return String(localized: "文稿")
+        case .archives: return String(localized: "压缩包")
+        case .apps: return String(localized: "应用程序")
         }
     }
 

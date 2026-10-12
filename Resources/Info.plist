@@ -3,15 +3,18 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>zh-Hans</string>
+	<string>en</string>
 	<key>CFBundleLocalizations</key>
 	<array>
+		<string>en</string>
 		<string>zh-Hans</string>
 	</array>
+	<key>LSHasLocalizedDisplayName</key>
+	<true/>
 	<key>CFBundleDisplayName</key>
-	<string>拾掇</string>
+	<string>Shiduo</string>
 	<key>CFBundleName</key>
-	<string>拾掇</string>
+	<string>Shiduo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -31,16 +34,16 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>MIT 开源许可 · github.com/hanson-zz/Shiduo</string>
+	<string>MIT License · github.com/hanson-zz/Shiduo</string>
 	<key>NSDesktopFolderUsageDescription</key>
-	<string>拾掇需要读取桌面上的文件，才能显示缩略图、识别截图文字和查找重复文件。所有处理都在本机完成。</string>
+	<string>Shiduo reads files on your Desktop to show thumbnails, recognize text in screenshots, and find duplicates. Everything happens on this Mac.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
-	<string>拾掇需要读取“文稿”中的文件，才能显示缩略图和查找重复文件。所有处理都在本机完成。</string>
+	<string>Shiduo reads files in Documents to show thumbnails and find duplicates. Everything happens on this Mac.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
-	<string>拾掇需要读取“下载”中的文件，才能按下载来源整理并找出可以清理的安装包。所有处理都在本机完成。</string>
+	<string>Shiduo reads files in Downloads to group them by where they came from and find installers you can clean up. Everything happens on this Mac.</string>
 	<key>NSRemovableVolumesUsageDescription</key>
-	<string>拾掇需要读取外接磁盘上的文件，才能显示缩略图。</string>
+	<string>Shiduo reads files on external drives to show thumbnails.</string>
 	<key>NSNetworkVolumesUsageDescription</key>
-	<string>拾掇需要读取网络磁盘上的文件，才能显示缩略图。</string>
+	<string>Shiduo reads files on network drives to show thumbnails.</string>
 </dict>
 </plist>

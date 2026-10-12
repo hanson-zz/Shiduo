@@ -198,10 +198,10 @@ final class LicenseManager: ObservableObject {
 
     var statusText: String {
         switch state {
-        case .free: return "免费版"
-        case .trial(let days): return "Pro 试用中，还剩 \(days) 天"
-        case .pro: return "拾掇 Pro 已激活"
-        case .expiredTrial: return "试用已结束"
+        case .free: return String(localized: "免费版")
+        case .trial(let days): return String(localized: "Pro 试用中，还剩 \(days) 天")
+        case .pro: return String(localized: "拾掇 Pro 已激活")
+        case .expiredTrial: return String(localized: "试用已结束")
         }
     }
 
@@ -270,7 +270,7 @@ final class LicenseManager: ObservableObject {
     func activate(_ raw: String) async -> Bool {
         let key = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !key.isEmpty else {
-            errorMessage = "请输入授权码。"
+            errorMessage = String(localized: "请输入授权码。")
             return false
         }
         errorMessage = nil
@@ -285,7 +285,7 @@ final class LicenseManager: ObservableObject {
             guard response.matchesConfig else {
                 // 不是拾掇的授权码：把刚占用的激活名额还回去。
                 _ = try? await LicenseAPI.deactivate(key: key, instanceID: instance)
-                errorMessage = "这个授权码不属于拾掇 Pro。"
+                errorMessage = String(localized: "这个授权码不属于拾掇 Pro。")
                 return false
             }
             LicenseKeychain.set(key, for: .licenseKey)
@@ -294,7 +294,7 @@ final class LicenseManager: ObservableObject {
             refreshState()
             return true
         } catch {
-            errorMessage = "无法连接授权服务器，请检查网络后再试。"
+            errorMessage = String(localized: "无法连接授权服务器，请检查网络后再试。")
             return false
         }
     }
@@ -318,7 +318,7 @@ final class LicenseManager: ObservableObject {
                 errorMessage = Self.message(for: response.error, status: response.status)
             }
         } catch {
-            errorMessage = "无法连接授权服务器，请检查网络后再试。"
+            errorMessage = String(localized: "无法连接授权服务器，请检查网络后再试。")
         }
     }
 
@@ -343,23 +343,23 @@ final class LicenseManager: ObservableObject {
     static func message(for error: String?, status: String?) -> String {
         let text = (error ?? "").lowercased()
         if text.contains("activation limit") {
-            return "这个授权码的激活次数已用完。请先在旧 Mac 的拾掇设置里「解绑此 Mac」，再来激活。"
+            return String(localized: "这个授权码的激活次数已用完。请先在旧 Mac 的拾掇设置里「解绑此 Mac」，再来激活。")
         }
         if text.contains("not found") || text.contains("invalid") {
-            return "授权码不正确，请检查是否完整复制。"
+            return String(localized: "授权码不正确，请检查是否完整复制。")
         }
         if text.contains("disabled") || status == "disabled" {
-            return "这个授权码已被停用。"
+            return String(localized: "这个授权码已被停用。")
         }
         if text.contains("expired") || status == "expired" {
-            return "这个授权码已过期。"
+            return String(localized: "这个授权码已过期。")
         }
         if text.contains("too many") {
-            return "请求太频繁，请稍后再试。"
+            return String(localized: "请求太频繁，请稍后再试。")
         }
         if let error, !error.isEmpty {
-            return "授权失败：\(error)"
+            return String(localized: "授权失败：\(error)")
         }
-        return "授权失败，请稍后再试。"
+        return String(localized: "授权失败，请稍后再试。")
     }
 }

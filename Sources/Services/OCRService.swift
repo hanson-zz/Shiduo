@@ -88,19 +88,19 @@ final class OCRStore: ObservableObject {
         batchTask?.cancel()
         let todo = Array(items.filter { $0.isImage && text(for: $0) == nil && FileActions.isLocal($0.url) }.prefix(500))
         guard !todo.isEmpty else {
-            batchStatus = "这些图片都已经识别过了"
+            batchStatus = String(localized: "这些图片都已经识别过了")
             return
         }
         batchTask = Task {
             for (index, item) in todo.enumerated() {
                 if Task.isCancelled { break }
-                batchStatus = "正在识别 \(index + 1) / \(todo.count)"
+                batchStatus = String(localized: "正在识别 \(index + 1) / \(todo.count)")
                 batchProgress = Double(index) / Double(todo.count)
                 await recognize(item, persist: false)
             }
             save()
             batchProgress = nil
-            batchStatus = "已识别 \(todo.count) 张图片"
+            batchStatus = String(localized: "已识别 \(todo.count) 张图片")
         }
     }
 

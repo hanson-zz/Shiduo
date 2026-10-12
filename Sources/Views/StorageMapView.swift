@@ -263,7 +263,7 @@ struct StorageMapView: View {
                             Text(node.name).lineLimit(1)
                         }
                         .font(.system(size: rect.width > 160 ? 13 : 11, weight: .semibold))
-                        Text(node.done ? node.size.byteText : "计算中…")
+                        Text(node.done ? node.size.byteText : String(localized: "计算中…"))
                             .font(.system(size: rect.width > 160 ? 12 : 10))
                             .opacity(0.85)
                     }
@@ -275,7 +275,7 @@ struct StorageMapView: View {
             .frame(width: max(rect.width - 3, 1), height: max(rect.height - 3, 1))
             .offset(x: rect.minX, y: rect.minY)
             .onHover { hovered = $0 ? node.id : (hovered == node.id ? nil : hovered) }
-            .help("\(node.name)\n\(node.done ? node.size.byteText : "计算中…")")
+            .help("\(node.name)\n" + (node.done ? node.size.byteText : String(localized: "计算中…")))
             .onTapGesture(count: 2) {
                 if !node.isDirectory { NSWorkspace.shared.open(node.url) }
             }

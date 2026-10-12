@@ -88,7 +88,7 @@ final class Updater: ObservableObject {
             state = .idle
             return nil
         case .failed:
-            state = manual ? .failed("检查失败，请稍后再试") : .idle
+            state = manual ? .failed(String(localized: "检查失败，请稍后再试")) : .idle
             return nil
         case .available(let info):
             if Self.autoInstall, let zip = info.zipURL, canReplaceSelf {
@@ -126,13 +126,13 @@ final class Updater: ObservableObject {
             guard let app = contents.first(where: { $0.pathExtension == "app" }),
                   Bundle(url: app)?.bundleIdentifier == Bundle.main.bundleIdentifier
             else {
-                state = .failed("下载的更新包不完整")
+                state = .failed(String(localized: "下载的更新包不完整"))
                 return
             }
             stagedApp = app
             state = .ready(info.version)
         } catch {
-            state = .failed("下载更新失败")
+            state = .failed(String(localized: "下载更新失败"))
         }
     }
 

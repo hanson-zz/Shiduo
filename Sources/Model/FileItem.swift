@@ -44,13 +44,13 @@ struct FileItem: Identifiable, Hashable {
     }
 
     var kindText: String {
-        if isScreenshot { return "截图" }
+        if isScreenshot { return String(localized: "截图") }
         if let type = contentType.flatMap({ UTType($0) }), let desc = type.localizedDescription {
             return desc
         }
-        if isDirectory { return "文件夹" }
+        if isDirectory { return String(localized: "文件夹") }
         if let category { return category.title }
-        return ext.isEmpty ? "文件" : ext.uppercased()
+        return ext.isEmpty ? String(localized: "文件") : ext.uppercased()
     }
 
     /// 好认的下载来源（Gmail、微信、GitHub……），认不出来时是网站域名。
@@ -65,7 +65,7 @@ struct FileItem: Identifiable, Hashable {
                 return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
             }
         }
-        return "其他来源"
+        return String(localized: "其他来源")
     }
 }
 

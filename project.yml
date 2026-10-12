@@ -10,9 +10,12 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.8.0"
-    CURRENT_PROJECT_VERSION: "9"
+    MARKETING_VERSION: "0.9.0"
+    CURRENT_PROJECT_VERSION: "10"
     DEAD_CODE_STRIPPING: YES
+    # 界面支持简体中文和英文：代码里的中文是 key，英文翻译在 Resources/Localizable.xcstrings。
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     # 默认 ad-hoc 签名（"-"），不需要 Apple 开发者证书，任何人 clone 后都能直接构建。
     ENABLE_HARDENED_RUNTIME: NO
     CODE_SIGN_STYLE: Manual

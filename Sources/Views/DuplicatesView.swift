@@ -63,7 +63,7 @@ struct DuplicatesView: View {
             Button("全部移到废纸篓", role: .destructive) {
                 let list = allExtras
                 let moved = store.moveToTrash(list)
-                if moved > 0 { store.showToast("已把 \(moved) 个副本移到废纸篓") }
+                if moved > 0 { store.showToast(String(localized: "已把 \(moved) 个副本移到废纸篓")) }
             }
             Button("取消", role: .cancel) {}
         } message: {
@@ -103,9 +103,9 @@ struct DuplicatesView: View {
                 } else if hasScanned {
                     Text("可腾出 \(freeBytes.byteText)")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
-                    Text(groups.isEmpty ? "没有发现多余的副本，很整齐" : "\(allExtras.count) 个多余的副本，共 \(groups.count) 组")
+                    Text(groups.isEmpty ? String(localized: "没有发现多余的副本，很整齐") : String(localized: "\(allExtras.count) 个多余的副本，共 \(groups.count) 组"))
                         .foregroundStyle(.white.opacity(0.7))
-                    Text(tab == .exact ? "完全相同 · SHA-256 指纹校验" : "画面相似 · Vision 本机比对")
+                    Text(tab == .exact ? String(localized: "完全相同 · SHA-256 指纹校验") : String(localized: "画面相似 · Vision 本机比对"))
                         .font(.caption.weight(.bold))
                         .tracking(0.8)
                         .foregroundStyle(Color.accentColor)
@@ -115,7 +115,7 @@ struct DuplicatesView: View {
                 } else {
                     Text("还没有扫描")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
-                    Text(tab == .exact ? "按大小和 SHA-256 指纹比对，只有内容完全相同才算重复" : "用 Vision 比较最近 800 张照片的画面")
+                    Text(tab == .exact ? String(localized: "按大小和 SHA-256 指纹比对，只有内容完全相同才算重复") : String(localized: "用 Vision 比较最近 800 张照片的画面"))
                         .foregroundStyle(.white.opacity(0.7))
                 }
             }
@@ -143,7 +143,7 @@ struct DuplicatesView: View {
                         rescan()
                     }
                 } label: {
-                    Label(isRunning ? "停止" : (hasScanned ? "重新扫描" : "开始扫描"),
+                    Label(isRunning ? String(localized: "停止") : (hasScanned ? String(localized: "重新扫描") : String(localized: "开始扫描")),
                           systemImage: isRunning ? "stop.fill" : "arrow.clockwise")
                         .foregroundStyle(.white)
                         .padding(.horizontal, 16)
@@ -166,8 +166,8 @@ struct DuplicatesView: View {
     private var tabs: some View {
         HStack(spacing: 12) {
             HStack(spacing: 4) {
-                tabButton(.exact, title: "完全相同", count: exact.groups.count)
-                tabButton(.similar, title: "相似照片", count: similar.groups.count)
+                tabButton(.exact, title: String(localized: "完全相同"), count: exact.groups.count)
+                tabButton(.similar, title: String(localized: "相似照片"), count: similar.groups.count)
             }
             .padding(4)
             .background(Capsule().fill(Color.primary.opacity(0.06)))
@@ -217,7 +217,7 @@ struct DuplicatesView: View {
                 Image(systemName: isRunning ? "hourglass" : (hasScanned ? "checkmark.seal" : "magnifyingglass"))
                     .font(.system(size: 34))
                     .foregroundStyle(.secondary)
-                Text(isRunning ? "正在比对，稍等一下…" : (hasScanned ? "没有发现重复" : "点“开始扫描”在本机查找"))
+                Text(isRunning ? String(localized: "正在比对，稍等一下…") : (hasScanned ? String(localized: "没有发现重复") : String(localized: "点“开始扫描”在本机查找")))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 200)
@@ -244,7 +244,7 @@ struct DuplicatesView: View {
             set = [item.id]
         } else if set.contains(item.id) {
             guard set.count > 1 else {
-                store.showToast("每组至少保留一张")
+                store.showToast(String(localized: "每组至少保留一张"))
                 return
             }
             set.remove(item.id)
@@ -258,7 +258,7 @@ struct DuplicatesView: View {
         let list = extras(group)
         guard !list.isEmpty else { return }
         let moved = store.moveToTrash(list)
-        if moved > 0 { store.showToast("已移到废纸篓，可随时恢复") }
+        if moved > 0 { store.showToast(String(localized: "已移到废纸篓，可随时恢复")) }
     }
 }
 
@@ -281,8 +281,8 @@ struct DuplicateGroupCard: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                     Text(isSimilar
-                         ? "\(group.items.count) 张 · 可腾出 \(freeBytes.byteText)"
-                         : "\(group.items.count) 份完全相同 · 可腾出 \(freeBytes.byteText)")
+                         ? String(localized: "\(group.items.count) 张 · 可腾出 \(freeBytes.byteText)")
+                         : String(localized: "\(group.items.count) 份完全相同 · 可腾出 \(freeBytes.byteText)"))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -327,7 +327,7 @@ struct DuplicateItemCard: View {
                     .frame(width: 180, height: 128)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .opacity(isKept ? 1 : 0.75)
-                Text(isKept ? "保留" : "废纸篓")
+                Text(isKept ? String(localized: "保留") : String(localized: "废纸篓"))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 9)

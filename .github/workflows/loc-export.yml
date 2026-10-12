@@ -1,0 +1,37 @@
+name: 导出本地化
+
+# 临时：导出所有需要翻译的字符串（xliff），推到 loc-export 分支，用来核对 key 和格式符。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 XcodeGen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: brew install --quiet xcodegen
+      - name: 导出
+        run: |
+          xcodegen generate
+          xcodebuild -exportLocalizations -project Shiduo.xcodeproj -localizationPath out \
+            -exportLanguage en -exportLanguage zh-Hans \
+            SWIFT_EMIT_LOC_STRINGS=YES CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="" \
+            > export.log 2>&1 || true
+          ls -R out | head -50 || true
+      - name: 推到 loc-export 分支
+        if: always()
+        run: |
+          D=$(mktemp -d)
+          cp -R out "$D/out" 2>/dev/null || true
+          grep -nE "error:|warning:" export.log | head -200 > "$D/export-errors.txt" || true
+          tail -50 export.log > "$D/export-tail.txt" || true
+          cd "$D" && git init -q
+          git config user.name "ci"; git config user.email "ci@users.noreply.github.com"
+          git add -A && git commit -qm "loc export ${{ github.run_id }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:loc-export

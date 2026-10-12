@@ -10,7 +10,7 @@ enum KindFilter: Hashable {
         switch self {
         case .category(let c): return c.title
         case .extensions(_, let label): return label
-        case .screenshot: return "截图"
+        case .screenshot: return String(localized: "截图")
         }
     }
 
@@ -86,13 +86,13 @@ struct SearchQuery: Hashable {
             result.append(SearchChip(field: .maxSize, label: "< \(Self.sizeLabel(maxSize))", symbol: "arrow.down.circle"))
         }
         if let source {
-            result.append(SearchChip(field: .source, label: "来自 \(source)", symbol: "globe"))
+            result.append(SearchChip(field: .source, label: String(localized: "来自 \(source)"), symbol: "globe"))
         }
         if downloadedOnly {
-            result.append(SearchChip(field: .downloaded, label: "下载的文件", symbol: "arrow.down.circle"))
+            result.append(SearchChip(field: .downloaded, label: String(localized: "下载的文件"), symbol: "arrow.down.circle"))
         }
         if let device {
-            result.append(SearchChip(field: .device, label: "\(device) 拍摄", symbol: "camera"))
+            result.append(SearchChip(field: .device, label: String(localized: "\(device) 拍摄"), symbol: "camera"))
         }
         if !text.isEmpty {
             result.append(SearchChip(field: .text, label: "“\(text)”", symbol: "textformat"))

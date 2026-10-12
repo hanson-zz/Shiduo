@@ -50,13 +50,13 @@ struct FileContextMenu: View {
         }
         TagMenu(items: items)
         if items.contains(where: { !$0.isDirectory }) {
-            Button(items.count > 1 ? "批量重命名 \(items.count) 个文件…" : "重命名…") { store.renameItems = items }
+            Button(items.count > 1 ? String(localized: "批量重命名 \(items.count) 个文件…") : String(localized: "重命名…")) { store.renameItems = items }
         }
         if items.contains(where: ImageConverter.canConvert) {
             Button("转换为 JPG / 压缩…") { store.convertItems = items.filter(ImageConverter.canConvert) }
         }
         Divider()
-        Button(items.count > 1 ? "拷贝 \(items.count) 个路径" : "拷贝路径") { FileActions.copyPaths(items) }
+        Button(items.count > 1 ? String(localized: "拷贝 \(items.count) 个路径") : String(localized: "拷贝路径")) { FileActions.copyPaths(items) }
         if items.contains(where: TextExtractor.canExtract) {
             Button("拷贝文字") { store.copyText(items) }
         }
@@ -141,7 +141,7 @@ struct ChipBar: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
-            Text(store.isLoading ? "正在搜索…" : "\(store.items.count) 个结果")
+            Text(store.isLoading ? String(localized: "正在搜索…") : String(localized: "\(store.items.count) 个结果"))
                 .font(.callout.weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
@@ -183,7 +183,7 @@ extension FileItem {
     var relativeDateText: String {
         guard sortDate != .distantPast else { return "--" }
         let formatter = RelativeDateTimeFormatter()
-        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.locale = Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en")
         formatter.unitsStyle = .full
         return formatter.localizedString(for: sortDate, relativeTo: Date())
     }

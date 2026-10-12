@@ -95,9 +95,9 @@ struct ContentView: View {
     private var trashTitle: String {
         let count = store.pendingTrash.count
         if count == 1, let first = store.pendingTrash.first {
-            return "将“\(first.name)”移到废纸篓？"
+            return String(localized: "将“\(first.name)”移到废纸篓？")
         }
-        return "将 \(count) 个项目移到废纸篓？"
+        return String(localized: "将 \(count) 个项目移到废纸篓？")
     }
 }
 
@@ -140,7 +140,7 @@ struct DetailView: View {
     @ViewBuilder
     private var content: some View {
         if store.activeQuery != nil {
-            BrowserView(title: "搜索结果", showsOCRTools: false)
+            BrowserView(title: String(localized: "搜索结果"), showsOCRTools: false)
         } else {
             switch store.selection ?? .home {
             case .home:
@@ -148,9 +148,9 @@ struct DetailView: View {
             case .category(let category):
                 BrowserView(title: category.title, showsOCRTools: category == .images)
             case .largeFiles:
-                BrowserView(title: "大文件", showsOCRTools: false)
+                BrowserView(title: String(localized: "大文件"), showsOCRTools: false)
             case .screenshots:
-                BrowserView(title: "截图", showsOCRTools: true)
+                BrowserView(title: String(localized: "截图"), showsOCRTools: true)
             case .downloads:
                 DownloadSourcesView()
             case .duplicates:
@@ -160,11 +160,11 @@ struct DetailView: View {
             case .cleanup:
                 CleanupView()
             case .tag(let name):
-                BrowserView(title: "标签：\(name)", showsOCRTools: false)
+                BrowserView(title: String(localized: "标签：\(name)"), showsOCRTools: false)
             case .storageMap:
                 StorageMapView()
             case .chat(let app):
-                BrowserView(title: "\(app.name)文件", showsOCRTools: false, chatApp: app)
+                BrowserView(title: String(localized: "\(app.name)文件"), showsOCRTools: false, chatApp: app)
             case .pinned(let path):
                 BrowserView(title: FileManager.default.displayName(atPath: path), showsOCRTools: false)
             case .autoOrganize:

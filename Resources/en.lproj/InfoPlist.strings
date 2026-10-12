@@ -1,0 +1,8 @@
+"CFBundleDisplayName" = "Shiduo";
+"CFBundleName" = "Shiduo";
+"NSHumanReadableCopyright" = "MIT License · github.com/hanson-zz/Shiduo";
+"NSDesktopFolderUsageDescription" = "Shiduo reads files on your Desktop to show thumbnails, recognize text in screenshots, and find duplicates. Everything happens on this Mac.";
+"NSDocumentsFolderUsageDescription" = "Shiduo reads files in Documents to show thumbnails and find duplicates. Everything happens on this Mac.";
+"NSDownloadsFolderUsageDescription" = "Shiduo reads files in Downloads to group them by where they came from and find installers you can clean up. Everything happens on this Mac.";
+"NSRemovableVolumesUsageDescription" = "Shiduo reads files on external drives to show thumbnails.";
+"NSNetworkVolumesUsageDescription" = "Shiduo reads files on network drives to show thumbnails.";

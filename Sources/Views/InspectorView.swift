@@ -25,7 +25,7 @@ struct MediaInfo: Equatable {
                 make = MDItemCopyAttribute(md, "kMDItemAcquisitionMake" as CFString) as? String
                 model = MDItemCopyAttribute(md, "kMDItemAcquisitionModel" as CFString) as? String
                 if let pages = (MDItemCopyAttribute(md, "kMDItemNumberOfPages" as CFString) as? NSNumber)?.intValue, pages > 0 {
-                    info.pages = "\(pages) 页"
+                    info.pages = String(localized: "\(pages) 页")
                 }
             }
             // Spotlight 没有记录时，直接读图片的 EXIF。
@@ -86,17 +86,17 @@ struct InspectorView: View {
                     }
                     .controlSize(.small)
                     Divider()
-                    InfoRow(title: "种类", value: item.kindText)
-                    InfoRow(title: "大小", value: item.sizeText)
-                    if let dimensions = media.dimensions { InfoRow(title: "尺寸", value: dimensions) }
-                    if let duration = media.duration { InfoRow(title: "时长", value: duration) }
-                    if let camera = media.camera { InfoRow(title: "相机", value: camera) }
-                    if let pages = media.pages { InfoRow(title: "页数", value: pages) }
-                    if let created = item.created { InfoRow(title: "创建时间", value: created.shortText) }
-                    if let modified = item.modified { InfoRow(title: "修改时间", value: modified.shortText) }
-                    if let added = item.added { InfoRow(title: "添加时间", value: added.shortText) }
-                    InfoRow(title: "上次打开", value: item.lastUsed?.shortText ?? "从未打开或无记录")
-                    InfoRow(title: "位置", value: item.url.deletingLastPathComponent().path)
+                    InfoRow(title: String(localized: "种类"), value: item.kindText)
+                    InfoRow(title: String(localized: "大小"), value: item.sizeText)
+                    if let dimensions = media.dimensions { InfoRow(title: String(localized: "尺寸"), value: dimensions) }
+                    if let duration = media.duration { InfoRow(title: String(localized: "时长"), value: duration) }
+                    if let camera = media.camera { InfoRow(title: String(localized: "相机"), value: camera) }
+                    if let pages = media.pages { InfoRow(title: String(localized: "页数"), value: pages) }
+                    if let created = item.created { InfoRow(title: String(localized: "创建时间"), value: created.shortText) }
+                    if let modified = item.modified { InfoRow(title: String(localized: "修改时间"), value: modified.shortText) }
+                    if let added = item.added { InfoRow(title: String(localized: "添加时间"), value: added.shortText) }
+                    InfoRow(title: String(localized: "上次打开"), value: item.lastUsed?.shortText ?? String(localized: "从未打开或无记录"))
+                    InfoRow(title: String(localized: "位置"), value: item.url.deletingLastPathComponent().path)
                     if !item.whereFroms.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("下载来源")
@@ -180,7 +180,7 @@ struct OCRSheet: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button(copied ? "已拷贝" : "拷贝全部文字") {
+                Button(copied ? String(localized: "已拷贝") : String(localized: "拷贝全部文字")) {
                     FileActions.copy(text)
                     copied = true
                 }

@@ -147,11 +147,11 @@ struct CleanupReviewPage: View {
 
             Divider()
             HStack(spacing: 12) {
-                Button(selected.count == items.count && !items.isEmpty ? "取消全选" : "全选") {
+                Button(selected.count == items.count && !items.isEmpty ? String(localized: "取消全选") : String(localized: "全选")) {
                     selected = selected.count == items.count ? [] : Set(items.map(\.id))
                 }
                 .disabled(items.isEmpty)
-                Text(selected.isEmpty ? "点缩略图选择要移除的文件" : "已选 \(selected.count) 项 · \(selectedBytes.byteText)")
+                Text(selected.isEmpty ? String(localized: "点缩略图选择要移除的文件") : String(localized: "已选 \(selected.count) 项 · \(selectedBytes.byteText)"))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button("移除所选") { confirm = selectedItems }
@@ -179,7 +179,7 @@ struct CleanupReviewPage: View {
                 confirm = []
                 let moved = store.moveToTrash(list)
                 selected.subtract(list.map(\.id))
-                if moved > 0 { store.showToast("已把 \(moved) 个项目移到废纸篓") }
+                if moved > 0 { store.showToast(String(localized: "已把 \(moved) 个项目移到废纸篓")) }
             }
             Button("取消", role: .cancel) { confirm = [] }
         } message: {
