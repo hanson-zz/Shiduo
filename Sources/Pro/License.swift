@@ -6,15 +6,18 @@ import Security
 
 /// 拾掇 Pro 的授权配置，集中放在这里。
 enum LicenseConfig {
-    // TODO: 在 Lemon Squeezy 后台建好商店和产品后，填入真实的 store_id / product_id。
-    // 为 0 时不校验（任何 Lemon Squeezy 授权码都能激活），上线前一定要填。
-    static let storeID = 0
-    static let productID = 0
+    // 付款和授权码由 Creem 处理（可提现到支付宝）。
+    // App 不直接调用 Creem（那需要 API 密钥，而代码是公开的），
+    // 而是调用 server/license-relay 里的 Cloudflare Worker 中转。
 
-    // TODO: 换成真实的购买页（Lemon Squeezy 结账链接）。
-    static let buyURL = URL(string: "https://shiduo.lemonsqueezy.com")!
+    // TODO: 在 Creem 建好产品后填入产品 ID（prod_xxx）。为空时不检查（中转服务也会检查）。
+    static let productID = ""
 
-    static let apiBase = "https://api.lemonsqueezy.com/v1/licenses/"
+    // TODO: 换成 Creem 产品的结账链接。
+    static let buyURL = URL(string: "https://www.creem.io")!
+
+    // TODO: 部署 Worker 后换成真实地址。
+    static let apiBase = "https://shiduo-license.workers.dev/v1/licenses/"
 
     /// 免费试用天数。
     static let trialDays = 7
@@ -75,9 +78,9 @@ enum LicenseKeychain {
     }
 }
 
-// MARK: - Lemon Squeezy License API
+// MARK: - 授权 API（经 Cloudflare Worker 中转到 Creem）
 
-/// Lemon Squeezy 返回的内容里我们关心的几项。
+/// 中转服务返回的内容里我们关心的几项。
 struct LicenseResponse {
     var activated: Bool?
     var valid: Bool?
@@ -85,13 +88,11 @@ struct LicenseResponse {
     var error: String?
     var instanceID: String?
     var status: String?
-    var storeID: Int?
-    var productID: Int?
+    var productID: String?
 
-    /// 授权码属于本应用（配置为 0 时不检查）。
+    /// 授权码属于本应用（配置为空时不检查）。
     var matchesConfig: Bool {
-        if LicenseConfig.storeID != 0, storeID != LicenseConfig.storeID { return false }
-        if LicenseConfig.productID != 0, productID != LicenseConfig.productID { return false }
+        if !LicenseConfig.productID.isEmpty, productID != LicenseConfig.productID { return false }
         return true
     }
 }
@@ -101,29 +102,18 @@ enum LicenseAPIError: Error {
     case badResponse
 }
 
-/// https://docs.lemonsqueezy.com/api/license-api
+/// 中转服务：server/license-relay/worker.js；上游 https://docs.creem.io/api-reference
 enum LicenseAPI {
     static func activate(key: String, instanceName: String) async throws -> LicenseResponse {
-        try await post("activate", ["license_key": key, "instance_name": instanceName])
+        try await post("activate", ["key": key, "instance_name": instanceName])
     }
 
     static func validate(key: String, instanceID: String) async throws -> LicenseResponse {
-        try await post("validate", ["license_key": key, "instance_id": instanceID])
+        try await post("validate", ["key": key, "instance_id": instanceID])
     }
 
     static func deactivate(key: String, instanceID: String) async throws -> LicenseResponse {
-        try await post("deactivate", ["license_key": key, "instance_id": instanceID])
-    }
-
-    private static func encode(_ params: [String: String]) -> Data {
-        var allowed = CharacterSet.alphanumerics
-        allowed.insert(charactersIn: "-._~")
-        let body = params.map { key, value in
-            let k = key.addingPercentEncoding(withAllowedCharacters: allowed) ?? key
-            let v = value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
-            return "\(k)=\(v)"
-        }.joined(separator: "&")
-        return Data(body.utf8)
+        try await post("deactivate", ["key": key, "instance_id": instanceID])
     }
 
     private static func post(_ endpoint: String, _ params: [String: String]) async throws -> LicenseResponse {
@@ -131,8 +121,8 @@ enum LicenseAPI {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.httpBody = encode(params)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: params)
         request.timeoutInterval = 15
 
         let data: Data
@@ -142,7 +132,7 @@ enum LicenseAPI {
         } catch {
             throw LicenseAPIError.network
         }
-        // 授权码无效时 Lemon Squeezy 返回 4xx，但正文仍是 JSON，所以不看状态码，直接解析。
+        // 授权码无效时中转服务返回 4xx，但正文仍是 JSON，所以不看状态码，直接解析。
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw LicenseAPIError.badResponse
         }
@@ -162,8 +152,7 @@ enum LicenseAPI {
             r.status = key["status"] as? String
         }
         if let meta = object["meta"] as? [String: Any] {
-            r.storeID = (meta["store_id"] as? NSNumber)?.intValue
-            r.productID = (meta["product_id"] as? NSNumber)?.intValue
+            r.productID = meta["product_id"] as? String
         }
         return r
     }
@@ -350,7 +339,7 @@ final class LicenseManager: ObservableObject {
         return status == "active" || status == "inactive"
     }
 
-    /// 把 Lemon Squeezy 的英文错误翻成中文。
+    /// 把中转服务的英文错误翻成中文。
     static func message(for error: String?, status: String?) -> String {
         let text = (error ?? "").lowercased()
         if text.contains("activation limit") {

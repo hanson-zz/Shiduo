@@ -79,7 +79,7 @@ struct SettingsView: View {
                 Toggle("每天检查一次新版本", isOn: $checkUpdates)
                 Toggle("自动下载，退出拾掇时安装", isOn: $autoInstall)
                     .disabled(!checkUpdates)
-                Text("拾掇只在两处联网：检查更新（只访问 GitHub 上本项目的发布页）和激活授权（只把授权码发给 Lemon Squeezy 校验）。你的文件从不上传。")
+                Text("拾掇只在两处联网：检查更新（只访问 GitHub 上本项目的发布页）和激活授权（只把授权码发给授权服务器校验）。你的文件从不上传。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 HStack {

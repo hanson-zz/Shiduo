@@ -40,15 +40,14 @@ final class LicenseResponseTests: XCTestCase {
             "error": NSNull(),
             "license_key": ["id": 1, "status": "active", "key": "38b1460a-5104-4067-a91d-77b872934d51"],
             "instance": ["id": "47596ad9-a811-4ebf-ac8a-03fc7b6d2a17", "name": "Test"],
-            "meta": ["store_id": 1234, "product_id": 5678],
+            "meta": ["product_id": "prod_abc123"],
         ]
         let r = LicenseAPI.parse(json)
         XCTAssertEqual(r.activated, true)
         XCTAssertNil(r.error)
         XCTAssertEqual(r.instanceID, "47596ad9-a811-4ebf-ac8a-03fc7b6d2a17")
         XCTAssertEqual(r.status, "active")
-        XCTAssertEqual(r.storeID, 1234)
-        XCTAssertEqual(r.productID, 5678)
+        XCTAssertEqual(r.productID, "prod_abc123")
     }
 
     func testParseError() {
