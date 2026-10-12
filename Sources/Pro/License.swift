@@ -17,7 +17,7 @@ enum LicenseConfig {
     static let buyURL = URL(string: "https://www.creem.io/payment/prod_632G8EgQJWLL6m9M5JaBXv")!
 
     // TODO: 部署 Worker 后换成真实地址。
-    static let apiBase = "https://shiduo-license.workers.dev/v1/licenses/"
+    static let apiBase = "https://shiduo-license.tudou-123.workers.dev/v1/licenses/"
 
     /// 免费试用天数。
     static let trialDays = 7
