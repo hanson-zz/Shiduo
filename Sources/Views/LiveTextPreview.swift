@@ -178,7 +178,7 @@ struct LiveTextImageView: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {
         let overlay = context.coordinator.overlay
         if overlay.selectableItemsHighlighted != highlight {
-            overlay.setSelectableItemsHighlighted(highlight, animated: true)
+            overlay.selectableItemsHighlighted = highlight
         }
         if context.coordinator.url != url, let imageView = nsView.subviews.first as? NSImageView {
             load(into: imageView, context: context)
