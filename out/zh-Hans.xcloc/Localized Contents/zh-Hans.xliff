@@ -1,0 +1,3093 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd">
+  <file original="Resources/Localizable.xcstrings" source-language="zh-Hans" target-language="zh-Hans" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="16.4" build-num="16F6"/>
+    </header>
+    <body>
+      <trans-unit id="" translate="no" xml:space="preserve">
+        <source/>
+        <target state="new"/>
+        <note/>
+      </trans-unit>
+      <trans-unit id="&#10;&#10;&#10;——&#10;拾掇 %@ · macOS %@ · %@" xml:space="preserve">
+        <source>
+
+
+——
+拾掇 %1$@ · macOS %2$@ · %3$@</source>
+        <target state="translated">
+
+
+——
+拾掇 %1$@ · macOS %2$@ · %3$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id=" · 上次 %@" xml:space="preserve">
+        <source> · 上次 %@</source>
+        <target state="translated"> · 上次 %@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ · %@" xml:space="preserve">
+        <source>%1$@ · %2$@</source>
+        <target state="translated">%1$@ · %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ · 可用 %@" xml:space="preserve">
+        <source>%1$@ · 可用 %2$@</source>
+        <target state="translated">%1$@ · 可用 %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ → %@" xml:space="preserve">
+        <source>%1$@ → %2$@</source>
+        <target state="translated">%1$@ → %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ 个项目" xml:space="preserve">
+        <source>%@ 个项目</source>
+        <target state="translated">%@ 个项目</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ 可用" xml:space="preserve">
+        <source>%@ 可用</source>
+        <target state="translated">%@ 可用</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ 已下载，退出拾掇时自动安装" xml:space="preserve">
+        <source>%@ 已下载，退出拾掇时自动安装</source>
+        <target state="translated">%@ 已下载，退出拾掇时自动安装</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ 已被其他 App 占用，请换一个快捷键。" xml:space="preserve">
+        <source>%@ 已被其他 App 占用，请换一个快捷键。</source>
+        <target state="translated">%@ 已被其他 App 占用，请换一个快捷键。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ 拍摄" xml:space="preserve">
+        <source>%@ 拍摄</source>
+        <target state="translated">%@ 拍摄</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@以前" xml:space="preserve">
+        <source>%@以前</source>
+        <target state="translated">%@以前</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@文件" xml:space="preserve">
+        <source>%@文件</source>
+        <target state="translated">%@文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@（%lld）" xml:space="preserve">
+        <source>%1$@（%2$lld）</source>
+        <target state="translated">%1$@（%2$lld）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@：%@ → %@" xml:space="preserve">
+        <source>%1$@：%2$@ → %3$@</source>
+        <target state="translated">%1$@：%2$@ → %3$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld" translate="no" xml:space="preserve">
+        <source>%lld</source>
+        <target state="new">%lld</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个 · %@" xml:space="preserve">
+        <source>%1$lld 个 · %2$@</source>
+        <target state="translated">%1$lld 个 · %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个多余的副本，共 %lld 组" xml:space="preserve">
+        <source>%1$lld 个多余的副本，共 %2$lld 组</source>
+        <target state="translated">%1$lld 个多余的副本，共 %2$lld 组</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个文件会改名，扩展名保持不变" xml:space="preserve">
+        <source>%lld 个文件会改名，扩展名保持不变</source>
+        <target state="translated">%lld 个文件会改名，扩展名保持不变</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个文件没能改名（可能被占用或没有权限）：" xml:space="preserve">
+        <source>%lld 个文件没能改名（可能被占用或没有权限）：</source>
+        <target state="translated">%lld 个文件没能改名（可能被占用或没有权限）：</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个月" xml:space="preserve">
+        <source>%lld 个月</source>
+        <target state="translated">%lld 个月</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个来源 · %lld 个文件" xml:space="preserve">
+        <source>%1$lld 个来源 · %2$lld 个文件</source>
+        <target state="translated">%1$lld 个来源 · %2$lld 个文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个结果" xml:space="preserve">
+        <source>%lld 个结果</source>
+        <target state="translated">%lld 个结果</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个项目" xml:space="preserve">
+        <source>%lld 个项目</source>
+        <target state="translated">%lld 个项目</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个项目 · %@" xml:space="preserve">
+        <source>%1$lld 个项目 · %2$@</source>
+        <target state="translated">%1$lld 个项目 · %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个项目只在 iCloud 云端或已不存在，已跳过。" xml:space="preserve">
+        <source>%lld 个项目只在 iCloud 云端或已不存在，已跳过。</source>
+        <target state="translated">%lld 个项目只在 iCloud 云端或已不存在，已跳过。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 个项目无法移到废纸篓（可能需要管理员权限）：%@" xml:space="preserve">
+        <source>%1$lld 个项目无法移到废纸篓（可能需要管理员权限）：%2$@</source>
+        <target state="translated">%1$lld 个项目无法移到废纸篓（可能需要管理员权限）：%2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 份完全相同 · 可腾出 %@" xml:space="preserve">
+        <source>%1$lld 份完全相同 · 可腾出 %2$@</source>
+        <target state="translated">%1$lld 份完全相同 · 可腾出 %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 份相同的文件 · 每份 %@" xml:space="preserve">
+        <source>%1$lld 份相同的文件 · 每份 %2$@</source>
+        <target state="translated">%1$lld 份相同的文件 · 每份 %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 周" xml:space="preserve">
+        <source>%lld 周</source>
+        <target state="translated">%lld 周</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 天" xml:space="preserve">
+        <source>%lld 天</source>
+        <target state="translated">%lld 天</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 字" xml:space="preserve">
+        <source>%lld 字</source>
+        <target state="translated">%lld 字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 年" xml:space="preserve">
+        <source>%lld 年</source>
+        <target state="translated">%lld 年</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 张 · 可腾出 %@" xml:space="preserve">
+        <source>%1$lld 张 · 可腾出 %2$@</source>
+        <target state="translated">%1$lld 张 · 可腾出 %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 张图片，共 %@。原图不会被改动。" xml:space="preserve">
+        <source>%1$lld 张图片，共 %2$@。原图不会被改动。</source>
+        <target state="translated">%1$lld 张图片，共 %2$@。原图不会被改动。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 张相似的照片" xml:space="preserve">
+        <source>%lld 张相似的照片</source>
+        <target state="translated">%lld 张相似的照片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 月" xml:space="preserve">
+        <source>%lld 月</source>
+        <target state="translated">%lld 月</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld 页" xml:space="preserve">
+        <source>%lld 页</source>
+        <target state="translated">%lld 页</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%lld%%" translate="no" xml:space="preserve">
+        <source>%lld%%</source>
+        <target state="new">%lld%%</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="+%lld" translate="no" xml:space="preserve">
+        <source>+%lld</source>
+        <target state="new">+%lld</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="+99" translate="no" xml:space="preserve">
+        <source>+99</source>
+        <target state="new">+99</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="001" translate="no" xml:space="preserve">
+        <source>001</source>
+        <target state="new">001</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="0001" translate="no" xml:space="preserve">
+        <source>0001</source>
+        <target state="new">0001</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="01" translate="no" xml:space="preserve">
+        <source>01</source>
+        <target state="new">01</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="1" translate="no" xml:space="preserve">
+        <source>1</source>
+        <target state="new">1</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="3个月前的截图" xml:space="preserve">
+        <source>3个月前的截图</source>
+        <target state="translated">3个月前的截图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="7 天试用已经结束。升级到拾掇 Pro 就能继续使用。" xml:space="preserve">
+        <source>7 天试用已经结束。升级到拾掇 Pro 就能继续使用。</source>
+        <target state="translated">7 天试用已经结束。升级到拾掇 Pro 就能继续使用。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="30 天以前拍的截图" xml:space="preserve">
+        <source>30 天以前拍的截图</source>
+        <target state="translated">30 天以前拍的截图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="200 MB 以上的文件" xml:space="preserve">
+        <source>200 MB 以上的文件</source>
+        <target state="translated">200 MB 以上的文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="999+" translate="no" xml:space="preserve">
+        <source>999+</source>
+        <target state="new">999+</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Apple 芯片" xml:space="preserve">
+        <source>Apple 芯片</source>
+        <target state="translated">Apple 芯片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Documents/下载的 PDF" xml:space="preserve">
+        <source>Documents/下载的 PDF</source>
+        <target state="translated">Documents/下载的 PDF</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="GitHub · hanson-zz/Shiduo" translate="no" xml:space="preserve">
+        <source>GitHub · hanson-zz/Shiduo</source>
+        <target state="new">GitHub · hanson-zz/Shiduo</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Google 云端硬盘" xml:space="preserve">
+        <source>Google 云端硬盘</source>
+        <target state="translated">Google 云端硬盘</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="HEIC 和 JPEG 成对" xml:space="preserve">
+        <source>HEIC 和 JPEG 成对</source>
+        <target state="translated">HEIC 和 JPEG 成对</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="MIT 开源 · Pro 功能需授权" xml:space="preserve">
+        <source>MIT 开源 · Pro 功能需授权</source>
+        <target state="translated">MIT 开源 · Pro 功能需授权</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="PRO" translate="no" xml:space="preserve">
+        <source>PRO</source>
+        <target state="new">PRO</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Pro 试用中，还剩 %lld 天" xml:space="preserve">
+        <source>Pro 试用中，还剩 %lld 天</source>
+        <target state="translated">Pro 试用中，还剩 %lld 天</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Pro：按画面内容搜索" xml:space="preserve">
+        <source>Pro：按画面内容搜索</source>
+        <target state="translated">Pro：按画面内容搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="QQ 邮箱" xml:space="preserve">
+        <source>QQ 邮箱</source>
+        <target state="translated">QQ 邮箱</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="inspector.where" xml:space="preserve">
+        <source>位置</source>
+        <target state="translated">位置</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="kind.file" xml:space="preserve">
+        <source>文件</source>
+        <target state="translated">文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="kind.screenshot" xml:space="preserve">
+        <source>截图</source>
+        <target state="translated">截图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="sidebar.movies" xml:space="preserve">
+        <source>影片</source>
+        <target state="translated">影片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="sidebar.pictures" xml:space="preserve">
+        <source>图片</source>
+        <target state="translated">图片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="wifi 密码截图" xml:space="preserve">
+        <source>wifi 密码截图</source>
+        <target state="translated">wifi 密码截图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="·" translate="no" xml:space="preserve">
+        <source>·</source>
+        <target state="new">·</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="“" translate="no" xml:space="preserve">
+        <source>“</source>
+        <target state="new">“</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="“上周超过5MB的pdf”“来自微信的图片”" xml:space="preserve">
+        <source>“上周超过5MB的pdf”“来自微信的图片”</source>
+        <target state="translated">“上周超过5MB的pdf”“来自微信的图片”</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包" xml:space="preserve">
+        <source>“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包</source>
+        <target state="translated">“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="“下载”里放了 30 天以上、之后再没打开过的文件" xml:space="preserve">
+        <source>“下载”里放了 30 天以上、之后再没打开过的文件</source>
+        <target state="translated">“下载”里放了 30 天以上、之后再没打开过的文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="“应用程序”里半年以上没打开过的第三方应用" xml:space="preserve">
+        <source>“应用程序”里半年以上没打开过的第三方应用</source>
+        <target state="translated">“应用程序”里半年以上没打开过的第三方应用</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="”" translate="no" xml:space="preserve">
+        <source>”</source>
+        <target state="new">”</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="← → 上一张 / 下一张" xml:space="preserve">
+        <source>← → 上一张 / 下一张</source>
+        <target state="translated">← → 上一张 / 下一张</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="↩ 打开" xml:space="preserve">
+        <source>↩ 打开</source>
+        <target state="translated">↩ 打开</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="⇧⌥ 空格" xml:space="preserve">
+        <source>⇧⌥ 空格</source>
+        <target state="translated">⇧⌥ 空格</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="⌃⌥ 空格" xml:space="preserve">
+        <source>⌃⌥ 空格</source>
+        <target state="translated">⌃⌥ 空格</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="⌘↩ 在访达中显示" xml:space="preserve">
+        <source>⌘↩ 在访达中显示</source>
+        <target state="translated">⌘↩ 在访达中显示</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="⌥ 空格" xml:space="preserve">
+        <source>⌥ 空格</source>
+        <target state="translated">⌥ 空格</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="、" xml:space="preserve">
+        <source>、</source>
+        <target state="translated">、</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="【%@】&#10;%@" xml:space="preserve">
+        <source>【%1$@】
+%2$@</source>
+        <target state="translated">【%1$@】
+%2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="一切就绪，微信 / QQ 专区和占用图都能完整工作了" xml:space="preserve">
+        <source>一切就绪，微信 / QQ 专区和占用图都能完整工作了</source>
+        <target state="translated">一切就绪，微信 / QQ 专区和占用图都能完整工作了</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="上一步" xml:space="preserve">
+        <source>上一步</source>
+        <target state="translated">上一步</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="上一首（⌘←）" xml:space="preserve">
+        <source>上一首（⌘←）</source>
+        <target state="translated">上一首（⌘←）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="上个月" xml:space="preserve">
+        <source>上个月</source>
+        <target state="translated">上个月</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="上周" xml:space="preserve">
+        <source>上周</source>
+        <target state="translated">上周</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="上周超过5MB的pdf" xml:space="preserve">
+        <source>上周超过5MB的pdf</source>
+        <target state="translated">上周超过5MB的pdf</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="上次打开" xml:space="preserve">
+        <source>上次打开</source>
+        <target state="translated">上次打开</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="上次校验" xml:space="preserve">
+        <source>上次校验</source>
+        <target state="translated">上次校验</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下一首（⌘→）" xml:space="preserve">
+        <source>下一首（⌘→）</source>
+        <target state="translated">下一首（⌘→）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下午好" xml:space="preserve">
+        <source>下午好</source>
+        <target state="translated">下午好</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下载" xml:space="preserve">
+        <source>下载</source>
+        <target state="translated">下载</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下载文件夹里的安装包、截图、发票自动归位" xml:space="preserve">
+        <source>下载文件夹里的安装包、截图、发票自动归位</source>
+        <target state="translated">下载文件夹里的安装包、截图、发票自动归位</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下载更新失败" xml:space="preserve">
+        <source>下载更新失败</source>
+        <target state="translated">下载更新失败</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下载来源" xml:space="preserve">
+        <source>下载来源</source>
+        <target state="translated">下载来源</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下载的 PDF 归到文稿" xml:space="preserve">
+        <source>下载的 PDF 归到文稿</source>
+        <target state="translated">下载的 PDF 归到文稿</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下载的文件" xml:space="preserve">
+        <source>下载的文件</source>
+        <target state="translated">下载的文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="下载的更新包不完整" xml:space="preserve">
+        <source>下载的更新包不完整</source>
+        <target state="translated">下载的更新包不完整</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="不上云" xml:space="preserve">
+        <source>不上云</source>
+        <target state="translated">不上云</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="不上传" xml:space="preserve">
+        <source>不上传</source>
+        <target state="translated">不上传</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="不会直接删除，都进废纸篓，随时可以放回原处。" xml:space="preserve">
+        <source>不会直接删除，都进废纸篓，随时可以放回原处。</source>
+        <target state="translated">不会直接删除，都进废纸篓，随时可以放回原处。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。" xml:space="preserve">
+        <source>不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。</source>
+        <target state="translated">不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="不常用的应用" xml:space="preserve">
+        <source>不常用的应用</source>
+        <target state="translated">不常用的应用</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="不按画面内容搜索" xml:space="preserve">
+        <source>不按画面内容搜索</source>
+        <target state="translated">不按画面内容搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="不限" xml:space="preserve">
+        <source>不限</source>
+        <target state="translated">不限</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="不限时间" xml:space="preserve">
+        <source>不限时间</source>
+        <target state="translated">不限时间</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="严格" xml:space="preserve">
+        <source>严格</source>
+        <target state="translated">严格</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="个人文件夹" xml:space="preserve">
+        <source>个人文件夹</source>
+        <target state="translated">个人文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="个文件" xml:space="preserve">
+        <source>个文件</source>
+        <target state="translated">个文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="个文件，共 %@，每一类都有自己的货架" xml:space="preserve">
+        <source>个文件，共 %@，每一类都有自己的货架</source>
+        <target state="translated">个文件，共 %@，每一类都有自己的货架</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="中午好" xml:space="preserve">
+        <source>中午好</source>
+        <target state="translated">中午好</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="了解拾掇 Pro" xml:space="preserve">
+        <source>了解拾掇 Pro</source>
+        <target state="translated">了解拾掇 Pro</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="今天" xml:space="preserve">
+        <source>今天</source>
+        <target state="translated">今天</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="今年" xml:space="preserve">
+        <source>今年</source>
+        <target state="translated">今年</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="今年的照片" xml:space="preserve">
+        <source>今年的照片</source>
+        <target state="translated">今年的照片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="从 %lld 开始" xml:space="preserve">
+        <source>从 %lld 开始</source>
+        <target state="translated">从 %lld 开始</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="从未打开或无记录" xml:space="preserve">
+        <source>从未打开或无记录</source>
+        <target state="translated">从未打开或无记录</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="从浏览器、邮箱、网盘下载的文件会记下来源，这里按来源分组显示。" xml:space="preserve">
+        <source>从浏览器、邮箱、网盘下载的文件会记下来源，这里按来源分组显示。</source>
+        <target state="translated">从浏览器、邮箱、网盘下载的文件会记下来源，这里按来源分组显示。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="以列表显示" xml:space="preserve">
+        <source>以列表显示</source>
+        <target state="translated">以列表显示</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="以后再说" xml:space="preserve">
+        <source>以后再说</source>
+        <target state="translated">以后再说</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="以图标显示" xml:space="preserve">
+        <source>以图标显示</source>
+        <target state="translated">以图标显示</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="位数" xml:space="preserve">
+        <source>位数</source>
+        <target state="translated">位数</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="位置" xml:space="preserve">
+        <source>位置</source>
+        <target state="translated">位置</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="你的文件只留在这台 Mac 上" xml:space="preserve">
+        <source>你的文件只留在这台 Mac 上</source>
+        <target state="translated">你的文件只留在这台 Mac 上</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="例如 dmg, pkg" xml:space="preserve">
+        <source>例如 dmg, pkg</source>
+        <target state="translated">例如 dmg, pkg</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="例如 发票" xml:space="preserve">
+        <source>例如 发票</source>
+        <target state="translated">例如 发票</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="保存" xml:space="preserve">
+        <source>保存</source>
+        <target state="translated">保存</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="保存到" xml:space="preserve">
+        <source>保存到</source>
+        <target state="translated">保存到</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="保持原尺寸" xml:space="preserve">
+        <source>保持原尺寸</source>
+        <target state="translated">保持原尺寸</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="保留" xml:space="preserve">
+        <source>保留</source>
+        <target state="translated">保留</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="保留 %lld 个，删 %lld 个" xml:space="preserve">
+        <source>保留 %1$lld 个，删 %2$lld 个</source>
+        <target state="translated">保留 %1$lld 个，删 %2$lld 个</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="修改日期" xml:space="preserve">
+        <source>修改日期</source>
+        <target state="translated">修改日期</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="修改时间" xml:space="preserve">
+        <source>修改时间</source>
+        <target state="translated">修改时间</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="停止" xml:space="preserve">
+        <source>停止</source>
+        <target state="translated">停止</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="像说话一样搜索" xml:space="preserve">
+        <source>像说话一样搜索</source>
+        <target state="translated">像说话一样搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="免费版" xml:space="preserve">
+        <source>免费版</source>
+        <target state="translated">免费版</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="全局快速搜索" xml:space="preserve">
+        <source>全局快速搜索</source>
+        <target state="translated">全局快速搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="全选" xml:space="preserve">
+        <source>全选</source>
+        <target state="translated">全选</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="全部" xml:space="preserve">
+        <source>全部</source>
+        <target state="translated">全部</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="全部来源" xml:space="preserve">
+        <source>全部来源</source>
+        <target state="translated">全部来源</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="全部来源（%lld）" xml:space="preserve">
+        <source>全部来源（%lld）</source>
+        <target state="translated">全部来源（%lld）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="全部移到废纸篓" xml:space="preserve">
+        <source>全部移到废纸篓</source>
+        <target state="translated">全部移到废纸篓</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="共 %@" xml:space="preserve">
+        <source>共 %@</source>
+        <target state="translated">共 %@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="关于" xml:space="preserve">
+        <source>关于</source>
+        <target state="translated">关于</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="关于拾掇" xml:space="preserve">
+        <source>关于拾掇</source>
+        <target state="translated">关于拾掇</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。" xml:space="preserve">
+        <source>关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。</source>
+        <target state="translated">关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="关闭（Esc 或空格）" xml:space="preserve">
+        <source>关闭（Esc 或空格）</source>
+        <target state="translated">关闭（Esc 或空格）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="其他来源" xml:space="preserve">
+        <source>其他来源</source>
+        <target state="translated">其他来源</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="其他网站" xml:space="preserve">
+        <source>其他网站</source>
+        <target state="translated">其他网站</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="分享给朋友" xml:space="preserve">
+        <source>分享给朋友</source>
+        <target state="translated">分享给朋友</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="列表" xml:space="preserve">
+        <source>列表</source>
+        <target state="translated">列表</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="列表里没有拾掇？点 + 号，到「应用程序」里选择拾掇" xml:space="preserve">
+        <source>列表里没有拾掇？点 + 号，到「应用程序」里选择拾掇</source>
+        <target state="translated">列表里没有拾掇？点 + 号，到「应用程序」里选择拾掇</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="创建时间" xml:space="preserve">
+        <source>创建时间</source>
+        <target state="translated">创建时间</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="删除规则" xml:space="preserve">
+        <source>删除规则</source>
+        <target state="translated">删除规则</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="刷新" xml:space="preserve">
+        <source>刷新</source>
+        <target state="translated">刷新</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="前天" xml:space="preserve">
+        <source>前天</source>
+        <target state="translated">前天</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="前往" xml:space="preserve">
+        <source>前往</source>
+        <target state="translated">前往</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="前往下载" xml:space="preserve">
+        <source>前往下载</source>
+        <target state="translated">前往下载</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="前缀" xml:space="preserve">
+        <source>前缀</source>
+        <target state="translated">前缀</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="剩余空间、最近下载、快速搜索，一点就到" xml:space="preserve">
+        <source>剩余空间、最近下载、快速搜索，一点就到</source>
+        <target state="translated">剩余空间、最近下载、快速搜索，一点就到</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="加前缀 / 后缀" xml:space="preserve">
+        <source>加前缀 / 后缀</source>
+        <target state="translated">加前缀 / 后缀</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="动作" xml:space="preserve">
+        <source>动作</source>
+        <target state="translated">动作</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="半年以前" xml:space="preserve">
+        <source>半年以前</source>
+        <target state="translated">半年以前</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="压缩包" xml:space="preserve">
+        <source>压缩包</source>
+        <target state="translated">压缩包</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="原名" xml:space="preserve">
+        <source>原名</source>
+        <target state="translated">原名</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="原图和编辑版" xml:space="preserve">
+        <source>原图和编辑版</source>
+        <target state="translated">原图和编辑版</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="原文件旁边" xml:space="preserve">
+        <source>原文件旁边</source>
+        <target state="translated">原文件旁边</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="去 GitHub 点星" xml:space="preserve">
+        <source>去 GitHub 点星</source>
+        <target state="translated">去 GitHub 点星</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="去年" xml:space="preserve">
+        <source>去年</source>
+        <target state="translated">去年</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="去掉这个条件" xml:space="preserve">
+        <source>去掉这个条件</source>
+        <target state="translated">去掉这个条件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="发现 %lld 组相似照片" xml:space="preserve">
+        <source>发现 %lld 组相似照片</source>
+        <target state="translated">发现 %lld 组相似照片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="发现 %lld 组重复文件" xml:space="preserve">
+        <source>发现 %lld 组重复文件</source>
+        <target state="translated">发现 %lld 组重复文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="发送反馈…" xml:space="preserve">
+        <source>发送反馈…</source>
+        <target state="translated">发送反馈…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="取消" xml:space="preserve">
+        <source>取消</source>
+        <target state="translated">取消</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="取消全选" xml:space="preserve">
+        <source>取消全选</source>
+        <target state="translated">取消全选</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="取消固定" xml:space="preserve">
+        <source>取消固定</source>
+        <target state="translated">取消固定</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="只移动、不覆盖：同名文件会自动加编号；只在 iCloud 云端的文件会跳过。移到废纸篓的随时可以放回。" xml:space="preserve">
+        <source>只移动、不覆盖：同名文件会自动加编号；只在 iCloud 云端的文件会跳过。移到废纸篓的随时可以放回。</source>
+        <target state="translated">只移动、不覆盖：同名文件会自动加编号；只在 iCloud 云端的文件会跳过。移到废纸篓的随时可以放回。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点" xml:space="preserve">
+        <source>可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点</source>
+        <target state="translated">可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="可直接拖到其他 App" xml:space="preserve">
+        <source>可直接拖到其他 App</source>
+        <target state="translated">可直接拖到其他 App</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="可腾出 %@" xml:space="preserve">
+        <source>可腾出 %@</source>
+        <target state="translated">可腾出 %@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="右键点击链接可以拷贝。" xml:space="preserve">
+        <source>右键点击链接可以拷贝。</source>
+        <target state="translated">右键点击链接可以拷贝。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="名称" xml:space="preserve">
+        <source>名称</source>
+        <target state="translated">名称</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="名称 + 序号" xml:space="preserve">
+        <source>名称 + 序号</source>
+        <target state="translated">名称 + 序号</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="名称含「%@」" xml:space="preserve">
+        <source>名称含「%@」</source>
+        <target state="translated">名称含「%@」</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="名称，例如“旅行”" xml:space="preserve">
+        <source>名称，例如“旅行”</source>
+        <target state="translated">名称，例如“旅行”</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="后缀" xml:space="preserve">
+        <source>后缀</source>
+        <target state="translated">后缀</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="启动磁盘" xml:space="preserve">
+        <source>启动磁盘</source>
+        <target state="translated">启动磁盘</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="启用" xml:space="preserve">
+        <source>启用</source>
+        <target state="translated">启用</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="周一" xml:space="preserve">
+        <source>周一</source>
+        <target state="translated">周一</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="周三" xml:space="preserve">
+        <source>周三</source>
+        <target state="translated">周三</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="周二" xml:space="preserve">
+        <source>周二</source>
+        <target state="translated">周二</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="周五" xml:space="preserve">
+        <source>周五</source>
+        <target state="translated">周五</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="周六" xml:space="preserve">
+        <source>周六</source>
+        <target state="translated">周六</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="周四" xml:space="preserve">
+        <source>周四</source>
+        <target state="translated">周四</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="周日" xml:space="preserve">
+        <source>周日</source>
+        <target state="translated">周日</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="哔哩哔哩" xml:space="preserve">
+        <source>哔哩哔哩</source>
+        <target state="translated">哔哩哔哩</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="固定" xml:space="preserve">
+        <source>固定</source>
+        <target state="translated">固定</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="固定一个文件夹" xml:space="preserve">
+        <source>固定一个文件夹</source>
+        <target state="translated">固定一个文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="固定所在文件夹" xml:space="preserve">
+        <source>固定所在文件夹</source>
+        <target state="translated">固定所在文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="固定文件夹" xml:space="preserve">
+        <source>固定文件夹</source>
+        <target state="translated">固定文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="固定文件夹…" xml:space="preserve">
+        <source>固定文件夹…</source>
+        <target state="translated">固定文件夹…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="图中文字" xml:space="preserve">
+        <source>图中文字</source>
+        <target state="translated">图中文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="图标" xml:space="preserve">
+        <source>图标</source>
+        <target state="translated">图标</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="图片" xml:space="preserve">
+        <source>图片</source>
+        <target state="translated">图片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在 GitHub 上星标" xml:space="preserve">
+        <source>在 GitHub 上星标</source>
+        <target state="translated">在 GitHub 上星标</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在 GitHub 上查看源代码" xml:space="preserve">
+        <source>在 GitHub 上查看源代码</source>
+        <target state="translated">在 GitHub 上查看源代码</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在「完全磁盘访问权限」列表里打开「拾掇」的开关" xml:space="preserve">
+        <source>在「完全磁盘访问权限」列表里打开「拾掇」的开关</source>
+        <target state="translated">在「完全磁盘访问权限」列表里打开「拾掇」的开关</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在任何 App 里按快捷键弹出拾掇搜索框" xml:space="preserve">
+        <source>在任何 App 里按快捷键弹出拾掇搜索框</source>
+        <target state="translated">在任何 App 里按快捷键弹出拾掇搜索框</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在任何应用里按下快捷键，弹出拾掇的搜索浮窗；窗口里按 ⌘F。试试这些：" xml:space="preserve">
+        <source>在任何应用里按下快捷键，弹出拾掇的搜索浮窗；窗口里按 ⌘F。试试这些：</source>
+        <target state="translated">在任何应用里按下快捷键，弹出拾掇的搜索浮窗；窗口里按 ⌘F。试试这些：</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在侧边栏里直接浏览移动硬盘、U 盘" xml:space="preserve">
+        <source>在侧边栏里直接浏览移动硬盘、U 盘</source>
+        <target state="translated">在侧边栏里直接浏览移动硬盘、U 盘</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在拾掇中查看全部结果" xml:space="preserve">
+        <source>在拾掇中查看全部结果</source>
+        <target state="translated">在拾掇中查看全部结果</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在本机识别过的照片里，画面有「%@」的也会列出来" xml:space="preserve">
+        <source>在本机识别过的照片里，画面有「%@」的也会列出来</source>
+        <target state="translated">在本机识别过的照片里，画面有「%@」的也会列出来</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索" xml:space="preserve">
+        <source>在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索</source>
+        <target state="translated">在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）" xml:space="preserve">
+        <source>在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）</source>
+        <target state="translated">在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在访达中显示" xml:space="preserve">
+        <source>在访达中显示</source>
+        <target state="translated">在访达中显示</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="在访达中显示拾掇" xml:space="preserve">
+        <source>在访达中显示拾掇</source>
+        <target state="translated">在访达中显示拾掇</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="外接磁盘" xml:space="preserve">
+        <source>外接磁盘</source>
+        <target state="translated">外接磁盘</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="多出 %@ 份" xml:space="preserve">
+        <source>多出 %@ 份</source>
+        <target state="translated">多出 %@ 份</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="大于100MB的压缩包" xml:space="preserve">
+        <source>大于100MB的压缩包</source>
+        <target state="translated">大于100MB的压缩包</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="大家好，我是 Hanson 👋&#10;&#10;我喜欢给 Mac 💻 做一些小而顺手的工具。拾掇就是其中之一：基础功能完全免费、开源，除了检查更新和激活授权从不联网、不收集任何数据，只想帮你把文件找得更快、理得更清爽 🧹。&#10;&#10;做它用的是下班和周末的时间。我的愿望是能有更多时间把它打磨好，修更多 bug，加大家真正想要的功能 🚀，也继续做更多有用的开源小工具 🌱。&#10;&#10;如果拾掇帮你省了时间、腾出了空间，欢迎请我喝杯咖啡 ☕。金额不重要，每一份支持都是对我的信任和鼓励。不方便赞助也完全没关系，分享给朋友、在 GitHub 上点个星，对我同样意义重大 💖。&#10;&#10;谢谢你。&#10;&#10;此致，&#10;Hanson" xml:space="preserve">
+        <source>大家好，我是 Hanson 👋
+
+我喜欢给 Mac 💻 做一些小而顺手的工具。拾掇就是其中之一：基础功能完全免费、开源，除了检查更新和激活授权从不联网、不收集任何数据，只想帮你把文件找得更快、理得更清爽 🧹。
+
+做它用的是下班和周末的时间。我的愿望是能有更多时间把它打磨好，修更多 bug，加大家真正想要的功能 🚀，也继续做更多有用的开源小工具 🌱。
+
+如果拾掇帮你省了时间、腾出了空间，欢迎请我喝杯咖啡 ☕。金额不重要，每一份支持都是对我的信任和鼓励。不方便赞助也完全没关系，分享给朋友、在 GitHub 上点个星，对我同样意义重大 💖。
+
+谢谢你。
+
+此致，
+Hanson</source>
+        <target state="translated">大家好，我是 Hanson 👋
+
+我喜欢给 Mac 💻 做一些小而顺手的工具。拾掇就是其中之一：基础功能完全免费、开源，除了检查更新和激活授权从不联网、不收集任何数据，只想帮你把文件找得更快、理得更清爽 🧹。
+
+做它用的是下班和周末的时间。我的愿望是能有更多时间把它打磨好，修更多 bug，加大家真正想要的功能 🚀，也继续做更多有用的开源小工具 🌱。
+
+如果拾掇帮你省了时间、腾出了空间，欢迎请我喝杯咖啡 ☕。金额不重要，每一份支持都是对我的信任和鼓励。不方便赞助也完全没关系，分享给朋友、在 GitHub 上点个星，对我同样意义重大 💖。
+
+谢谢你。
+
+此致，
+Hanson</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="大小" xml:space="preserve">
+        <source>大小</source>
+        <target state="translated">大小</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="大文件" xml:space="preserve">
+        <source>大文件</source>
+        <target state="translated">大文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="大缩略图，一眼认出要找的那个" xml:space="preserve">
+        <source>大缩略图，一眼认出要找的那个</source>
+        <target state="translated">大缩略图，一眼认出要找的那个</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="夸克网盘" xml:space="preserve">
+        <source>夸克网盘</source>
+        <target state="translated">夸克网盘</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="好" xml:space="preserve">
+        <source>好</source>
+        <target state="translated">好</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="如果系统询问“拾掇想访问其他 App 的数据”，请点“允许”。&#10;也可以在“系统设置 › 隐私与安全性 › 完全磁盘访问权限”里打开拾掇，然后点“重新扫描”。" xml:space="preserve">
+        <source>如果系统询问“拾掇想访问其他 App 的数据”，请点“允许”。
+也可以在“系统设置 › 隐私与安全性 › 完全磁盘访问权限”里打开拾掇，然后点“重新扫描”。</source>
+        <target state="translated">如果系统询问“拾掇想访问其他 App 的数据”，请点“允许”。
+也可以在“系统设置 › 隐私与安全性 › 完全磁盘访问权限”里打开拾掇，然后点“重新扫描”。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="安全地拿回空间：只移到废纸篓，随时可以放回" xml:space="preserve">
+        <source>安全地拿回空间：只移到废纸篓，随时可以放回</source>
+        <target state="translated">安全地拿回空间：只移到废纸篓，随时可以放回</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="安全地腾出空间" xml:space="preserve">
+        <source>安全地腾出空间</source>
+        <target state="translated">安全地腾出空间</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="安装包" xml:space="preserve">
+        <source>安装包</source>
+        <target state="translated">安装包</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="完全相同" xml:space="preserve">
+        <source>完全相同</source>
+        <target state="translated">完全相同</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="完全相同 · SHA-256 指纹校验" xml:space="preserve">
+        <source>完全相同 · SHA-256 指纹校验</source>
+        <target state="translated">完全相同 · SHA-256 指纹校验</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="完全相同的副本，以及连拍、编辑版、HEIC/JPEG 成对这类看起来差不多的照片" xml:space="preserve">
+        <source>完全相同的副本，以及连拍、编辑版、HEIC/JPEG 成对这类看起来差不多的照片</source>
+        <target state="translated">完全相同的副本，以及连拍、编辑版、HEIC/JPEG 成对这类看起来差不多的照片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="完全磁盘访问权限" xml:space="preserve">
+        <source>完全磁盘访问权限</source>
+        <target state="translated">完全磁盘访问权限</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="完成" xml:space="preserve">
+        <source>完成</source>
+        <target state="translated">完成</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="定时清理提醒" xml:space="preserve">
+        <source>定时清理提醒</source>
+        <target state="translated">定时清理提醒</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="宽松" xml:space="preserve">
+        <source>宽松</source>
+        <target state="translated">宽松</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="将 %lld 个多余的副本移到废纸篓？" xml:space="preserve">
+        <source>将 %lld 个多余的副本移到废纸篓？</source>
+        <target state="translated">将 %lld 个多余的副本移到废纸篓？</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="将 %lld 个项目移到废纸篓？" xml:space="preserve">
+        <source>将 %lld 个项目移到废纸篓？</source>
+        <target state="translated">将 %lld 个项目移到废纸篓？</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="将“%@”移到废纸篓？" xml:space="preserve">
+        <source>将“%@”移到废纸篓？</source>
+        <target state="translated">将“%@”移到废纸篓？</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="小红书" xml:space="preserve">
+        <source>小红书</source>
+        <target state="translated">小红书</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="尺寸" xml:space="preserve">
+        <source>尺寸</source>
+        <target state="translated">尺寸</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已停止" xml:space="preserve">
+        <source>已停止</source>
+        <target state="translated">已停止</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已去掉“%@”标签" xml:space="preserve">
+        <source>已去掉“%@”标签</source>
+        <target state="translated">已去掉“%@”标签</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已在本机分析 %lld 张" xml:space="preserve">
+        <source>已在本机分析 %lld 张</source>
+        <target state="translated">已在本机分析 %lld 张</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已在本机识别 %lld 张图片，识别后搜索就能搜到图里的字。结果只保存在这台 Mac 上。" xml:space="preserve">
+        <source>已在本机识别 %lld 张图片，识别后搜索就能搜到图里的字。结果只保存在这台 Mac 上。</source>
+        <target state="translated">已在本机识别 %lld 张图片，识别后搜索就能搜到图里的字。结果只保存在这台 Mac 上。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已开启" xml:space="preserve">
+        <source>已开启</source>
+        <target state="translated">已开启</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已把 %lld 个副本移到废纸篓" xml:space="preserve">
+        <source>已把 %lld 个副本移到废纸篓</source>
+        <target state="translated">已把 %lld 个副本移到废纸篓</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已把 %lld 个项目移到废纸篓" xml:space="preserve">
+        <source>已把 %lld 个项目移到废纸篓</source>
+        <target state="translated">已把 %lld 个项目移到废纸篓</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已拷贝" xml:space="preserve">
+        <source>已拷贝</source>
+        <target state="translated">已拷贝</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已拷贝 %lld 个文件的文字" xml:space="preserve">
+        <source>已拷贝 %lld 个文件的文字</source>
+        <target state="translated">已拷贝 %lld 个文件的文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已拷贝 %lld 张图片的文字" xml:space="preserve">
+        <source>已拷贝 %lld 张图片的文字</source>
+        <target state="translated">已拷贝 %lld 张图片的文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已拷贝图中全部文字" xml:space="preserve">
+        <source>已拷贝图中全部文字</source>
+        <target state="translated">已拷贝图中全部文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已撤销" xml:space="preserve">
+        <source>已撤销</source>
+        <target state="translated">已撤销</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已移到废纸篓，可随时恢复" xml:space="preserve">
+        <source>已移到废纸篓，可随时恢复</source>
+        <target state="translated">已移到废纸篓，可随时恢复</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已经清理完了" xml:space="preserve">
+        <source>已经清理完了</source>
+        <target state="translated">已经清理完了</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已经购买或收到兑换码？在这里输入" xml:space="preserve">
+        <source>已经购买或收到兑换码？在这里输入</source>
+        <target state="translated">已经购买或收到兑换码？在这里输入</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已给 %lld 个项目加上“%@”标签" xml:space="preserve">
+        <source>已给 %1$lld 个项目加上“%2$@”标签</source>
+        <target state="translated">已给 %1$lld 个项目加上“%2$@”标签</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已获得完全磁盘访问权限" xml:space="preserve">
+        <source>已获得完全磁盘访问权限</source>
+        <target state="translated">已获得完全磁盘访问权限</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已识别 %lld 张图片" xml:space="preserve">
+        <source>已识别 %lld 张图片</source>
+        <target state="translated">已识别 %lld 张图片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已转换 %lld 张，%@ → %@" xml:space="preserve">
+        <source>已转换 %1$lld 张，%2$@ → %3$@</source>
+        <target state="translated">已转换 %1$lld 张，%2$@ → %3$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已选 %lld 项 · %@" xml:space="preserve">
+        <source>已选 %1$lld 项 · %2$@</source>
+        <target state="translated">已选 %1$lld 项 · %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="已重命名 %lld 个文件" xml:space="preserve">
+        <source>已重命名 %lld 个文件</source>
+        <target state="translated">已重命名 %lld 个文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="应用和服务" xml:space="preserve">
+        <source>应用和服务</source>
+        <target state="translated">应用和服务</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="应用程序" xml:space="preserve">
+        <source>应用程序</source>
+        <target state="translated">应用程序</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="废纸篓" xml:space="preserve">
+        <source>废纸篓</source>
+        <target state="translated">废纸篓</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="开启完全磁盘访问权限" xml:space="preserve">
+        <source>开启完全磁盘访问权限</source>
+        <target state="translated">开启完全磁盘访问权限</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="开始 %lld 天免费试用" xml:space="preserve">
+        <source>开始 %lld 天免费试用</source>
+        <target state="translated">开始 %lld 天免费试用</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="开始使用" xml:space="preserve">
+        <source>开始使用</source>
+        <target state="translated">开始使用</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="开始扫描" xml:space="preserve">
+        <source>开始扫描</source>
+        <target state="translated">开始扫描</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="开始转换" xml:space="preserve">
+        <source>开始转换</source>
+        <target state="translated">开始转换</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="当前版本 %@" xml:space="preserve">
+        <source>当前版本 %@</source>
+        <target state="translated">当前版本 %@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="很久没看的大视频" xml:space="preserve">
+        <source>很久没看的大视频</source>
+        <target state="translated">很久没看的大视频</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="微信" xml:space="preserve">
+        <source>微信</source>
+        <target state="translated">微信</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="微信 / QQ 大文件" xml:space="preserve">
+        <source>微信 / QQ 大文件</source>
+        <target state="translated">微信 / QQ 大文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，文件从不上传；拾掇只在检查更新和激活授权时联网。" xml:space="preserve">
+        <source>微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，文件从不上传；拾掇只在检查更新和激活授权时联网。</source>
+        <target state="translated">微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，文件从不上传；拾掇只在检查更新和激活授权时联网。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="微博" xml:space="preserve">
+        <source>微博</source>
+        <target state="translated">微博</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="快捷键" xml:space="preserve">
+        <source>快捷键</source>
+        <target state="translated">快捷键</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="快速搜索" xml:space="preserve">
+        <source>快速搜索</source>
+        <target state="translated">快速搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="快速搜索浮窗（%@）" xml:space="preserve">
+        <source>快速搜索浮窗（%@）</source>
+        <target state="translated">快速搜索浮窗（%@）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="快速查看" xml:space="preserve">
+        <source>快速查看</source>
+        <target state="translated">快速查看</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="快速查看（空格或 ⌘Y）" xml:space="preserve">
+        <source>快速查看（空格或 ⌘Y）</source>
+        <target state="translated">快速查看（空格或 ⌘Y）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="截图" xml:space="preserve">
+        <source>截图</source>
+        <target state="translated">截图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="打开" xml:space="preserve">
+        <source>打开</source>
+        <target state="translated">打开</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="打开完全磁盘访问权限设置" xml:space="preserve">
+        <source>打开完全磁盘访问权限设置</source>
+        <target state="translated">打开完全磁盘访问权限设置</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="打开清理" xml:space="preserve">
+        <source>打开清理</source>
+        <target state="translated">打开清理</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="打开系统设置" xml:space="preserve">
+        <source>打开系统设置</source>
+        <target state="translated">打开系统设置</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="打开这个文件夹的占用图" xml:space="preserve">
+        <source>打开这个文件夹的占用图</source>
+        <target state="translated">打开这个文件夹的占用图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="扩展名" xml:space="preserve">
+        <source>扩展名</source>
+        <target state="translated">扩展名</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="扫描中…" xml:space="preserve">
+        <source>扫描中…</source>
+        <target state="translated">扫描中…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="批量重命名 %lld 个文件" xml:space="preserve">
+        <source>批量重命名 %lld 个文件</source>
+        <target state="translated">批量重命名 %lld 个文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="批量重命名 %lld 个文件…" xml:space="preserve">
+        <source>批量重命名 %lld 个文件…</source>
+        <target state="translated">批量重命名 %lld 个文件…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="把 Mac 上的照片、视频、音乐、文稿按类别摆好，一句话就能找到，顺手把空间腾出来。" xml:space="preserve">
+        <source>把 Mac 上的照片、视频、音乐、文稿按类别摆好，一句话就能找到，顺手把空间腾出来。</source>
+        <target state="translated">把 Mac 上的照片、视频、音乐、文稿按类别摆好，一句话就能找到，顺手把空间腾出来。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="把图里能选的文字都标出来" xml:space="preserve">
+        <source>把图里能选的文字都标出来</source>
+        <target state="translated">把图里能选的文字都标出来</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="把标着“废纸篓”的文件移到废纸篓" xml:space="preserve">
+        <source>把标着“废纸篓”的文件移到废纸篓</source>
+        <target state="translated">把标着“废纸篓”的文件移到废纸篓</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拍摄时间" xml:space="preserve">
+        <source>拍摄时间</source>
+        <target state="translated">拍摄时间</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拷贝" xml:space="preserve">
+        <source>拷贝</source>
+        <target state="translated">拷贝</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拷贝 %lld 个路径" xml:space="preserve">
+        <source>拷贝 %lld 个路径</source>
+        <target state="translated">拷贝 %lld 个路径</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拷贝全部文字" xml:space="preserve">
+        <source>拷贝全部文字</source>
+        <target state="translated">拷贝全部文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拷贝文字" xml:space="preserve">
+        <source>拷贝文字</source>
+        <target state="translated">拷贝文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拷贝路径" xml:space="preserve">
+        <source>拷贝路径</source>
+        <target state="translated">拷贝路径</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拷贝邮箱" xml:space="preserve">
+        <source>拷贝邮箱</source>
+        <target state="translated">拷贝邮箱</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拷贝链接" xml:space="preserve">
+        <source>拷贝链接</source>
+        <target state="translated">拷贝链接</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇" xml:space="preserve">
+        <source>拾掇</source>
+        <target state="translated">拾掇</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇 Pro" xml:space="preserve">
+        <source>拾掇 Pro</source>
+        <target state="translated">拾掇 Pro</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇 Pro 功能" xml:space="preserve">
+        <source>拾掇 Pro 功能</source>
+        <target state="translated">拾掇 Pro 功能</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇 Pro 可以按照片画面搜索，比如「猫」「海边」「收据」" xml:space="preserve">
+        <source>拾掇 Pro 可以按照片画面搜索，比如「猫」「海边」「收据」</source>
+        <target state="translated">拾掇 Pro 可以按照片画面搜索，比如「猫」「海边」「收据」</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇 Pro 已激活" xml:space="preserve">
+        <source>拾掇 Pro 已激活</source>
+        <target state="translated">拾掇 Pro 已激活</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。" xml:space="preserve">
+        <source>拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。</source>
+        <target state="translated">拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇依赖 Spotlight 索引。请确认“系统设置 ▸ Spotlight”中没有关闭文件索引。" xml:space="preserve">
+        <source>拾掇依赖 Spotlight 索引。请确认“系统设置 ▸ Spotlight”中没有关闭文件索引。</source>
+        <target state="translated">拾掇依赖 Spotlight 索引。请确认“系统设置 ▸ Spotlight”中没有关闭文件索引。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇反馈" xml:space="preserve">
+        <source>拾掇反馈</source>
+        <target state="translated">拾掇反馈</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇只在两处联网：检查更新（只访问 GitHub 上本项目的发布页）和激活授权（只把授权码发给授权服务器校验）。你的文件从不上传。" xml:space="preserve">
+        <source>拾掇只在两处联网：检查更新（只访问 GitHub 上本项目的发布页）和激活授权（只把授权码发给授权服务器校验）。你的文件从不上传。</source>
+        <target state="translated">拾掇只在两处联网：检查更新（只访问 GitHub 上本项目的发布页）和激活授权（只把授权码发给授权服务器校验）。你的文件从不上传。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇开着时，每 10 分钟按规则整理一次" xml:space="preserve">
+        <source>拾掇开着时，每 10 分钟按规则整理一次</source>
+        <target state="translated">拾掇开着时，每 10 分钟按规则整理一次</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇有新版本" xml:space="preserve">
+        <source>拾掇有新版本</source>
+        <target state="translated">拾掇有新版本</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇转换" xml:space="preserve">
+        <source>拾掇转换</source>
+        <target state="translated">拾掇转换</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="拾掇：该清理一下了" xml:space="preserve">
+        <source>拾掇：该清理一下了</source>
+        <target state="translated">拾掇：该清理一下了</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="按下载来源筛选" xml:space="preserve">
+        <source>按下载来源筛选</source>
+        <target state="translated">按下载来源筛选</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="按名称" xml:space="preserve">
+        <source>按名称</source>
+        <target state="translated">按名称</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="按图中文字筛选" xml:space="preserve">
+        <source>按图中文字筛选</source>
+        <target state="translated">按图中文字筛选</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="按大小和 SHA-256 指纹比对，只有内容完全相同才算重复" xml:space="preserve">
+        <source>按大小和 SHA-256 指纹比对，只有内容完全相同才算重复</source>
+        <target state="translated">按大小和 SHA-256 指纹比对，只有内容完全相同才算重复</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="按大小（大的在前）" xml:space="preserve">
+        <source>按大小（大的在前）</source>
+        <target state="translated">按大小（大的在前）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="按日期（新的在前）" xml:space="preserve">
+        <source>按日期（新的在前）</source>
+        <target state="translated">按日期（新的在前）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="按画面内容搜索照片" xml:space="preserve">
+        <source>按画面内容搜索照片</source>
+        <target state="translated">按画面内容搜索照片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="按种类" xml:space="preserve">
+        <source>按种类</source>
+        <target state="translated">按种类</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="换新 Mac 前先在这里解绑，激活名额会留给新的 Mac。" xml:space="preserve">
+        <source>换新 Mac 前先在这里解绑，激活名额会留给新的 Mac。</source>
+        <target state="translated">换新 Mac 前先在这里解绑，激活名额会留给新的 Mac。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="授权" xml:space="preserve">
+        <source>授权</source>
+        <target state="translated">授权</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="授权失败，请稍后再试。" xml:space="preserve">
+        <source>授权失败，请稍后再试。</source>
+        <target state="translated">授权失败，请稍后再试。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="授权失败：%@" xml:space="preserve">
+        <source>授权失败：%@</source>
+        <target state="translated">授权失败：%@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="授权码" xml:space="preserve">
+        <source>授权码</source>
+        <target state="translated">授权码</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="授权码不正确，请检查是否完整复制。" xml:space="preserve">
+        <source>授权码不正确，请检查是否完整复制。</source>
+        <target state="translated">授权码不正确，请检查是否完整复制。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="授权码或兑换码（SDG-XXXX-XXXX-XXXX）" xml:space="preserve">
+        <source>授权码或兑换码（SDG-XXXX-XXXX-XXXX）</source>
+        <target state="translated">授权码或兑换码（SDG-XXXX-XXXX-XXXX）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="排序" xml:space="preserve">
+        <source>排序</source>
+        <target state="translated">排序</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="推出" xml:space="preserve">
+        <source>推出</source>
+        <target state="translated">推出</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="推广" xml:space="preserve">
+        <source>推广</source>
+        <target state="translated">推广</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="提示" xml:space="preserve">
+        <source>提示</source>
+        <target state="translated">提示</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="提醒时间" xml:space="preserve">
+        <source>提醒时间</source>
+        <target state="translated">提醒时间</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="搜「猫」「海边」「收据」，在本机识别照片画面" xml:space="preserve">
+        <source>搜「猫」「海边」「收据」，在本机识别照片画面</source>
+        <target state="translated">搜「猫」「海边」「收据」，在本机识别照片画面</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="搜索" xml:space="preserve">
+        <source>搜索</source>
+        <target state="translated">搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="搜索「猫」「海边的照片」「收据」时，也会按画面内容找最近的 %lld 张照片。识别只在本机进行。" xml:space="preserve">
+        <source>搜索「猫」「海边的照片」「收据」时，也会按画面内容找最近的 %lld 张照片。识别只在本机进行。</source>
+        <target state="translated">搜索「猫」「海边的照片」「收据」时，也会按画面内容找最近的 %lld 张照片。识别只在本机进行。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="搜索文件，比如“上周的pdf”“nianbao”" xml:space="preserve">
+        <source>搜索文件，比如“上周的pdf”“nianbao”</source>
+        <target state="translated">搜索文件，比如“上周的pdf”“nianbao”</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="搜索结果" xml:space="preserve">
+        <source>搜索结果</source>
+        <target state="translated">搜索结果</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="搜索，或试试“上周超过5MB的pdf”…" xml:space="preserve">
+        <source>搜索，或试试“上周超过5MB的pdf”…</source>
+        <target state="translated">搜索，或试试“上周超过5MB的pdf”…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="撤销" xml:space="preserve">
+        <source>撤销</source>
+        <target state="translated">撤销</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="播放" xml:space="preserve">
+        <source>播放</source>
+        <target state="translated">播放</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="播放 / 暂停（⌘空格）" xml:space="preserve">
+        <source>播放 / 暂停（⌘空格）</source>
+        <target state="translated">播放 / 暂停（⌘空格）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="支付宝" xml:space="preserve">
+        <source>支付宝</source>
+        <target state="translated">支付宝</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="支持拾掇" xml:space="preserve">
+        <source>支持拾掇</source>
+        <target state="translated">支持拾掇</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="支持拾掇…" xml:space="preserve">
+        <source>支持拾掇…</source>
+        <target state="translated">支持拾掇…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="放进文件夹超过 %lld 天" xml:space="preserve">
+        <source>放进文件夹超过 %lld 天</source>
+        <target state="translated">放进文件夹超过 %lld 天</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="整理" xml:space="preserve">
+        <source>整理</source>
+        <target state="translated">整理</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="文件" xml:space="preserve">
+        <source>文件</source>
+        <target state="translated">文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="文件名包含" xml:space="preserve">
+        <source>文件名包含</source>
+        <target state="translated">文件名包含</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="文件夹" xml:space="preserve">
+        <source>文件夹</source>
+        <target state="translated">文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="文件类型" xml:space="preserve">
+        <source>文件类型</source>
+        <target state="translated">文件类型</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="文字识别" xml:space="preserve">
+        <source>文字识别</source>
+        <target state="translated">文字识别</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="文稿" xml:space="preserve">
+        <source>文稿</source>
+        <target state="translated">文稿</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="新建规则" xml:space="preserve">
+        <source>新建规则</source>
+        <target state="translated">新建规则</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="新规则" xml:space="preserve">
+        <source>新规则</source>
+        <target state="translated">新规则</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="方式" xml:space="preserve">
+        <source>方式</source>
+        <target state="translated">方式</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="无法推出「%@」：可能还有 App 正在使用上面的文件。" xml:space="preserve">
+        <source>无法推出「%@」：可能还有 App 正在使用上面的文件。</source>
+        <target state="translated">无法推出「%@」：可能还有 App 正在使用上面的文件。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="无法撤销：文件已经不在原来移去的位置" xml:space="preserve">
+        <source>无法撤销：文件已经不在原来移去的位置</source>
+        <target state="translated">无法撤销：文件已经不在原来移去的位置</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="无法连接授权服务器，请检查网络后再试。" xml:space="preserve">
+        <source>无法连接授权服务器，请检查网络后再试。</source>
+        <target state="translated">无法连接授权服务器，请检查网络后再试。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="无需账号" xml:space="preserve">
+        <source>无需账号</source>
+        <target state="translated">无需账号</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="旧安装包移到废纸篓" xml:space="preserve">
+        <source>旧安装包移到废纸篓</source>
+        <target state="translated">旧安装包移到废纸篓</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="旧截图" xml:space="preserve">
+        <source>旧截图</source>
+        <target state="translated">旧截图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="早上好" xml:space="preserve">
+        <source>早上好</source>
+        <target state="translated">早上好</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="时长" xml:space="preserve">
+        <source>时长</source>
+        <target state="translated">时长</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="昨天" xml:space="preserve">
+        <source>昨天</source>
+        <target state="translated">昨天</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="显示或隐藏简介" xml:space="preserve">
+        <source>显示或隐藏简介</source>
+        <target state="translated">显示或隐藏简介</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="显示所有文字" xml:space="preserve">
+        <source>显示所有文字</source>
+        <target state="translated">显示所有文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="显示方式" xml:space="preserve">
+        <source>显示方式</source>
+        <target state="translated">显示方式</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="显示简介" xml:space="preserve">
+        <source>显示简介</source>
+        <target state="translated">显示简介</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="晚上好" xml:space="preserve">
+        <source>晚上好</source>
+        <target state="translated">晚上好</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="智能文件夹" xml:space="preserve">
+        <source>智能文件夹</source>
+        <target state="translated">智能文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="更新" xml:space="preserve">
+        <source>更新</source>
+        <target state="translated">更新</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="替换为（留空表示删除）" xml:space="preserve">
+        <source>替换为（留空表示删除）</source>
+        <target state="translated">替换为（留空表示删除）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="替换文字" xml:space="preserve">
+        <source>替换文字</source>
+        <target state="translated">替换文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最多可腾出 %@" xml:space="preserve">
+        <source>最多可腾出 %@</source>
+        <target state="translated">最多可腾出 %@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最新版本 %@，当前版本 %@。" xml:space="preserve">
+        <source>最新版本 %1$@，当前版本 %2$@。</source>
+        <target state="translated">最新版本 %1$@，当前版本 %2$@。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近" xml:space="preserve">
+        <source>最近</source>
+        <target state="translated">最近</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近 %@" xml:space="preserve">
+        <source>最近 %@</source>
+        <target state="translated">最近 %@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近下载" xml:space="preserve">
+        <source>最近下载</source>
+        <target state="translated">最近下载</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近使用" xml:space="preserve">
+        <source>最近使用</source>
+        <target state="translated">最近使用</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近半年" xml:space="preserve">
+        <source>最近半年</source>
+        <target state="translated">最近半年</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近截图" xml:space="preserve">
+        <source>最近截图</source>
+        <target state="translated">最近截图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近打开的文稿" xml:space="preserve">
+        <source>最近打开的文稿</source>
+        <target state="translated">最近打开的文稿</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近的图片" xml:space="preserve">
+        <source>最近的图片</source>
+        <target state="translated">最近的图片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="最近的整理记录" xml:space="preserve">
+        <source>最近的整理记录</source>
+        <target state="translated">最近的整理记录</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="未命名规则" xml:space="preserve">
+        <source>未命名规则</source>
+        <target state="translated">未命名规则</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="未开启" xml:space="preserve">
+        <source>未开启</source>
+        <target state="translated">未开启</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="未选择" xml:space="preserve">
+        <source>未选择</source>
+        <target state="translated">未选择</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="未选择文件" xml:space="preserve">
+        <source>未选择文件</source>
+        <target state="translated">未选择文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="本周" xml:space="preserve">
+        <source>本周</source>
+        <target state="translated">本周</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="本周可腾出 %@，点这里打开清理。" xml:space="preserve">
+        <source>本周可腾出 %@，点这里打开清理。</source>
+        <target state="translated">本周可腾出 %@，点这里打开清理。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="本月" xml:space="preserve">
+        <source>本月</source>
+        <target state="translated">本月</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="条件（全部满足才执行）" xml:space="preserve">
+        <source>条件（全部满足才执行）</source>
+        <target state="translated">条件（全部满足才执行）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="来源：%@" xml:space="preserve">
+        <source>来源：%@</source>
+        <target state="translated">来源：%@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="来源：全部" xml:space="preserve">
+        <source>来源：全部</source>
+        <target state="translated">来源：全部</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="来自 %@" xml:space="preserve">
+        <source>来自 %@</source>
+        <target state="translated">来自 %@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="来自 %lld 个来源" xml:space="preserve">
+        <source>来自 %lld 个来源</source>
+        <target state="translated">来自 %lld 个来源</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="来自微信的图片" xml:space="preserve">
+        <source>来自微信的图片</source>
+        <target state="translated">来自微信的图片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="查找" xml:space="preserve">
+        <source>查找</source>
+        <target state="translated">查找</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="查看全部" xml:space="preserve">
+        <source>查看全部</source>
+        <target state="translated">查看全部</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="标签" xml:space="preserve">
+        <source>标签</source>
+        <target state="translated">标签</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="标签：%@" xml:space="preserve">
+        <source>标签：%@</source>
+        <target state="translated">标签：%@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="格式" xml:space="preserve">
+        <source>格式</source>
+        <target state="translated">格式</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="桌面" xml:space="preserve">
+        <source>桌面</source>
+        <target state="translated">桌面</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="桌面上的“拾掇转换”文件夹" xml:space="preserve">
+        <source>桌面上的“拾掇转换”文件夹</source>
+        <target state="translated">桌面上的“拾掇转换”文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="检查失败，请稍后再试" xml:space="preserve">
+        <source>检查失败，请稍后再试</source>
+        <target state="translated">检查失败，请稍后再试</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="欢迎使用拾掇" xml:space="preserve">
+        <source>欢迎使用拾掇</source>
+        <target state="translated">欢迎使用拾掇</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在下载 %@…" xml:space="preserve">
+        <source>正在下载 %@…</source>
+        <target state="translated">正在下载 %@…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在分析 %lld 张照片…" xml:space="preserve">
+        <source>正在分析 %lld 张照片…</source>
+        <target state="translated">正在分析 %lld 张照片…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在扫描…" xml:space="preserve">
+        <source>正在扫描…</source>
+        <target state="translated">正在扫描…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在找可以清理的文件…" xml:space="preserve">
+        <source>正在找可以清理的文件…</source>
+        <target state="translated">正在找可以清理的文件…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在搜索…" xml:space="preserve">
+        <source>正在搜索…</source>
+        <target state="translated">正在搜索…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在本机识别文字…" xml:space="preserve">
+        <source>正在本机识别文字…</source>
+        <target state="translated">正在本机识别文字…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在查找…" xml:space="preserve">
+        <source>正在查找…</source>
+        <target state="translated">正在查找…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在查找候选文件…" xml:space="preserve">
+        <source>正在查找候选文件…</source>
+        <target state="translated">正在查找候选文件…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在检查…" xml:space="preserve">
+        <source>正在检查…</source>
+        <target state="translated">正在检查…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在比对 %lld 个文件…" xml:space="preserve">
+        <source>正在比对 %lld 个文件…</source>
+        <target state="translated">正在比对 %lld 个文件…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在比对，稍等一下…" xml:space="preserve">
+        <source>正在比对，稍等一下…</source>
+        <target state="translated">正在比对，稍等一下…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在计算大小…" xml:space="preserve">
+        <source>正在计算大小…</source>
+        <target state="translated">正在计算大小…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在识别 %lld / %lld" xml:space="preserve">
+        <source>正在识别 %1$lld / %2$lld</source>
+        <target state="translated">正在识别 %1$lld / %2$lld</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在识别 %lld 个文件的文字…" xml:space="preserve">
+        <source>正在识别 %lld 个文件的文字…</source>
+        <target state="translated">正在识别 %lld 个文件的文字…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在识别图中文字…" xml:space="preserve">
+        <source>正在识别图中文字…</source>
+        <target state="translated">正在识别图中文字…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在识别文字…" xml:space="preserve">
+        <source>正在识别文字…</source>
+        <target state="translated">正在识别文字…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在读取 Spotlight 索引…" xml:space="preserve">
+        <source>正在读取 Spotlight 索引…</source>
+        <target state="translated">正在读取 Spotlight 索引…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在读取下载记录…" xml:space="preserve">
+        <source>正在读取下载记录…</source>
+        <target state="translated">正在读取下载记录…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在读取最近的照片…" xml:space="preserve">
+        <source>正在读取最近的照片…</source>
+        <target state="translated">正在读取最近的照片…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="正在转换 %lld/%lld…" xml:space="preserve">
+        <source>正在转换 %1$lld/%2$lld…</source>
+        <target state="translated">正在转换 %1$lld/%2$lld…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="每周提醒一次：本周可以腾出多少空间" xml:space="preserve">
+        <source>每周提醒一次：本周可以腾出多少空间</source>
+        <target state="translated">每周提醒一次：本周可以腾出多少空间</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="每周提醒我清理" xml:space="preserve">
+        <source>每周提醒我清理</source>
+        <target state="translated">每周提醒我清理</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="每天检查一次新版本" xml:space="preserve">
+        <source>每天检查一次新版本</source>
+        <target state="translated">每天检查一次新版本</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="每类文件都有自己的货架" xml:space="preserve">
+        <source>每类文件都有自己的货架</source>
+        <target state="translated">每类文件都有自己的货架</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="每组标着“保留”的文件不会动。随时可以从废纸篓里恢复。" xml:space="preserve">
+        <source>每组标着“保留”的文件不会动。随时可以从废纸篓里恢复。</source>
+        <target state="translated">每组标着“保留”的文件不会动。随时可以从废纸篓里恢复。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="每组至少保留一张" xml:space="preserve">
+        <source>每组至少保留一张</source>
+        <target state="translated">每组至少保留一张</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有下载来源记录" xml:space="preserve">
+        <source>没有下载来源记录</source>
+        <target state="translated">没有下载来源记录</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有发现多余的副本，很整齐" xml:space="preserve">
+        <source>没有发现多余的副本，很整齐</source>
+        <target state="translated">没有发现多余的副本，很整齐</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有发现相似的照片" xml:space="preserve">
+        <source>没有发现相似的照片</source>
+        <target state="translated">没有发现相似的照片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有发现重复" xml:space="preserve">
+        <source>没有发现重复</source>
+        <target state="translated">没有发现重复</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有发现重复文件" xml:space="preserve">
+        <source>没有发现重复文件</source>
+        <target state="translated">没有发现重复文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有找到%@文件" xml:space="preserve">
+        <source>没有找到%@文件</source>
+        <target state="translated">没有找到%@文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有找到匹配的文件" xml:space="preserve">
+        <source>没有找到匹配的文件</source>
+        <target state="translated">没有找到匹配的文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有最近下载的文件" xml:space="preserve">
+        <source>没有最近下载的文件</source>
+        <target state="translated">没有最近下载的文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有识别到文字" xml:space="preserve">
+        <source>没有识别到文字</source>
+        <target state="translated">没有识别到文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有识别到文字。" xml:space="preserve">
+        <source>没有识别到文字。</source>
+        <target state="translated">没有识别到文字。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有读到任何文件" xml:space="preserve">
+        <source>没有读到任何文件</source>
+        <target state="translated">没有读到任何文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没有需要清理的，很整齐" xml:space="preserve">
+        <source>没有需要清理的，很整齐</source>
+        <target state="translated">没有需要清理的，很整齐</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="没能修改登录项：%@。可以在“系统设置 › 通用 › 登录项”里手动添加拾掇。" xml:space="preserve">
+        <source>没能修改登录项：%@。可以在“系统设置 › 通用 › 登录项”里手动添加拾掇。</source>
+        <target state="translated">没能修改登录项：%@。可以在“系统设置 › 通用 › 登录项”里手动添加拾掇。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="浏览器扩展" xml:space="preserve">
+        <source>浏览器扩展</source>
+        <target state="translated">浏览器扩展</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="添加文件夹…" xml:space="preserve">
+        <source>添加文件夹…</source>
+        <target state="translated">添加文件夹…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="添加时间" xml:space="preserve">
+        <source>添加时间</source>
+        <target state="translated">添加时间</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="清理" xml:space="preserve">
+        <source>清理</source>
+        <target state="translated">清理</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="清理 · 可以腾出" xml:space="preserve">
+        <source>清理 · 可以腾出</source>
+        <target state="translated">清理 · 可以腾出</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="清理大文件" xml:space="preserve">
+        <source>清理大文件</source>
+        <target state="translated">清理大文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="清空记录" xml:space="preserve">
+        <source>清空记录</source>
+        <target state="translated">清空记录</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="清除" xml:space="preserve">
+        <source>清除</source>
+        <target state="translated">清除</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="清除搜索" xml:space="preserve">
+        <source>清除搜索</source>
+        <target state="translated">清除搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="清除识别缓存" xml:space="preserve">
+        <source>清除识别缓存</source>
+        <target state="translated">清除识别缓存</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="演示文稿" xml:space="preserve">
+        <source>演示文稿</source>
+        <target state="translated">演示文稿</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="激活" xml:space="preserve">
+        <source>激活</source>
+        <target state="translated">激活</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="点“开始扫描”在本机查找" xml:space="preserve">
+        <source>点“开始扫描”在本机查找</source>
+        <target state="translated">点“开始扫描”在本机查找</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="点一下切换“保留 / 废纸篓”&#10;%@" xml:space="preserve">
+        <source>点一下切换“保留 / 废纸篓”
+%@</source>
+        <target state="translated">点一下切换“保留 / 废纸篓”
+%@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="点下面的「打开系统设置」" xml:space="preserve">
+        <source>点下面的「打开系统设置」</source>
+        <target state="translated">点下面的「打开系统设置」</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="点按扫描" xml:space="preserve">
+        <source>点按扫描</source>
+        <target state="translated">点按扫描</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="点缩略图选择要移除的文件" xml:space="preserve">
+        <source>点缩略图选择要移除的文件</source>
+        <target state="translated">点缩略图选择要移除的文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="照片画面识别" xml:space="preserve">
+        <source>照片画面识别</source>
+        <target state="translated">照片画面识别</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="照片读取相机记录的拍摄时间；没有记录的按创建时间。同一秒的会自动加 _2。" xml:space="preserve">
+        <source>照片读取相机记录的拍摄时间；没有记录的按创建时间。同一秒的会自动加 _2。</source>
+        <target state="translated">照片读取相机记录的拍摄时间；没有记录的按创建时间。同一秒的会自动加 _2。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="版本" xml:space="preserve">
+        <source>版本</source>
+        <target state="translated">版本</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="状态" xml:space="preserve">
+        <source>状态</source>
+        <target state="translated">状态</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。" xml:space="preserve">
+        <source>现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。</source>
+        <target state="translated">现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="理解为" xml:space="preserve">
+        <source>理解为</source>
+        <target state="translated">理解为</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="用 Vision 比较最近 800 张照片的画面" xml:space="preserve">
+        <source>用 Vision 比较最近 800 张照片的画面</source>
+        <target state="translated">用 Vision 比较最近 800 张照片的画面</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="用微信扫一扫，金额随意" xml:space="preserve">
+        <source>用微信扫一扫，金额随意</source>
+        <target state="translated">用微信扫一扫，金额随意</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="用支付宝扫一扫，金额随意" xml:space="preserve">
+        <source>用支付宝扫一扫，金额随意</source>
+        <target state="translated">用支付宝扫一扫，金额随意</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="用过的安装包" xml:space="preserve">
+        <source>用过的安装包</source>
+        <target state="translated">用过的安装包</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="画质" xml:space="preserve">
+        <source>画质</source>
+        <target state="translated">画质</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="画质 85% 时肉眼几乎看不出差别，体积通常只有 PNG 的几分之一。" xml:space="preserve">
+        <source>画质 85% 时肉眼几乎看不出差别，体积通常只有 PNG 的几分之一。</source>
+        <target state="translated">画质 85% 时肉眼几乎看不出差别，体积通常只有 PNG 的几分之一。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="画面相似 · Vision 本机比对" xml:space="preserve">
+        <source>画面相似 · Vision 本机比对</source>
+        <target state="translated">画面相似 · Vision 本机比对</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="画面：%@" xml:space="preserve">
+        <source>画面：%@</source>
+        <target state="translated">画面：%@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="登录时自动打开拾掇" xml:space="preserve">
+        <source>登录时自动打开拾掇</source>
+        <target state="translated">登录时自动打开拾掇</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="百度网盘" xml:space="preserve">
+        <source>百度网盘</source>
+        <target state="translated">百度网盘</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="监视" xml:space="preserve">
+        <source>监视</source>
+        <target state="translated">监视</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="监视文件夹" xml:space="preserve">
+        <source>监视文件夹</source>
+        <target state="translated">监视文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="目标文件夹" xml:space="preserve">
+        <source>目标文件夹</source>
+        <target state="translated">目标文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="相似照片" xml:space="preserve">
+        <source>相似照片</source>
+        <target state="translated">相似照片</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="相机" xml:space="preserve">
+        <source>相机</source>
+        <target state="translated">相机</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="种类" xml:space="preserve">
+        <source>种类</source>
+        <target state="translated">种类</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="移到「%@」" xml:space="preserve">
+        <source>移到「%@」</source>
+        <target state="translated">移到「%@」</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="移到废纸篓" xml:space="preserve">
+        <source>移到废纸篓</source>
+        <target state="translated">移到废纸篓</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="移到废纸篓…" xml:space="preserve">
+        <source>移到废纸篓…</source>
+        <target state="translated">移到废纸篓…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="移到文件夹" xml:space="preserve">
+        <source>移到文件夹</source>
+        <target state="translated">移到文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="移到这里" xml:space="preserve">
+        <source>移到这里</source>
+        <target state="translated">移到这里</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="移除" xml:space="preserve">
+        <source>移除</source>
+        <target state="translated">移除</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="移除所选" xml:space="preserve">
+        <source>移除所选</source>
+        <target state="translated">移除所选</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="稍后再说" xml:space="preserve">
+        <source>稍后再说</source>
+        <target state="translated">稍后再说</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="空格预览图片时可以直接划选文字" xml:space="preserve">
+        <source>空格预览图片时可以直接划选文字</source>
+        <target state="translated">空格预览图片时可以直接划选文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="空间占用图" xml:space="preserve">
+        <source>空间占用图</source>
+        <target state="translated">空间占用图</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="立即整理" xml:space="preserve">
+        <source>立即整理</source>
+        <target state="translated">立即整理</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="立即检查" xml:space="preserve">
+        <source>立即检查</source>
+        <target state="translated">立即检查</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="立即重新打开" xml:space="preserve">
+        <source>立即重新打开</source>
+        <target state="translated">立即重新打开</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="简介" xml:space="preserve">
+        <source>简介</source>
+        <target state="translated">简介</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="类型" xml:space="preserve">
+        <source>类型</source>
+        <target state="translated">类型</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="系统提示退出重开时，点「稍后」也可以，回到这里会自动刷新" xml:space="preserve">
+        <source>系统提示退出重开时，点「稍后」也可以，回到这里会自动刷新</source>
+        <target state="translated">系统提示退出重开时，点「稍后」也可以，回到这里会自动刷新</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="系统没有允许拾掇发通知：请到「系统设置 › 通知 › 拾掇」里打开。" xml:space="preserve">
+        <source>系统没有允许拾掇发通知：请到「系统设置 › 通知 › 拾掇」里打开。</source>
+        <target state="translated">系统没有允许拾掇发通知：请到「系统设置 › 通知 › 拾掇」里打开。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="统计中…" xml:space="preserve">
+        <source>统计中…</source>
+        <target state="translated">统计中…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="继续" xml:space="preserve">
+        <source>继续</source>
+        <target state="translated">继续</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="编辑" xml:space="preserve">
+        <source>编辑</source>
+        <target state="translated">编辑</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="缩略图大小" xml:space="preserve">
+        <source>缩略图大小</source>
+        <target state="translated">缩略图大小</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="网易邮箱" xml:space="preserve">
+        <source>网易邮箱</source>
+        <target state="translated">网易邮箱</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="网站" xml:space="preserve">
+        <source>网站</source>
+        <target state="translated">网站</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="聊天文件" xml:space="preserve">
+        <source>聊天文件</source>
+        <target state="translated">聊天文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了" xml:space="preserve">
+        <source>聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了</source>
+        <target state="translated">聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="联系我们" xml:space="preserve">
+        <source>联系我们</source>
+        <target state="translated">联系我们</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="自动下载，退出拾掇时安装" xml:space="preserve">
+        <source>自动下载，退出拾掇时安装</source>
+        <target state="translated">自动下载，退出拾掇时安装</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="自动整理" xml:space="preserve">
+        <source>自动整理</source>
+        <target state="translated">自动整理</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="自动整理规则" xml:space="preserve">
+        <source>自动整理规则</source>
+        <target state="translated">自动整理规则</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="自动识别截图和近期照片里的文字" xml:space="preserve">
+        <source>自动识别截图和近期照片里的文字</source>
+        <target state="translated">自动识别截图和近期照片里的文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="至少设置一个条件才会生效" xml:space="preserve">
+        <source>至少设置一个条件才会生效</source>
+        <target state="translated">至少设置一个条件才会生效</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="至少设置一个条件，避免把整个文件夹都搬走。" xml:space="preserve">
+        <source>至少设置一个条件，避免把整个文件夹都搬走。</source>
+        <target state="translated">至少设置一个条件，避免把整个文件夹都搬走。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="花一分钟看看有哪些可以清理的文件。" xml:space="preserve">
+        <source>花一分钟看看有哪些可以清理的文件。</source>
+        <target state="translated">花一分钟看看有哪些可以清理的文件。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="菜单栏小助手" xml:space="preserve">
+        <source>菜单栏小助手</source>
+        <target state="translated">菜单栏小助手</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="表格" xml:space="preserve">
+        <source>表格</source>
+        <target state="translated">表格</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="被遗忘的下载" xml:space="preserve">
+        <source>被遗忘的下载</source>
+        <target state="translated">被遗忘的下载</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="视频" xml:space="preserve">
+        <source>视频</source>
+        <target state="translated">视频</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="解绑此 Mac" xml:space="preserve">
+        <source>解绑此 Mac</source>
+        <target state="translated">解绑此 Mac</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="计算中…" xml:space="preserve">
+        <source>计算中…</source>
+        <target state="translated">计算中…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="记得它从哪儿来" xml:space="preserve">
+        <source>记得它从哪儿来</source>
+        <target state="translated">记得它从哪儿来</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="许可" xml:space="preserve">
+        <source>许可</source>
+        <target state="translated">许可</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="识别图中文字…" xml:space="preserve">
+        <source>识别图中文字…</source>
+        <target state="translated">识别图中文字…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="识别在本机完成，不会上传。" xml:space="preserve">
+        <source>识别在本机完成，不会上传。</source>
+        <target state="translated">识别在本机完成，不会上传。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="识别并拷贝图中文字（⇧⌘C）" xml:space="preserve">
+        <source>识别并拷贝图中文字（⇧⌘C）</source>
+        <target state="translated">识别并拷贝图中文字（⇧⌘C）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="识别文字" xml:space="preserve">
+        <source>识别文字</source>
+        <target state="translated">识别文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="试用已结束" xml:space="preserve">
+        <source>试用已结束</source>
+        <target state="translated">试用已结束</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="试试" xml:space="preserve">
+        <source>试试</source>
+        <target state="translated">试试</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="试试去掉一个筛选条件。" xml:space="preserve">
+        <source>试试去掉一个筛选条件。</source>
+        <target state="translated">试试去掉一个筛选条件。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="语言 / Language" xml:space="preserve">
+        <source>语言 / Language</source>
+        <target state="translated">语言 / Language</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="请求太频繁，请稍后再试。" xml:space="preserve">
+        <source>请求太频繁，请稍后再试。</source>
+        <target state="translated">请求太频繁，请稍后再试。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="请输入授权码。" xml:space="preserve">
+        <source>请输入授权码。</source>
+        <target state="translated">请输入授权码。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="请选择目标文件夹" xml:space="preserve">
+        <source>请选择目标文件夹</source>
+        <target state="translated">请选择目标文件夹</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="请选择目标文件夹。" xml:space="preserve">
+        <source>请选择目标文件夹。</source>
+        <target state="translated">请选择目标文件夹。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="调整后点“重新扫描”生效" xml:space="preserve">
+        <source>调整后点“重新扫描”生效</source>
+        <target state="translated">调整后点“重新扫描”生效</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="购买" xml:space="preserve">
+        <source>购买</source>
+        <target state="translated">购买</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="购买拾掇 Pro…" xml:space="preserve">
+        <source>购买拾掇 Pro…</source>
+        <target state="translated">购买拾掇 Pro…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="资料库" xml:space="preserve">
+        <source>资料库</source>
+        <target state="translated">资料库</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="资料库大小" xml:space="preserve">
+        <source>资料库大小</source>
+        <target state="translated">资料库大小</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="赞助" xml:space="preserve">
+        <source>赞助</source>
+        <target state="translated">赞助</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="超过 %lld 天" xml:space="preserve">
+        <source>超过 %lld 天</source>
+        <target state="translated">超过 %lld 天</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="超过 200 MB、90 天没打开的视频" xml:space="preserve">
+        <source>超过 200 MB、90 天没打开的视频</source>
+        <target state="translated">超过 200 MB、90 天没打开的视频</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="超过1GB的视频" xml:space="preserve">
+        <source>超过1GB的视频</source>
+        <target state="translated">超过1GB的视频</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="跟随系统" xml:space="preserve">
+        <source>跟随系统</source>
+        <target state="translated">跟随系统</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="转换为 JPG" xml:space="preserve">
+        <source>转换为 JPG</source>
+        <target state="translated">转换为 JPG</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="转换为 JPG / 压缩…" xml:space="preserve">
+        <source>转换为 JPG / 压缩…</source>
+        <target state="translated">转换为 JPG / 压缩…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="输入文件名、拼音首字母，或者一句话" xml:space="preserve">
+        <source>输入文件名、拼音首字母，或者一句话</source>
+        <target state="translated">输入文件名、拼音首字母，或者一句话</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="返回上一层" xml:space="preserve">
+        <source>返回上一层</source>
+        <target state="translated">返回上一层</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="还在找，数字会继续变大…" xml:space="preserve">
+        <source>还在找，数字会继续变大…</source>
+        <target state="translated">还在找，数字会继续变大…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="还没有固定文件夹。" xml:space="preserve">
+        <source>还没有固定文件夹。</source>
+        <target state="translated">还没有固定文件夹。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="还没有扫描" xml:space="preserve">
+        <source>还没有扫描</source>
+        <target state="translated">还没有扫描</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="还没有规则。点「新建规则」，比如把下载文件夹里的安装包自动移到废纸篓。" xml:space="preserve">
+        <source>还没有规则。点「新建规则」，比如把下载文件夹里的安装包自动移到废纸篓。</source>
+        <target state="translated">还没有规则。点「新建规则」，比如把下载文件夹里的安装包自动移到废纸篓。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这个授权码不属于拾掇 Pro。" xml:space="preserve">
+        <source>这个授权码不属于拾掇 Pro。</source>
+        <target state="translated">这个授权码不属于拾掇 Pro。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这个授权码已被停用。" xml:space="preserve">
+        <source>这个授权码已被停用。</source>
+        <target state="translated">这个授权码已被停用。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这个授权码已过期。" xml:space="preserve">
+        <source>这个授权码已过期。</source>
+        <target state="translated">这个授权码已过期。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这个授权码的激活次数已用完。请先在旧 Mac 的拾掇设置里「解绑此 Mac」，再来激活。" xml:space="preserve">
+        <source>这个授权码的激活次数已用完。请先在旧 Mac 的拾掇设置里「解绑此 Mac」，再来激活。</source>
+        <target state="translated">这个授权码的激活次数已用完。请先在旧 Mac 的拾掇设置里「解绑此 Mac」，再来激活。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这个文件夹是空的" xml:space="preserve">
+        <source>这个文件夹是空的</source>
+        <target state="translated">这个文件夹是空的</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这些图片都已经识别过了" xml:space="preserve">
+        <source>这些图片都已经识别过了</source>
+        <target state="translated">这些图片都已经识别过了</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）" xml:space="preserve">
+        <source>这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）</source>
+        <target state="translated">这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这张图里没有识别到文字" xml:space="preserve">
+        <source>这张图里没有识别到文字</source>
+        <target state="translated">这张图里没有识别到文字</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这是拾掇 Pro 的功能。" xml:space="preserve">
+        <source>这是拾掇 Pro 的功能。</source>
+        <target state="translated">这是拾掇 Pro 的功能。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="这里还没有文件" xml:space="preserve">
+        <source>这里还没有文件</source>
+        <target state="translated">这里还没有文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="选中一个文件查看简介。" xml:space="preserve">
+        <source>选中一个文件查看简介。</source>
+        <target state="translated">选中一个文件查看简介。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="选中的文件里没有图片或 PDF" xml:space="preserve">
+        <source>选中的文件里没有图片或 PDF</source>
+        <target state="translated">选中的文件里没有图片或 PDF</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="选择…" xml:space="preserve">
+        <source>选择…</source>
+        <target state="translated">选择…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="选择文件夹…" xml:space="preserve">
+        <source>选择文件夹…</source>
+        <target state="translated">选择文件夹…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="邮箱" xml:space="preserve">
+        <source>邮箱</source>
+        <target state="translated">邮箱</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重命名" xml:space="preserve">
+        <source>重命名</source>
+        <target state="translated">重命名</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重命名…" xml:space="preserve">
+        <source>重命名…</source>
+        <target state="translated">重命名…</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重复文件" xml:space="preserve">
+        <source>重复文件</source>
+        <target state="translated">重复文件</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重复文件、旧安装包、微信大文件，只移到废纸篓" xml:space="preserve">
+        <source>重复文件、旧安装包、微信大文件，只移到废纸篓</source>
+        <target state="translated">重复文件、旧安装包、微信大文件，只移到废纸篓</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重复文件、旧安装包、被遗忘的下载，一次看清" xml:space="preserve">
+        <source>重复文件、旧安装包、被遗忘的下载，一次看清</source>
+        <target state="translated">重复文件、旧安装包、被遗忘的下载，一次看清</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重新打开拾掇后生效。" xml:space="preserve">
+        <source>重新打开拾掇后生效。</source>
+        <target state="translated">重新打开拾掇后生效。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重新扫描" xml:space="preserve">
+        <source>重新扫描</source>
+        <target state="translated">重新扫描</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重新查看欢迎引导" xml:space="preserve">
+        <source>重新查看欢迎引导</source>
+        <target state="translated">重新查看欢迎引导</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重新统计" xml:space="preserve">
+        <source>重新统计</source>
+        <target state="translated">重新统计</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="重新计算" xml:space="preserve">
+        <source>重新计算</source>
+        <target state="translated">重新计算</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="钉钉" xml:space="preserve">
+        <source>钉钉</source>
+        <target state="translated">钉钉</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="长边 1280 像素（发邮件）" xml:space="preserve">
+        <source>长边 1280 像素（发邮件）</source>
+        <target state="translated">长边 1280 像素（发邮件）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="长边 2000 像素（发微信够用）" xml:space="preserve">
+        <source>长边 2000 像素（发微信够用）</source>
+        <target state="translated">长边 2000 像素（发微信够用）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="长边 3000 像素（高清）" xml:space="preserve">
+        <source>长边 3000 像素（高清）</source>
+        <target state="translated">长边 3000 像素（高清）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="阿里云盘" xml:space="preserve">
+        <source>阿里云盘</source>
+        <target state="translated">阿里云盘</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。" xml:space="preserve">
+        <source>随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。</source>
+        <target state="translated">随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="随时按 %@ 搜索" xml:space="preserve">
+        <source>随时按 %@ 搜索</source>
+        <target state="translated">随时按 %@ 搜索</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="隐私与权限" xml:space="preserve">
+        <source>隐私与权限</source>
+        <target state="translated">隐私与权限</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="隐藏文字框" xml:space="preserve">
+        <source>隐藏文字框</source>
+        <target state="translated">隐藏文字框</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="隐藏简介" xml:space="preserve">
+        <source>隐藏简介</source>
+        <target state="translated">隐藏简介</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="音乐" xml:space="preserve">
+        <source>音乐</source>
+        <target state="translated">音乐</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="页数" xml:space="preserve">
+        <source>页数</source>
+        <target state="translated">页数</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="预览" xml:space="preserve">
+        <source>预览</source>
+        <target state="translated">预览</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="飞书" xml:space="preserve">
+        <source>飞书</source>
+        <target state="translated">飞书</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="首页" xml:space="preserve">
+        <source>首页</source>
+        <target state="translated">首页</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="（还没有条件）" xml:space="preserve">
+        <source>（还没有条件）</source>
+        <target state="translated">（还没有条件）</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="，%lld 张失败" xml:space="preserve">
+        <source>，%lld 张失败</source>
+        <target state="translated">，%lld 张失败</target>
+        <note/>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="Resources/zh-Hans.lproj/InfoPlist.strings" source-language="zh-Hans" target-language="zh-Hans" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="16.4" build-num="16F6"/>
+    </header>
+    <body>
+      <trans-unit id="CFBundleDisplayName" xml:space="preserve">
+        <source>拾掇</source>
+        <target>拾掇</target>
+        <note>Bundle display name</note>
+      </trans-unit>
+      <trans-unit id="CFBundleName" xml:space="preserve">
+        <source>拾掇</source>
+        <target>拾掇</target>
+        <note>Bundle name</note>
+      </trans-unit>
+      <trans-unit id="NSDesktopFolderUsageDescription" xml:space="preserve">
+        <source>拾掇需要读取桌面上的文件，才能显示缩略图、识别截图文字和查找重复文件。所有处理都在本机完成。</source>
+        <target>拾掇需要读取桌面上的文件，才能显示缩略图、识别截图文字和查找重复文件。所有处理都在本机完成。</target>
+        <note>Privacy - Desktop Folder Usage Description</note>
+      </trans-unit>
+      <trans-unit id="NSDocumentsFolderUsageDescription" xml:space="preserve">
+        <source>拾掇需要读取“文稿”中的文件，才能显示缩略图和查找重复文件。所有处理都在本机完成。</source>
+        <target>拾掇需要读取“文稿”中的文件，才能显示缩略图和查找重复文件。所有处理都在本机完成。</target>
+        <note>Privacy - Documents Folder Usage Description</note>
+      </trans-unit>
+      <trans-unit id="NSDownloadsFolderUsageDescription" xml:space="preserve">
+        <source>拾掇需要读取“下载”中的文件，才能按下载来源整理并找出可以清理的安装包。所有处理都在本机完成。</source>
+        <target>拾掇需要读取“下载”中的文件，才能按下载来源整理并找出可以清理的安装包。所有处理都在本机完成。</target>
+        <note>Privacy - Downloads Folder Usage Description</note>
+      </trans-unit>
+      <trans-unit id="NSHumanReadableCopyright" xml:space="preserve">
+        <source>MIT 开源许可 · github.com/hanson-zz/Shiduo</source>
+        <target>MIT 开源许可 · github.com/hanson-zz/Shiduo</target>
+        <note>Copyright (human-readable)</note>
+      </trans-unit>
+      <trans-unit id="NSNetworkVolumesUsageDescription" xml:space="preserve">
+        <source>拾掇需要读取网络磁盘上的文件，才能显示缩略图。</source>
+        <target>拾掇需要读取网络磁盘上的文件，才能显示缩略图。</target>
+        <note>Privacy - Network Volumes Usage Description</note>
+      </trans-unit>
+      <trans-unit id="NSRemovableVolumesUsageDescription" xml:space="preserve">
+        <source>拾掇需要读取外接磁盘上的文件，才能显示缩略图。</source>
+        <target>拾掇需要读取外接磁盘上的文件，才能显示缩略图。</target>
+        <note>Privacy - Removable Volumes Usage Description</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

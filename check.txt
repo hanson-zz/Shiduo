@@ -1,0 +1,24 @@
+== preferred: ["en", "en"]
+1 item | 5 items
+4 extra copies in 2 groups
+Clean Up | Pictures | File | System Default | Home
+Shiduo
+== preferred: ["zh-Hans", "zh-Hans"]
+1 个项目 | 5 个项目
+4 个多余的副本，共 2 组
+清理 | 图片 | 文件 | 跟随系统 | 首页
+拾掇
+== preferred: ["en", "en"]
+1 item | 5 items
+4 extra copies in 2 groups
+Clean Up | Pictures | File | System Default | Home
+Shiduo
+== preferred: ["en", "en"]
+1 item | 5 items
+4 extra copies in 2 groups
+Clean Up | Pictures | File | System Default | Home
+Shiduo
+AppIcon.icns
+Assets.car
+en.lproj
+zh-Hans.lproj

@@ -1,0 +1,141 @@
+208:/Users/runner/work/Shiduo/Shiduo/Sources/Views/Components.swift:29:51: warning: non-sendable result type 'NSImage?' cannot be sent from nonisolated context in call to instance method 'thumbnail(for:size:)'; this is an error in the Swift 6 language mode
+272:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:31: warning: conformance of 'NSImage' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+278:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:36: warning: conformance of 'NSImage' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+284:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:100: warning: conformance of 'NSImage' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+290:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:31: warning: non-sendable type 'Task<NSImage?, Never>' cannot exit main actor-isolated context in call to nonisolated property 'value'; this is an error in the Swift 6 language mode
+296:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:100: warning: non-sendable type 'NSImage?' of nonisolated property 'value' cannot be sent to main actor-isolated context; this is an error in the Swift 6 language mode
+420:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:31: warning: conformance of 'NSImage' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+426:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:36: warning: conformance of 'NSImage' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+432:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:100: warning: conformance of 'NSImage' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+438:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:31: warning: non-sendable type 'Task<NSImage?, Never>' cannot exit main actor-isolated context in call to nonisolated property 'value'; this is an error in the Swift 6 language mode
+444:/Users/runner/work/Shiduo/Shiduo/Sources/Views/LiveTextPreview.swift:200:100: warning: non-sendable type 'NSImage?' of nonisolated property 'value' cannot be sent to main actor-isolated context; this is an error in the Swift 6 language mode
+507:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+513:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+519:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+523:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+548:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+554:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+560:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+564:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+589:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+595:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+601:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+605:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+630:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+636:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+642:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+646:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+671:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+677:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+683:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+687:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+712:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+718:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+724:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+728:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+753:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+759:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+765:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+769:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+794:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+800:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+806:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+810:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+835:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+841:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+847:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+851:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+876:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+882:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+888:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+892:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+917:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+923:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+929:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+933:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+958:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+964:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+970:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+974:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+999:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1005:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1011:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1015:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1040:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1046:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1052:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1056:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1081:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1087:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1093:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1097:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1122:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1128:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1134:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1138:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1190:/Users/runner/work/Shiduo/Shiduo/Sources/Views/Components.swift:29:51: warning: non-sendable result type 'NSImage?' cannot be sent from nonisolated context in call to instance method 'thumbnail(for:size:)'; this is an error in the Swift 6 language mode
+1244:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1250:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1256:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1260:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1285:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1291:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1297:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1301:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1326:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1332:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1338:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1342:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1367:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1373:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1379:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1383:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1408:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1414:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1420:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1424:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1449:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1455:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1461:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1465:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1490:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1496:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1502:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1506:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1531:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1537:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1543:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1547:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1572:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1578:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1584:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1588:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1613:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1619:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1625:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1629:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1654:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1660:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1666:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1670:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1695:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1701:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1707:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1711:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1736:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1742:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1748:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1752:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1777:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1783:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1789:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1793:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1818:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1824:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1830:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1834:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1859:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:45:17: warning: capture of 'query' with non-sendable type 'NSMetadataQuery' in a '@Sendable' closure
+1865:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:66:24: warning: capture of 'observer' with non-sendable type '(any NSObjectProtocol)?' in a '@Sendable' closure
+1871:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:1:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'ObjectiveC'
+1875:/Users/runner/work/Shiduo/Shiduo/Sources/Services/SpotlightSearch.swift:40:22: warning: 'observer' mutated after capture by sendable closure
+1929:2026-10-12 12:59:06.176 appintentsmetadataprocessor[6092:21711] warning: Metadata extraction skipped. No AppIntents.framework dependency found.

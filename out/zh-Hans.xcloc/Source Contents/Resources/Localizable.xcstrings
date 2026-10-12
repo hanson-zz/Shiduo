@@ -1,0 +1,5901 @@
+{
+  "sourceLanguage" : "zh-Hans",
+  "strings" : {
+    "" : {
+      "shouldTranslate" : false
+    },
+    "\n\n\n——\n拾掇 %@ · macOS %@ · %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\n\n\n——\n拾掇 %1$@ · macOS %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    " · 上次 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · 上次 %@"
+          }
+        }
+      }
+    },
+    "，%lld 张失败" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "，%lld 张失败"
+          }
+        }
+      }
+    },
+    "、" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "、"
+          }
+        }
+      }
+    },
+    "·" : {
+      "shouldTranslate" : false
+    },
+    "“" : {
+      "shouldTranslate" : false
+    },
+    "”" : {
+      "shouldTranslate" : false
+    },
+    "“上周超过5MB的pdf”“来自微信的图片”" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“上周超过5MB的pdf”“来自微信的图片”"
+          }
+        }
+      }
+    },
+    "“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包"
+          }
+        }
+      }
+    },
+    "“下载”里放了 30 天以上、之后再没打开过的文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“下载”里放了 30 天以上、之后再没打开过的文件"
+          }
+        }
+      }
+    },
+    "“应用程序”里半年以上没打开过的第三方应用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“应用程序”里半年以上没打开过的第三方应用"
+          }
+        }
+      }
+    },
+    "（还没有条件）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（还没有条件）"
+          }
+        }
+      }
+    },
+    "【%@】\n%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "【%1$@】\n%2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · 可用 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · 可用 %2$@"
+          }
+        }
+      }
+    },
+    "%@ → %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ → %2$@"
+          }
+        }
+      }
+    },
+    "%@ 个项目" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 个项目"
+          }
+        }
+      }
+    },
+    "%@ 可用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 可用"
+          }
+        }
+      }
+    },
+    "%@ 已下载，退出拾掇时自动安装" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 已下载，退出拾掇时自动安装"
+          }
+        }
+      }
+    },
+    "%@ 已被其他 App 占用，请换一个快捷键。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 已被其他 App 占用，请换一个快捷键。"
+          }
+        }
+      }
+    },
+    "%@ 拍摄" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 拍摄"
+          }
+        }
+      }
+    },
+    "%@：%@ → %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：%2$@ → %3$@"
+          }
+        }
+      }
+    },
+    "%@（%lld）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@（%2$lld）"
+          }
+        }
+      }
+    },
+    "%@以前" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@以前"
+          }
+        }
+      }
+    },
+    "%@文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@文件"
+          }
+        }
+      }
+    },
+    "%lld" : {
+      "shouldTranslate" : false
+    },
+    "%lld 个 · %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个 · %2$@"
+          }
+        }
+      }
+    },
+    "%lld 个多余的副本，共 %lld 组" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个多余的副本，共 %2$lld 组"
+          }
+        }
+      }
+    },
+    "%lld 个文件会改名，扩展名保持不变" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个文件会改名，扩展名保持不变"
+          }
+        }
+      }
+    },
+    "%lld 个文件没能改名（可能被占用或没有权限）：" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个文件没能改名（可能被占用或没有权限）："
+          }
+        }
+      }
+    },
+    "%lld 个月" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个月"
+          }
+        }
+      }
+    },
+    "%lld 个来源 · %lld 个文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个来源 · %2$lld 个文件"
+          }
+        }
+      }
+    },
+    "%lld 个结果" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个结果"
+          }
+        }
+      }
+    },
+    "%lld 个项目" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个项目"
+          }
+        }
+      }
+    },
+    "%lld 个项目 · %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个项目 · %2$@"
+          }
+        }
+      }
+    },
+    "%lld 个项目只在 iCloud 云端或已不存在，已跳过。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个项目只在 iCloud 云端或已不存在，已跳过。"
+          }
+        }
+      }
+    },
+    "%lld 个项目无法移到废纸篓（可能需要管理员权限）：%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个项目无法移到废纸篓（可能需要管理员权限）：%2$@"
+          }
+        }
+      }
+    },
+    "%lld 份完全相同 · 可腾出 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 份完全相同 · 可腾出 %2$@"
+          }
+        }
+      }
+    },
+    "%lld 份相同的文件 · 每份 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 份相同的文件 · 每份 %2$@"
+          }
+        }
+      }
+    },
+    "%lld 周" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 周"
+          }
+        }
+      }
+    },
+    "%lld 天" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 天"
+          }
+        }
+      }
+    },
+    "%lld 字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 字"
+          }
+        }
+      }
+    },
+    "%lld 年" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 年"
+          }
+        }
+      }
+    },
+    "%lld 张 · 可腾出 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 张 · 可腾出 %2$@"
+          }
+        }
+      }
+    },
+    "%lld 张图片，共 %@。原图不会被改动。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 张图片，共 %2$@。原图不会被改动。"
+          }
+        }
+      }
+    },
+    "%lld 张相似的照片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 张相似的照片"
+          }
+        }
+      }
+    },
+    "%lld 月" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 月"
+          }
+        }
+      }
+    },
+    "%lld 页" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 页"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+      "shouldTranslate" : false
+    },
+    "← → 上一张 / 下一张" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← → 上一张 / 下一张"
+          }
+        }
+      }
+    },
+    "↩ 打开" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↩ 打开"
+          }
+        }
+      }
+    },
+    "⇧⌥ 空格" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⇧⌥ 空格"
+          }
+        }
+      }
+    },
+    "+%lld" : {
+      "shouldTranslate" : false
+    },
+    "+99" : {
+      "shouldTranslate" : false
+    },
+    "⌃⌥ 空格" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌃⌥ 空格"
+          }
+        }
+      }
+    },
+    "⌘↩ 在访达中显示" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘↩ 在访达中显示"
+          }
+        }
+      }
+    },
+    "⌥ 空格" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌥ 空格"
+          }
+        }
+      }
+    },
+    "1" : {
+      "shouldTranslate" : false
+    },
+    "01" : {
+      "shouldTranslate" : false
+    },
+    "001" : {
+      "shouldTranslate" : false
+    },
+    "0001" : {
+      "shouldTranslate" : false
+    },
+    "3个月前的截图" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3个月前的截图"
+          }
+        }
+      }
+    },
+    "7 天试用已经结束。升级到拾掇 Pro 就能继续使用。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 天试用已经结束。升级到拾掇 Pro 就能继续使用。"
+          }
+        }
+      }
+    },
+    "30 天以前拍的截图" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 天以前拍的截图"
+          }
+        }
+      }
+    },
+    "200 MB 以上的文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "200 MB 以上的文件"
+          }
+        }
+      }
+    },
+    "999+" : {
+      "shouldTranslate" : false
+    },
+    "Apple 芯片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple 芯片"
+          }
+        }
+      }
+    },
+    "Documents/下载的 PDF" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents/下载的 PDF"
+          }
+        }
+      }
+    },
+    "GitHub · hanson-zz/Shiduo" : {
+      "shouldTranslate" : false
+    },
+    "Google 云端硬盘" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google 云端硬盘"
+          }
+        }
+      }
+    },
+    "HEIC 和 JPEG 成对" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HEIC 和 JPEG 成对"
+          }
+        }
+      }
+    },
+    "inspector.where" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置"
+          }
+        }
+      }
+    },
+    "kind.file" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "kind.screenshot" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "截图"
+          }
+        }
+      }
+    },
+    "MIT 开源 · Pro 功能需授权" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIT 开源 · Pro 功能需授权"
+          }
+        }
+      }
+    },
+    "PRO" : {
+      "shouldTranslate" : false
+    },
+    "Pro 试用中，还剩 %lld 天" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro 试用中，还剩 %lld 天"
+          }
+        }
+      }
+    },
+    "Pro：按画面内容搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro：按画面内容搜索"
+          }
+        }
+      }
+    },
+    "QQ 邮箱" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QQ 邮箱"
+          }
+        }
+      }
+    },
+    "sidebar.movies" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片"
+          }
+        }
+      }
+    },
+    "sidebar.pictures" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片"
+          }
+        }
+      }
+    },
+    "wifi 密码截图" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wifi 密码截图"
+          }
+        }
+      }
+    },
+    "一切就绪，微信 / QQ 专区和占用图都能完整工作了" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一切就绪，微信 / QQ 专区和占用图都能完整工作了"
+          }
+        }
+      }
+    },
+    "上一步" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一步"
+          }
+        }
+      }
+    },
+    "上一首（⌘←）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一首（⌘←）"
+          }
+        }
+      }
+    },
+    "上个月" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上个月"
+          }
+        }
+      }
+    },
+    "上周" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上周"
+          }
+        }
+      }
+    },
+    "上周超过5MB的pdf" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上周超过5MB的pdf"
+          }
+        }
+      }
+    },
+    "上次打开" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次打开"
+          }
+        }
+      }
+    },
+    "上次校验" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次校验"
+          }
+        }
+      }
+    },
+    "下一首（⌘→）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一首（⌘→）"
+          }
+        }
+      }
+    },
+    "下午好" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下午好"
+          }
+        }
+      }
+    },
+    "下载" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载"
+          }
+        }
+      }
+    },
+    "下载文件夹里的安装包、截图、发票自动归位" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载文件夹里的安装包、截图、发票自动归位"
+          }
+        }
+      }
+    },
+    "下载更新失败" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载更新失败"
+          }
+        }
+      }
+    },
+    "下载来源" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载来源"
+          }
+        }
+      }
+    },
+    "下载的 PDF 归到文稿" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的 PDF 归到文稿"
+          }
+        }
+      }
+    },
+    "下载的文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的文件"
+          }
+        }
+      }
+    },
+    "下载的更新包不完整" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的更新包不完整"
+          }
+        }
+      }
+    },
+    "不上云" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不上云"
+          }
+        }
+      }
+    },
+    "不上传" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不上传"
+          }
+        }
+      }
+    },
+    "不会直接删除，都进废纸篓，随时可以放回原处。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不会直接删除，都进废纸篓，随时可以放回原处。"
+          }
+        }
+      }
+    },
+    "不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。"
+          }
+        }
+      }
+    },
+    "不常用的应用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不常用的应用"
+          }
+        }
+      }
+    },
+    "不按画面内容搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不按画面内容搜索"
+          }
+        }
+      }
+    },
+    "不限" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不限"
+          }
+        }
+      }
+    },
+    "不限时间" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不限时间"
+          }
+        }
+      }
+    },
+    "严格" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "严格"
+          }
+        }
+      }
+    },
+    "个人文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "个人文件夹"
+          }
+        }
+      }
+    },
+    "个文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "个文件"
+          }
+        }
+      }
+    },
+    "个文件，共 %@，每一类都有自己的货架" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "个文件，共 %@，每一类都有自己的货架"
+          }
+        }
+      }
+    },
+    "中午好" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中午好"
+          }
+        }
+      }
+    },
+    "了解拾掇 Pro" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "了解拾掇 Pro"
+          }
+        }
+      }
+    },
+    "今天" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天"
+          }
+        }
+      }
+    },
+    "今年" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今年"
+          }
+        }
+      }
+    },
+    "今年的照片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今年的照片"
+          }
+        }
+      }
+    },
+    "从 %lld 开始" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 %lld 开始"
+          }
+        }
+      }
+    },
+    "从未打开或无记录" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从未打开或无记录"
+          }
+        }
+      }
+    },
+    "从浏览器、邮箱、网盘下载的文件会记下来源，这里按来源分组显示。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从浏览器、邮箱、网盘下载的文件会记下来源，这里按来源分组显示。"
+          }
+        }
+      }
+    },
+    "以列表显示" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以列表显示"
+          }
+        }
+      }
+    },
+    "以后再说" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以后再说"
+          }
+        }
+      }
+    },
+    "以图标显示" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以图标显示"
+          }
+        }
+      }
+    },
+    "位数" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位数"
+          }
+        }
+      }
+    },
+    "位置" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置"
+          }
+        }
+      }
+    },
+    "你的文件只留在这台 Mac 上" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的文件只留在这台 Mac 上"
+          }
+        }
+      }
+    },
+    "例如 dmg, pkg" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如 dmg, pkg"
+          }
+        }
+      }
+    },
+    "例如 发票" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如 发票"
+          }
+        }
+      }
+    },
+    "保存" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "保存到" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存到"
+          }
+        }
+      }
+    },
+    "保持原尺寸" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保持原尺寸"
+          }
+        }
+      }
+    },
+    "保留" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留"
+          }
+        }
+      }
+    },
+    "保留 %lld 个，删 %lld 个" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留 %1$lld 个，删 %2$lld 个"
+          }
+        }
+      }
+    },
+    "修改日期" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改日期"
+          }
+        }
+      }
+    },
+    "修改时间" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改时间"
+          }
+        }
+      }
+    },
+    "停止" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        }
+      }
+    },
+    "像说话一样搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "像说话一样搜索"
+          }
+        }
+      }
+    },
+    "免费版" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "免费版"
+          }
+        }
+      }
+    },
+    "全局快速搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全局快速搜索"
+          }
+        }
+      }
+    },
+    "全选" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全选"
+          }
+        }
+      }
+    },
+    "全部" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        }
+      }
+    },
+    "全部来源" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部来源"
+          }
+        }
+      }
+    },
+    "全部来源（%lld）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部来源（%lld）"
+          }
+        }
+      }
+    },
+    "全部移到废纸篓" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部移到废纸篓"
+          }
+        }
+      }
+    },
+    "共 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共 %@"
+          }
+        }
+      }
+    },
+    "关于" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
+          }
+        }
+      }
+    },
+    "关于拾掇" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于拾掇"
+          }
+        }
+      }
+    },
+    "关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。"
+          }
+        }
+      }
+    },
+    "关闭（Esc 或空格）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭（Esc 或空格）"
+          }
+        }
+      }
+    },
+    "其他来源" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他来源"
+          }
+        }
+      }
+    },
+    "其他网站" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他网站"
+          }
+        }
+      }
+    },
+    "最多可腾出 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最多可腾出 %@"
+          }
+        }
+      }
+    },
+    "最新版本 %@，当前版本 %@。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新版本 %1$@，当前版本 %2$@。"
+          }
+        }
+      }
+    },
+    "最近" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近"
+          }
+        }
+      }
+    },
+    "最近 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 %@"
+          }
+        }
+      }
+    },
+    "最近下载" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近下载"
+          }
+        }
+      }
+    },
+    "最近使用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近使用"
+          }
+        }
+      }
+    },
+    "最近半年" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近半年"
+          }
+        }
+      }
+    },
+    "最近截图" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近截图"
+          }
+        }
+      }
+    },
+    "最近打开的文稿" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近打开的文稿"
+          }
+        }
+      }
+    },
+    "最近的图片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近的图片"
+          }
+        }
+      }
+    },
+    "最近的整理记录" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近的整理记录"
+          }
+        }
+      }
+    },
+    "分享给朋友" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享给朋友"
+          }
+        }
+      }
+    },
+    "列表" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列表"
+          }
+        }
+      }
+    },
+    "列表里没有拾掇？点 + 号，到「应用程序」里选择拾掇" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列表里没有拾掇？点 + 号，到「应用程序」里选择拾掇"
+          }
+        }
+      }
+    },
+    "创建时间" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建时间"
+          }
+        }
+      }
+    },
+    "删除规则" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除规则"
+          }
+        }
+      }
+    },
+    "刷新" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新"
+          }
+        }
+      }
+    },
+    "前天" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前天"
+          }
+        }
+      }
+    },
+    "前往" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往"
+          }
+        }
+      }
+    },
+    "前往下载" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往下载"
+          }
+        }
+      }
+    },
+    "前缀" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前缀"
+          }
+        }
+      }
+    },
+    "剩余空间、最近下载、快速搜索，一点就到" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剩余空间、最近下载、快速搜索，一点就到"
+          }
+        }
+      }
+    },
+    "加前缀 / 后缀" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加前缀 / 后缀"
+          }
+        }
+      }
+    },
+    "动作" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "动作"
+          }
+        }
+      }
+    },
+    "半年以前" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "半年以前"
+          }
+        }
+      }
+    },
+    "压缩包" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "压缩包"
+          }
+        }
+      }
+    },
+    "原名" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原名"
+          }
+        }
+      }
+    },
+    "原图和编辑版" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原图和编辑版"
+          }
+        }
+      }
+    },
+    "原文件旁边" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原文件旁边"
+          }
+        }
+      }
+    },
+    "去 GitHub 点星" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去 GitHub 点星"
+          }
+        }
+      }
+    },
+    "去年" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去年"
+          }
+        }
+      }
+    },
+    "去掉这个条件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去掉这个条件"
+          }
+        }
+      }
+    },
+    "发现 %lld 组相似照片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现 %lld 组相似照片"
+          }
+        }
+      }
+    },
+    "发现 %lld 组重复文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现 %lld 组重复文件"
+          }
+        }
+      }
+    },
+    "发送反馈…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送反馈…"
+          }
+        }
+      }
+    },
+    "取消" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "取消全选" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消全选"
+          }
+        }
+      }
+    },
+    "取消固定" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消固定"
+          }
+        }
+      }
+    },
+    "只移动、不覆盖：同名文件会自动加编号；只在 iCloud 云端的文件会跳过。移到废纸篓的随时可以放回。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只移动、不覆盖：同名文件会自动加编号；只在 iCloud 云端的文件会跳过。移到废纸篓的随时可以放回。"
+          }
+        }
+      }
+    },
+    "可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点"
+          }
+        }
+      }
+    },
+    "可直接拖到其他 App" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可直接拖到其他 App"
+          }
+        }
+      }
+    },
+    "可腾出 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可腾出 %@"
+          }
+        }
+      }
+    },
+    "右键点击链接可以拷贝。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右键点击链接可以拷贝。"
+          }
+        }
+      }
+    },
+    "名称" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称"
+          }
+        }
+      }
+    },
+    "名称 + 序号" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称 + 序号"
+          }
+        }
+      }
+    },
+    "名称，例如“旅行”" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称，例如“旅行”"
+          }
+        }
+      }
+    },
+    "名称含「%@」" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称含「%@」"
+          }
+        }
+      }
+    },
+    "后缀" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后缀"
+          }
+        }
+      }
+    },
+    "启动磁盘" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动磁盘"
+          }
+        }
+      }
+    },
+    "启用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用"
+          }
+        }
+      }
+    },
+    "周一" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周一"
+          }
+        }
+      }
+    },
+    "周三" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周三"
+          }
+        }
+      }
+    },
+    "周二" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周二"
+          }
+        }
+      }
+    },
+    "周五" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周五"
+          }
+        }
+      }
+    },
+    "周六" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周六"
+          }
+        }
+      }
+    },
+    "周四" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周四"
+          }
+        }
+      }
+    },
+    "周日" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周日"
+          }
+        }
+      }
+    },
+    "哔哩哔哩" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "哔哩哔哩"
+          }
+        }
+      }
+    },
+    "固定" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "固定"
+          }
+        }
+      }
+    },
+    "固定一个文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "固定一个文件夹"
+          }
+        }
+      }
+    },
+    "固定所在文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "固定所在文件夹"
+          }
+        }
+      }
+    },
+    "固定文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "固定文件夹"
+          }
+        }
+      }
+    },
+    "固定文件夹…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "固定文件夹…"
+          }
+        }
+      }
+    },
+    "图中文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图中文字"
+          }
+        }
+      }
+    },
+    "图标" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图标"
+          }
+        }
+      }
+    },
+    "图片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片"
+          }
+        }
+      }
+    },
+    "在 GitHub 上星标" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 GitHub 上星标"
+          }
+        }
+      }
+    },
+    "在 GitHub 上查看源代码" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 GitHub 上查看源代码"
+          }
+        }
+      }
+    },
+    "在「完全磁盘访问权限」列表里打开「拾掇」的开关" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在「完全磁盘访问权限」列表里打开「拾掇」的开关"
+          }
+        }
+      }
+    },
+    "在任何 App 里按快捷键弹出拾掇搜索框" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何 App 里按快捷键弹出拾掇搜索框"
+          }
+        }
+      }
+    },
+    "在任何应用里按下快捷键，弹出拾掇的搜索浮窗；窗口里按 ⌘F。试试这些：" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何应用里按下快捷键，弹出拾掇的搜索浮窗；窗口里按 ⌘F。试试这些："
+          }
+        }
+      }
+    },
+    "在侧边栏里直接浏览移动硬盘、U 盘" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在侧边栏里直接浏览移动硬盘、U 盘"
+          }
+        }
+      }
+    },
+    "在拾掇中查看全部结果" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在拾掇中查看全部结果"
+          }
+        }
+      }
+    },
+    "在本机识别过的照片里，画面有「%@」的也会列出来" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在本机识别过的照片里，画面有「%@」的也会列出来"
+          }
+        }
+      }
+    },
+    "在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索"
+          }
+        }
+      }
+    },
+    "在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）"
+          }
+        }
+      }
+    },
+    "在访达中显示" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在访达中显示"
+          }
+        }
+      }
+    },
+    "在访达中显示拾掇" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在访达中显示拾掇"
+          }
+        }
+      }
+    },
+    "外接磁盘" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外接磁盘"
+          }
+        }
+      }
+    },
+    "多出 %@ 份" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多出 %@ 份"
+          }
+        }
+      }
+    },
+    "大于100MB的压缩包" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大于100MB的压缩包"
+          }
+        }
+      }
+    },
+    "大家好，我是 Hanson 👋\n\n我喜欢给 Mac 💻 做一些小而顺手的工具。拾掇就是其中之一：基础功能完全免费、开源，除了检查更新和激活授权从不联网、不收集任何数据，只想帮你把文件找得更快、理得更清爽 🧹。\n\n做它用的是下班和周末的时间。我的愿望是能有更多时间把它打磨好，修更多 bug，加大家真正想要的功能 🚀，也继续做更多有用的开源小工具 🌱。\n\n如果拾掇帮你省了时间、腾出了空间，欢迎请我喝杯咖啡 ☕。金额不重要，每一份支持都是对我的信任和鼓励。不方便赞助也完全没关系，分享给朋友、在 GitHub 上点个星，对我同样意义重大 💖。\n\n谢谢你。\n\n此致，\nHanson" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大家好，我是 Hanson 👋\n\n我喜欢给 Mac 💻 做一些小而顺手的工具。拾掇就是其中之一：基础功能完全免费、开源，除了检查更新和激活授权从不联网、不收集任何数据，只想帮你把文件找得更快、理得更清爽 🧹。\n\n做它用的是下班和周末的时间。我的愿望是能有更多时间把它打磨好，修更多 bug，加大家真正想要的功能 🚀，也继续做更多有用的开源小工具 🌱。\n\n如果拾掇帮你省了时间、腾出了空间，欢迎请我喝杯咖啡 ☕。金额不重要，每一份支持都是对我的信任和鼓励。不方便赞助也完全没关系，分享给朋友、在 GitHub 上点个星，对我同样意义重大 💖。\n\n谢谢你。\n\n此致，\nHanson"
+          }
+        }
+      }
+    },
+    "大小" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大小"
+          }
+        }
+      }
+    },
+    "大文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大文件"
+          }
+        }
+      }
+    },
+    "大缩略图，一眼认出要找的那个" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大缩略图，一眼认出要找的那个"
+          }
+        }
+      }
+    },
+    "夸克网盘" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "夸克网盘"
+          }
+        }
+      }
+    },
+    "好" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
+    },
+    "如果系统询问“拾掇想访问其他 App 的数据”，请点“允许”。\n也可以在“系统设置 › 隐私与安全性 › 完全磁盘访问权限”里打开拾掇，然后点“重新扫描”。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果系统询问“拾掇想访问其他 App 的数据”，请点“允许”。\n也可以在“系统设置 › 隐私与安全性 › 完全磁盘访问权限”里打开拾掇，然后点“重新扫描”。"
+          }
+        }
+      }
+    },
+    "安全地拿回空间：只移到废纸篓，随时可以放回" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安全地拿回空间：只移到废纸篓，随时可以放回"
+          }
+        }
+      }
+    },
+    "安全地腾出空间" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安全地腾出空间"
+          }
+        }
+      }
+    },
+    "安装包" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装包"
+          }
+        }
+      }
+    },
+    "完全相同" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完全相同"
+          }
+        }
+      }
+    },
+    "完全相同 · SHA-256 指纹校验" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完全相同 · SHA-256 指纹校验"
+          }
+        }
+      }
+    },
+    "完全相同的副本，以及连拍、编辑版、HEIC/JPEG 成对这类看起来差不多的照片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完全相同的副本，以及连拍、编辑版、HEIC/JPEG 成对这类看起来差不多的照片"
+          }
+        }
+      }
+    },
+    "完全磁盘访问权限" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完全磁盘访问权限"
+          }
+        }
+      }
+    },
+    "完成" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "定时清理提醒" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "定时清理提醒"
+          }
+        }
+      }
+    },
+    "宽松" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "宽松"
+          }
+        }
+      }
+    },
+    "将 %lld 个多余的副本移到废纸篓？" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 %lld 个多余的副本移到废纸篓？"
+          }
+        }
+      }
+    },
+    "将 %lld 个项目移到废纸篓？" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 %lld 个项目移到废纸篓？"
+          }
+        }
+      }
+    },
+    "将“%@”移到废纸篓？" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将“%@”移到废纸篓？"
+          }
+        }
+      }
+    },
+    "小红书" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小红书"
+          }
+        }
+      }
+    },
+    "尺寸" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尺寸"
+          }
+        }
+      }
+    },
+    "已停止" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停止"
+          }
+        }
+      }
+    },
+    "已去掉“%@”标签" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已去掉“%@”标签"
+          }
+        }
+      }
+    },
+    "已在本机分析 %lld 张" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在本机分析 %lld 张"
+          }
+        }
+      }
+    },
+    "已在本机识别 %lld 张图片，识别后搜索就能搜到图里的字。结果只保存在这台 Mac 上。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在本机识别 %lld 张图片，识别后搜索就能搜到图里的字。结果只保存在这台 Mac 上。"
+          }
+        }
+      }
+    },
+    "已开启" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已开启"
+          }
+        }
+      }
+    },
+    "已把 %lld 个副本移到废纸篓" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已把 %lld 个副本移到废纸篓"
+          }
+        }
+      }
+    },
+    "已把 %lld 个项目移到废纸篓" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已把 %lld 个项目移到废纸篓"
+          }
+        }
+      }
+    },
+    "已拷贝" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已拷贝"
+          }
+        }
+      }
+    },
+    "已拷贝 %lld 个文件的文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已拷贝 %lld 个文件的文字"
+          }
+        }
+      }
+    },
+    "已拷贝 %lld 张图片的文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已拷贝 %lld 张图片的文字"
+          }
+        }
+      }
+    },
+    "已拷贝图中全部文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已拷贝图中全部文字"
+          }
+        }
+      }
+    },
+    "已撤销" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已撤销"
+          }
+        }
+      }
+    },
+    "已移到废纸篓，可随时恢复" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已移到废纸篓，可随时恢复"
+          }
+        }
+      }
+    },
+    "已经清理完了" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经清理完了"
+          }
+        }
+      }
+    },
+    "已经购买或收到兑换码？在这里输入" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经购买或收到兑换码？在这里输入"
+          }
+        }
+      }
+    },
+    "已给 %lld 个项目加上“%@”标签" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已给 %1$lld 个项目加上“%2$@”标签"
+          }
+        }
+      }
+    },
+    "已获得完全磁盘访问权限" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已获得完全磁盘访问权限"
+          }
+        }
+      }
+    },
+    "已识别 %lld 张图片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已识别 %lld 张图片"
+          }
+        }
+      }
+    },
+    "已转换 %lld 张，%@ → %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已转换 %1$lld 张，%2$@ → %3$@"
+          }
+        }
+      }
+    },
+    "已选 %lld 项 · %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选 %1$lld 项 · %2$@"
+          }
+        }
+      }
+    },
+    "已重命名 %lld 个文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已重命名 %lld 个文件"
+          }
+        }
+      }
+    },
+    "应用和服务" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用和服务"
+          }
+        }
+      }
+    },
+    "应用程序" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用程序"
+          }
+        }
+      }
+    },
+    "废纸篓" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "废纸篓"
+          }
+        }
+      }
+    },
+    "开启完全磁盘访问权限" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启完全磁盘访问权限"
+          }
+        }
+      }
+    },
+    "开始 %lld 天免费试用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始 %lld 天免费试用"
+          }
+        }
+      }
+    },
+    "开始使用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始使用"
+          }
+        }
+      }
+    },
+    "开始扫描" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始扫描"
+          }
+        }
+      }
+    },
+    "开始转换" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始转换"
+          }
+        }
+      }
+    },
+    "当前版本 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前版本 %@"
+          }
+        }
+      }
+    },
+    "很久没看的大视频" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "很久没看的大视频"
+          }
+        }
+      }
+    },
+    "微信" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微信"
+          }
+        }
+      }
+    },
+    "微信 / QQ 大文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微信 / QQ 大文件"
+          }
+        }
+      }
+    },
+    "微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，文件从不上传；拾掇只在检查更新和激活授权时联网。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微信 / QQ 文件专区、空间占用图需要读取资源库里的文件夹。权限只用来在本机读取，文件从不上传；拾掇只在检查更新和激活授权时联网。"
+          }
+        }
+      }
+    },
+    "微博" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微博"
+          }
+        }
+      }
+    },
+    "快捷键" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键"
+          }
+        }
+      }
+    },
+    "快速搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速搜索"
+          }
+        }
+      }
+    },
+    "快速搜索浮窗（%@）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速搜索浮窗（%@）"
+          }
+        }
+      }
+    },
+    "快速查看" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速查看"
+          }
+        }
+      }
+    },
+    "快速查看（空格或 ⌘Y）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速查看（空格或 ⌘Y）"
+          }
+        }
+      }
+    },
+    "截图" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "截图"
+          }
+        }
+      }
+    },
+    "打开" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开"
+          }
+        }
+      }
+    },
+    "打开完全磁盘访问权限设置" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开完全磁盘访问权限设置"
+          }
+        }
+      }
+    },
+    "打开清理" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开清理"
+          }
+        }
+      }
+    },
+    "打开系统设置" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统设置"
+          }
+        }
+      }
+    },
+    "打开这个文件夹的占用图" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开这个文件夹的占用图"
+          }
+        }
+      }
+    },
+    "扩展名" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扩展名"
+          }
+        }
+      }
+    },
+    "扫描中…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫描中…"
+          }
+        }
+      }
+    },
+    "批量重命名 %lld 个文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "批量重命名 %lld 个文件"
+          }
+        }
+      }
+    },
+    "批量重命名 %lld 个文件…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "批量重命名 %lld 个文件…"
+          }
+        }
+      }
+    },
+    "把 Mac 上的照片、视频、音乐、文稿按类别摆好，一句话就能找到，顺手把空间腾出来。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把 Mac 上的照片、视频、音乐、文稿按类别摆好，一句话就能找到，顺手把空间腾出来。"
+          }
+        }
+      }
+    },
+    "把图里能选的文字都标出来" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把图里能选的文字都标出来"
+          }
+        }
+      }
+    },
+    "把标着“废纸篓”的文件移到废纸篓" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把标着“废纸篓”的文件移到废纸篓"
+          }
+        }
+      }
+    },
+    "拍摄时间" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍摄时间"
+          }
+        }
+      }
+    },
+    "拷贝" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝"
+          }
+        }
+      }
+    },
+    "拷贝 %lld 个路径" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝 %lld 个路径"
+          }
+        }
+      }
+    },
+    "拷贝全部文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝全部文字"
+          }
+        }
+      }
+    },
+    "拷贝文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝文字"
+          }
+        }
+      }
+    },
+    "拷贝路径" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝路径"
+          }
+        }
+      }
+    },
+    "拷贝邮箱" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝邮箱"
+          }
+        }
+      }
+    },
+    "拷贝链接" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝链接"
+          }
+        }
+      }
+    },
+    "拾掇" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇"
+          }
+        }
+      }
+    },
+    "拾掇 Pro" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇 Pro"
+          }
+        }
+      }
+    },
+    "拾掇 Pro 功能" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇 Pro 功能"
+          }
+        }
+      }
+    },
+    "拾掇 Pro 可以按照片画面搜索，比如「猫」「海边」「收据」" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇 Pro 可以按照片画面搜索，比如「猫」「海边」「收据」"
+          }
+        }
+      }
+    },
+    "拾掇 Pro 已激活" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇 Pro 已激活"
+          }
+        }
+      }
+    },
+    "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。"
+          }
+        }
+      }
+    },
+    "拾掇：该清理一下了" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇：该清理一下了"
+          }
+        }
+      }
+    },
+    "拾掇依赖 Spotlight 索引。请确认“系统设置 ▸ Spotlight”中没有关闭文件索引。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇依赖 Spotlight 索引。请确认“系统设置 ▸ Spotlight”中没有关闭文件索引。"
+          }
+        }
+      }
+    },
+    "拾掇反馈" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇反馈"
+          }
+        }
+      }
+    },
+    "拾掇只在两处联网：检查更新（只访问 GitHub 上本项目的发布页）和激活授权（只把授权码发给授权服务器校验）。你的文件从不上传。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇只在两处联网：检查更新（只访问 GitHub 上本项目的发布页）和激活授权（只把授权码发给授权服务器校验）。你的文件从不上传。"
+          }
+        }
+      }
+    },
+    "拾掇开着时，每 10 分钟按规则整理一次" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇开着时，每 10 分钟按规则整理一次"
+          }
+        }
+      }
+    },
+    "拾掇有新版本" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇有新版本"
+          }
+        }
+      }
+    },
+    "拾掇转换" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拾掇转换"
+          }
+        }
+      }
+    },
+    "按下载来源筛选" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下载来源筛选"
+          }
+        }
+      }
+    },
+    "按名称" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按名称"
+          }
+        }
+      }
+    },
+    "按图中文字筛选" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按图中文字筛选"
+          }
+        }
+      }
+    },
+    "按大小（大的在前）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按大小（大的在前）"
+          }
+        }
+      }
+    },
+    "按大小和 SHA-256 指纹比对，只有内容完全相同才算重复" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按大小和 SHA-256 指纹比对，只有内容完全相同才算重复"
+          }
+        }
+      }
+    },
+    "按日期（新的在前）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按日期（新的在前）"
+          }
+        }
+      }
+    },
+    "按画面内容搜索照片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按画面内容搜索照片"
+          }
+        }
+      }
+    },
+    "按种类" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按种类"
+          }
+        }
+      }
+    },
+    "换新 Mac 前先在这里解绑，激活名额会留给新的 Mac。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "换新 Mac 前先在这里解绑，激活名额会留给新的 Mac。"
+          }
+        }
+      }
+    },
+    "授权" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权"
+          }
+        }
+      }
+    },
+    "授权失败，请稍后再试。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权失败，请稍后再试。"
+          }
+        }
+      }
+    },
+    "授权失败：%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权失败：%@"
+          }
+        }
+      }
+    },
+    "授权码" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权码"
+          }
+        }
+      }
+    },
+    "授权码不正确，请检查是否完整复制。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权码不正确，请检查是否完整复制。"
+          }
+        }
+      }
+    },
+    "授权码或兑换码（SDG-XXXX-XXXX-XXXX）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权码或兑换码（SDG-XXXX-XXXX-XXXX）"
+          }
+        }
+      }
+    },
+    "排序" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排序"
+          }
+        }
+      }
+    },
+    "推出" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推出"
+          }
+        }
+      }
+    },
+    "推广" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推广"
+          }
+        }
+      }
+    },
+    "提示" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提示"
+          }
+        }
+      }
+    },
+    "提醒时间" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提醒时间"
+          }
+        }
+      }
+    },
+    "搜「猫」「海边」「收据」，在本机识别照片画面" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜「猫」「海边」「收据」，在本机识别照片画面"
+          }
+        }
+      }
+    },
+    "搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索"
+          }
+        }
+      }
+    },
+    "搜索，或试试“上周超过5MB的pdf”…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索，或试试“上周超过5MB的pdf”…"
+          }
+        }
+      }
+    },
+    "搜索「猫」「海边的照片」「收据」时，也会按画面内容找最近的 %lld 张照片。识别只在本机进行。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索「猫」「海边的照片」「收据」时，也会按画面内容找最近的 %lld 张照片。识别只在本机进行。"
+          }
+        }
+      }
+    },
+    "搜索文件，比如“上周的pdf”“nianbao”" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索文件，比如“上周的pdf”“nianbao”"
+          }
+        }
+      }
+    },
+    "搜索结果" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索结果"
+          }
+        }
+      }
+    },
+    "撤销" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销"
+          }
+        }
+      }
+    },
+    "播放" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放"
+          }
+        }
+      }
+    },
+    "播放 / 暂停（⌘空格）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放 / 暂停（⌘空格）"
+          }
+        }
+      }
+    },
+    "支付宝" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支付宝"
+          }
+        }
+      }
+    },
+    "支持拾掇" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持拾掇"
+          }
+        }
+      }
+    },
+    "支持拾掇…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持拾掇…"
+          }
+        }
+      }
+    },
+    "放进文件夹超过 %lld 天" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放进文件夹超过 %lld 天"
+          }
+        }
+      }
+    },
+    "整理" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整理"
+          }
+        }
+      }
+    },
+    "文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "文件名包含" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件名包含"
+          }
+        }
+      }
+    },
+    "文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹"
+          }
+        }
+      }
+    },
+    "文件类型" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件类型"
+          }
+        }
+      }
+    },
+    "文字识别" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字识别"
+          }
+        }
+      }
+    },
+    "文稿" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文稿"
+          }
+        }
+      }
+    },
+    "新建规则" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建规则"
+          }
+        }
+      }
+    },
+    "新规则" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新规则"
+          }
+        }
+      }
+    },
+    "方式" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "方式"
+          }
+        }
+      }
+    },
+    "无法推出「%@」：可能还有 App 正在使用上面的文件。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法推出「%@」：可能还有 App 正在使用上面的文件。"
+          }
+        }
+      }
+    },
+    "无法撤销：文件已经不在原来移去的位置" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法撤销：文件已经不在原来移去的位置"
+          }
+        }
+      }
+    },
+    "无法连接授权服务器，请检查网络后再试。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法连接授权服务器，请检查网络后再试。"
+          }
+        }
+      }
+    },
+    "无需账号" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无需账号"
+          }
+        }
+      }
+    },
+    "旧安装包移到废纸篓" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旧安装包移到废纸篓"
+          }
+        }
+      }
+    },
+    "旧截图" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旧截图"
+          }
+        }
+      }
+    },
+    "早上好" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "早上好"
+          }
+        }
+      }
+    },
+    "时长" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时长"
+          }
+        }
+      }
+    },
+    "昨天" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "昨天"
+          }
+        }
+      }
+    },
+    "显示或隐藏简介" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示或隐藏简介"
+          }
+        }
+      }
+    },
+    "显示所有文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示所有文字"
+          }
+        }
+      }
+    },
+    "显示方式" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示方式"
+          }
+        }
+      }
+    },
+    "显示简介" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示简介"
+          }
+        }
+      }
+    },
+    "晚上好" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "晚上好"
+          }
+        }
+      }
+    },
+    "智能文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "智能文件夹"
+          }
+        }
+      }
+    },
+    "更新" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        }
+      }
+    },
+    "替换为（留空表示删除）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换为（留空表示删除）"
+          }
+        }
+      }
+    },
+    "替换文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换文字"
+          }
+        }
+      }
+    },
+    "未命名规则" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未命名规则"
+          }
+        }
+      }
+    },
+    "未开启" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未开启"
+          }
+        }
+      }
+    },
+    "未选择" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未选择"
+          }
+        }
+      }
+    },
+    "未选择文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未选择文件"
+          }
+        }
+      }
+    },
+    "本周" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本周"
+          }
+        }
+      }
+    },
+    "本周可腾出 %@，点这里打开清理。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本周可腾出 %@，点这里打开清理。"
+          }
+        }
+      }
+    },
+    "本月" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月"
+          }
+        }
+      }
+    },
+    "条件（全部满足才执行）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "条件（全部满足才执行）"
+          }
+        }
+      }
+    },
+    "来源：%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源：%@"
+          }
+        }
+      }
+    },
+    "来源：全部" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源：全部"
+          }
+        }
+      }
+    },
+    "来自 %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自 %@"
+          }
+        }
+      }
+    },
+    "来自 %lld 个来源" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自 %lld 个来源"
+          }
+        }
+      }
+    },
+    "来自微信的图片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自微信的图片"
+          }
+        }
+      }
+    },
+    "查找" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找"
+          }
+        }
+      }
+    },
+    "查看全部" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看全部"
+          }
+        }
+      }
+    },
+    "标签" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签"
+          }
+        }
+      }
+    },
+    "标签：%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签：%@"
+          }
+        }
+      }
+    },
+    "格式" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "格式"
+          }
+        }
+      }
+    },
+    "桌面" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面"
+          }
+        }
+      }
+    },
+    "桌面上的“拾掇转换”文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面上的“拾掇转换”文件夹"
+          }
+        }
+      }
+    },
+    "检查失败，请稍后再试" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查失败，请稍后再试"
+          }
+        }
+      }
+    },
+    "欢迎使用拾掇" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "欢迎使用拾掇"
+          }
+        }
+      }
+    },
+    "正在下载 %@…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下载 %@…"
+          }
+        }
+      }
+    },
+    "正在分析 %lld 张照片…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在分析 %lld 张照片…"
+          }
+        }
+      }
+    },
+    "正在扫描…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在扫描…"
+          }
+        }
+      }
+    },
+    "正在找可以清理的文件…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在找可以清理的文件…"
+          }
+        }
+      }
+    },
+    "正在搜索…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在搜索…"
+          }
+        }
+      }
+    },
+    "正在本机识别文字…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在本机识别文字…"
+          }
+        }
+      }
+    },
+    "正在查找…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在查找…"
+          }
+        }
+      }
+    },
+    "正在查找候选文件…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在查找候选文件…"
+          }
+        }
+      }
+    },
+    "正在检查…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检查…"
+          }
+        }
+      }
+    },
+    "正在比对 %lld 个文件…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在比对 %lld 个文件…"
+          }
+        }
+      }
+    },
+    "正在比对，稍等一下…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在比对，稍等一下…"
+          }
+        }
+      }
+    },
+    "正在计算大小…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在计算大小…"
+          }
+        }
+      }
+    },
+    "正在识别 %lld / %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在识别 %1$lld / %2$lld"
+          }
+        }
+      }
+    },
+    "正在识别 %lld 个文件的文字…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在识别 %lld 个文件的文字…"
+          }
+        }
+      }
+    },
+    "正在识别图中文字…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在识别图中文字…"
+          }
+        }
+      }
+    },
+    "正在识别文字…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在识别文字…"
+          }
+        }
+      }
+    },
+    "正在读取 Spotlight 索引…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取 Spotlight 索引…"
+          }
+        }
+      }
+    },
+    "正在读取下载记录…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取下载记录…"
+          }
+        }
+      }
+    },
+    "正在读取最近的照片…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取最近的照片…"
+          }
+        }
+      }
+    },
+    "正在转换 %lld/%lld…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在转换 %1$lld/%2$lld…"
+          }
+        }
+      }
+    },
+    "每周提醒一次：本周可以腾出多少空间" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每周提醒一次：本周可以腾出多少空间"
+          }
+        }
+      }
+    },
+    "每周提醒我清理" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每周提醒我清理"
+          }
+        }
+      }
+    },
+    "每天检查一次新版本" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每天检查一次新版本"
+          }
+        }
+      }
+    },
+    "每类文件都有自己的货架" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每类文件都有自己的货架"
+          }
+        }
+      }
+    },
+    "每组标着“保留”的文件不会动。随时可以从废纸篓里恢复。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每组标着“保留”的文件不会动。随时可以从废纸篓里恢复。"
+          }
+        }
+      }
+    },
+    "每组至少保留一张" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每组至少保留一张"
+          }
+        }
+      }
+    },
+    "没有下载来源记录" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有下载来源记录"
+          }
+        }
+      }
+    },
+    "没有最近下载的文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有最近下载的文件"
+          }
+        }
+      }
+    },
+    "没有发现多余的副本，很整齐" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有发现多余的副本，很整齐"
+          }
+        }
+      }
+    },
+    "没有发现相似的照片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有发现相似的照片"
+          }
+        }
+      }
+    },
+    "没有发现重复" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有发现重复"
+          }
+        }
+      }
+    },
+    "没有发现重复文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有发现重复文件"
+          }
+        }
+      }
+    },
+    "没有找到%@文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有找到%@文件"
+          }
+        }
+      }
+    },
+    "没有找到匹配的文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有找到匹配的文件"
+          }
+        }
+      }
+    },
+    "没有识别到文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有识别到文字"
+          }
+        }
+      }
+    },
+    "没有识别到文字。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有识别到文字。"
+          }
+        }
+      }
+    },
+    "没有读到任何文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有读到任何文件"
+          }
+        }
+      }
+    },
+    "没有需要清理的，很整齐" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有需要清理的，很整齐"
+          }
+        }
+      }
+    },
+    "没能修改登录项：%@。可以在“系统设置 › 通用 › 登录项”里手动添加拾掇。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没能修改登录项：%@。可以在“系统设置 › 通用 › 登录项”里手动添加拾掇。"
+          }
+        }
+      }
+    },
+    "浏览器扩展" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览器扩展"
+          }
+        }
+      }
+    },
+    "添加文件夹…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加文件夹…"
+          }
+        }
+      }
+    },
+    "添加时间" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加时间"
+          }
+        }
+      }
+    },
+    "清理" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理"
+          }
+        }
+      }
+    },
+    "清理 · 可以腾出" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理 · 可以腾出"
+          }
+        }
+      }
+    },
+    "清理大文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理大文件"
+          }
+        }
+      }
+    },
+    "清空记录" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空记录"
+          }
+        }
+      }
+    },
+    "清除" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除"
+          }
+        }
+      }
+    },
+    "清除搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除搜索"
+          }
+        }
+      }
+    },
+    "清除识别缓存" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除识别缓存"
+          }
+        }
+      }
+    },
+    "演示文稿" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "演示文稿"
+          }
+        }
+      }
+    },
+    "激活" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "激活"
+          }
+        }
+      }
+    },
+    "点“开始扫描”在本机查找" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点“开始扫描”在本机查找"
+          }
+        }
+      }
+    },
+    "点一下切换“保留 / 废纸篓”\n%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下切换“保留 / 废纸篓”\n%@"
+          }
+        }
+      }
+    },
+    "点下面的「打开系统设置」" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点下面的「打开系统设置」"
+          }
+        }
+      }
+    },
+    "点按扫描" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点按扫描"
+          }
+        }
+      }
+    },
+    "点缩略图选择要移除的文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点缩略图选择要移除的文件"
+          }
+        }
+      }
+    },
+    "照片画面识别" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "照片画面识别"
+          }
+        }
+      }
+    },
+    "照片读取相机记录的拍摄时间；没有记录的按创建时间。同一秒的会自动加 _2。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "照片读取相机记录的拍摄时间；没有记录的按创建时间。同一秒的会自动加 _2。"
+          }
+        }
+      }
+    },
+    "版本" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本"
+          }
+        }
+      }
+    },
+    "状态" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "状态"
+          }
+        }
+      }
+    },
+    "现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。"
+          }
+        }
+      }
+    },
+    "理解为" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "理解为"
+          }
+        }
+      }
+    },
+    "用 Vision 比较最近 800 张照片的画面" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用 Vision 比较最近 800 张照片的画面"
+          }
+        }
+      }
+    },
+    "用微信扫一扫，金额随意" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用微信扫一扫，金额随意"
+          }
+        }
+      }
+    },
+    "用支付宝扫一扫，金额随意" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用支付宝扫一扫，金额随意"
+          }
+        }
+      }
+    },
+    "用过的安装包" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用过的安装包"
+          }
+        }
+      }
+    },
+    "画质" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画质"
+          }
+        }
+      }
+    },
+    "画质 85% 时肉眼几乎看不出差别，体积通常只有 PNG 的几分之一。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画质 85% 时肉眼几乎看不出差别，体积通常只有 PNG 的几分之一。"
+          }
+        }
+      }
+    },
+    "画面：%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画面：%@"
+          }
+        }
+      }
+    },
+    "画面相似 · Vision 本机比对" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画面相似 · Vision 本机比对"
+          }
+        }
+      }
+    },
+    "登录时自动打开拾掇" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录时自动打开拾掇"
+          }
+        }
+      }
+    },
+    "百度网盘" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "百度网盘"
+          }
+        }
+      }
+    },
+    "监视" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "监视"
+          }
+        }
+      }
+    },
+    "监视文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "监视文件夹"
+          }
+        }
+      }
+    },
+    "目标文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标文件夹"
+          }
+        }
+      }
+    },
+    "相似照片" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相似照片"
+          }
+        }
+      }
+    },
+    "相机" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相机"
+          }
+        }
+      }
+    },
+    "视频" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视频"
+          }
+        }
+      }
+    },
+    "种类" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "种类"
+          }
+        }
+      }
+    },
+    "移到「%@」" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移到「%@」"
+          }
+        }
+      }
+    },
+    "移到废纸篓" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移到废纸篓"
+          }
+        }
+      }
+    },
+    "移到废纸篓…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移到废纸篓…"
+          }
+        }
+      }
+    },
+    "移到文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移到文件夹"
+          }
+        }
+      }
+    },
+    "移到这里" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移到这里"
+          }
+        }
+      }
+    },
+    "移除" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        }
+      }
+    },
+    "移除所选" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除所选"
+          }
+        }
+      }
+    },
+    "稍后再说" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "稍后再说"
+          }
+        }
+      }
+    },
+    "空格预览图片时可以直接划选文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空格预览图片时可以直接划选文字"
+          }
+        }
+      }
+    },
+    "空间占用图" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空间占用图"
+          }
+        }
+      }
+    },
+    "立即整理" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即整理"
+          }
+        }
+      }
+    },
+    "立即检查" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即检查"
+          }
+        }
+      }
+    },
+    "立即重新打开" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即重新打开"
+          }
+        }
+      }
+    },
+    "简介" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简介"
+          }
+        }
+      }
+    },
+    "类型" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "类型"
+          }
+        }
+      }
+    },
+    "系统提示退出重开时，点「稍后」也可以，回到这里会自动刷新" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统提示退出重开时，点「稍后」也可以，回到这里会自动刷新"
+          }
+        }
+      }
+    },
+    "系统没有允许拾掇发通知：请到「系统设置 › 通知 › 拾掇」里打开。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统没有允许拾掇发通知：请到「系统设置 › 通知 › 拾掇」里打开。"
+          }
+        }
+      }
+    },
+    "统计中…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "统计中…"
+          }
+        }
+      }
+    },
+    "继续" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续"
+          }
+        }
+      }
+    },
+    "编辑" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑"
+          }
+        }
+      }
+    },
+    "缩略图大小" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩略图大小"
+          }
+        }
+      }
+    },
+    "网易邮箱" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网易邮箱"
+          }
+        }
+      }
+    },
+    "网站" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网站"
+          }
+        }
+      }
+    },
+    "聊天文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聊天文件"
+          }
+        }
+      }
+    },
+    "聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了"
+          }
+        }
+      }
+    },
+    "联系我们" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "联系我们"
+          }
+        }
+      }
+    },
+    "自动下载，退出拾掇时安装" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动下载，退出拾掇时安装"
+          }
+        }
+      }
+    },
+    "自动整理" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动整理"
+          }
+        }
+      }
+    },
+    "自动整理规则" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动整理规则"
+          }
+        }
+      }
+    },
+    "自动识别截图和近期照片里的文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动识别截图和近期照片里的文字"
+          }
+        }
+      }
+    },
+    "至少设置一个条件，避免把整个文件夹都搬走。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "至少设置一个条件，避免把整个文件夹都搬走。"
+          }
+        }
+      }
+    },
+    "至少设置一个条件才会生效" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "至少设置一个条件才会生效"
+          }
+        }
+      }
+    },
+    "花一分钟看看有哪些可以清理的文件。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "花一分钟看看有哪些可以清理的文件。"
+          }
+        }
+      }
+    },
+    "菜单栏小助手" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "菜单栏小助手"
+          }
+        }
+      }
+    },
+    "表格" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表格"
+          }
+        }
+      }
+    },
+    "被遗忘的下载" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "被遗忘的下载"
+          }
+        }
+      }
+    },
+    "解绑此 Mac" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解绑此 Mac"
+          }
+        }
+      }
+    },
+    "计算中…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计算中…"
+          }
+        }
+      }
+    },
+    "记得它从哪儿来" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记得它从哪儿来"
+          }
+        }
+      }
+    },
+    "许可" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "许可"
+          }
+        }
+      }
+    },
+    "识别图中文字…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别图中文字…"
+          }
+        }
+      }
+    },
+    "识别在本机完成，不会上传。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别在本机完成，不会上传。"
+          }
+        }
+      }
+    },
+    "识别并拷贝图中文字（⇧⌘C）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别并拷贝图中文字（⇧⌘C）"
+          }
+        }
+      }
+    },
+    "识别文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别文字"
+          }
+        }
+      }
+    },
+    "试用已结束" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "试用已结束"
+          }
+        }
+      }
+    },
+    "试试" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "试试"
+          }
+        }
+      }
+    },
+    "试试去掉一个筛选条件。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "试试去掉一个筛选条件。"
+          }
+        }
+      }
+    },
+    "语言 / Language" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语言 / Language"
+          }
+        }
+      }
+    },
+    "请求太频繁，请稍后再试。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请求太频繁，请稍后再试。"
+          }
+        }
+      }
+    },
+    "请输入授权码。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入授权码。"
+          }
+        }
+      }
+    },
+    "请选择目标文件夹" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择目标文件夹"
+          }
+        }
+      }
+    },
+    "请选择目标文件夹。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择目标文件夹。"
+          }
+        }
+      }
+    },
+    "调整后点“重新扫描”生效" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整后点“重新扫描”生效"
+          }
+        }
+      }
+    },
+    "购买" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买"
+          }
+        }
+      }
+    },
+    "购买拾掇 Pro…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买拾掇 Pro…"
+          }
+        }
+      }
+    },
+    "资料库" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "资料库"
+          }
+        }
+      }
+    },
+    "资料库大小" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "资料库大小"
+          }
+        }
+      }
+    },
+    "赞助" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "赞助"
+          }
+        }
+      }
+    },
+    "超过 %lld 天" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "超过 %lld 天"
+          }
+        }
+      }
+    },
+    "超过 200 MB、90 天没打开的视频" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "超过 200 MB、90 天没打开的视频"
+          }
+        }
+      }
+    },
+    "超过1GB的视频" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "超过1GB的视频"
+          }
+        }
+      }
+    },
+    "跟随系统" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "转换为 JPG" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "转换为 JPG"
+          }
+        }
+      }
+    },
+    "转换为 JPG / 压缩…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "转换为 JPG / 压缩…"
+          }
+        }
+      }
+    },
+    "输入文件名、拼音首字母，或者一句话" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入文件名、拼音首字母，或者一句话"
+          }
+        }
+      }
+    },
+    "返回上一层" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回上一层"
+          }
+        }
+      }
+    },
+    "还在找，数字会继续变大…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还在找，数字会继续变大…"
+          }
+        }
+      }
+    },
+    "还没有固定文件夹。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有固定文件夹。"
+          }
+        }
+      }
+    },
+    "还没有扫描" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有扫描"
+          }
+        }
+      }
+    },
+    "还没有规则。点「新建规则」，比如把下载文件夹里的安装包自动移到废纸篓。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有规则。点「新建规则」，比如把下载文件夹里的安装包自动移到废纸篓。"
+          }
+        }
+      }
+    },
+    "这个授权码不属于拾掇 Pro。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个授权码不属于拾掇 Pro。"
+          }
+        }
+      }
+    },
+    "这个授权码已被停用。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个授权码已被停用。"
+          }
+        }
+      }
+    },
+    "这个授权码已过期。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个授权码已过期。"
+          }
+        }
+      }
+    },
+    "这个授权码的激活次数已用完。请先在旧 Mac 的拾掇设置里「解绑此 Mac」，再来激活。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个授权码的激活次数已用完。请先在旧 Mac 的拾掇设置里「解绑此 Mac」，再来激活。"
+          }
+        }
+      }
+    },
+    "这个文件夹是空的" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个文件夹是空的"
+          }
+        }
+      }
+    },
+    "这些图片都已经识别过了" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些图片都已经识别过了"
+          }
+        }
+      }
+    },
+    "这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）"
+          }
+        }
+      }
+    },
+    "这张图里没有识别到文字" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这张图里没有识别到文字"
+          }
+        }
+      }
+    },
+    "这是拾掇 Pro 的功能。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这是拾掇 Pro 的功能。"
+          }
+        }
+      }
+    },
+    "这里还没有文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这里还没有文件"
+          }
+        }
+      }
+    },
+    "选中一个文件查看简介。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选中一个文件查看简介。"
+          }
+        }
+      }
+    },
+    "选中的文件里没有图片或 PDF" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选中的文件里没有图片或 PDF"
+          }
+        }
+      }
+    },
+    "选择…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择…"
+          }
+        }
+      }
+    },
+    "选择文件夹…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择文件夹…"
+          }
+        }
+      }
+    },
+    "邮箱" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "邮箱"
+          }
+        }
+      }
+    },
+    "重命名" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名"
+          }
+        }
+      }
+    },
+    "重命名…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名…"
+          }
+        }
+      }
+    },
+    "重复文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重复文件"
+          }
+        }
+      }
+    },
+    "重复文件、旧安装包、微信大文件，只移到废纸篓" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重复文件、旧安装包、微信大文件，只移到废纸篓"
+          }
+        }
+      }
+    },
+    "重复文件、旧安装包、被遗忘的下载，一次看清" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重复文件、旧安装包、被遗忘的下载，一次看清"
+          }
+        }
+      }
+    },
+    "重新打开拾掇后生效。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新打开拾掇后生效。"
+          }
+        }
+      }
+    },
+    "重新扫描" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新扫描"
+          }
+        }
+      }
+    },
+    "重新查看欢迎引导" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新查看欢迎引导"
+          }
+        }
+      }
+    },
+    "重新统计" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新统计"
+          }
+        }
+      }
+    },
+    "重新计算" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新计算"
+          }
+        }
+      }
+    },
+    "钉钉" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "钉钉"
+          }
+        }
+      }
+    },
+    "长边 1280 像素（发邮件）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "长边 1280 像素（发邮件）"
+          }
+        }
+      }
+    },
+    "长边 2000 像素（发微信够用）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "长边 2000 像素（发微信够用）"
+          }
+        }
+      }
+    },
+    "长边 3000 像素（高清）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "长边 3000 像素（高清）"
+          }
+        }
+      }
+    },
+    "阿里云盘" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阿里云盘"
+          }
+        }
+      }
+    },
+    "隐私与权限" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私与权限"
+          }
+        }
+      }
+    },
+    "隐藏文字框" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏文字框"
+          }
+        }
+      }
+    },
+    "隐藏简介" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏简介"
+          }
+        }
+      }
+    },
+    "随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。"
+          }
+        }
+      }
+    },
+    "随时按 %@ 搜索" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "随时按 %@ 搜索"
+          }
+        }
+      }
+    },
+    "音乐" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音乐"
+          }
+        }
+      }
+    },
+    "页数" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页数"
+          }
+        }
+      }
+    },
+    "预览" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览"
+          }
+        }
+      }
+    },
+    "飞书" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "飞书"
+          }
+        }
+      }
+    },
+    "首页" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首页"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
