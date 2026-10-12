@@ -12,8 +12,11 @@ struct BrowserView: View {
     @EnvironmentObject private var ocr: OCRStore
     let title: String
     let showsOCRTools: Bool
+    /// 微信 / QQ 文件页。
+    var chatApp: ChatApp? = nil
 
     @State private var ocrFilter = ""
+    @State private var chatKind: ChatFileKind = .all
     /// “来源”筛选：只看从某个来源下载的文件。
     @State private var sourceFilter: String?
 
@@ -21,6 +24,9 @@ struct BrowserView: View {
 
     private var visible: [FileItem] {
         var list = store.items
+        if chatApp != nil, chatKind != .all {
+            list = list.filter(chatKind.includes)
+        }
         if let sourceFilter {
             list = list.filter { $0.downloadSource?.id == sourceFilter }
         }
@@ -36,6 +42,10 @@ struct BrowserView: View {
         VStack(spacing: 0) {
             if let query = store.activeQuery {
                 ChipBar(query: query)
+                Divider()
+            }
+            if let chatApp {
+                ChatFilesBar(app: chatApp, kind: $chatKind)
                 Divider()
             }
             if showsOCRTools || !sourceGroups.isEmpty {
@@ -65,6 +75,18 @@ struct BrowserView: View {
         if store.isLoading && store.items.isEmpty {
             ProgressView("正在查找…")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if visible.isEmpty, chatApp != nil {
+            ContentUnavailableView {
+                Label("没有找到\(chatApp?.name ?? "")文件", systemImage: "tray")
+            } description: {
+                Text("如果系统询问“拾掇想访问其他 App 的数据”，请点“允许”。\n也可以在“系统设置 › 隐私与安全性 › 完全磁盘访问权限”里打开拾掇，然后点“重新扫描”。")
+            } actions: {
+                Button("打开完全磁盘访问权限设置") {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+            }
         } else if visible.isEmpty {
             ContentUnavailableView(
                 store.activeQuery != nil ? "没有找到匹配的文件" : "这里还没有文件",
@@ -127,6 +149,49 @@ struct BrowserView: View {
     }
 }
 
+/// 微信 / QQ 文件页顶部：按文件 / 图片 / 视频筛选，重新扫描。
+struct ChatFilesBar: View {
+    @EnvironmentObject private var store: LibraryStore
+    @EnvironmentObject private var chat: ChatFilesStore
+    let app: ChatApp
+    @Binding var kind: ChatFileKind
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Picker("类型", selection: $kind) {
+                ForEach(ChatFileKind.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 260)
+            Text("共 \(chat.bytes(app).byteText)")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Spacer()
+            if chat.isScanning {
+                ProgressView().controlSize(.small)
+                Text("正在扫描…").font(.caption).foregroundStyle(.secondary)
+            }
+            Button {
+                Task {
+                    await chat.scan()
+                    store.reload()
+                }
+            } label: {
+                Label("重新扫描", systemImage: "arrow.clockwise")
+            }
+            .disabled(chat.isScanning)
+            Button {
+                store.openCleanup(.chatFiles)
+            } label: {
+                Label("清理大文件", systemImage: "sparkles")
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+}
+
 struct FileCollectionView: View {
     @EnvironmentObject private var store: LibraryStore
     let items: [FileItem]
@@ -135,6 +200,8 @@ struct FileCollectionView: View {
     @AppStorage("thumbnailSize") private var thumbnailSize: Double = 120
     @State private var sortOrder: [KeyPathComparator<FileItem>] = [KeyPathComparator(\FileItem.sortDate, order: .reverse)]
     @State private var previewURL: URL?
+    /// 图片用自己的预览，能直接划选文字。
+    @State private var liveItem: FileItem?
 
     private var sorted: [FileItem] { items.sorted(using: sortOrder) }
 
@@ -147,6 +214,13 @@ struct FileCollectionView: View {
             }
         }
         .quickLookPreview($previewURL, in: sorted.map(\.url))
+        .overlay {
+            if let liveItem {
+                LiveTextPreview(item: liveItem, onClose: { self.liveItem = nil }, onStep: { _ = step($0) })
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.15), value: liveItem?.id)
         .toolbar {
             ToolbarItemGroup {
                 if viewMode == .grid {
@@ -207,7 +281,7 @@ struct FileCollectionView: View {
                         .onTapGesture(count: 2) { store.open(item, in: sorted) }
                         .onTapGesture { select(item) }
                         .contextMenu {
-                            FileContextMenu(items: targets(for: item), preview: { previewURL = $0.url })
+                            FileContextMenu(items: targets(for: item), preview: { preview($0) })
                         }
                         .onDrag { NSItemProvider(object: item.url as NSURL) }
                         .help(item.path)
@@ -224,8 +298,9 @@ struct FileCollectionView: View {
         .onKeyPress(.leftArrow) { step(-1) }
         .onKeyPress(.rightArrow) { step(1) }
         .onKeyPress(.escape) {
-            guard previewURL != nil else { return .ignored }
+            guard previewURL != nil || liveItem != nil else { return .ignored }
             previewURL = nil
+            liveItem = nil
             return .handled
         }
     }
@@ -237,7 +312,11 @@ struct FileCollectionView: View {
         let index = list.firstIndex { store.selectedIDs.contains($0.id) } ?? (offset > 0 ? -1 : list.count)
         let target = min(max(index + offset, 0), list.count - 1)
         store.selectedIDs = [list[target].id]
-        if previewURL != nil { previewURL = list[target].url }
+        if previewURL != nil || liveItem != nil {
+            previewURL = nil
+            liveItem = nil
+            preview(list[target])
+        }
         return .handled
     }
 
@@ -271,7 +350,7 @@ struct FileCollectionView: View {
         }
         .scrollContentBackground(.hidden)
         .contextMenu(forSelectionType: String.self) { ids in
-            FileContextMenu(items: resolve(ids), preview: { previewURL = $0.url })
+            FileContextMenu(items: resolve(ids), preview: { preview($0) })
         } primaryAction: { ids in
             let list = resolve(ids)
             if list.count == 1, let item = list.first {
@@ -309,10 +388,20 @@ struct FileCollectionView: View {
     }
 
     private func quickLookSelection() {
-        if previewURL != nil {
+        if previewURL != nil || liveItem != nil {
             previewURL = nil
+            liveItem = nil
         } else if let first = sorted.first(where: { store.selectedIDs.contains($0.id) }) {
-            previewURL = first.url
+            preview(first)
+        }
+    }
+
+    /// 图片用能划选文字的预览，其他文件用系统的快速查看。
+    private func preview(_ item: FileItem) {
+        if item.isImage && UserDefaults.standard.object(forKey: "liveTextPreview") as? Bool ?? true {
+            liveItem = item
+        } else {
+            previewURL = item.url
         }
     }
 }

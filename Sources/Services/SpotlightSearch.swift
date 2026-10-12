@@ -27,7 +27,8 @@ enum SpotlightSearch {
         maxItems: Int = 3000,
         sortKey: String = "kMDItemFSContentChangeDate",
         ascending: Bool = false,
-        accept: ((FileItem) -> Bool)? = nil
+        accept: ((FileItem) -> Bool)? = nil,
+        nameFilter: ((String) -> Bool)? = nil
     ) async -> SpotlightResult {
         await withCheckedContinuation { (continuation: CheckedContinuation<SpotlightResult, Never>) in
             let query = NSMetadataQuery()
@@ -49,6 +50,10 @@ enum SpotlightSearch {
                           let path = item.value(forAttribute: "kMDItemPath") as? String,
                           !isNoise(path)
                     else { continue }
+                    if let nameFilter {
+                        let name = item.value(forAttribute: "kMDItemFSName") as? String ?? (path as NSString).lastPathComponent
+                        if !nameFilter(name) { continue }
+                    }
                     result.totalCount += 1
                     result.totalBytes += (item.value(forAttribute: "kMDItemFSSize") as? NSNumber)?.int64Value ?? 0
                     if result.items.count < maxItems, let file = FileItem(metadata: item) {

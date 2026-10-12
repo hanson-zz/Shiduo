@@ -7,6 +7,11 @@ struct SettingsView: View {
     @AppStorage("checkUpdates") private var checkUpdates = true
     @AppStorage("autoInstallUpdates") private var autoInstall = true
     @AppStorage("autoOCR") private var autoOCR = true
+    @AppStorage("liveTextPreview") private var liveTextPreview = true
+    @AppStorage("quickSearchEnabled") private var quickSearchEnabled = true
+    @AppStorage("quickSearchHotKey") private var hotKey: QuickSearchHotKey = .optionSpace
+    @State private var loginItem = LoginItem.isEnabled
+    @State private var hotKeyMessage: String?
 
     var body: some View {
         Form {
@@ -28,7 +33,28 @@ struct SettingsView: View {
                 Button("添加文件夹…") { store.choosePinnedFolder() }
             }
 
+            Section("全局快速搜索") {
+                Toggle("在任何 App 里按快捷键弹出拾掇搜索框", isOn: $quickSearchEnabled)
+                Picker("快捷键", selection: $hotKey) {
+                    ForEach(QuickSearchHotKey.allCases) { Text($0.title).tag($0) }
+                }
+                .disabled(!quickSearchEnabled)
+                Toggle("登录时自动打开拾掇", isOn: $loginItem)
+                    .onChange(of: loginItem) {
+                        if let error = LoginItem.set(loginItem) {
+                            hotKeyMessage = error
+                            loginItem = LoginItem.isEnabled
+                        }
+                    }
+                Text(hotKeyMessage ?? "关掉拾掇的窗口后它仍在后台，快捷键随时可用；搜到的文件可以直接拖进微信、邮件等 App。")
+                    .font(.caption)
+                    .foregroundStyle(hotKeyMessage == nil ? Color.secondary : Color.orange)
+            }
+            .onChange(of: quickSearchEnabled) { applyHotKey() }
+            .onChange(of: hotKey) { applyHotKey() }
+
             Section("文字识别") {
+                Toggle("空格预览图片时可以直接划选文字", isOn: $liveTextPreview)
                 Toggle("自动识别截图和近期照片里的文字", isOn: $autoOCR)
                 Text("已在本机识别 \(ocr.texts.count) 张图片，识别后搜索就能搜到图里的字。结果只保存在这台 Mac 上。")
                     .font(.caption)
@@ -67,6 +93,10 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 560, height: 720)
+    }
+
+    private func applyHotKey() {
+        hotKeyMessage = HotKeyCenter.shared.apply() ? nil : "\(hotKey.title) 已被其他 App 占用，请换一个快捷键。"
     }
 
     private var statusText: String {

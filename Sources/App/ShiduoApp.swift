@@ -15,6 +15,7 @@ struct ShiduoApp: App {
                 .environmentObject(store.cleanup)
                 .environmentObject(store.player)
                 .environmentObject(store.updater)
+                .environmentObject(store.chat)
                 .frame(minWidth: 960, minHeight: 600)
         }
         .commands {
@@ -42,6 +43,8 @@ struct ShiduoApp: App {
                     .keyboardShortcut("r", modifiers: .command)
             }
             CommandMenu("前往") {
+                Button("快速搜索浮窗（\(QuickSearchHotKey.current.title)）") { QuickSearchController.shared.show() }
+                Divider()
                 Button("首页") { store.selection = .home }
                     .keyboardShortcut("h", modifiers: [.command, .shift])
                 Button("下载来源") { store.selection = .downloads }

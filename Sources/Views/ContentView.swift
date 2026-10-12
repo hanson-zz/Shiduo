@@ -16,6 +16,7 @@ struct ContentView: View {
                 store.startDemo()
                 return
             }
+            QuickSearchController.shared.configure(store: store)
             await store.refreshDashboard()
             await store.checkForUpdatesOnLaunch()
         }
@@ -124,6 +125,8 @@ struct DetailView: View {
                 DuplicatesView()
             case .cleanup:
                 CleanupView()
+            case .chat(let app):
+                BrowserView(title: "\(app.name)文件", showsOCRTools: false, chatApp: app)
             case .pinned(let path):
                 BrowserView(title: FileManager.default.displayName(atPath: path), showsOCRTools: false)
             }

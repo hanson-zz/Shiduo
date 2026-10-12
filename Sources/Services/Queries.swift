@@ -166,9 +166,24 @@ enum Queries {
         if q.downloadedOnly {
             filter = { (file: FileItem) -> Bool in !file.whereFroms.isEmpty }
         }
-        return await SpotlightSearch.run(
+        var items = await SpotlightSearch.run(
             predicate: q.predicate, scopes: q.scopes, maxItems: 3000, accept: filter
         ).items
+        // 拼音 / 首字母：“nianbao”、“nb” 找到「年报.pdf」。
+        let word = q.text.trimmingCharacters(in: .whitespaces)
+        if Pinyin.looksLikePinyin(word) {
+            var rest = q
+            rest.text = ""
+            let needle = word.lowercased()
+            let seen = Set(items.map(\.path))
+            let extra = await SpotlightSearch.run(
+                predicate: rest.predicate, scopes: q.scopes, maxItems: 1000, accept: filter,
+                nameFilter: { Pinyin.matches(($0 as NSString).deletingPathExtension, query: needle) }
+            ).items.filter { !seen.contains($0.path) }
+            // 拼音命中的排在前面：通常就是想找的那个。
+            items = extra + items
+        }
+        return items
     }
 
     /// 固定文件夹：直接读磁盘，不依赖 Spotlight 索引。

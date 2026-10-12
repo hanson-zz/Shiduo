@@ -318,6 +318,7 @@ enum CleanupKind: String, CaseIterable, Identifiable {
     case oldScreenshots
     case bigOldVideos
     case unusedApps
+    case chatFiles
 
     var id: String { rawValue }
 
@@ -328,6 +329,7 @@ enum CleanupKind: String, CaseIterable, Identifiable {
         case .oldScreenshots: return "旧截图"
         case .bigOldVideos: return "很久没看的大视频"
         case .unusedApps: return "不常用的应用"
+        case .chatFiles: return "微信 / QQ 大文件"
         }
     }
 
@@ -338,6 +340,7 @@ enum CleanupKind: String, CaseIterable, Identifiable {
         case .oldScreenshots: return "30 天以前拍的截图"
         case .bigOldVideos: return "超过 200 MB、90 天没打开的视频"
         case .unusedApps: return "“应用程序”里半年以上没打开过的第三方应用"
+        case .chatFiles: return "聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了"
         }
     }
 
@@ -348,6 +351,7 @@ enum CleanupKind: String, CaseIterable, Identifiable {
         case .oldScreenshots: return "camera.viewfinder"
         case .bigOldVideos: return "film.stack"
         case .unusedApps: return "app.dashed"
+        case .chatFiles: return "message.fill"
         }
     }
 }
@@ -446,5 +450,15 @@ final class CleanupScanner: ObservableObject {
             CleanupCard(kind: .bigOldVideos, items: local(bigVideos)),
             CleanupCard(kind: .unusedApps, items: apps.sorted { $0.size > $1.size }),
         ]
+        updateChatCard()
+    }
+
+    /// 微信 / QQ 大文件：只在扫描过聊天文件后出现。
+    func updateChatCard() {
+        let chat = ChatFilesStore.shared
+        cards.removeAll { $0.kind == .chatFiles }
+        guard chat.hasScanned else { return }
+        let big = chat.allFiles.filter { $0.size >= 20_000_000 }.sorted { $0.size > $1.size }
+        cards.append(CleanupCard(kind: .chatFiles, items: big))
     }
 }

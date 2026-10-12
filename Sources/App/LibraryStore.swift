@@ -10,6 +10,7 @@ enum SidebarItem: Hashable {
     case duplicates
     case similarPhotos
     case cleanup
+    case chat(ChatApp)
     case pinned(String)
 }
 
@@ -111,6 +112,7 @@ final class LibraryStore: ObservableObject {
     let cleanup = CleanupScanner()
     let player = MusicPlayer()
     let updater = Updater()
+    let chat = ChatFilesStore.shared
 
     var libraryBytes: Int64 { totals.values.reduce(0) { $0 + $1.bytes } }
 
@@ -163,6 +165,9 @@ final class LibraryStore: ObservableObject {
         case .screenshots: result = await Queries.screenshots()
         case .downloads: result = await Queries.downloaded()
         case .pinned(let path): result = await Queries.folder(path)
+        case .chat(let app):
+            result = await chat.items(for: app)
+            cleanup.updateChatCard()
         default: break
         }
         guard !Task.isCancelled else { return }
@@ -210,8 +215,13 @@ final class LibraryStore: ObservableObject {
         let recentPhotos = await Queries.recentImages(limit: 200)
         let allShots = await Queries.screenshots(limit: 300)
         ocr.autoRecognize(allShots + recentPhotos)
+        if chat.autoScan && !chat.hasScanned {
+            await chat.scan()
+        }
         if !cleanup.hasScanned && !cleanup.isRunning {
             await cleanup.scan()
+        } else {
+            cleanup.updateChatCard()
         }
     }
 
@@ -381,6 +391,7 @@ final class LibraryStore: ObservableObject {
         duplicates.remove(paths: moved)
         similar.remove(paths: moved)
         cleanup.remove(paths: moved)
+        chat.remove(paths: moved)
 
         var notes: [String] = []
         if !outcome.skipped.isEmpty {

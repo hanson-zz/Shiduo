@@ -4,6 +4,7 @@ struct SidebarView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var cleanup: CleanupScanner
     @EnvironmentObject private var duplicates: DuplicateScanner
+    @EnvironmentObject private var chat: ChatFilesStore
 
     /// 常用位置，和访达侧边栏一样。
     private struct Location: Identifiable {
@@ -75,6 +76,21 @@ struct SidebarView: View {
                     .tag(SidebarItem.duplicates)
                 Label("相似照片", systemImage: "photo.stack")
                     .tag(SidebarItem.similarPhotos)
+            }
+
+            if !chat.installedApps.isEmpty {
+                Section("聊天文件") {
+                    ForEach(chat.installedApps) { app in
+                        Label {
+                            Text(app.name)
+                        } icon: {
+                            Image(systemName: app.symbol)
+                                .foregroundStyle(app == .wechat ? Color.green : Color.blue)
+                        }
+                        .badge(chat.hasScanned && chat.bytes(app) > 0 ? Text(chat.bytes(app).byteText) : nil)
+                        .tag(SidebarItem.chat(app))
+                    }
+                }
             }
 
             Section("位置") {
