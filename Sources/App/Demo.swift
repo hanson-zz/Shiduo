@@ -381,10 +381,10 @@ extension LibraryStore {
         case "storagemap": selection = .storageMap
         case "rename":
             selection = .category(.images)
-            renameItems = Array(demoItems.filter { $0.category == .image && !$0.isScreenshot }.prefix(6))
+            renameItems = Array(demoItems.filter { $0.category == .images && !$0.isScreenshot }.prefix(6))
         case "convert":
             selection = .category(.images)
-            convertItems = Array(demoItems.filter { $0.category == .image }.prefix(8))
+            convertItems = Array(demoItems.filter { $0.category == .images }.prefix(8))
         case "music":
             selection = .category(.music)
             if let song = demoItems.first(where: { $0.category == .music }) {
