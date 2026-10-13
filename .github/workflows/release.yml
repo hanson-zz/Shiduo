@@ -56,14 +56,23 @@ jobs:
           lipo -info build/Build/Products/Release/Shiduo.app/Contents/MacOS/Shiduo
 
       - name: 打包 DMG 和 ZIP
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
         run: |
           APP=build/Build/Products/Release/Shiduo.app
           ditto -c -k --keepParent "$APP" "Shiduo-${TAG}.zip"
-          STAGE="$(mktemp -d)/Shiduo"
-          mkdir -p "$STAGE"
-          ditto "$APP" "$STAGE/拾掇.app"
-          ln -s /Applications "$STAGE/Applications"
-          hdiutil create -volname "拾掇 ${TAG}" -srcfolder "$STAGE" -ov -format UDZO "Shiduo-${TAG}.dmg"
+          # 带背景图的 DMG（左边拾掇，右边“应用程序”，附首次打开指南）；
+          # create-dmg 失败时脚本会自动退回普通 hdiutil 打包，不会让发布中断。
+          if [ -x scripts/dmg/make-dmg.sh ]; then
+            brew install --quiet create-dmg || true
+            scripts/dmg/make-dmg.sh "$APP" "$TAG" "Shiduo-${TAG}.dmg"
+          else
+            STAGE="$(mktemp -d)/Shiduo"
+            mkdir -p "$STAGE"
+            ditto "$APP" "$STAGE/拾掇.app"
+            ln -s /Applications "$STAGE/Applications"
+            hdiutil create -volname "拾掇 ${TAG}" -srcfolder "$STAGE" -ov -format UDZO "Shiduo-${TAG}.dmg"
+          fi
 
       - name: 发布到 GitHub Releases
         env:
@@ -81,13 +90,13 @@ jobs:
 
           ## 第一次打开
 
-          拾掇是开源软件，没有经过 Apple 公证，第一次打开时系统会拦截：
+          拾掇是开源软件，没有经过 Apple 公证，第一次打开时系统会拦截一下（只需要处理一次）：
 
-          1. 双击打开一次，看到提示后点“完成”
-          2. 打开“系统设置 ▸ 隐私与安全性”，在下方找到“拾掇”，点“仍要打开”
-          3. 输入开机密码确认
+          1. 在“访达 ▸ 应用程序”里右键点按（或按住 Control 点按）“拾掇”，选“打开”，再点“打开”
+          2. 如果提示“Apple 无法验证…”且没有“打开”按钮（macOS 15 Sequoia 常见）：先点“完成”，打开“系统设置 ▸ 隐私与安全性”，滚动到底部点“仍要打开”，输入开机密码
+          3. 也可以在“终端”里运行：`xattr -dr com.apple.quarantine /Applications/拾掇.app`
 
-          或者在“终端”里运行：`xattr -cr /Applications/拾掇.app`
+          图文步骤见 DMG 里的“首次打开请看我.png”，或 https://hanson-zz.github.io/Shiduo/#first-open
 
           ## 隐私
 

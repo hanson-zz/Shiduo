@@ -46,3 +46,26 @@ html[data-lang="zh"] .lang-toggle .zh,html:not([data-lang="zh"]) .lang-toggle .e
 .demo-box video{display:block;width:100%;max-height:calc(100vh - 48px);border-radius:16px;background:#000;box-shadow:0 30px 80px rgba(0,0,0,.45)}
 .demo-close{position:absolute;top:-14px;right:-14px;width:38px;height:38px;border-radius:50%;border:0;background:#fff;color:#111;font-size:24px;line-height:38px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3)}
 @media (max-aspect-ratio:3/4){.demo-box{width:min(440px,100%)}}
+/* 首次打开 / First launch */
+.first-note{font-size:14px;color:var(--mut);margin:-12px 0 6px}.hero .first-note{font-size:14px}
+.lead{text-align:center;color:var(--mut);max-width:720px;margin:-6px auto 20px}
+.guide{padding:18px}.guide img{display:block;width:100%;border-radius:12px;margin:0 0 14px}
+.guide ol{margin:0 0 12px;padding-left:22px}.guide li{margin:6px 0}
+.guide .note{margin:0 0 12px;padding:10px 14px;border-radius:12px;background:rgba(217,101,59,.1);color:var(--fg);font-size:15px}
+.cmd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;padding:10px 14px;border-radius:12px;background:#1f1f24;color:#fff}
+.cmd code{flex:1 1 280px;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+.cmd .codebtn{border-color:#fff;color:#fff}
+/* 免费版 vs Pro */
+.cmp-title{text-align:center;font-size:22px;margin:34px 0 14px}
+.cmp-wrap{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.cmp{width:100%;border-collapse:collapse;font-size:15px}
+.cmp th,.cmp td{padding:11px 16px;border-top:1px solid var(--line);text-align:center;vertical-align:middle}
+.cmp thead th{border-top:0;font-size:15px;background:rgba(127,127,127,.06)}
+.cmp tbody th{text-align:left;font-weight:500}
+.cmp td,.cmp thead th:not(:first-child){width:110px}
+.cmp .pro-col{color:var(--acc)}
+.cmp .yes{color:#2f9e6a;font-weight:700;font-size:18px}.cmp .no{color:var(--mut)}
+.cmp .price-row th,.cmp .price-row td{font-weight:600;background:rgba(217,101,59,.06)}
+.cmp .eb{display:block;font-size:12px;font-weight:500;color:#2f9e6a}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:560px){.cmp{font-size:14px}.cmp th,.cmp td{padding:9px 8px}.cmp td,.cmp thead th:not(:first-child){width:64px}.guide{padding:12px}.hero h1{font-size:34px}}

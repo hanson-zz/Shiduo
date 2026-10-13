@@ -1,0 +1,59 @@
+name: DMG 测试
+
+# 手动运行：按发布流程构建并打包 DMG（带背景图），但不发布。
+# 打好的 DMG 和挂载后 Finder 窗口的截图会作为构件上传，方便检查样子。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dmg:
+    runs-on: macos-15
+    env:
+      TAG: v0.0.0-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 XcodeGen 和 create-dmg
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: brew install --quiet xcodegen create-dmg
+
+      - name: 构建
+        run: |
+          xcodegen generate
+          xcodebuild build -project Shiduo.xcodeproj -scheme Shiduo -configuration Release \
+            -derivedDataPath build ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" DEVELOPMENT_TEAM="" \
+            > build.log 2>&1 || { grep -E "error:" build.log | head -80; exit 1; }
+
+      - name: 打包 DMG
+        run: scripts/dmg/make-dmg.sh build/Build/Products/Release/Shiduo.app "$TAG" "Shiduo-${TAG}.dmg"
+
+      - name: 检查 DMG 内容并截图
+        run: |
+          echo "打包方式：$DMG_STYLE"
+          MNT=$(hdiutil attach "Shiduo-${TAG}.dmg" | grep -E --color=never '/Volumes/' | sed 's/.*\(\/Volumes\/.*\)/\1/' | tail -1)
+          echo "挂载在：$MNT"
+          ls -la "$MNT" "$MNT/.background" || true
+          test -d "$MNT/拾掇.app"
+          test -L "$MNT/Applications"
+          test -f "$MNT/首次打开请看我.png"
+          test -f "$MNT/First launch guide.png"
+          osascript -e 'tell application "System Events" to set visible of every process whose visible is true and name is not "Finder" to false' || true
+          open "$MNT"
+          sleep 8
+          screencapture -x dmg-window.png || true
+          hdiutil detach "$MNT" -force || true
+
+      - name: 上传为构件
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dmg-test
+          path: |
+            Shiduo-*.dmg
+            dmg-window.png
+          if-no-files-found: warn

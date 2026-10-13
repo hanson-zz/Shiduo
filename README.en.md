@@ -39,9 +39,25 @@ Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, 7-day fre
 
 1. Download the latest `Shiduo-*.dmg` from [Releases](https://github.com/hanson-zz/Shiduo/releases).
 2. Open it and drag Shiduo to Applications.
-3. The app isn’t notarized by Apple, so the first launch is blocked. Open **System Settings › Privacy & Security** and click **Open Anyway**, or run `xattr -cr /Applications/拾掇.app` in Terminal.
+3. The app isn’t notarized by Apple, so macOS stops it the first time. Follow **First launch** below once.
 
 Requires macOS 14 Sonoma or later, on Apple silicon or Intel.
+
+### First launch
+
+<p align="center"><img src="docs/guide/open-en.png" alt="How to open Shiduo the first time" width="880"></p>
+
+1. Drag Shiduo from the DMG into **Applications**.
+2. In Finder › Applications, **right-click** (or Control-click) Shiduo (拾掇), choose **Open**, then click **Open** again in the dialog.
+3. If macOS says “Apple could not verify…” and there’s no Open button: click **Done**, go to **System Settings › Privacy & Security**, scroll down, click **Open Anyway** and enter your password.
+
+Optional: or run this one line in Terminal, then open Shiduo as usual:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/拾掇.app
+```
+
+> On macOS 15 Sequoia and later, **Open** in the right-click menu may no longer get past the block, so use step 3. You only need to do this once. The DMG also includes a “First launch guide.png”.
 
 ## Privacy
 
