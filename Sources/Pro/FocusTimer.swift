@@ -77,13 +77,16 @@ final class FocusTimer: ObservableObject {
 
     var phaseTitle: String { phase == .focus ? String(localized: "专注") : String(localized: "休息") }
 
-    /// 吉祥物图片名（Assets 里的 Mascot-panda-*）。
+    /// 吉祥物图片名（Assets 里的 Mascot-<吉祥物>-<状态>）。
     var mascotImage: String {
-        if justFinished { return "Mascot-panda-done" }
-        switch phase {
-        case .focus: return running ? "Mascot-panda-focus" : "Mascot-panda-idle"
-        case .rest: return "Mascot-panda-break"
+        let state: String
+        if justFinished { state = "done" } else {
+            switch phase {
+            case .focus: state = running ? "focus" : "idle"
+            case .rest: state = "break"
+            }
         }
+        return FocusMascot.current.image(state)
     }
 
     // MARK: 操作
@@ -210,6 +213,70 @@ final class FocusTimer: ObservableObject {
     }
 }
 
+// MARK: - 吉祥物
+
+enum FocusMascot: String, CaseIterable, Identifiable {
+    case panda, shiba, cat, penguin, otter, octopus
+
+    static let key = "focus.mascot"
+    var id: String { rawValue }
+
+    static var current: FocusMascot {
+        FocusMascot(rawValue: UserDefaults.standard.string(forKey: key) ?? "") ?? .panda
+    }
+
+    func image(_ state: String) -> String { "Mascot-\(rawValue)-\(state)" }
+
+    var title: String {
+        switch self {
+        case .panda: return String(localized: "小熊猫")
+        case .shiba: return String(localized: "柴犬")
+        case .cat: return String(localized: "橘猫")
+        case .penguin: return String(localized: "企鹅")
+        case .otter: return String(localized: "水獭")
+        case .octopus: return String(localized: "八爪鱼")
+        }
+    }
+}
+
+struct FocusMascotPicker: View {
+    @AppStorage(FocusMascot.key) private var mascot: FocusMascot = .panda
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("专注吉祥物")
+            HStack(spacing: 8) {
+                ForEach(FocusMascot.allCases) { m in
+                    Button { mascot = m } label: {
+                        VStack(spacing: 3) {
+                            Image(m.image("idle"))
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 46, height: 46)
+                            Text(m.title).font(.caption)
+                        }
+                        .padding(6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(mascot == m ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.08))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(mascot == m ? Color.accentColor : .clear, lineWidth: 2)
+                        )
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .onChange(of: mascot) {
+            FocusTimer.shared.objectWillChange.send()
+            FocusNotchIndicator.shared.update()
+        }
+    }
+}
+
 // MARK: - 「专注」标签页
 
 struct FocusTabView: View {
@@ -287,7 +354,7 @@ private struct FocusBarStyle: ProgressViewStyle {
 
 // MARK: - 收起时刘海两侧的小倒计时
 
-/// 专注进行中、刘海暂存架收起时，在刘海左边放小熊猫、右边放剩余时间。鼠标事件全部穿透。
+/// 专注进行中、刘海暂存架收起时，在刘海左边放吉祥物、右边放剩余时间。鼠标事件全部穿透。
 @MainActor
 final class FocusNotchIndicator {
     static let shared = FocusNotchIndicator()
@@ -371,7 +438,8 @@ struct FocusSettings: View {
             Text("休息时长：\(restMinutes) 分钟")
         }
         .onChange(of: restMinutes) { FocusTimer.shared.durationsChanged() }
-        Toggle("专注时在刘海两侧显示小熊猫和剩余时间", isOn: $showInNotch)
+        FocusMascotPicker()
+        Toggle("专注时在刘海两侧显示吉祥物和剩余时间", isOn: $showInNotch)
             .onChange(of: showInNotch) { FocusNotchIndicator.shared.update() }
     }
 }

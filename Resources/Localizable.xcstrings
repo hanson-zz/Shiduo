@@ -2130,6 +2130,22 @@
         }
       }
     },
+    "专注吉祥物": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus mascot"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注吉祥物"
+          }
+        }
+      }
+    },
     "专注完成": {
       "localizations": {
         "en": {
@@ -2146,18 +2162,18 @@
         }
       }
     },
-    "专注时在刘海两侧显示小熊猫和剩余时间": {
+    "专注时在刘海两侧显示吉祥物和剩余时间": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "While focusing, show the red panda and time left beside the notch"
+            "value": "While focusing, show the mascot and time left beside the notch"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "专注时在刘海两侧显示小熊猫和剩余时间"
+            "value": "专注时在刘海两侧显示吉祥物和剩余时间"
           }
         }
       }
@@ -2510,6 +2526,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "以图标显示"
+          }
+        }
+      }
+    },
+    "企鹅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Penguin"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "企鹅"
           }
         }
       }
@@ -2938,6 +2970,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "全部移到废纸篓"
+          }
+        }
+      }
+    },
+    "八爪鱼": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Octopus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "八爪鱼"
           }
         }
       }
@@ -4902,6 +4950,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "小"
+          }
+        }
+      }
+    },
+    "小熊猫": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red panda"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小熊猫"
           }
         }
       }
@@ -8670,6 +8734,22 @@
         }
       }
     },
+    "柴犬": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiba"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "柴犬"
+          }
+        }
+      }
+    },
     "标签": {
       "localizations": {
         "en": {
@@ -8762,6 +8842,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "检查失败，请稍后再试"
+          }
+        }
+      }
+    },
+    "橘猫": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ginger cat"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "橘猫"
           }
         }
       }
@@ -9246,6 +9342,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "每组至少保留一张"
+          }
+        }
+      }
+    },
+    "水獭": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otter"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "水獭"
           }
         }
       }
