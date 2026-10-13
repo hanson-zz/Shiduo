@@ -106,7 +106,7 @@ enum NotchShelfPrefs {
 final class NotchShelfController: NSObject, ObservableObject {
     static let shared = NotchShelfController()
 
-    enum Tab: String { case shelf, downloads }
+    enum Tab: String, CaseIterable { case shelf, downloads, reminders }
 
     @Published var tab: Tab = .shelf
     @Published var downloads: [FileItem] = []
@@ -201,6 +201,7 @@ final class NotchShelfController: NSObject, ObservableObject {
                            width: screen.notchWidth, height: screen.notchHeight)
         if byDrag { tab = .shelf }
         ShelfStore.shared.refresh()
+        ReminderStore.shared.refresh()
         selectedIndex = 0
         panel.setFrame(start, display: false)
         panel.alphaValue = 0
@@ -284,7 +285,11 @@ final class NotchShelfController: NSObject, ObservableObject {
     // MARK: 当前列表与键盘操作
 
     var currentItems: [FileItem] {
-        tab == .shelf ? ShelfStore.shared.items : downloads
+        switch tab {
+        case .shelf: return ShelfStore.shared.items
+        case .downloads: return downloads
+        case .reminders: return ReminderStore.shared.items
+        }
     }
 
     var selectedItem: FileItem? {
@@ -308,16 +313,21 @@ final class NotchShelfController: NSObject, ObservableObject {
     /// ⌫：从暂存架移出（「最近下载」里则是放上暂存架）。
     func deleteSelected() {
         guard let item = selectedItem else { return }
-        if tab == .shelf {
+        switch tab {
+        case .shelf:
             ShelfStore.shared.remove(paths: [item.path])
             selectedIndex = min(selectedIndex, max(ShelfStore.shared.count - 1, 0))
-        } else {
+        case .downloads:
             ShelfStore.shared.add([item.url])
+        case .reminders:
+            if let reminder = ReminderStore.shared.reminder(for: item.path) { ReminderStore.shared.complete(reminder.id) }
+            selectedIndex = min(selectedIndex, max(ReminderStore.shared.count - 1, 0))
         }
     }
 
     func switchTab() {
-        tab = tab == .shelf ? .downloads : .shelf
+        let all = Tab.allCases
+        tab = all[((all.firstIndex(of: tab) ?? 0) + 1) % all.count]
         selectedIndex = 0
     }
 
@@ -382,6 +392,7 @@ private struct NotchShape: Shape {
 struct NotchShelfView: View {
     @ObservedObject var controller: NotchShelfController
     @ObservedObject private var shelf = ShelfStore.shared
+    @ObservedObject private var reminders = ReminderStore.shared
     let screenNotchWidth: CGFloat
     let topInset: CGFloat
     @State private var previewURL: URL?
@@ -442,6 +453,7 @@ struct NotchShelfView: View {
         HStack(spacing: 6) {
             tabButton(.shelf, title: String(localized: "暂存架"), count: shelf.count)
             tabButton(.downloads, title: String(localized: "最近下载"), count: nil)
+            tabButton(.reminders, title: String(localized: "提醒"), count: reminders.count)
             Spacer(minLength: screenNotchWidth + 16)
             if controller.tab == .shelf && !shelf.isEmpty {
                 MultiFileDragArea(urls: { shelf.urls }) {
@@ -503,9 +515,9 @@ struct NotchShelfView: View {
     private var content: some View {
         if items.isEmpty {
             HStack(spacing: 10) {
-                Image(systemName: controller.tab == .shelf ? "tray.and.arrow.down" : "arrow.down.circle")
+                Image(systemName: emptySymbol)
                     .font(.system(size: 24, weight: .light))
-                Text(controller.tab == .shelf ? String(localized: "把文件拖到这里，暂时放一下") : String(localized: "没有最近下载的文件"))
+                Text(emptyText)
                     .font(.callout)
             }
             .foregroundStyle(.white.opacity(0.6))
@@ -534,10 +546,36 @@ struct NotchShelfView: View {
         }
     }
 
+    private var emptySymbol: String {
+        switch controller.tab {
+        case .shelf: return "tray.and.arrow.down"
+        case .downloads: return "arrow.down.circle"
+        case .reminders: return "alarm"
+        }
+    }
+
+    private var emptyText: String {
+        switch controller.tab {
+        case .shelf: return String(localized: "把文件拖到这里，暂时放一下")
+        case .downloads: return String(localized: "没有最近下载的文件")
+        case .reminders: return String(localized: "还没有提醒")
+        }
+    }
+
     private func card(_ item: FileItem, index: Int) -> some View {
         let selected = index == controller.selectedIndex
         return VStack(spacing: 4) {
             ThumbnailView(url: item.url, size: cardSize)
+                .overlay(alignment: .topTrailing) {
+                    if reminders.paths.contains(item.path) {
+                        Image(systemName: "alarm.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(3)
+                            .background(Circle().fill(Color.red))
+                            .offset(x: 4, y: -4)
+                    }
+                }
             Text(item.name)
                 .font(.caption2)
                 .lineLimit(1)
@@ -560,10 +598,17 @@ struct NotchShelfView: View {
             Button("打开") { NSWorkspace.shared.open(item.url) }
             Button("在访达中显示") { FileActions.reveal([item]) }
             Divider()
-            if controller.tab == .shelf {
+            switch controller.tab {
+            case .shelf:
                 Button("从暂存架移除") { shelf.remove(paths: [item.path]) }
-            } else {
+            case .downloads:
                 Button("加入暂存架") { shelf.add([item.url]) }
+            case .reminders:
+                Button("加入暂存架") { shelf.add([item.url]) }
+                if let reminder = reminders.reminder(for: item.path) {
+                    Button("1 小时后再提醒") { reminders.snooze(reminder.id) }
+                    Button("完成") { reminders.complete(reminder.id) }
+                }
             }
         }
         .help(item.path)

@@ -5,6 +5,8 @@ enum SidebarItem: Hashable {
     case home
     /// 暂存架：临时放一下的文件。
     case shelf
+    /// Pro：文件提醒。
+    case reminders
     case category(FileCategory)
     case largeFiles
     case screenshots

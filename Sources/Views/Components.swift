@@ -50,6 +50,14 @@ struct FileContextMenu: View {
         }
         TagMenu(items: items)
         Button("加入暂存架") { store.addToShelf(items) }
+        Button("提醒我处理…") {
+            LicenseManager.shared.startTrialIfNeeded()
+            if LicenseManager.shared.isPro {
+                ReminderStore.shared.composing = items
+            } else {
+                LicenseManager.shared.showPaywall = true
+            }
+        }
         if items.contains(where: { !$0.isDirectory }) {
             Button(items.count > 1 ? String(localized: "批量重命名 \(items.count) 个文件…") : String(localized: "重命名…")) { store.renameItems = items }
         }

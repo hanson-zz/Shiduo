@@ -94,7 +94,12 @@ final class CleanupReminderDelegate: NSObject, UNUserNotificationCenterDelegate 
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let id = response.notification.request.identifier
-        if id == cleanupReminderID {
+        if id.hasPrefix(ReminderStore.idPrefix), let uuid = UUID(uuidString: String(id.dropFirst(ReminderStore.idPrefix.count))) {
+            let action = response.actionIdentifier
+            Task { @MainActor in
+                ReminderStore.shared.handle(action: action, id: uuid)
+            }
+        } else if id == cleanupReminderID {
             Task { @MainActor in
                 CleanupReminder.shared.openCleanup()
             }

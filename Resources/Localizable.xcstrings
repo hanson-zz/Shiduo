@@ -315,6 +315,22 @@
         }
       }
     },
+    "%lld 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件"
+          }
+        }
+      }
+    },
     "%lld 个文件会改名，扩展名保持不变": {
       "localizations": {
         "en": {
@@ -1044,6 +1060,38 @@
     "1": {
       "shouldTranslate": false
     },
+    "1 小时后": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In 1 hour"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 小时后"
+          }
+        }
+      }
+    },
+    "1 小时后再提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me in 1 hour"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 小时后再提醒"
+          }
+        }
+      }
+    },
     "200 MB 以上的文件": {
       "localizations": {
         "en": {
@@ -1355,6 +1403,22 @@
     },
     "·": {
       "shouldTranslate": false
+    },
+    "· %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        }
+      }
     },
     "“": {
       "shouldTranslate": false
@@ -1710,6 +1774,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "下午好"
+          }
+        }
+      }
+    },
+    "下周一 9 点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Monday 9 AM"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下周一 9 点"
+          }
+        }
+      }
+    },
+    "下次打开%@时": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next time you open %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下次打开%@时"
           }
         }
       }
@@ -2082,6 +2178,22 @@
         }
       }
     },
+    "什么时候": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "什么时候"
+          }
+        }
+      }
+    },
     "今天": {
       "localizations": {
         "en": {
@@ -2126,6 +2238,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "今年的照片"
+          }
+        }
+      }
+    },
+    "今晚 8 点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tonight 8 PM"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今晚 8 点"
           }
         }
       }
@@ -3350,6 +3478,22 @@
         }
       }
     },
+    "右键「提醒我处理…」，到点或打开微信时提醒你": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right-click “Remind Me…” and get nudged on time or when you open WeChat"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右键「提醒我处理…」，到点或打开微信时提醒你"
+          }
+        }
+      }
+    },
     "右键点击链接可以拷贝。": {
       "localizations": {
         "en": {
@@ -3846,6 +3990,22 @@
         }
       }
     },
+    "在任何文件上点右键，选「提醒我处理…」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right-click any file and choose “Remind Me…”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在任何文件上点右键，选「提醒我处理…」"
+          }
+        }
+      }
+    },
     "在侧边栏里直接浏览移动硬盘、U 盘": {
       "localizations": {
         "en": {
@@ -3986,6 +4146,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "在访达中显示拾掇"
+          }
+        }
+      }
+    },
+    "备注（可选），比如：回复报价": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note (optional), e.g. reply to the quote"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备注（可选），比如：回复报价"
           }
         }
       }
@@ -5462,6 +5638,22 @@
         }
       }
     },
+    "或者，下次打开这个 App 时": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or the next time you open this app"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或者，下次打开这个 App 时"
+          }
+        }
+      }
+    },
     "截图": {
       "localizations": {
         "en": {
@@ -6614,6 +6806,54 @@
         }
       }
     },
+    "提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提醒"
+          }
+        }
+      }
+    },
+    "提醒我处理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me about"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提醒我处理"
+          }
+        }
+      }
+    },
+    "提醒我处理…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind Me…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提醒我处理…"
+          }
+        }
+      }
+    },
     "提醒时间": {
       "localizations": {
         "en": {
@@ -6838,6 +7078,22 @@
         }
       }
     },
+    "放上暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put on Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放上暂存架"
+          }
+        }
+      }
+    },
     "放进文件夹超过 %lld 天": {
       "localizations": {
         "en": {
@@ -6926,6 +7182,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "文件夹"
+          }
+        }
+      }
+    },
+    "文件提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File reminders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件提醒"
           }
         }
       }
@@ -7166,6 +7438,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "时长"
+          }
+        }
+      }
+    },
+    "时间": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时间"
+          }
+        }
+      }
+    },
+    "明天再提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me tomorrow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明天再提醒"
+          }
+        }
+      }
+    },
+    "明早 9 点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow 9 AM"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明早 9 点"
           }
         }
       }
@@ -9602,6 +9922,22 @@
         }
       }
     },
+    "给下载的合同、待回复的报价、要报销的发票设个提醒，到点或打开微信时就会想起来。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set reminders for contracts, quotes to answer or receipts to file. You'll be nudged on time, or when you open WeChat."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "给下载的合同、待回复的报价、要报销的发票设个提醒，到点或打开微信时就会想起来。"
+          }
+        }
+      }
+    },
     "统计中…": {
       "localizations": {
         "en": {
@@ -9842,6 +10178,22 @@
         }
       }
     },
+    "自定义…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义…"
+          }
+        }
+      }
+    },
     "至少设置一个条件才会生效": {
       "localizations": {
         "en": {
@@ -10018,6 +10370,22 @@
         }
       }
     },
+    "设定提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Reminder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设定提醒"
+          }
+        }
+      }
+    },
     "识别图中文字…": {
       "localizations": {
         "en": {
@@ -10142,6 +10510,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "试试去掉一个筛选条件。"
+          }
+        }
+      }
+    },
+    "该处理「%@」了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time to deal with “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该处理「%@」了"
           }
         }
       }
@@ -10558,6 +10942,22 @@
         }
       }
     },
+    "还没有提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reminders yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有提醒"
+          }
+        }
+      }
+    },
     "还没有规则。点「新建规则」，比如把下载文件夹里的安装包自动移到废纸篓。": {
       "localizations": {
         "en": {
@@ -10814,6 +11214,22 @@
         }
       }
     },
+    "通知被关掉了。请到「系统设置 › 通知 › 拾掇」里打开，提醒才能弹出来。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are off. Turn them on in System Settings › Notifications › Shiduo so reminders can appear."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知被关掉了。请到「系统设置 › 通知 › 拾掇」里打开，提醒才能弹出来。"
+          }
+        }
+      }
+    },
     "通过邮件发送": {
       "localizations": {
         "en": {
@@ -10826,6 +11242,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "通过邮件发送"
+          }
+        }
+      }
+    },
+    "邮件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "邮件"
           }
         }
       }

@@ -8,6 +8,7 @@ struct SidebarView: View {
     @EnvironmentObject private var chat: ChatFilesStore
     @EnvironmentObject private var license: LicenseManager
     @ObservedObject private var shelf = ShelfStore.shared
+    @ObservedObject private var reminders = ReminderStore.shared
     @State private var shelfTargeted = false
 
     /// 常用位置，和访达侧边栏一样。
@@ -54,6 +55,10 @@ struct SidebarView: View {
                         if added > 0 { store.showToast(String(localized: "已放上暂存架：\(added) 个")) }
                     }
                 }
+
+            Label("提醒", systemImage: "alarm")
+                .badge(reminders.count == 0 ? nil : Text("\(reminders.count)"))
+                .tag(SidebarItem.reminders)
 
             Section("资料库") {
                 ForEach(FileCategory.allCases) { category in

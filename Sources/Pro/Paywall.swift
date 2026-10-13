@@ -30,6 +30,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case volumes
     case menuBar
     case floatingShelf
+    case fileReminder
 
     var id: Self { self }
 
@@ -41,6 +42,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .volumes: return String(localized: "外接磁盘")
         case .menuBar: return String(localized: "菜单栏小助手")
         case .floatingShelf: return String(localized: "悬浮暂存架")
+        case .fileReminder: return String(localized: "文件提醒")
         }
     }
 
@@ -52,6 +54,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .volumes: return String(localized: "在侧边栏里直接浏览移动硬盘、U 盘")
         case .menuBar: return String(localized: "剩余空间、最近下载、快速搜索，一点就到")
         case .floatingShelf: return String(localized: "拖着文件碰到刘海或屏幕边缘，就有地方先放一下")
+        case .fileReminder: return String(localized: "右键「提醒我处理…」，到点或打开微信时提醒你")
         }
     }
 
@@ -63,6 +66,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .volumes: return "externaldrive"
         case .menuBar: return "menubar.rectangle"
         case .floatingShelf: return "tray.and.arrow.down"
+        case .fileReminder: return "alarm"
         }
     }
 
@@ -74,6 +78,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .volumes: return .blue
         case .menuBar: return .teal
         case .floatingShelf: return .indigo
+        case .fileReminder: return .red
         }
     }
 }

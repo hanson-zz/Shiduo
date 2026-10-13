@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var license: LicenseManager
+    @ObservedObject private var reminders = ReminderStore.shared
 
     var body: some View {
         NavigationSplitView {
@@ -20,6 +21,7 @@ struct ContentView: View {
             QuickSearchController.shared.configure(store: store)
             CleanupReminder.shared.configure(store: store)
             FloatingShelfController.shared.configure(store: store)
+            ReminderStore.shared.start()
             TrialReminder.shared.start()
             if !UserDefaults.standard.bool(forKey: "onboardingDone") { store.showOnboarding = true }
             // 拾掇 Pro：最多每 24 小时联网校验一次授权（不挡住首页加载）；之后马上自动整理一次，再每 10 分钟一次。
@@ -40,6 +42,9 @@ struct ContentView: View {
         .sheet(isPresented: $license.showPaywall) {
             PaywallView()
                 .environmentObject(license)
+        }
+        .sheet(isPresented: Binding(get: { !reminders.composing.isEmpty }, set: { if !$0 { reminders.composing = [] } })) {
+            ReminderSheet(items: reminders.composing)
         }
         .sheet(item: $store.ocrItem) { item in
             OCRSheet(item: item)
@@ -150,6 +155,9 @@ struct DetailView: View {
                 HomeView()
             case .shelf:
                 ShelfPageView()
+            case .reminders:
+                RemindersPageView()
+                    .proGated(.fileReminder)
             case .category(let category):
                 BrowserView(title: category.title, showsOCRTools: category == .images)
             case .largeFiles:
