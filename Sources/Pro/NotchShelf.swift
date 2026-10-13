@@ -130,7 +130,9 @@ final class NotchShelfController: NSObject, ObservableObject {
 
     private func panelSize(for screen: NSScreen) -> NSSize {
         let card = NotchShelfPrefs.cardSize
-        let width = max(screen.notchWidth + 440, 640)
+        // 标签贴着刘海两边排，宽度只留够标签用；英文标签更长，多给一点。
+        let english = Bundle.main.preferredLocalizations.first?.hasPrefix("en") ?? false
+        let width = max(screen.notchWidth + (english ? 460 : 400), english ? 640 : 580)
         let height = screen.notchHeight + card + 92
         return NSSize(width: min(width, screen.frame.width - 40), height: height)
     }
@@ -470,9 +472,9 @@ struct NotchShelfView: View {
         // 刘海正中是摄像头，什么都看不见：标签分到刘海两边，左边两个、右边两个。
         HStack(spacing: 0) {
             HStack(spacing: 6) {
+                Spacer(minLength: 0)
                 tabButton(.shelf, title: String(localized: "暂存架"), count: shelf.count)
                 tabButton(.downloads, title: String(localized: "最近下载"), count: nil)
-                Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity)
             Color.clear.frame(width: screenNotchWidth + 16)
@@ -531,6 +533,7 @@ struct NotchShelfView: View {
             .padding(.vertical, 3)
             .background(Capsule().fill(controller.tab == tab ? Color.white.opacity(0.18) : .clear))
             .opacity(controller.tab == tab ? 1 : 0.7)
+            .fixedSize()
         }
         .buttonStyle(.plain)
     }
