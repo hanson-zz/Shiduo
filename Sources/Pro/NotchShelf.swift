@@ -129,7 +129,7 @@ final class NotchShelfController: NSObject, ObservableObject {
 
     private func panelSize(for screen: NSScreen) -> NSSize {
         let card = NotchShelfPrefs.cardSize
-        let width = max(screen.notchWidth + 360, 620)
+        let width = max(screen.notchWidth + 560, 780)
         let height = screen.notchHeight + card + 92
         return NSSize(width: min(width, screen.frame.width - 40), height: height)
     }
@@ -456,12 +456,29 @@ struct NotchShelfView: View {
     }
 
     private var header: some View {
+        // 刘海正中是摄像头，什么都看不见：标签分到刘海两边，左边两个、右边两个。
+        HStack(spacing: 0) {
+            HStack(spacing: 6) {
+                tabButton(.shelf, title: String(localized: "暂存架"), count: shelf.count)
+                tabButton(.downloads, title: String(localized: "最近下载"), count: nil)
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity)
+            Color.clear.frame(width: screenNotchWidth + 16)
+            HStack(spacing: 6) {
+                tabButton(.reminders, title: String(localized: "提醒"), count: reminders.count)
+                tabButton(.focus, title: String(localized: "专注"), count: nil)
+                Spacer(minLength: 0)
+                rightControls
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .font(.callout)
+    }
+
+    @ViewBuilder
+    private var rightControls: some View {
         HStack(spacing: 6) {
-            tabButton(.shelf, title: String(localized: "暂存架"), count: shelf.count)
-            tabButton(.downloads, title: String(localized: "最近下载"), count: nil)
-            tabButton(.reminders, title: String(localized: "提醒"), count: reminders.count)
-            tabButton(.focus, title: String(localized: "专注"), count: nil)
-            Spacer(minLength: screenNotchWidth + 16)
             if controller.tab == .shelf && !shelf.isEmpty {
                 MultiFileDragArea(urls: { shelf.urls }) {
                     Label(String(localized: "拖出全部"), systemImage: "hand.draw")
