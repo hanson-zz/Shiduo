@@ -29,6 +29,9 @@ The app is in English and Simplified Chinese. It follows your system language, a
 - **Safe cleanup**: used installers, forgotten downloads, old screenshots, big old videos and rarely used apps. Files only go to the Trash, and iCloud-only files are skipped.
 - **Duplicates and similar photos**: exact copies by size and SHA-256, look-alike photos with Vision.
 - **Shelf**: drop files from anywhere onto the Shelf in the sidebar to park them for a moment (only their locations are saved, nothing is copied), then drag them all out together, or move, copy, zip or AirDrop them in one go.
+
+<p align="center"><img src="docs/screenshots/en/shelf.png" alt="Shelf" width="880"></p>
+
 - **Handy tools**: text recognition in images (on-device), storage map, batch rename, convert to JPG, Finder tags, and a global quick-search panel (⌥Space).
 
 ## Shiduo Pro
