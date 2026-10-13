@@ -184,6 +184,22 @@
         }
       }
     },
+    "%@里没有第 %lld 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No file #%2$lld in %1$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@里没有第 %2$lld 个文件"
+          }
+        }
+      }
+    },
     "%@（%lld）": {
       "localizations": {
         "en": {
@@ -2894,6 +2910,22 @@
         }
       }
     },
+    "切到任何 App 按 ⌘V 粘贴；加 ⇧ 只拷贝路径。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press ⌘V in any app to paste. Add ⇧ to copy just the path."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切到任何 App 按 ⌘V 粘贴；加 ⇧ 只拷贝路径。"
+          }
+        }
+      }
+    },
     "列表": {
       "localizations": {
         "en": {
@@ -4954,6 +4986,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "已拷贝图中全部文字"
+          }
+        }
+      }
+    },
+    "已拷贝文件，按 ⌘V 粘贴": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File copied. Press ⌘V to paste"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拷贝文件，按 ⌘V 粘贴"
+          }
+        }
+      }
+    },
+    "已拷贝路径，按 ⌘V 粘贴": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Path copied. Press ⌘V to paste"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拷贝路径，按 ⌘V 粘贴"
           }
         }
       }
@@ -7122,6 +7186,38 @@
         }
       }
     },
+    "数字键取自": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number keys use"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数字键取自"
+          }
+        }
+      }
+    },
+    "数字键直达：⌃⌘1…9、0 拷贝最近第 1…10 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number keys: ⌃⌘1…9, 0 copy your 1st…10th recent file"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数字键直达：⌃⌘1…9、0 拷贝最近第 1…10 个文件"
+          }
+        }
+      }
+    },
     "整理": {
       "localizations": {
         "en": {
@@ -7902,6 +7998,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "最近的整理记录"
+          }
+        }
+      }
+    },
+    "有 %lld 个组合已被其他 App 占用，那几个数字键不会生效。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld shortcuts are taken by other apps and won't work."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %lld 个组合已被其他 App 占用，那几个数字键不会生效。"
           }
         }
       }

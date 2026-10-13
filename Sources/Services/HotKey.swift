@@ -97,6 +97,29 @@ final class HotKeyCenter {
         return register(.floatingShelf, keyCode: FloatingShelfHotKey.keyCode, modifiers: FloatingShelfHotKey.modifiers)
     }
 
+    // MARK: 数字键直达（⌃⌘ 数字 / ⌃⌘⇧ 数字）
+
+    private var extraRefs: [UInt32: EventHotKeyRef] = [:]
+    private var extraActions: [UInt32: () -> Void] = [:]
+
+    /// 注册或取消一个数字键组合。返回 false 表示被别的 App 占用了。
+    @discardableResult
+    func applyQuickPick(slot: Int, shift: Bool, keyCode: UInt32, active: Bool, action: @escaping () -> Void) -> Bool {
+        let id = UInt32(100 + slot * 2 + (shift ? 1 : 0))
+        if let ref = extraRefs[id] { UnregisterEventHotKey(ref) }
+        extraRefs[id] = nil
+        extraActions[id] = action
+        guard active else { return true }
+        installHandlerIfNeeded()
+        var ref: EventHotKeyRef?
+        let modifiers = UInt32(controlKey | cmdKey) | (shift ? UInt32(shiftKey) : 0)
+        let status = RegisterEventHotKey(keyCode, modifiers, EventHotKeyID(signature: Self.signature, id: id),
+                                         GetEventDispatcherTarget(), 0, &ref)
+        guard status == noErr, let ref else { return false }
+        extraRefs[id] = ref
+        return true
+    }
+
     func isRegistered(_ slot: Slot) -> Bool { refs[slot] != nil }
 
     func unregister() { unregister(.quickSearch) }
@@ -117,7 +140,10 @@ final class HotKeyCenter {
     }
 
     fileprivate func fire(_ id: UInt32) {
-        guard let slot = Slot(rawValue: id) else { return }
+        guard let slot = Slot(rawValue: id) else {
+            extraActions[id]?()
+            return
+        }
         actions[slot]?()
     }
 

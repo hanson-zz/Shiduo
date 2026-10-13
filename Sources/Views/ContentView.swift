@@ -22,6 +22,7 @@ struct ContentView: View {
             CleanupReminder.shared.configure(store: store)
             FloatingShelfController.shared.configure(store: store)
             ReminderStore.shared.start()
+            QuickPickController.shared.apply()
             TrialReminder.shared.start()
             if !UserDefaults.standard.bool(forKey: "onboardingDone") { store.showOnboarding = true }
             // 拾掇 Pro：最多每 24 小时联网校验一次授权（不挡住首页加载）；之后马上自动整理一次，再每 10 分钟一次。
@@ -32,7 +33,10 @@ struct ContentView: View {
             await store.refreshDashboard()
             await store.checkForUpdatesOnLaunch()
         }
-        .onChange(of: license.state) { FloatingShelfController.shared.apply() }
+        .onChange(of: license.state) {
+            FloatingShelfController.shared.apply()
+            QuickPickController.shared.apply()
+        }
         .sheet(isPresented: $store.showOnboarding) {
             OnboardingView(onSearch: { text in
                 store.searchText = text

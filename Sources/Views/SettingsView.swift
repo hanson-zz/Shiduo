@@ -228,6 +228,8 @@ struct SettingsView: View {
             }
             ShelfStyleSettings()
                 .disabled(!license.isPro || !floatingShelfEnabled)
+            QuickPickSettings()
+                .disabled(!license.isPro)
             Toggle("每周提醒我清理", isOn: $reminderEnabled)
                 .disabled(!license.isPro)
             HStack {

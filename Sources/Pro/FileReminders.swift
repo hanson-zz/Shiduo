@@ -198,7 +198,7 @@ final class ReminderStore: ObservableObject {
     }
 
     var items: [FileItem] {
-        reminders.map { FileItem(url: $0.url) }
+        reminders.compactMap { FileItem(url: $0.url) }
     }
 
     // MARK: 通知
