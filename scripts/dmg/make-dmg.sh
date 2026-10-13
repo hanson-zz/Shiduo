@@ -66,11 +66,11 @@ if command -v create-dmg > /dev/null 2>&1; then
         --window-size 660 500 \
         --icon-size 110 \
         --text-size 13 \
-        --icon "$APP_NAME" 165 180 \
+        --icon "$APP_NAME" 165 150 \
         --hide-extension "$APP_NAME" \
-        --app-drop-link 495 180 \
-        --icon "$GUIDE_ZH" 250 385 \
-        --icon "$GUIDE_EN" 410 385 \
+        --app-drop-link 495 150 \
+        --icon "$GUIDE_ZH" 250 350 \
+        --icon "$GUIDE_EN" 410 350 \
         --no-internet-enable \
         --hdiutil-retries 10 \
         --applescript-sleep-duration 10 \
