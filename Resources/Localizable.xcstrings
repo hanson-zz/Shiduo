@@ -1554,6 +1554,22 @@
         }
       }
     },
+    "⌃⌘1–0 拷贝最近 10 个文件，到哪都能 ⌘V 粘贴": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌃⌘1–0 copy your 10 latest files, paste anywhere with ⌘V"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌃⌘1–0 拷贝最近 10 个文件，到哪都能 ⌘V 粘贴"
+          }
+        }
+      }
+    },
     "⌃⌥ 空格": {
       "localizations": {
         "en": {
@@ -2970,6 +2986,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "刘海"
+          }
+        }
+      }
+    },
+    "刘海 / 悬浮暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notch / floating shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刘海 / 悬浮暂存架"
           }
         }
       }
@@ -7198,6 +7230,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "数字键取自"
+          }
+        }
+      }
+    },
+    "数字键直达": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number keys"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数字键直达"
           }
         }
       }
