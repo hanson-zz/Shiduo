@@ -2098,6 +2098,86 @@
         }
       }
     },
+    "专注": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注"
+          }
+        }
+      }
+    },
+    "专注中…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focusing…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注中…"
+          }
+        }
+      }
+    },
+    "专注完成": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus session done"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注完成"
+          }
+        }
+      }
+    },
+    "专注时在刘海两侧显示小熊猫和剩余时间": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While focusing, show the red panda and time left beside the notch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注时在刘海两侧显示小熊猫和剩余时间"
+          }
+        }
+      }
+    },
+    "专注时长：%lld 分钟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus length: %lld min"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注时长：%lld 分钟"
+          }
+        }
+      }
+    },
     "严格": {
       "localizations": {
         "en": {
@@ -2238,6 +2318,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "今天"
+          }
+        }
+      }
+    },
+    "今天完成的专注轮数": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus sessions completed today"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天完成的专注轮数"
           }
         }
       }
@@ -2414,6 +2510,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "以图标显示"
+          }
+        }
+      }
+    },
+    "休息": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "休息"
+          }
+        }
+      }
+    },
+    "休息中": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a break"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "休息中"
+          }
+        }
+      }
+    },
+    "休息时长：%lld 分钟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break length: %lld min"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "休息时长：%lld 分钟"
+          }
+        }
+      }
+    },
+    "休息结束": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break's over"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "休息结束"
           }
         }
       }
@@ -2798,6 +2958,22 @@
         }
       }
     },
+    "共 %lld 分钟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min total"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共 %lld 分钟"
+          }
+        }
+      }
+    },
     "共享…": {
       "localizations": {
         "en": {
@@ -2906,6 +3082,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "其他网站"
+          }
+        }
+      }
+    },
+    "准备专注": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready to focus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准备专注"
+          }
+        }
+      }
+    },
+    "准备休息": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready for a break"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准备休息"
+          }
+        }
+      }
+    },
+    "准备好开始下一轮专注了吗？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready for the next focus session?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准备好开始下一轮专注了吗？"
           }
         }
       }
@@ -4546,6 +4770,22 @@
         }
       }
     },
+    "完成一轮，休息一下吧": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round done — take a break"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成一轮，休息一下吧"
+          }
+        }
+      }
+    },
     "定时清理提醒": {
       "localizations": {
         "en": {
@@ -4726,6 +4966,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "展开延迟"
+          }
+        }
+      }
+    },
+    "已专注 %lld 分钟，起来活动一下，休息 %lld 分钟。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You focused for %1$lld minutes. Stretch and take a %2$lld-minute break."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已专注 %lld 分钟，起来活动一下，休息 %lld 分钟。"
           }
         }
       }
@@ -5094,6 +5350,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "已放上暂存架：%lld 个"
+          }
+        }
+      }
+    },
+    "已暂停": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已暂停"
           }
         }
       }
@@ -5506,6 +5778,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "开始转换"
+          }
+        }
+      }
+    },
+    "开始（空格）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start (Space)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始（空格）"
           }
         }
       }
@@ -5982,6 +6270,22 @@
         }
       }
     },
+    "把文件拖到这里，用隔空投送发给附近的 iPhone、iPad 或 Mac；点一下发送暂存架里选中的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop files here to AirDrop them to a nearby iPhone, iPad or Mac. Click to send the selected shelf file."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把文件拖到这里，用隔空投送发给附近的 iPhone、iPad 或 Mac；点一下发送暂存架里选中的文件"
+          }
+        }
+      }
+    },
     "把文件移到另一个文件夹，暂存架会跟着更新": {
       "localizations": {
         "en": {
@@ -6102,6 +6406,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "拖到屏幕边缘时弹出悬浮暂存架"
+          }
+        }
+      }
+    },
+    "拖到这里发送": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop to send"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖到这里发送"
           }
         }
       }
@@ -7762,6 +8082,22 @@
         }
       }
     },
+    "暂停（空格）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause (Space)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停（空格）"
+          }
+        }
+      }
+    },
     "暂存架": {
       "localizations": {
         "en": {
@@ -8282,6 +8618,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "来自微信的图片"
+          }
+        }
+      }
+    },
+    "松手发送": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release to send"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松手发送"
           }
         }
       }
@@ -10974,6 +11326,38 @@
         }
       }
     },
+    "跳到专注": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip to focus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳到专注"
+          }
+        }
+      }
+    },
+    "跳到休息": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip to break"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳到休息"
+          }
+        }
+      }
+    },
     "转换为 JPG": {
       "localizations": {
         "en": {
@@ -11594,6 +11978,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "重新计算"
+          }
+        }
+      }
+    },
+    "重来": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重来"
           }
         }
       }

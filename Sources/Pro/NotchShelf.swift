@@ -106,7 +106,7 @@ enum NotchShelfPrefs {
 final class NotchShelfController: NSObject, ObservableObject {
     static let shared = NotchShelfController()
 
-    enum Tab: String, CaseIterable { case shelf, downloads, reminders }
+    enum Tab: String, CaseIterable { case shelf, downloads, reminders, focus }
 
     @Published var tab: Tab = .shelf
     @Published var downloads: [FileItem] = []
@@ -215,6 +215,7 @@ final class NotchShelfController: NSObject, ObservableObject {
         }
         loadDownloads()
         startWatching()
+        FocusNotchIndicator.shared.update()
     }
 
     func hide() {
@@ -236,6 +237,7 @@ final class NotchShelfController: NSObject, ObservableObject {
             MainActor.assumeIsolated {
                 panel.orderOut(nil)
                 panel.alphaValue = 1
+                FocusNotchIndicator.shared.update()
             }
         })
     }
@@ -289,6 +291,7 @@ final class NotchShelfController: NSObject, ObservableObject {
         case .shelf: return ShelfStore.shared.items
         case .downloads: return downloads
         case .reminders: return ReminderStore.shared.items
+        case .focus: return []
         }
     }
 
@@ -322,6 +325,8 @@ final class NotchShelfController: NSObject, ObservableObject {
         case .reminders:
             if let reminder = ReminderStore.shared.reminder(for: item.path) { ReminderStore.shared.complete(reminder.id) }
             selectedIndex = min(selectedIndex, max(ReminderStore.shared.count - 1, 0))
+        case .focus:
+            FocusTimer.shared.reset()
         }
     }
 
@@ -369,7 +374,7 @@ final class NotchShelfPanel: NSPanel {
 // MARK: - 界面
 
 /// 黑色、上边贴着屏幕顶、下边是大圆角，和刘海连成一体。
-private struct NotchShape: Shape {
+struct NotchShape: Shape {
     var bottomRadius: CGFloat = 24
     var topRadius: CGFloat = 10
 
@@ -438,6 +443,7 @@ struct NotchShelfView: View {
         .onKeyPress(.delete) { controller.deleteSelected(); return .handled }
         .onKeyPress(.tab) { controller.switchTab(); return .handled }
         .onKeyPress(.space) {
+            if controller.tab == .focus { FocusTimer.shared.toggle(); return .handled }
             previewURL = previewURL == nil ? controller.selectedItem?.url : nil
             return .handled
         }
@@ -454,6 +460,7 @@ struct NotchShelfView: View {
             tabButton(.shelf, title: String(localized: "暂存架"), count: shelf.count)
             tabButton(.downloads, title: String(localized: "最近下载"), count: nil)
             tabButton(.reminders, title: String(localized: "提醒"), count: reminders.count)
+            tabButton(.focus, title: String(localized: "专注"), count: nil)
             Spacer(minLength: screenNotchWidth + 16)
             if controller.tab == .shelf && !shelf.isEmpty {
                 MultiFileDragArea(urls: { shelf.urls }) {
@@ -513,6 +520,24 @@ struct NotchShelfView: View {
 
     @ViewBuilder
     private var content: some View {
+        switch controller.tab {
+        case .focus:
+            FocusTabView(height: cardSize + 30)
+        case .shelf:
+            HStack(spacing: 10) {
+                AirDropDropPane(height: cardSize + 40) {
+                    if let item = controller.selectedItem { return [item.url] }
+                    return shelf.urls
+                }
+                fileList
+            }
+        default:
+            fileList
+        }
+    }
+
+    @ViewBuilder
+    private var fileList: some View {
         if items.isEmpty {
             HStack(spacing: 10) {
                 Image(systemName: emptySymbol)
@@ -551,6 +576,7 @@ struct NotchShelfView: View {
         case .shelf: return "tray.and.arrow.down"
         case .downloads: return "arrow.down.circle"
         case .reminders: return "alarm"
+        case .focus: return "timer"
         }
     }
 
@@ -559,6 +585,7 @@ struct NotchShelfView: View {
         case .shelf: return String(localized: "把文件拖到这里，暂时放一下")
         case .downloads: return String(localized: "没有最近下载的文件")
         case .reminders: return String(localized: "还没有提醒")
+        case .focus: return ""
         }
     }
 
@@ -609,6 +636,8 @@ struct NotchShelfView: View {
                     Button("1 小时后再提醒") { reminders.snooze(reminder.id) }
                     Button("完成") { reminders.complete(reminder.id) }
                 }
+            case .focus:
+                EmptyView()
             }
         }
         .help(item.path)
@@ -668,5 +697,6 @@ struct ShelfStyleSettings: View {
             Text("大").tag(84.0)
         }
         Toggle("鼠标移开 0.5 秒后自动收起刘海暂存架", isOn: $autoHide)
+        FocusSettings()
     }
 }
