@@ -223,6 +223,7 @@ final class NotchShelfController: NSObject, ObservableObject {
 
     func hide() {
         cancelHover()
+        ShelfTools.shared.pendingImages = []
         watchTimer?.invalidate()
         watchTimer = nil
         outsideSince = nil
@@ -444,6 +445,9 @@ struct NotchShelfView: View {
                 ShelfStore.shared.add(urls)
                 controller.tab = .shelf
                 controller.selectedIndex = 0
+                // 拖进来的是图片：「转换格式」格子里直接给出格式按钮。
+                let images = ShelfTools.images(in: urls)
+                if !images.isEmpty { ShelfTools.shared.pendingImages = images }
             }
         }
         .focusable()
@@ -502,6 +506,12 @@ struct NotchShelfView: View {
             Menu {
                 Button("在访达中显示") { FileActions.reveal(items) }
                     .disabled(items.isEmpty)
+                Button("全部压缩为 ZIP") { ShelfTools.shared.startZip(shelf.urls) }
+                    .disabled(shelf.isEmpty)
+                if !ShelfTools.images(in: shelf.urls).isEmpty {
+                    ShelfConvertMenu(urls: { ShelfTools.images(in: shelf.urls) })
+                }
+                Divider()
                 Button("清空暂存架") { shelf.clear() }
                     .disabled(shelf.isEmpty)
             } label: {
@@ -549,6 +559,10 @@ struct NotchShelfView: View {
                     if let item = controller.selectedItem { return [item.url] }
                     return shelf.urls
                 }
+                ImageConvertDropPane(height: cardSize + 40) {
+                    if let item = controller.selectedItem { return [item.url] }
+                    return shelf.urls
+                }
                 fileList
             }
         default:
@@ -589,6 +603,20 @@ struct NotchShelfView: View {
                             }
                             .fixedSize()
                             .help("按住拖到访达、微信、邮件等任何地方，一次带上所有文件")
+                        }
+                        if controller.tab == .shelf && !items.isEmpty {
+                            Button {
+                                ShelfTools.shared.startZip(shelf.urls)
+                            } label: {
+                                Label("压缩为 ZIP", systemImage: "doc.zipper")
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Capsule().fill(Color.white.opacity(0.14)))
+                            }
+                            .buttonStyle(.plain)
+                            .fixedSize()
+                            .help("把暂存架上的文件压缩为 ZIP，并放上暂存架")
                         }
                     }
                     .padding(.horizontal, 2)
@@ -658,6 +686,11 @@ struct NotchShelfView: View {
             Divider()
             switch controller.tab {
             case .shelf:
+                Button("压缩为 ZIP") { ShelfTools.shared.startZip([item.url]) }
+                if ImageConverter.canConvert(item.url) {
+                    ShelfConvertMenu(urls: { [item.url] })
+                }
+                Divider()
                 Button("从暂存架移除") { shelf.remove(paths: [item.path]) }
             case .downloads:
                 Button("加入暂存架") { shelf.add([item.url]) }
@@ -685,6 +718,7 @@ struct ShelfStyleSettings: View {
     @AppStorage(NotchShelfPrefs.cardSizeKey) private var cardSize = 64.0
     @AppStorage(NotchShelfPrefs.autoHideKey) private var autoHide = true
     @AppStorage(NotchShelfPrefs.opacityKey) private var opacity = 1.0
+    @AppStorage(FloatingShelfController.shakeKey) private var shakeToSummon = true
     @State private var overrides: [String: String] = ShelfStyle.perDisplay
 
     private var screenNames: [String] {
@@ -700,6 +734,7 @@ struct ShelfStyleSettings: View {
         Text("自动：有刘海的屏幕用刘海，外接显示器和没有刘海的 Mac 用屏幕边缘。两种样式放的是同一份暂存架。")
             .font(.caption)
             .foregroundStyle(.secondary)
+        Toggle("晃一晃呼出暂存架：拖着文件左右快速晃几下，在鼠标旁边弹出", isOn: $shakeToSummon)
         if screenNames.count > 1 {
             ForEach(screenNames, id: \.self) { name in
                 Picker(selection: Binding(

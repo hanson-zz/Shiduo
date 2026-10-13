@@ -13273,6 +13273,310 @@
           }
         }
       }
+    },
+    "归档": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "归档"
+          }
+        }
+      }
+    },
+    "没有可以转换的图片": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No images to convert"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有可以转换的图片"
+          }
+        }
+      }
+    },
+    "已经是 %@ 格式了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in %@ format"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经是 %@ 格式了"
+          }
+        }
+      }
+    },
+    "已转换 %lld 张为 %@，已放上暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Converted %1$lld to %2$@ and added to the Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已转换 %1$lld 张为 %2$@，已放上暂存架"
+          }
+        }
+      }
+    },
+    "转换格式": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convert Format"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转换格式"
+          }
+        }
+      }
+    },
+    "转换为 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convert to %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转换为 %@"
+          }
+        }
+      }
+    },
+    "拖图片到这里转换格式": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop images here to convert their format"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖图片到这里转换格式"
+          }
+        }
+      }
+    },
+    "松手选格式": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release to pick a format"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松手选格式"
+          }
+        }
+      }
+    },
+    "拖图片到这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop images here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖图片到这里"
+          }
+        }
+      }
+    },
+    "%lld 张图片转为": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convert %lld to"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 张图片转为"
+          }
+        }
+      }
+    },
+    "压缩成 ZIP 放在原文件旁边，并放上暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compress to a ZIP next to the original files and add it to the Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩成 ZIP 放在原文件旁边，并放上暂存架"
+          }
+        }
+      }
+    },
+    "转换格式…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convert Format…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转换格式…"
+          }
+        }
+      }
+    },
+    "把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并放上暂存架（Pro）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convert images to JPG, PNG, HEIC and more; new files are saved next to the originals and added to the Shelf (Pro)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并放上暂存架（Pro）"
+          }
+        }
+      }
+    },
+    "正在处理…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在处理…"
+          }
+        }
+      }
+    },
+    "把暂存架上的文件压缩为 ZIP，并放上暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compress the files on the Shelf to a ZIP and add it to the Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把暂存架上的文件压缩为 ZIP，并放上暂存架"
+          }
+        }
+      }
+    },
+    "全部压缩为 ZIP": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compress All as ZIP"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部压缩为 ZIP"
+          }
+        }
+      }
+    },
+    "晃一晃呼出暂存架：拖着文件左右快速晃几下，在鼠标旁边弹出": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shake to summon: while dragging files, shake quickly left and right to pop up the Shelf by the pointer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "晃一晃呼出暂存架：拖着文件左右快速晃几下，在鼠标旁边弹出"
+          }
+        }
+      }
+    },
+    "左右拖动调整": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to adjust"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左右拖动调整"
+          }
+        }
+      }
+    },
+    "左右拖动调整专注时长（5–90 分钟）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag left or right to set the focus length (5–90 min)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左右拖动调整专注时长（5–90 分钟）"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

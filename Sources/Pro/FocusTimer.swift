@@ -132,6 +132,21 @@ final class FocusTimer: ObservableObject {
         FocusNotchIndicator.shared.update()
     }
 
+    /// 拖动大号时间调整专注时长的范围和步长（分钟）。
+    static let scrubRange = 5...90
+    static let scrubStep = 5
+
+    /// 还没开始的专注阶段才能拖动调整时长。
+    var canScrub: Bool { phase == .focus && !isActive }
+
+    /// 拖动调整专注时长：写进设置并立即刷新显示。
+    func setFocusMinutes(_ minutes: Int) {
+        let clamped = min(max(minutes, Self.scrubRange.lowerBound), Self.scrubRange.upperBound)
+        guard clamped != Self.focusMinutes else { return }
+        UserDefaults.standard.set(clamped, forKey: Self.focusKey)
+        durationsChanged()
+    }
+
     /// 设置里改了时长：没开始时立即生效。
     func durationsChanged() {
         if !isActive || (!running && remaining > total) { remaining = total }
@@ -284,7 +299,10 @@ struct FocusMascotPicker: View {
 
 struct FocusTabView: View {
     @ObservedObject private var timer = FocusTimer.shared
+    @ObservedObject private var scrub = FocusScrubState.shared
     let height: CGFloat
+
+    private var scrubbing: Bool { scrub.active }
 
     var body: some View {
         HStack(spacing: 18) {
@@ -299,9 +317,8 @@ struct FocusTabView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(timer.timeText)
-                        .font(.system(size: 30, weight: .bold, design: .rounded).monospacedDigit())
-                    Text(timer.statusText)
+                    FocusTimeScrubber()
+                    Text(scrubbing ? String(localized: "左右拖动调整") : timer.statusText)
                         .font(.callout.weight(.medium))
                         .foregroundStyle(Color.orange)
                     Spacer()
@@ -339,6 +356,90 @@ struct FocusTabView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// 拖动调整时长时，旁边的状态文字换成提示。
+@MainActor
+final class FocusScrubState: ObservableObject {
+    static let shared = FocusScrubState()
+    @Published var active = false
+}
+
+/// 大号剩余时间。专注还没开始时可以左右（或上下）拖动它，按 5 分钟一档调整专注时长（5–90 分钟），
+/// 每换一档触控板轻轻震一下。
+struct FocusTimeScrubber: View {
+    @ObservedObject private var timer = FocusTimer.shared
+    @ObservedObject private var scrub = FocusScrubState.shared
+    @State private var startMinutes: Int?
+    @State private var hovering = false
+    @State private var cursorPushed = false
+
+    /// 拖多远换一档（点）。
+    private let pointsPerStep: CGFloat = 14
+
+    var body: some View {
+        Text(timer.timeText)
+            .font(.system(size: 30, weight: .bold, design: .rounded).monospacedDigit())
+            .padding(.horizontal, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(scrub.active ? 0.16 : (hovering && timer.canScrub ? 0.08 : 0)))
+            )
+            .overlay(alignment: .bottom) {
+                if timer.canScrub && (hovering || scrub.active) {
+                    Image(systemName: "arrow.left.and.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Color.orange)
+                        .offset(y: 8)
+                        .allowsHitTesting(false)
+                }
+            }
+            .contentShape(Rectangle())
+            .onHover { inside in
+                hovering = inside
+                if inside && timer.canScrub && !cursorPushed {
+                    NSCursor.resizeLeftRight.push()
+                    cursorPushed = true
+                } else if !inside && cursorPushed {
+                    NSCursor.pop()
+                    cursorPushed = false
+                }
+            }
+            .onDisappear {
+                if cursorPushed {
+                    NSCursor.pop()
+                    cursorPushed = false
+                }
+            }
+            .gesture(
+                DragGesture(minimumDistance: 2)
+                    .onChanged { value in
+                        guard timer.canScrub || startMinutes != nil else { return }
+                        let base = startMinutes ?? min(max(FocusTimer.focusMinutes, FocusTimer.scrubRange.lowerBound),
+                                                       FocusTimer.scrubRange.upperBound)
+                        if startMinutes == nil {
+                            startMinutes = base
+                            scrub.active = true
+                        }
+                        // 向右、向上都是加；取移动得多的那个方向。
+                        let dx = value.translation.width
+                        let dy = -value.translation.height
+                        let distance = abs(dx) >= abs(dy) ? dx : dy
+                        let steps = Int((distance / pointsPerStep).rounded(.towardZero))
+                        let minutes = base + steps * FocusTimer.scrubStep
+                        let before = FocusTimer.focusMinutes
+                        timer.setFocusMinutes(minutes)
+                        if FocusTimer.focusMinutes != before {
+                            NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+                        }
+                    }
+                    .onEnded { _ in
+                        startMinutes = nil
+                        scrub.active = false
+                    }
+            )
+            .help(timer.canScrub ? String(localized: "左右拖动调整专注时长（5–90 分钟）") : "")
     }
 }
 

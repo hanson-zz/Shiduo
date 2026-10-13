@@ -23,8 +23,58 @@ enum ImageConverter {
         }
     }
 
+    /// 能输出的格式。WebP 只有系统 ImageIO 支持写入时才出现。
+    enum OutputFormat: String, CaseIterable, Identifiable {
+        case jpg, png, heic, webp
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .jpg: return "JPG"
+            case .png: return "PNG"
+            case .heic: return "HEIC"
+            case .webp: return "WebP"
+            }
+        }
+
+        var fileExtension: String { rawValue }
+
+        var typeIdentifier: String {
+            switch self {
+            case .jpg: return UTType.jpeg.identifier
+            case .png: return UTType.png.identifier
+            case .heic: return UTType.heic.identifier
+            case .webp: return UTType.webP.identifier
+            }
+        }
+
+        /// 原文件已经是这种格式（不用再转）。
+        func matches(_ ext: String) -> Bool {
+            switch self {
+            case .jpg: return ext == "jpg" || ext == "jpeg"
+            case .heic: return ext == "heic" || ext == "heif"
+            default: return ext == rawValue
+            }
+        }
+
+        /// 这台 Mac 能写出的格式。
+        static var available: [OutputFormat] {
+            let writable = Set((CGImageDestinationCopyTypeIdentifiers() as? [String]) ?? [])
+            return allCases.filter { writable.contains($0.typeIdentifier) }
+        }
+    }
+
+    static func canConvert(_ url: URL) -> Bool {
+        inputExtensions.contains(url.pathExtension.lowercased())
+    }
+
     /// 转成一张 JPG。maxPixel 为 0 表示保持原尺寸。返回新文件地址。
     static func convert(_ url: URL, to folder: URL, quality: Double, maxPixel: Int) -> URL? {
+        convert(url, to: folder, format: .jpg, quality: quality, maxPixel: maxPixel)
+    }
+
+    /// 转成指定格式。原图不动，新文件同名换扩展名，重名时加编号。返回新文件地址。
+    static func convert(_ url: URL, to folder: URL, format: OutputFormat, quality: Double, maxPixel: Int) -> URL? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         var options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailWithTransform: true,
@@ -39,15 +89,17 @@ enum ImageConverter {
         guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
 
         let stem = url.deletingPathExtension().lastPathComponent
-        var target = folder.appendingPathComponent(stem + ".jpg")
+        let ext = format.fileExtension
+        var target = folder.appendingPathComponent(stem + "." + ext)
         var n = 2
         while FileManager.default.fileExists(atPath: target.path) {
-            target = folder.appendingPathComponent("\(stem)_\(n).jpg")
+            target = folder.appendingPathComponent("\(stem)_\(n).\(ext)")
             n += 1
         }
-        guard let dest = CGImageDestinationCreateWithURL(target as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else { return nil }
+        guard let dest = CGImageDestinationCreateWithURL(target as CFURL, format.typeIdentifier as CFString, 1, nil) else { return nil }
         // 保留拍摄时间、相机和位置信息；方向已经转正，统一写成 1。
-        var meta: [CFString: Any] = [kCGImageDestinationLossyCompressionQuality: quality]
+        var meta: [CFString: Any] = [:]
+        if format != .png { meta[kCGImageDestinationLossyCompressionQuality] = quality }
         if let exif = props[kCGImagePropertyExifDictionary] { meta[kCGImagePropertyExifDictionary] = exif }
         if let tiff = props[kCGImagePropertyTIFFDictionary] as? [CFString: Any] {
             var t = tiff
@@ -57,7 +109,11 @@ enum ImageConverter {
         if let gps = props[kCGImagePropertyGPSDictionary] { meta[kCGImagePropertyGPSDictionary] = gps }
         meta[kCGImagePropertyOrientation] = 1
         CGImageDestinationAddImage(dest, image, meta as CFDictionary)
-        guard CGImageDestinationFinalize(dest) else { return nil }
+        guard CGImageDestinationFinalize(dest) else {
+            // 只清理这次新建、没写成功的文件。
+            try? FileManager.default.removeItem(at: target)
+            return nil
+        }
         return target
     }
 }

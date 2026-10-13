@@ -9,6 +9,12 @@ final class FloatingShelfController: NSObject {
     static let shared = FloatingShelfController()
 
     nonisolated static let enabledKey = "floatingShelfEnabled"
+    /// 拖着文件左右晃一晃，就在鼠标旁边弹出暂存架。
+    nonisolated static let shakeKey = "shelf.shakeToSummon"
+
+    static var shakeToSummon: Bool {
+        UserDefaults.standard.object(forKey: shakeKey) as? Bool ?? true
+    }
 
     /// 打开了开关，并且是 Pro（含试用）。
     var isActive: Bool {
@@ -32,6 +38,11 @@ final class FloatingShelfController: NSObject {
     private var idleTicks = 0
     var hovering = false
     var dropTargeted = false
+    /// 晃一晃认出来的；拖动结束后什么都没放进来就自动收起。
+    private var shake = ShakeDetector()
+    private var summonedByShake = false
+    private var droppedSinceShow = false
+    private var pollTick = 0
 
     func configure(store: LibraryStore) {
         self.store = store
@@ -88,7 +99,10 @@ final class FloatingShelfController: NSObject {
             MainActor.assumeIsolated { FloatingShelfController.shared.mouseWentDown() }
         }
         let dragged: (NSEvent) -> Void = { _ in
-            MainActor.assumeIsolated { FloatingShelfController.shared.checkDrag() }
+            MainActor.assumeIsolated {
+                FloatingShelfController.shared.sampleShake()
+                FloatingShelfController.shared.checkDrag()
+            }
         }
         if let m = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown, handler: down) { monitors.append(m) }
         if let m = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDragged, handler: dragged) { monitors.append(m) }
@@ -115,19 +129,25 @@ final class FloatingShelfController: NSObject {
 
     private func mouseWentDown() {
         dragCountAtMouseDown = NSPasteboard(name: .drag).changeCount
+        shake.reset()
         // 拖动开始后，别的 App 不一定还会发出 leftMouseDragged，所以按住期间也轮询一下鼠标位置。
         startPolling()
     }
 
     private func startPolling() {
         stopPolling()
-        let timer = Timer(timeInterval: 0.1, repeats: true) { _ in
+        pollTick = 0
+        // 晃动很快，要密一点采样鼠标位置；碰边检测仍然大约每 0.1 秒一次。
+        let timer = Timer(timeInterval: 0.025, repeats: true) { _ in
             MainActor.assumeIsolated {
                 let shared = FloatingShelfController.shared
                 if NSEvent.pressedMouseButtons & 1 == 0 {
                     shared.stopPolling()
+                    shared.dragEnded()
                 } else {
-                    shared.checkDrag()
+                    shared.sampleShake()
+                    shared.pollTick += 1
+                    if shared.pollTick % 4 == 0 { shared.checkDrag() }
                 }
             }
         }
@@ -161,16 +181,71 @@ final class FloatingShelfController: NSObject {
         }
     }
 
+    // MARK: - 晃一晃呼出
+
+    /// 正在拖文件吗（拖动剪贴板在按下鼠标后换过，并且里面是文件）。
+    private var isDraggingFiles: Bool {
+        let pasteboard = NSPasteboard(name: .drag)
+        return pasteboard.changeCount != dragCountAtMouseDown
+            && pasteboard.canReadObject(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true])
+    }
+
+    private func sampleShake() {
+        guard isActive, Self.shakeToSummon, !isVisible, !NotchShelfController.shared.isVisible else { return }
+        let mouse = NSEvent.mouseLocation
+        guard shake.add(x: Double(mouse.x), time: ProcessInfo.processInfo.systemUptime) else { return }
+        guard isDraggingFiles else { return }
+        let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main
+        show(near: mouse, screen: screen)
+    }
+
+    /// 松开鼠标：晃出来的暂存架如果没接到文件、鼠标也不在上面，1.5 秒后收起。
+    private func dragEnded() {
+        shake.reset()
+        guard summonedByShake, isVisible else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            MainActor.assumeIsolated {
+                let shared = FloatingShelfController.shared
+                guard shared.summonedByShake, shared.isVisible, !shared.droppedSinceShow,
+                      !shared.hovering, NSEvent.pressedMouseButtons & 1 == 0 else { return }
+                shared.hide()
+            }
+        }
+    }
+
+    /// 面板接到了拖进来的文件。
+    func noteDrop() {
+        droppedSinceShow = true
+    }
+
+    /// 在鼠标所在位置弹出（鼠标正好落在面板中间偏上，松手就能放进来）。
+    private func show(near point: NSPoint, screen: NSScreen?) {
+        let frame = screen?.visibleFrame ?? NSRect(origin: .zero, size: NSSize(width: 1440, height: 900))
+        let x = min(max(point.x - panelSize.width / 2, frame.minX + 8), frame.maxX - panelSize.width - 8)
+        let y = min(max(point.y - panelSize.height * 0.6, frame.minY + 8), frame.maxY - panelSize.height - 8)
+        present(at: NSRect(origin: NSPoint(x: x, y: y), size: panelSize))
+        summonedByShake = true
+        NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
+    }
+
     // MARK: - 面板
 
     private func show(onRightOf right: Bool, screen: NSScreen?, mouseY: CGFloat) {
-        let panel = self.panel ?? makePanel()
-        self.panel = panel
+        var target: NSRect?
         if let frame = screen?.visibleFrame {
             let x = right ? frame.maxX - panelSize.width - 4 : frame.minX + 4
             let y = min(max(mouseY - panelSize.height / 2, frame.minY + 8), frame.maxY - panelSize.height - 8)
-            panel.setFrame(NSRect(origin: NSPoint(x: x, y: y), size: panelSize), display: false)
+            target = NSRect(origin: NSPoint(x: x, y: y), size: panelSize)
         }
+        present(at: target)
+    }
+
+    private func present(at frame: NSRect?) {
+        let panel = self.panel ?? makePanel()
+        self.panel = panel
+        if let frame { panel.setFrame(frame, display: false) }
+        summonedByShake = false
+        droppedSinceShow = false
         ShelfStore.shared.refresh()
         panel.alphaValue = 0
         panel.orderFrontRegardless()
@@ -278,6 +353,7 @@ final class FloatingShelfPanel: NSPanel {
 struct FloatingShelfView: View {
     let controller: FloatingShelfController
     @ObservedObject private var shelf = ShelfStore.shared
+    @ObservedObject private var tools = ShelfTools.shared
     @State private var targeted = false
 
     var body: some View {
@@ -347,12 +423,28 @@ struct FloatingShelfView: View {
                                 Button("打开") { NSWorkspace.shared.open(item.url) }
                                 Button("在访达中显示") { FileActions.reveal([item]) }
                                 Divider()
+                                Button("压缩为 ZIP") { tools.startZip([item.url]) }
+                                if ImageConverter.canConvert(item.url) {
+                                    ShelfConvertMenu(urls: { [item.url] })
+                                }
+                                Divider()
                                 Button("从暂存架移除") { shelf.remove(paths: [item.path]) }
                             }
                             .help(item.path)
                         }
                     }
                     .padding(2)
+                }
+
+                if tools.busy || tools.message != nil {
+                    HStack(spacing: 6) {
+                        if tools.busy { ProgressView().controlSize(.mini) }
+                        Text(tools.message ?? String(localized: "正在处理…"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                        Spacer(minLength: 0)
+                    }
                 }
 
                 HStack(spacing: 8) {
@@ -364,8 +456,21 @@ struct FloatingShelfView: View {
                             .background(Capsule().fill(Color.accentColor.opacity(0.18)))
                     }
                     .help("按住拖到访达、微信、邮件等任何地方，一次带上所有文件")
+                    Button {
+                        tools.startZip(shelf.urls)
+                    } label: {
+                        Image(systemName: "doc.zipper")
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(tools.busy)
+                    .help("把暂存架上的文件压缩为 ZIP，并放上暂存架")
                     Menu {
                         Button("在访达中显示") { FileActions.reveal(shelf.items) }
+                        Button("全部压缩为 ZIP") { tools.startZip(shelf.urls) }
+                        if !ShelfTools.images(in: shelf.urls).isEmpty {
+                            ShelfConvertMenu(urls: { ShelfTools.images(in: shelf.urls) })
+                        }
+                        Divider()
                         Button("清空暂存架") { shelf.clear() }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -385,7 +490,8 @@ struct FloatingShelfView: View {
             }
         }
         .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
-            FileDrop.load(providers) { _ = ShelfStore.shared.add($0) }
+            controller.noteDrop()
+            return FileDrop.load(providers) { _ = ShelfStore.shared.add($0) }
         }
         .onHover { controller.hovering = $0 }
         .onChange(of: targeted) { controller.dropTargeted = targeted }

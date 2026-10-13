@@ -7,6 +7,7 @@ struct ShelfPageView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var license: LicenseManager
     @ObservedObject private var shelf = ShelfStore.shared
+    @ObservedObject private var tools = ShelfTools.shared
     @AppStorage(FloatingShelfController.enabledKey) private var floatingEnabled = false
 
     @State private var selection: Set<String> = []
@@ -50,6 +51,9 @@ struct ShelfPageView: View {
         .onChange(of: shelf.items) {
             selection.formIntersection(Set(shelf.items.map(\.id)))
         }
+        .onChange(of: tools.message) {
+            if let message = tools.message { store.showToast(message) }
+        }
         .navigationTitle("暂存架")
         .navigationSubtitle(subtitle)
     }
@@ -80,12 +84,23 @@ struct ShelfPageView: View {
 
             Spacer()
 
-            if working { ProgressView().controlSize(.small) }
+            if working || tools.busy { ProgressView().controlSize(.small) }
 
             Button { moveTargets() } label: { Label("移动到…", systemImage: "folder") }
                 .help("把文件移到另一个文件夹，暂存架会跟着更新")
             Button { copyTargets() } label: { Label("拷贝到…", systemImage: "doc.on.doc") }
             Button { zipTargets() } label: { Label("压缩为 ZIP", systemImage: "doc.zipper") }
+                .help("压缩成 ZIP 放在原文件旁边，并放上暂存架")
+            Menu {
+                ForEach(ImageConverter.OutputFormat.available) { format in
+                    Button(String(localized: "转换为 \(format.title)")) { convert(targets, to: format) }
+                }
+            } label: {
+                Label("转换格式…", systemImage: "photo.on.rectangle.angled")
+            }
+            .fixedSize()
+            .disabled(ShelfTools.images(in: targets.map(\.url)).isEmpty)
+            .help("把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并放上暂存架（Pro）")
             Button { ShelfActions.share(targets.map(\.url)) } label: { Label("共享…", systemImage: "square.and.arrow.up") }
                 .help("隔空投送、信息、邮件……")
             Menu {
@@ -105,7 +120,7 @@ struct ShelfPageView: View {
             .menuStyle(.borderlessButton)
             .fixedSize()
         }
-        .disabled(working)
+        .disabled(working || tools.busy)
         .controlSize(.regular)
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
@@ -219,6 +234,9 @@ struct ShelfPageView: View {
         Button("移动到…") { move(list) }
         Button("拷贝到…") { copy(list) }
         Button("压缩为 ZIP") { zip(list) }
+        if !ShelfTools.images(in: list.map(\.url)).isEmpty {
+            ShelfConvertMenu(urls: { list.map(\.url) })
+        }
         Button("共享…") { ShelfActions.share(list.map(\.url)) }
         Button("隔空投送") { airDrop(list) }
         Divider()
@@ -274,21 +292,16 @@ struct ShelfPageView: View {
                message: String(localized: "已拷贝 \(result.copied.count) 个项目"))
     }
 
+    /// 压缩好的 ZIP 放在第一个文件旁边，并放上暂存架（结果用提示条显示）。
     private func zip(_ list: [FileItem]) {
         guard !list.isEmpty else { return }
-        working = true
         let urls = list.map(\.url)
-        let name = String(localized: "暂存架文件")
-        Task {
-            let zip = await ShelfActions.zip(urls, multipleName: name)
-            working = false
-            if let zip {
-                store.showToast(String(localized: "已压缩为 \(zip.lastPathComponent)"))
-                NSWorkspace.shared.activateFileViewerSelecting([zip])
-            } else {
-                store.alertMessage = String(localized: "没能压缩这些文件。")
-            }
-        }
+        Task { await tools.zip(urls) }
+    }
+
+    /// 转换格式是 Pro 功能。
+    private func convert(_ list: [FileItem], to format: ImageConverter.OutputFormat) {
+        tools.startConvert(list.map(\.url), to: format)
     }
 
     private func airDrop(_ list: [FileItem]) {

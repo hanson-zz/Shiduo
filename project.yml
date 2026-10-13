@@ -53,6 +53,7 @@ targets:
       - path: Sources/Model/SourceCatalog.swift
       - path: Sources/Pro/PhotoConcepts.swift
       - path: Sources/Pro/License.swift
+      - path: Sources/Pro/ShakeDetector.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests
