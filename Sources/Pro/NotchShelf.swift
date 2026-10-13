@@ -75,6 +75,7 @@ extension NSScreen {
 enum NotchShelfPrefs {
     nonisolated static let delayKey = "notchShelfHoverDelay"
     nonisolated static let cardSizeKey = "notchShelfCardSize"
+    nonisolated static let opacityKey = "notchShelfOpacity"
     nonisolated static let autoHideKey = "notchShelfAutoHide"
     nonisolated static let hoverKey = "notchShelfHoverToOpen"
 
@@ -129,7 +130,7 @@ final class NotchShelfController: NSObject, ObservableObject {
 
     private func panelSize(for screen: NSScreen) -> NSSize {
         let card = NotchShelfPrefs.cardSize
-        let width = max(screen.notchWidth + 560, 780)
+        let width = max(screen.notchWidth + 440, 640)
         let height = screen.notchHeight + card + 92
         return NSSize(width: min(width, screen.frame.width - 40), height: height)
     }
@@ -402,6 +403,7 @@ struct NotchShelfView: View {
     let topInset: CGFloat
     @State private var previewURL: URL?
     @FocusState private var focused: Bool
+    @AppStorage(NotchShelfPrefs.opacityKey) private var opacity = 1.0
 
     private var cardSize: CGFloat { NotchShelfPrefs.cardSize }
     private var items: [FileItem] { controller.currentItems }
@@ -417,7 +419,16 @@ struct NotchShelfView: View {
         .padding(.bottom, 12)
         .padding(.top, 2)
         .foregroundStyle(.white)
-        .background(NotchShape().fill(Color.black))
+        .background {
+            // 透明度 100% 是纯黑，和刘海融为一体；调低后透出桌面并做模糊。
+            ZStack {
+                if opacity < 0.99 {
+                    VisualEffectView(material: .hudWindow, blending: .behindWindow)
+                }
+                Color.black.opacity(opacity)
+            }
+            .clipShape(NotchShape())
+        }
         .overlay {
             if controller.dropTargeted {
                 NotchShape()
@@ -479,17 +490,6 @@ struct NotchShelfView: View {
     @ViewBuilder
     private var rightControls: some View {
         HStack(spacing: 6) {
-            if controller.tab == .shelf && !shelf.isEmpty {
-                MultiFileDragArea(urls: { shelf.urls }) {
-                    Label(String(localized: "拖出全部"), systemImage: "hand.draw")
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(Color.white.opacity(0.14)))
-                }
-                .fixedSize()
-                .help("按住拖到访达、微信、邮件等任何地方，一次带上所有文件")
-            }
             Button {
                 controller.openInApp()
             } label: {
@@ -575,6 +575,17 @@ struct NotchShelfView: View {
                         ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                             card(item, index: index)
                                 .id(item.id)
+                        }
+                        if controller.tab == .shelf && items.count > 1 {
+                            MultiFileDragArea(urls: { shelf.urls }) {
+                                Label(String(localized: "拖出全部"), systemImage: "hand.draw")
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Capsule().fill(Color.white.opacity(0.14)))
+                            }
+                            .fixedSize()
+                            .help("按住拖到访达、微信、邮件等任何地方，一次带上所有文件")
                         }
                     }
                     .padding(.horizontal, 2)
@@ -670,6 +681,7 @@ struct ShelfStyleSettings: View {
     @AppStorage(NotchShelfPrefs.delayKey) private var delay = 0.2
     @AppStorage(NotchShelfPrefs.cardSizeKey) private var cardSize = 64.0
     @AppStorage(NotchShelfPrefs.autoHideKey) private var autoHide = true
+    @AppStorage(NotchShelfPrefs.opacityKey) private var opacity = 1.0
     @State private var overrides: [String: String] = ShelfStyle.perDisplay
 
     private var screenNames: [String] {
@@ -714,6 +726,15 @@ struct ShelfStyleSettings: View {
             Text("大").tag(84.0)
         }
         Toggle("鼠标移开 0.5 秒后自动收起刘海暂存架", isOn: $autoHide)
+        LabeledContent("刘海暂存架透明度") {
+            HStack {
+                Slider(value: $opacity, in: 0.5...1.0, step: 0.05)
+                    .frame(width: 160)
+                Text("\(Int((opacity * 100).rounded()))%")
+                    .monospacedDigit()
+                    .frame(width: 40, alignment: .trailing)
+            }
+        }
         FocusSettings()
     }
 }

@@ -3038,6 +3038,22 @@
         }
       }
     },
+    "八音盒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Music box"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "八音盒"
+          }
+        }
+      }
+    },
     "共 %@": {
       "localizations": {
         "en": {
@@ -3322,6 +3338,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "刘海 / 悬浮暂存架"
+          }
+        }
+      }
+    },
+    "刘海暂存架透明度": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notch shelf opacity"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刘海暂存架透明度"
           }
         }
       }
@@ -5062,6 +5094,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "小"
+          }
+        }
+      }
+    },
+    "小号胜利": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fanfare"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小号胜利"
           }
         }
       }
@@ -9522,6 +9570,22 @@
         }
       }
     },
+    "水滴": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Droplets"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "水滴"
+          }
+        }
+      }
+    },
     "水獭": {
       "localizations": {
         "en": {
@@ -10702,6 +10766,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "立即重新打开"
+          }
+        }
+      }
+    },
+    "竹风铃": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bamboo chimes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "竹风铃"
           }
         }
       }
@@ -12622,6 +12702,22 @@
         }
       }
     },
+    "颂钵": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Singing bowl"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "颂钵"
+          }
+        }
+      }
+    },
     "预览": {
       "localizations": {
         "en": {
@@ -12666,6 +12762,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "首页"
+          }
+        }
+      }
+    },
+    "马林巴上行": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marimba rise"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "马林巴上行"
           }
         }
       }

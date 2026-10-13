@@ -455,12 +455,14 @@ struct FocusSettings: View {
 enum FocusSound {
     case focusEnd, restEnd
 
-    static let choices = ["Glass", "Hero", "Ping", "Purr", "Submarine", "Funk", "Blow", "Bottle", "Pop", "Tink", "Morse", "Sosumi"]
+    /// 拾掇自带的原创提示音（Resources/Sounds，代码合成，MIT），排在系统声音前面。
+    static let bundled = ["Shiduo-musicbox", "Shiduo-marimba", "Shiduo-fanfare", "Shiduo-droplets", "Shiduo-bamboo", "Shiduo-bowl"]
+    static let system = ["Glass", "Hero", "Ping", "Purr", "Submarine", "Funk", "Blow", "Bottle", "Pop", "Tink", "Morse", "Sosumi"]
     static let none = "none"
     static let repeatKey = "focus.sound.repeat"
 
     var key: String { self == .focusEnd ? "focus.sound.focusEnd" : "focus.sound.restEnd" }
-    var defaultName: String { self == .focusEnd ? "Glass" : "Hero" }
+    var defaultName: String { self == .focusEnd ? "Shiduo-musicbox" : "Shiduo-bowl" }
 
     var name: String { UserDefaults.standard.string(forKey: key) ?? defaultName }
 
@@ -484,6 +486,12 @@ enum FocusSound {
     static func title(_ name: String) -> String {
         switch name {
         case none: return String(localized: "无")
+        case "Shiduo-musicbox": return String(localized: "八音盒")
+        case "Shiduo-marimba": return String(localized: "马林巴上行")
+        case "Shiduo-fanfare": return String(localized: "小号胜利")
+        case "Shiduo-droplets": return String(localized: "水滴")
+        case "Shiduo-bamboo": return String(localized: "竹风铃")
+        case "Shiduo-bowl": return String(localized: "颂钵")
         case "Glass": return String(localized: "玻璃")
         case "Hero": return String(localized: "英雄")
         case "Ping": return String(localized: "乒")
@@ -516,7 +524,9 @@ struct FocusSoundRow: View {
     var body: some View {
         HStack {
             Picker(title, selection: $name) {
-                ForEach(FocusSound.choices, id: \.self) { Text(FocusSound.title($0)).tag($0) }
+                ForEach(FocusSound.bundled, id: \.self) { Text(FocusSound.title($0)).tag($0) }
+                Divider()
+                ForEach(FocusSound.system, id: \.self) { Text(FocusSound.title($0)).tag($0) }
                 Divider()
                 Text(FocusSound.title(FocusSound.none)).tag(FocusSound.none)
             }
