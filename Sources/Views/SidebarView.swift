@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SidebarView: View {
     @EnvironmentObject private var store: LibraryStore
@@ -6,6 +7,8 @@ struct SidebarView: View {
     @EnvironmentObject private var duplicates: DuplicateScanner
     @EnvironmentObject private var chat: ChatFilesStore
     @EnvironmentObject private var license: LicenseManager
+    @ObservedObject private var shelf = ShelfStore.shared
+    @State private var shelfTargeted = false
 
     /// 常用位置，和访达侧边栏一样。
     private struct Location: Identifiable {
@@ -40,6 +43,17 @@ struct SidebarView: View {
         List(selection: $store.selection) {
             Label("首页", systemImage: "house")
                 .tag(SidebarItem.home)
+
+            Label("暂存架", systemImage: "tray.full")
+                .badge(shelf.isEmpty ? nil : Text("\(shelf.count)"))
+                .tag(SidebarItem.shelf)
+                .help("把文件拖到这里，暂时放一下")
+                .onDrop(of: [.fileURL], isTargeted: $shelfTargeted) { providers in
+                    FileDrop.load(providers) { urls in
+                        let added = shelf.add(urls)
+                        if added > 0 { store.showToast(String(localized: "已放上暂存架：\(added) 个")) }
+                    }
+                }
 
             Section("资料库") {
                 ForEach(FileCategory.allCases) { category in

@@ -3,6 +3,8 @@ import SwiftUI
 
 enum SidebarItem: Hashable {
     case home
+    /// 暂存架：临时放一下的文件。
+    case shelf
     case category(FileCategory)
     case largeFiles
     case screenshots
@@ -180,7 +182,7 @@ final class LibraryStore: ObservableObject {
         case .home:
             await refreshDashboard()
             return
-        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize:
+        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf:
             items = []
             return
         default:
@@ -428,6 +430,18 @@ final class LibraryStore: ObservableObject {
 
     // MARK: - 固定文件夹
 
+    // MARK: - 暂存架
+
+    /// 放上暂存架（只记住位置，不拷贝文件）。
+    func addToShelf(_ list: [FileItem]) {
+        let added = ShelfStore.shared.add(list.map(\.url))
+        if added > 0 {
+            showToast(String(localized: "已放上暂存架：\(added) 个"))
+        } else {
+            showToast(String(localized: "已经在暂存架上了"))
+        }
+    }
+
     func pin(_ path: String) {
         guard !pinnedFolders.contains(path) else { return }
         pinnedFolders.append(path)
@@ -470,6 +484,7 @@ final class LibraryStore: ObservableObject {
         similar.remove(paths: moved)
         cleanup.remove(paths: moved)
         chat.remove(paths: moved)
+        ShelfStore.shared.remove(paths: moved)
 
         var notes: [String] = []
         if !outcome.skipped.isEmpty {

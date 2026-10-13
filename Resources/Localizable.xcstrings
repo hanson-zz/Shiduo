@@ -617,6 +617,44 @@
         }
       }
     },
+    "%lld 个项目没有处理成功：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$#@items@ couldn’t be processed: %2$@"
+          },
+          "substitutions": {
+            "items": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg item"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg items"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个项目没有处理成功：%2$@"
+          }
+        }
+      }
+    },
     "%lld 份完全相同 · 可腾出 %@": {
       "localizations": {
         "en": {
@@ -2044,6 +2082,22 @@
         }
       }
     },
+    "从暂存架移除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从暂存架移除"
+          }
+        }
+      }
+    },
     "从未打开或无记录": {
       "localizations": {
         "en": {
@@ -2072,6 +2126,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "从浏览器、邮箱、网盘下载的文件会记下来源，这里按来源分组显示。"
+          }
+        }
+      }
+    },
+    "从访达或拾掇的任何列表拖进来，也可以在文件上点右键选「加入暂存架」。攒齐了再一起拖走、移动、压缩或共享。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag files in from Finder or any list in Shiduo, or right-click a file and choose “Add to Shelf”. When you have everything, drag them out together, or move, compress or share them."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从访达或拾掇的任何列表拖进来，也可以在文件上点右键选「加入暂存架」。攒齐了再一起拖走、移动、压缩或共享。"
           }
         }
       }
@@ -2412,6 +2482,34 @@
         }
       }
     },
+    "全部 %lld 个": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "All %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "All %lld items"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部 %lld 个"
+          }
+        }
+      }
+    },
     "全部来源": {
       "localizations": {
         "en": {
@@ -2472,6 +2570,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "共 %@"
+          }
+        }
+      }
+    },
+    "共享…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共享…"
           }
         }
       }
@@ -2748,6 +2862,22 @@
         }
       }
     },
+    "加入暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入暂存架"
+          }
+        }
+      }
+    },
     "加前缀 / 后缀": {
       "localizations": {
         "en": {
@@ -2792,6 +2922,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "半年以前"
+          }
+        }
+      }
+    },
+    "压缩为 ZIP": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compress to ZIP"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩为 ZIP"
           }
         }
       }
@@ -3572,6 +3718,22 @@
         }
       }
     },
+    "在拾掇中打开暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the Shelf in Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在拾掇中打开暂存架"
+          }
+        }
+      }
+    },
     "在拾掇中查看全部结果": {
       "localizations": {
         "en": {
@@ -4108,6 +4270,22 @@
         }
       }
     },
+    "已压缩为 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compressed to %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已压缩为 %@"
+          }
+        }
+      }
+    },
     "已去掉“%@”标签": {
       "localizations": {
         "en": {
@@ -4296,6 +4474,34 @@
         }
       }
     },
+    "已拷贝 %lld 个项目": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Copied %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Copied %lld items"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拷贝 %lld 个项目"
+          }
+        }
+      }
+    },
     "已拷贝 %lld 张图片的文字": {
       "localizations": {
         "en": {
@@ -4356,6 +4562,34 @@
         }
       }
     },
+    "已放上暂存架：%lld 个": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Added %lld item to the shelf"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Added %lld items to the shelf"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已放上暂存架：%lld 个"
+          }
+        }
+      }
+    },
     "已移到废纸篓，可随时恢复": {
       "localizations": {
         "en": {
@@ -4368,6 +4602,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "已移到废纸篓，可随时恢复"
+          }
+        }
+      }
+    },
+    "已移动 %lld 个项目": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Moved %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Moved %lld items"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已移动 %lld 个项目"
+          }
+        }
+      }
+    },
+    "已经在暂存架上了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already on the shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经在暂存架上了"
           }
         }
       }
@@ -4520,6 +4798,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "已转换 %1$lld 张，%2$@ → %3$@"
+          }
+        }
+      }
+    },
+    "已选 %lld 个": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld selected"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld selected"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已选 %lld 个"
           }
         }
       }
@@ -4872,6 +5178,22 @@
         }
       }
     },
+    "悬浮暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Floating shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬浮暂存架"
+          }
+        }
+      }
+    },
     "截图": {
       "localizations": {
         "en": {
@@ -5064,6 +5386,38 @@
         }
       }
     },
+    "把文件拖到这里，暂时放一下": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop files here to park them for a moment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把文件拖到这里，暂时放一下"
+          }
+        }
+      }
+    },
+    "把文件移到另一个文件夹，暂存架会跟着更新": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move the files to another folder; the shelf follows them"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把文件移到另一个文件夹，暂存架会跟着更新"
+          }
+        }
+      }
+    },
     "把标着“废纸篓”的文件移到废纸篓": {
       "localizations": {
         "en": {
@@ -5092,6 +5446,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "拍摄时间"
+          }
+        }
+      }
+    },
+    "拖出全部": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag Out All"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖出全部"
+          }
+        }
+      }
+    },
+    "拖出全部 %lld 个": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Drag Out %lld Item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Drag Out All %lld"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖出全部 %lld 个"
+          }
+        }
+      }
+    },
+    "拖出所选": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag Out Selected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖出所选"
+          }
+        }
+      }
+    },
+    "拖到屏幕边缘时弹出悬浮暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show a floating shelf when dragging files to the screen edge"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖到屏幕边缘时弹出悬浮暂存架"
+          }
+        }
+      }
+    },
+    "拖着文件碰到屏幕边缘，就有地方先放一下": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag files to the edge of the screen and a shelf pops up to hold them"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖着文件碰到屏幕边缘，就有地方先放一下"
           }
         }
       }
@@ -5140,6 +5586,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "拷贝全部文字"
+          }
+        }
+      }
+    },
+    "拷贝到…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy To…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝到…"
+          }
+        }
+      }
+    },
+    "拷贝到这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝到这里"
           }
         }
       }
@@ -5428,6 +5906,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "按下载来源筛选"
+          }
+        }
+      }
+    },
+    "按住拖到访达、微信、邮件等任何地方，一次带上所有文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to Finder, WeChat, Mail or anywhere else to take all the files at once"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按住拖到访达、微信、邮件等任何地方，一次带上所有文件"
           }
         }
       }
@@ -5928,6 +6422,22 @@
         }
       }
     },
+    "收起": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起"
+          }
+        }
+      }
+    },
     "放进文件夹超过 %lld 天": {
       "localizations": {
         "en": {
@@ -6260,6 +6770,22 @@
         }
       }
     },
+    "显示 / 隐藏悬浮暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show / Hide Floating Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示 / 隐藏悬浮暂存架"
+          }
+        }
+      }
+    },
     "显示或隐藏简介": {
       "localizations": {
         "en": {
@@ -6352,6 +6878,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "智能文件夹"
+          }
+        }
+      }
+    },
+    "暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂存架"
+          }
+        }
+      }
+    },
+    "暂存架只记住文件的位置，不会复制文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shelf only remembers where files are. Nothing is copied."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂存架只记住文件的位置，不会复制文件。"
+          }
+        }
+      }
+    },
+    "暂存架文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shelf Items"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂存架文件"
+          }
+        }
+      }
+    },
+    "更多": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更多"
           }
         }
       }
@@ -7604,6 +8194,22 @@
         }
       }
     },
+    "没能压缩这些文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t compress these files."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能压缩这些文件。"
+          }
+        }
+      }
+    },
     "浏览器扩展": {
       "localizations": {
         "en": {
@@ -7696,6 +8302,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "清理大文件"
+          }
+        }
+      }
+    },
+    "清空暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空暂存架"
           }
         }
       }
@@ -8304,6 +8926,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "移到这里"
+          }
+        }
+      }
+    },
+    "移动到…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move To…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动到…"
+          }
+        }
+      }
+    },
+    "移动到这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动到这里"
           }
         }
       }
@@ -9488,6 +10142,22 @@
         }
       }
     },
+    "这台 Mac 现在不能使用隔空投送。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirDrop isn’t available on this Mac right now."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 现在不能使用隔空投送。"
+          }
+        }
+      }
+    },
     "这张图里没有识别到文字": {
       "localizations": {
         "en": {
@@ -9932,6 +10602,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "隐藏简介"
+          }
+        }
+      }
+    },
+    "隔空投送": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirDrop"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔空投送"
+          }
+        }
+      }
+    },
+    "隔空投送、信息、邮件……": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirDrop, Messages, Mail…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔空投送、信息、邮件……"
           }
         }
       }

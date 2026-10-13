@@ -19,6 +19,7 @@ struct ContentView: View {
             }
             QuickSearchController.shared.configure(store: store)
             CleanupReminder.shared.configure(store: store)
+            FloatingShelfController.shared.configure(store: store)
             if !UserDefaults.standard.bool(forKey: "onboardingDone") { store.showOnboarding = true }
             // 拾掇 Pro：最多每 24 小时联网校验一次授权（不挡住首页加载）；之后马上自动整理一次，再每 10 分钟一次。
             Task { @MainActor in
@@ -28,6 +29,7 @@ struct ContentView: View {
             await store.refreshDashboard()
             await store.checkForUpdatesOnLaunch()
         }
+        .onChange(of: license.state) { FloatingShelfController.shared.apply() }
         .sheet(isPresented: $store.showOnboarding) {
             OnboardingView(onSearch: { text in
                 store.searchText = text
@@ -145,6 +147,8 @@ struct DetailView: View {
             switch store.selection ?? .home {
             case .home:
                 HomeView()
+            case .shelf:
+                ShelfPageView()
             case .category(let category):
                 BrowserView(title: category.title, showsOCRTools: category == .images)
             case .largeFiles:

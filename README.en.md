@@ -28,11 +28,12 @@ The app is in English and Simplified Chinese. It follows your system language, a
 - **Downloaded from**: recognizes Gmail, Google Drive, ChatGPT, WeChat, GitHub, Figma, browser extensions and 30+ other sources, and groups the rest by website.
 - **Safe cleanup**: used installers, forgotten downloads, old screenshots, big old videos and rarely used apps. Files only go to the Trash, and iCloud-only files are skipped.
 - **Duplicates and similar photos**: exact copies by size and SHA-256, look-alike photos with Vision.
+- **Shelf**: drop files from anywhere onto the Shelf in the sidebar to park them for a moment (only their locations are saved, nothing is copied), then drag them all out together, or move, copy, zip or AirDrop them in one go.
 - **Handy tools**: text recognition in images (on-device), storage map, batch rename, convert to JPG, Finder tags, and a global quick-search panel (⌥Space).
 
 ## Shiduo Pro
 
-Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, 7-day free trial, payments by Creem) adds auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, and a menu bar helper. Enter your license key in **Settings › License**.
+Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, 7-day free trial, payments by Creem) adds auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, and a floating shelf that pops up when you drag files to the edge of the screen. Enter your license key in **Settings › License**.
 
 ## Install
 

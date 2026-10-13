@@ -18,6 +18,7 @@ struct SettingsView: View {
     @State private var licenseKey = ""
     @State private var reminderDenied = false
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
+    @AppStorage(FloatingShelfController.enabledKey) private var floatingShelfEnabled = false
     @AppStorage(CleanupReminder.enabledKey) private var reminderEnabled = false
     @AppStorage(CleanupReminder.weekdayKey) private var reminderWeekday = 7
     @AppStorage(CleanupReminder.hourKey) private var reminderHour = 10
@@ -199,6 +200,9 @@ struct SettingsView: View {
         Section {
             Toggle("在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）", isOn: $menuBarEnabled)
                 .disabled(!license.isPro)
+            Toggle("拖到屏幕边缘时弹出悬浮暂存架", isOn: $floatingShelfEnabled)
+                .disabled(!license.isPro)
+                .onChange(of: floatingShelfEnabled) { FloatingShelfController.shared.apply() }
             Toggle("每周提醒我清理", isOn: $reminderEnabled)
                 .disabled(!license.isPro)
             HStack {

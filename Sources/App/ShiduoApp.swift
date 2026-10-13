@@ -37,6 +37,8 @@ struct ShiduoApp: App {
                     .keyboardShortcut("f", modifiers: .command)
                 Button("拷贝文字") { store.copyText(store.selectedItems) }
                     .keyboardShortcut("c", modifiers: [.command, .shift])
+                Button("加入暂存架") { store.addToShelf(store.selectedItems) }
+                    .disabled(store.selectedItems.isEmpty)
             }
             CommandGroup(after: .toolbar) {
                 Button("以图标显示") { UserDefaults.standard.set(ViewMode.grid.rawValue, forKey: "viewMode") }
@@ -54,6 +56,9 @@ struct ShiduoApp: App {
                 Divider()
                 Button("首页") { store.selection = .home }
                     .keyboardShortcut("h", modifiers: [.command, .shift])
+                Button("暂存架") { store.selection = .shelf }
+                Button("显示 / 隐藏悬浮暂存架") { FloatingShelfController.shared.toggle() }
+                    .keyboardShortcut("s", modifiers: [.command, .option])
                 Button("下载来源") { store.selection = .downloads }
                     .keyboardShortcut("j", modifiers: [.command, .shift])
                 Button("重复文件") { store.selection = .duplicates }

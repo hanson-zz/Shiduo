@@ -422,6 +422,13 @@ extension LibraryStore {
         case "suggest": searchFieldFocused = true
         case "onboarding": showOnboarding = true
         case "storagemap": selection = .storageMap
+        case "shelf":
+            let names = [Demo.n("设计稿-首页.png"), Demo.n("海报.png"), Demo.n("年度报告 2026.pdf"), Demo.n("季度复盘.docx"),
+                         Demo.n("西湖日落.jpg"), Demo.n("会议录屏.mov"), Demo.n("项目素材.zip")]
+            var seen = Set<String>()
+            let picks = names.compactMap { name in demoItems.first { $0.name == name && seen.insert(name).inserted } }
+            ShelfStore.shared.setDemo(picks)
+            selection = .shelf
         case "rename":
             selection = .category(.images)
             renameItems = Array(demoItems.filter { $0.category == .images && !$0.isScreenshot }.prefix(6))

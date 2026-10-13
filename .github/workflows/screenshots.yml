@@ -58,7 +58,7 @@ jobs:
             kill $pid || true
             sleep 2
           }
-          PAGES="home:light:home home:dark:home-dark images:light:images search:light:search downloads:light:downloads cleanup:light:cleanup duplicates:light:duplicates similar:light:similar review:light:review music:light:music suggest:light:suggest onboarding:light:onboarding storagemap:light:storagemap rename:light:rename convert:light:convert"
+          PAGES="home:light:home home:dark:home-dark images:light:images search:light:search downloads:light:downloads cleanup:light:cleanup duplicates:light:duplicates similar:light:similar review:light:review music:light:music suggest:light:suggest onboarding:light:onboarding storagemap:light:storagemap rename:light:rename convert:light:convert shelf:light:shelf"
           for lang in zh en; do
             shoot home light warmup $lang   # 冷启动预热，首张截图常停在加载中
             rm -f docs/screenshots/warmup.png docs/screenshots/en/warmup.png
