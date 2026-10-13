@@ -1,3 +1,4 @@
+import OSLog
 import AppKit
 import CoreServices
 import ImageIO
@@ -120,6 +121,7 @@ enum Renamer {
                 try fm.moveItem(at: plan.item.url, to: tmp)
                 temps.append((plan, tmp))
             } catch {
+                AppLog.files.error("Rename failed: \(AppLog.describe(error), privacy: .public)")
                 failed.append(plan.item.name)
             }
         }

@@ -93,9 +93,14 @@ final class CleanupReminderDelegate: NSObject, UNUserNotificationCenterDelegate 
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        if response.notification.request.identifier == cleanupReminderID {
+        let id = response.notification.request.identifier
+        if id == cleanupReminderID {
             Task { @MainActor in
                 CleanupReminder.shared.openCleanup()
+            }
+        } else if id == trialReminderID {
+            Task { @MainActor in
+                TrialReminder.shared.enterLicense()
             }
         }
         completionHandler()

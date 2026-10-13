@@ -72,22 +72,6 @@
         }
       }
     },
-    "%@ 个项目": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ items"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 个项目"
-          }
-        }
-      }
-    },
     "%@ 可用": {
       "localizations": {
         "en": {
@@ -116,6 +100,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 已下载，退出拾掇时自动安装"
+          }
+        }
+      }
+    },
+    "%@ 已被其他 App 占用，仍可在拾掇的「前往」菜单里使用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is already used by another app. You can still use it from Shiduo’s Go menu."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 已被其他 App 占用，仍可在拾掇的「前往」菜单里使用。"
           }
         }
       }
@@ -1858,6 +1858,22 @@
         }
       }
     },
+    "不再显示": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don’t Show Again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不再显示"
+          }
+        }
+      }
+    },
     "不常用的应用": {
       "localizations": {
         "en": {
@@ -3110,6 +3126,22 @@
         }
       }
     },
+    "发送反馈": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send Feedback"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送反馈"
+          }
+        }
+      }
+    },
     "发送反馈…": {
       "localizations": {
         "en": {
@@ -3227,7 +3259,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ to free up"
+            "value": "%@ can be freed up"
           }
         },
         "zh-Hans": {
@@ -3654,6 +3686,22 @@
         }
       }
     },
+    "在 GitHub 提交问题": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open GitHub Issue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 GitHub 提交问题"
+          }
+        }
+      }
+    },
     "在「完全磁盘访问权限」列表里打开「拾掇」的开关": {
       "localizations": {
         "en": {
@@ -3682,6 +3730,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "在任何 App 里按快捷键弹出拾掇搜索框"
+          }
+        }
+      }
+    },
+    "在任何 App 里按快捷键显示 / 隐藏悬浮暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show / hide the floating shelf from any app with a shortcut"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在任何 App 里按快捷键显示 / 隐藏悬浮暂存架"
           }
         }
       }
@@ -3782,6 +3846,22 @@
         }
       }
     },
+    "在菜单栏图标旁显示可腾出的空间": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show reclaimable space next to the menu bar icon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在菜单栏图标旁显示可腾出的空间"
+          }
+        }
+      }
+    },
     "在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）": {
       "localizations": {
         "en": {
@@ -3846,18 +3926,30 @@
         }
       }
     },
-    "多出 %@ 份": {
+    "多出 %lld 份": {
       "localizations": {
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extra copies: %@"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld extra copy"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld extra copies"
+                }
+              }
+            }
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "多出 %@ 份"
+            "value": "多出 %lld 份"
           }
         }
       }
@@ -5325,9 +5417,21 @@
     "批量重命名 %lld 个文件": {
       "localizations": {
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rename %lld Files"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Rename %lld File"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Rename %lld Files"
+                }
+              }
+            }
           }
         },
         "zh-Hans": {
@@ -5341,9 +5445,21 @@
     "批量重命名 %lld 个文件…": {
       "localizations": {
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rename %lld Files…"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Rename %lld File…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Rename %lld Files…"
+                }
+              }
+            }
           }
         },
         "zh-Hans": {
@@ -5561,9 +5677,21 @@
     "拷贝 %lld 个路径": {
       "localizations": {
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy %lld Paths"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Copy %lld Path"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Copy %lld Paths"
+                }
+              }
+            }
           }
         },
         "zh-Hans": {
@@ -5634,6 +5762,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "拷贝文字"
+          }
+        }
+      }
+    },
+    "拷贝诊断信息": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Diagnostics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝诊断信息"
           }
         }
       }
@@ -5766,6 +5910,38 @@
         }
       }
     },
+    "拾掇 Pro 试用明天到期": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Shiduo Pro trial ends tomorrow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 试用明天到期"
+          }
+        }
+      }
+    },
+    "拾掇 Pro 试用明天到期 · 早鸟价 $6.90（原价 $9.90），使用优惠码 EARLYBIRD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Shiduo Pro trial ends tomorrow · Early-bird price $6.90 (regularly $9.90) with code EARLYBIRD"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 试用明天到期 · 早鸟价 $6.90（原价 $9.90），使用优惠码 EARLYBIRD"
+          }
+        }
+      }
+    },
     "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。": {
       "localizations": {
         "en": {
@@ -5810,6 +5986,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "拾掇反馈"
+          }
+        }
+      }
+    },
+    "拾掇反馈：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo feedback: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇反馈：%@"
           }
         }
       }
@@ -5874,6 +6066,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "拾掇转换"
+          }
+        }
+      }
+    },
+    "拾掇：可腾出 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo: %@ can be freed up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇：可腾出 %@"
           }
         }
       }
@@ -6734,6 +6942,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "早上好"
+          }
+        }
+      }
+    },
+    "早鸟价 $6.90（原价 $9.90），使用优惠码 EARLYBIRD。点这里购买或输入许可证。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early-bird price $6.90 (regularly $9.90) with code EARLYBIRD. Click to buy or enter a license key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "早鸟价 $6.90（原价 $9.90），使用优惠码 EARLYBIRD。点这里购买或输入许可证。"
           }
         }
       }
@@ -7622,6 +7846,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在搜索…"
+          }
+        }
+      }
+    },
+    "正在收集诊断信息…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collecting diagnostics…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在收集诊断信息…"
           }
         }
       }
@@ -9602,6 +9842,22 @@
         }
       }
     },
+    "诊断信息预览（不含授权码；路径里的主目录已替换为 ~）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics preview (no license key; your home folder in paths is shown as ~)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "诊断信息预览（不含授权码；路径里的主目录已替换为 ~）"
+          }
+        }
+      }
+    },
     "试用已结束": {
       "localizations": {
         "en": {
@@ -9662,6 +9918,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "语言 / Language"
+          }
+        }
+      }
+    },
+    "说说遇到了什么问题或想要什么功能。下面的诊断信息能帮助更快找到原因，发送前你可以先看一遍。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell us what went wrong or what you’d like to see. The diagnostics below help track down problems faster — you can review them before sending."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "说说遇到了什么问题或想要什么功能。下面的诊断信息能帮助更快找到原因，发送前你可以先看一遍。"
           }
         }
       }
@@ -9946,6 +10218,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "输入文件名、拼音首字母，或者一句话"
+          }
+        }
+      }
+    },
+    "输入许可证": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter License Key"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入许可证"
           }
         }
       }
@@ -10270,6 +10558,22 @@
         }
       }
     },
+    "通过邮件发送": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send by Email"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通过邮件发送"
+          }
+        }
+      }
+    },
     "邮箱": {
       "localizations": {
         "en": {
@@ -10510,6 +10814,22 @@
         }
       }
     },
+    "问题描述、复现步骤或建议……": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What happened, steps to reproduce, or your suggestion…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "问题描述、复现步骤或建议……"
+          }
+        }
+      }
+    },
     "阿里云盘": {
       "localizations": {
         "en": {
@@ -10522,6 +10842,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "阿里云盘"
+          }
+        }
+      }
+    },
+    "附带诊断信息": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include diagnostics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "附带诊断信息"
           }
         }
       }

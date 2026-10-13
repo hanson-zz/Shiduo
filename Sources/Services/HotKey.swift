@@ -45,38 +45,95 @@ enum QuickSearchHotKey: String, CaseIterable, Identifiable {
     }
 }
 
+/// 悬浮暂存架的全局快捷键 ⌥⌘S（固定，不可改）。只在 Pro 且打开了悬浮暂存架时注册。
+enum FloatingShelfHotKey {
+    static let enabledKey = "floatingShelfHotKeyEnabled"
+    static let title = "⌥⌘ S"
+    static let keyCode = UInt32(kVK_ANSI_S)
+    static let modifiers = UInt32(optionKey | cmdKey)
+
+    static var isEnabled: Bool {
+        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+    }
+}
+
 @MainActor
 final class HotKeyCenter {
     static let shared = HotKeyCenter()
 
-    private var ref: EventHotKeyRef?
-    private var installed = false
-    var handler: (() -> Void)?
-
-    /// 按设置注册或取消全局快捷键。返回 false 表示被别的 App 占用了。
-    @discardableResult
-    func apply() -> Bool {
-        unregister()
-        guard QuickSearchHotKey.isEnabled else { return true }
-        installHandlerIfNeeded()
-        let key = QuickSearchHotKey.current
-        let id = EventHotKeyID(signature: OSType(0x5348_4459), id: 1)  // "SHDY"
-        let status = RegisterEventHotKey(key.keyCode, key.modifiers, id, GetEventDispatcherTarget(), 0, &ref)
-        return status == noErr
+    /// 每个全局快捷键一个编号，按下时根据编号找到对应的动作。
+    enum Slot: UInt32 {
+        case quickSearch = 1
+        case floatingShelf = 2
     }
 
-    func unregister() {
-        if let ref { UnregisterEventHotKey(ref) }
-        ref = nil
+    private static let signature = OSType(0x5348_4459)  // "SHDY"
+
+    private var refs: [Slot: EventHotKeyRef] = [:]
+    private var actions: [Slot: () -> Void] = [:]
+    private var installed = false
+
+    /// 快速搜索的动作（保留原来的接口）。
+    var handler: (() -> Void)? {
+        get { actions[.quickSearch] }
+        set { actions[.quickSearch] = newValue }
+    }
+
+    /// 按设置注册或取消快速搜索的全局快捷键。返回 false 表示被别的 App 占用了。
+    @discardableResult
+    func apply() -> Bool {
+        unregister(.quickSearch)
+        guard QuickSearchHotKey.isEnabled else { return true }
+        let key = QuickSearchHotKey.current
+        return register(.quickSearch, keyCode: key.keyCode, modifiers: key.modifiers)
+    }
+
+    /// 悬浮暂存架的 ⌥⌘S：active 为 true 时注册，否则取消。返回 false 表示被别的 App 占用了。
+    @discardableResult
+    func applyFloatingShelf(active: Bool, action: @escaping () -> Void) -> Bool {
+        unregister(.floatingShelf)
+        actions[.floatingShelf] = action
+        guard active else { return true }
+        return register(.floatingShelf, keyCode: FloatingShelfHotKey.keyCode, modifiers: FloatingShelfHotKey.modifiers)
+    }
+
+    func isRegistered(_ slot: Slot) -> Bool { refs[slot] != nil }
+
+    func unregister() { unregister(.quickSearch) }
+
+    func unregister(_ slot: Slot) {
+        if let ref = refs[slot] { UnregisterEventHotKey(ref) }
+        refs[slot] = nil
+    }
+
+    private func register(_ slot: Slot, keyCode: UInt32, modifiers: UInt32) -> Bool {
+        installHandlerIfNeeded()
+        var ref: EventHotKeyRef?
+        let id = EventHotKeyID(signature: Self.signature, id: slot.rawValue)
+        let status = RegisterEventHotKey(keyCode, modifiers, id, GetEventDispatcherTarget(), 0, &ref)
+        guard status == noErr, let ref else { return false }
+        refs[slot] = ref
+        return true
+    }
+
+    fileprivate func fire(_ id: UInt32) {
+        guard let slot = Slot(rawValue: id) else { return }
+        actions[slot]?()
     }
 
     private func installHandlerIfNeeded() {
         guard !installed else { return }
         installed = true
         var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetEventDispatcherTarget(), { _, _, _ in
+        InstallEventHandler(GetEventDispatcherTarget(), { _, event, _ in
+            var hotKeyID = EventHotKeyID()
+            let status = GetEventParameter(
+                event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID
+            )
+            let id: UInt32 = status == noErr ? hotKeyID.id : 1
             DispatchQueue.main.async {
-                MainActor.assumeIsolated { HotKeyCenter.shared.handler?() }
+                MainActor.assumeIsolated { HotKeyCenter.shared.fire(id) }
             }
             return noErr
         }, 1, &spec, nil, nil)

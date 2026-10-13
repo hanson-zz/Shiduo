@@ -16,18 +16,8 @@ enum Support {
         return c.url ?? URL(string: "mailto:\(email)")!
     }
 
-    static var feedbackURL: URL {
-        let os = ProcessInfo.processInfo.operatingSystemVersionString
-        #if arch(arm64)
-        let chip = String(localized: "Apple 芯片")
-        #else
-        let chip = "Intel"
-        #endif
-        let body = String(localized: "\n\n\n——\n拾掇 \(UpdateChecker.currentVersion) · macOS \(os) · \(chip)")
-        return mailURL(subject: String(localized: "拾掇反馈"), body: body)
-    }
+    static let issuesURL = URL(string: "https://github.com/hanson-zz/Shiduo/issues/new")!
 
-    static func openFeedback() { NSWorkspace.shared.open(feedbackURL) }
     static func openRepo() { NSWorkspace.shared.open(repoURL) }
 
     static func copy(_ text: String) {
@@ -54,6 +44,7 @@ enum Support {
 /// 设置里的「联系我们」+「推广」+「发送反馈」三块。
 struct SupportSections: View {
     @Environment(\.openWindow) private var openWindow
+    @State private var showFeedback = false
 
     var body: some View {
         Section {
@@ -100,8 +91,11 @@ struct SupportSections: View {
         }
 
         Section {
-            Button("发送反馈…") { Support.openFeedback() }
+            Button("发送反馈…") { showFeedback = true }
                 .buttonStyle(.link)
+        }
+        .sheet(isPresented: $showFeedback) {
+            FeedbackView()
         }
     }
 }
@@ -159,5 +153,143 @@ struct SponsorView: View {
         }
         .padding(28)
         .frame(width: 660, height: 500)
+    }
+}
+
+// MARK: - 发送反馈
+
+/// 发送反馈：先看清楚要附带的诊断信息，写几句描述，再自己选择用邮件或 GitHub 发出去。
+/// 用户点按钮之前什么都不会发送。
+struct FeedbackView: View {
+    static let windowID = "feedback"
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var message = ""
+    @State private var diagnostics = ""
+    @State private var includeDiagnostics = true
+    @State private var loading = true
+    @State private var copied = false
+
+    /// mailto 链接里的正文上限（有些邮件 App 对太长的链接会直接打不开）。
+    private let mailtoLimit = 1_800
+    /// GitHub 新建 issue 链接的总长度上限。
+    private let githubURLLimit = 7_000
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("发送反馈")
+                .font(.title2.weight(.bold))
+            Text("说说遇到了什么问题或想要什么功能。下面的诊断信息能帮助更快找到原因，发送前你可以先看一遍。")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            TextEditor(text: $message)
+                .font(.body)
+                .frame(minHeight: 110)
+                .scrollContentBackground(.hidden)
+                .padding(6)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor)))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.quaternary))
+                .overlay(alignment: .topLeading) {
+                    if message.isEmpty {
+                        Text("问题描述、复现步骤或建议……")
+                            .foregroundStyle(.tertiary)
+                            .padding(.horizontal, 11)
+                            .padding(.vertical, 6)
+                            .allowsHitTesting(false)
+                    }
+                }
+
+            Toggle("附带诊断信息", isOn: $includeDiagnostics)
+
+            GroupBox {
+                ScrollView {
+                    Text(loading ? String(localized: "正在收集诊断信息…") : diagnostics)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(height: 170)
+            } label: {
+                Text("诊断信息预览（不含授权码；路径里的主目录已替换为 ~）")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .opacity(includeDiagnostics ? 1 : 0.45)
+
+            HStack(spacing: 10) {
+                Button("取消") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Spacer()
+                Button(copied ? String(localized: "已拷贝") : String(localized: "拷贝诊断信息")) {
+                    Support.copy(fullText)
+                    copied = true
+                }
+                .disabled(loading)
+                Button("在 GitHub 提交问题") {
+                    NSWorkspace.shared.open(githubURL)
+                    dismiss()
+                }
+                .disabled(loading)
+                Button("通过邮件发送") {
+                    sendEmail()
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(loading)
+            }
+        }
+        .padding(22)
+        .frame(width: 560)
+        .task {
+            diagnostics = await Diagnostics.report()
+            loading = false
+        }
+        .onChange(of: message) { copied = false }
+        .onChange(of: includeDiagnostics) { copied = false }
+    }
+
+    private var subject: String {
+        let first = message.split(whereSeparator: \.isNewline).first.map(String.init)?
+            .trimmingCharacters(in: .whitespaces) ?? ""
+        let short = first.count > 60 ? String(first.prefix(60)) + "…" : first
+        return short.isEmpty ? String(localized: "拾掇反馈") : String(localized: "拾掇反馈：\(short)")
+    }
+
+    private var fullText: String {
+        var parts: [String] = []
+        let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !text.isEmpty { parts.append(text) }
+        if includeDiagnostics && !diagnostics.isEmpty {
+            parts.append("——\n" + diagnostics)
+        }
+        return parts.joined(separator: "\n\n")
+    }
+
+    private func sendEmail() {
+        let body = fullText
+        if let service = NSSharingService(named: .composeEmail), service.canPerform(withItems: [body]) {
+            service.recipients = [Support.email]
+            service.subject = subject
+            service.perform(withItems: [body])
+            return
+        }
+        let short = body.count > mailtoLimit ? String(body.prefix(mailtoLimit)) + "\n…" : body
+        NSWorkspace.shared.open(Support.mailURL(subject: subject, body: short))
+    }
+
+    private var githubURL: URL {
+        var body = fullText
+        while true {
+            var c = URLComponents(url: Support.issuesURL, resolvingAgainstBaseURL: false)
+            c?.queryItems = [URLQueryItem(name: "title", value: subject), URLQueryItem(name: "body", value: body)]
+            if let url = c?.url, url.absoluteString.count <= githubURLLimit || body.isEmpty {
+                return url
+            }
+            // 太长就从末尾截掉一截（日志最旧的放在前面，截掉的是最后几行）。
+            let keep = max(0, Int(Double(body.count) * 0.85) - 20)
+            body = keep == 0 ? "" : String(body.prefix(keep)) + "\n…"
+        }
     }
 }

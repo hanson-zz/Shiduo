@@ -1,3 +1,4 @@
+import OSLog
 import AppKit
 import Foundation
 
@@ -197,6 +198,7 @@ enum ShelfActions {
                 try fm.moveItem(at: url, to: target)
                 moved.append((url.path, target))
             } catch {
+                AppLog.shelf.error("Shelf move failed: \(AppLog.describe(error), privacy: .public)")
                 failed.append(url.lastPathComponent)
             }
         }
@@ -214,6 +216,7 @@ enum ShelfActions {
                 try fm.copyItem(at: url, to: target)
                 copied.append(target)
             } catch {
+                AppLog.shelf.error("Shelf copy failed: \(AppLog.describe(error), privacy: .public)")
                 failed.append(url.lastPathComponent)
             }
         }
@@ -247,6 +250,7 @@ enum ShelfActions {
                     try fm.copyItem(at: url, to: target)
                 }
             } catch {
+                AppLog.shelf.error("Shelf zip staging failed: \(AppLog.describe(error), privacy: .public)")
                 return nil
             }
             let target = OrganizeEngine.uniqueURL(for: multipleName + ".zip", in: folder)
@@ -261,8 +265,12 @@ enum ShelfActions {
         do {
             try process.run()
             process.waitUntilExit()
+            if process.terminationStatus != 0 {
+                AppLog.shelf.error("ditto exited with status \(process.terminationStatus, privacy: .public)")
+            }
             return process.terminationStatus == 0
         } catch {
+            AppLog.shelf.error("ditto failed to start: \(AppLog.describe(error), privacy: .public)")
             return false
         }
     }

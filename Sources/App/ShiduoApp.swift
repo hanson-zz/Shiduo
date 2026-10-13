@@ -78,6 +78,11 @@ struct ShiduoApp: App {
         }
         .windowResizability(.contentSize)
 
+        Window("发送反馈", id: FeedbackView.windowID) {
+            FeedbackView()
+        }
+        .windowResizability(.contentSize)
+
         Settings {
             SettingsView()
                 .environmentObject(store)
@@ -87,10 +92,12 @@ struct ShiduoApp: App {
                 .environmentObject(store.photos)
         }
 
-        MenuBarExtra("拾掇", systemImage: "tray.full", isInserted: menuBarInserted) {
+        MenuBarExtra(isInserted: menuBarInserted) {
             MenuBarContent()
                 .environmentObject(store)
                 .environmentObject(store.license)
+        } label: {
+            MenuBarLabel(cleanup: store.cleanup, duplicates: store.duplicates)
         }
         .menuBarExtraStyle(.window)
     }
@@ -113,7 +120,7 @@ struct SupportCommands: Commands {
             Button("支持拾掇…") { openWindow(id: SponsorView.windowID) }
         }
         CommandGroup(replacing: .help) {
-            Button("发送反馈…") { Support.openFeedback() }
+            Button("发送反馈…") { openWindow(id: FeedbackView.windowID) }
             Button("在 GitHub 上查看源代码") { Support.openRepo() }
         }
     }

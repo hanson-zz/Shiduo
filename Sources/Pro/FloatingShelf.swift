@@ -37,13 +37,20 @@ final class FloatingShelfController: NSObject {
         apply()
     }
 
-    /// 按开关和授权装上或拿掉全局鼠标监听。
+    /// 全局快捷键 ⌥⌘S 是否注册成功（false 表示被别的 App 占用了）。
+    private(set) var hotKeyAvailable = true
+
+    /// 按开关和授权装上或拿掉全局鼠标监听和全局快捷键。
     func apply() {
         if isActive && !Demo.isOn {
             installMonitors()
         } else {
             removeMonitors()
             if !LicenseManager.shared.isPro { hide() }
+        }
+        let hotKeyOn = isActive && !Demo.isOn && FloatingShelfHotKey.isEnabled
+        hotKeyAvailable = HotKeyCenter.shared.applyFloatingShelf(active: hotKeyOn) {
+            FloatingShelfController.shared.toggle()
         }
     }
 

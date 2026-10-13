@@ -17,6 +17,7 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 34) {
+                TrialEndingBanner()
                 header
                 library
                 cleanupSection
@@ -40,6 +41,11 @@ struct HomeView: View {
         }
         .scrollContentBackground(.hidden)
         .navigationTitle("首页")
+        .task {
+            // 回到首页时重新算一下：应用一直开着时，也能在到期前一天出现横幅。
+            LicenseManager.shared.refreshState()
+            await TrialReminder.shared.update()
+        }
     }
 
     // MARK: - 问候
@@ -207,7 +213,7 @@ struct CleanupTile: View {
                     .lineLimit(1)
                 Spacer()
                 HStack(spacing: 3) {
-                    Text("\(card.items.count.formatted()) 个项目")
+                    Text("\(card.items.count) 个项目")
                     Image(systemName: "chevron.right")
                 }
                 .font(.callout)
@@ -256,7 +262,7 @@ struct DuplicatesTile: View {
                 }
                 Spacer()
                 HStack(spacing: 3) {
-                    Text(scanner.hasScanned ? String(localized: "多出 \(extraCopies.formatted()) 份") : "")
+                    Text(scanner.hasScanned ? String(localized: "多出 \(extraCopies) 份") : "")
                     Image(systemName: "chevron.right")
                 }
                 .font(.callout)

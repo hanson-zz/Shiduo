@@ -111,7 +111,7 @@ struct CleanupReviewPage: View {
                         VStack(alignment: .trailing, spacing: 2) {
                             Text((card?.bytes ?? 0).byteText)
                                 .font(.system(size: 32, weight: .bold, design: .rounded))
-                            Text("\(items.count.formatted()) 个项目")
+                            Text("\(items.count) 个项目")
                                 .foregroundStyle(.secondary)
                         }
                     }

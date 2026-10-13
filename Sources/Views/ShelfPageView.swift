@@ -13,6 +13,7 @@ struct ShelfPageView: View {
     @State private var targeted = false
     @State private var working = false
     @State private var previewURL: URL?
+    @FocusState private var gridFocused: Bool
 
     private let thumbnail: CGFloat = 104
 
@@ -169,9 +170,18 @@ struct ShelfPageView: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: thumbnail + 28), spacing: 8)], spacing: 10) {
                     ForEach(shelf.items) { item in
                         FileGridCell(item: item, size: thumbnail, selected: selection.contains(item.id))
-                            .onTapGesture(count: 2) { NSWorkspace.shared.open(item.url) }
-                            .onTapGesture { select(item) }
-                            .onDrag { NSItemProvider(object: item.url as NSURL) }
+                            // 左键点按、双击和拖动交给 AppKit：拖动选中的格子时一次带上所有选中的文件。
+                            .overlay(FileCellMouseArea(
+                                urls: { dragURLs(for: item) },
+                                onClick: { count, flags in
+                                    gridFocused = true
+                                    if count >= 2 {
+                                        NSWorkspace.shared.open(item.url)
+                                    } else {
+                                        select(item, flags: flags)
+                                    }
+                                }
+                            ))
                             .contextMenu { menu(for: item) }
                             .help(item.path)
                     }
@@ -181,6 +191,7 @@ struct ShelfPageView: View {
             .contentShape(Rectangle())
             .onTapGesture { selection = [] }
             .focusable()
+            .focused($gridFocused)
             .focusEffectDisabled()
             .onKeyPress(.space) {
                 if previewURL != nil {
@@ -217,8 +228,13 @@ struct ShelfPageView: View {
         Button("移到废纸篓", role: .destructive) { store.requestTrash(list) }
     }
 
-    private func select(_ item: FileItem) {
-        let flags = NSEvent.modifierFlags
+    /// 拖动选中的格子时带上全部选中的文件，拖动没选中的格子时只带它自己。
+    private func dragURLs(for item: FileItem) -> [URL] {
+        guard selection.contains(item.id), selection.count > 1 else { return [item.url] }
+        return shelf.items.filter { selection.contains($0.id) }.map(\.url)
+    }
+
+    private func select(_ item: FileItem, flags: NSEvent.ModifierFlags) {
         if flags.contains(.command) || flags.contains(.shift) {
             if selection.contains(item.id) { selection.remove(item.id) } else { selection.insert(item.id) }
         } else {
@@ -366,9 +382,11 @@ private struct MultiFileDragRepresentable: NSViewRepresentable {
 }
 
 /// 用 NSDraggingSession 开始一次包含多个文件的拖动。
-final class MultiFileDragNSView: NSView, NSDraggingSource {
+class MultiFileDragNSView: NSView, NSDraggingSource {
     var provider: (() -> [URL])?
     private var downEvent: NSEvent?
+    /// 这次按下鼠标后是否已经开始拖动（子类据此区分点按和拖动）。
+    private(set) var startedDrag = false
 
     override var mouseDownCanMoveWindow: Bool { false }
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
@@ -379,6 +397,7 @@ final class MultiFileDragNSView: NSView, NSDraggingSource {
 
     override func mouseDown(with event: NSEvent) {
         downEvent = event
+        startedDrag = false
     }
 
     override func mouseUp(with event: NSEvent) {
@@ -393,6 +412,7 @@ final class MultiFileDragNSView: NSView, NSDraggingSource {
         downEvent = nil
         let urls = provider?() ?? []
         guard !urls.isEmpty else { return }
+        startedDrag = true
         let origin = convert(start, from: nil)
         let side: CGFloat = 48
         let items: [NSDraggingItem] = urls.enumerated().map { index, url in
@@ -413,5 +433,49 @@ final class MultiFileDragNSView: NSView, NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         // 一律拷贝，原文件留在原处；要移动请用「移动到…」。
         .copy
+    }
+}
+
+// MARK: - 格子的点按与拖动
+
+/// 盖在文件格子上的透明 AppKit 视图：处理左键点按、双击和拖出（可以一次拖出多个文件）。
+/// 右键、悬停提示等其他事件不拦截，仍由 SwiftUI 处理（右键菜单、.help）。
+struct FileCellMouseArea: NSViewRepresentable {
+    let urls: () -> [URL]
+    let onClick: (Int, NSEvent.ModifierFlags) -> Void
+
+    func makeNSView(context: Context) -> FileCellMouseNSView {
+        let view = FileCellMouseNSView()
+        view.provider = urls
+        view.onClick = onClick
+        return view
+    }
+
+    func updateNSView(_ view: FileCellMouseNSView, context: Context) {
+        view.provider = urls
+        view.onClick = onClick
+    }
+}
+
+final class FileCellMouseNSView: MultiFileDragNSView {
+    var onClick: ((Int, NSEvent.ModifierFlags) -> Void)?
+
+    override func resetCursorRects() {}
+
+    /// 只接左键（不按 Control）的事件，其余让给下面的 SwiftUI 视图。
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard let event = NSApp.currentEvent else { return nil }
+        switch event.type {
+        case .leftMouseDown, .leftMouseDragged, .leftMouseUp:
+            if event.modifierFlags.contains(.control) { return nil }
+            return super.hitTest(point)
+        default:
+            return nil
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        if !startedDrag { onClick?(event.clickCount, event.modifierFlags) }
     }
 }

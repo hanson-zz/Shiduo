@@ -1,3 +1,4 @@
+import OSLog
 import AppKit
 import SwiftUI
 
@@ -158,6 +159,7 @@ enum OrganizeEngine {
                 return OrganizeLogEntry(date: now, ruleName: rule.name, fileName: url.lastPathComponent,
                                         from: url.path, to: target.path, action: .move)
             } catch {
+                AppLog.organize.error("Auto-organize move failed: \(AppLog.describe(error), privacy: .public)")
                 return nil
             }
         case .trash:
@@ -165,6 +167,7 @@ enum OrganizeEngine {
             do {
                 try fm.trashItem(at: url, resultingItemURL: &resulting)
             } catch {
+                AppLog.organize.error("Auto-organize trash failed: \(AppLog.describe(error), privacy: .public)")
                 return nil
             }
             return OrganizeLogEntry(date: now, ruleName: rule.name, fileName: url.lastPathComponent,

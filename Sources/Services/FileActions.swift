@@ -1,3 +1,4 @@
+import OSLog
 import AppKit
 import Foundation
 
@@ -29,6 +30,7 @@ enum FileActions {
                 try FileManager.default.trashItem(at: url, resultingItemURL: nil)
                 moved.append(url)
             } catch {
+                AppLog.files.error("Move to Trash failed: \(AppLog.describe(error), privacy: .public)")
                 failed.append(url)
             }
         }

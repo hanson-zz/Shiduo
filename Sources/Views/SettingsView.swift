@@ -19,6 +19,9 @@ struct SettingsView: View {
     @State private var reminderDenied = false
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
     @AppStorage(FloatingShelfController.enabledKey) private var floatingShelfEnabled = false
+    @AppStorage(FloatingShelfHotKey.enabledKey) private var floatingShelfHotKey = true
+    @AppStorage(MenuBarLabel.showReclaimableKey) private var menuBarShowsReclaimable = true
+    @State private var floatingHotKeyAvailable = true
     @AppStorage(CleanupReminder.enabledKey) private var reminderEnabled = false
     @AppStorage(CleanupReminder.weekdayKey) private var reminderWeekday = 7
     @AppStorage(CleanupReminder.hourKey) private var reminderHour = 10
@@ -200,9 +203,29 @@ struct SettingsView: View {
         Section {
             Toggle("在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）", isOn: $menuBarEnabled)
                 .disabled(!license.isPro)
+            Toggle("在菜单栏图标旁显示可腾出的空间", isOn: $menuBarShowsReclaimable)
+                .disabled(!license.isPro || !menuBarEnabled)
             Toggle("拖到屏幕边缘时弹出悬浮暂存架", isOn: $floatingShelfEnabled)
                 .disabled(!license.isPro)
-                .onChange(of: floatingShelfEnabled) { FloatingShelfController.shared.apply() }
+                .onChange(of: floatingShelfEnabled) { applyFloatingShelf() }
+            Toggle(isOn: $floatingShelfHotKey) {
+                HStack {
+                    Text("在任何 App 里按快捷键显示 / 隐藏悬浮暂存架")
+                    Spacer()
+                    Text(FloatingShelfHotKey.title)
+                        .font(.callout.monospaced())
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1)
+                        .background(RoundedRectangle(cornerRadius: 5).fill(.quaternary))
+                }
+            }
+            .disabled(!license.isPro || !floatingShelfEnabled)
+            .onChange(of: floatingShelfHotKey) { applyFloatingShelf() }
+            if !floatingHotKeyAvailable {
+                Text("\(FloatingShelfHotKey.title) 已被其他 App 占用，仍可在拾掇的「前往」菜单里使用。")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
             Toggle("每周提醒我清理", isOn: $reminderEnabled)
                 .disabled(!license.isPro)
             HStack {
@@ -254,6 +277,11 @@ struct SettingsView: View {
             await CleanupReminder.shared.reschedule()
             reminderDenied = CleanupReminder.shared.denied
         }
+    }
+
+    private func applyFloatingShelf() {
+        FloatingShelfController.shared.apply()
+        floatingHotKeyAvailable = FloatingShelfController.shared.hotKeyAvailable
     }
 
     private func applyHotKey() {

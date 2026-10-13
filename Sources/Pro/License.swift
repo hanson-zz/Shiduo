@@ -1,6 +1,10 @@
 import Combine
 import Foundation
+import OSLog
 import Security
+
+/// 授权相关的系统日志（只记录错误种类，不记录授权码）。
+private let licenseLog = Logger(subsystem: "io.github.hansonzz.shiduo", category: "license")
 
 // MARK: - 配置
 
@@ -130,10 +134,13 @@ enum LicenseAPI {
             let result = try await URLSession.shared.data(for: request)
             data = result.0
         } catch {
+            let ns = error as NSError
+            licenseLog.error("License request \(endpoint, privacy: .public) failed: \(ns.domain, privacy: .public) \(ns.code, privacy: .public)")
             throw LicenseAPIError.network
         }
         // 授权码无效时中转服务返回 4xx，但正文仍是 JSON，所以不看状态码，直接解析。
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            licenseLog.error("License request \(endpoint, privacy: .public): response is not JSON")
             throw LicenseAPIError.badResponse
         }
         return parse(object)
@@ -190,6 +197,11 @@ final class LicenseManager: ObservableObject {
     /// 授权码只显示前 4 位和后 4 位。
     @Published private(set) var maskedKey: String?
     @Published private(set) var lastValidated: Date?
+
+    /// 试用结束的时间；没开始试用时为 nil。
+    var trialEndDate: Date? {
+        LicenseKeychain.date(.trialStart).map { $0.addingTimeInterval(TimeInterval(LicenseConfig.trialDays) * 86_400) }
+    }
 
     /// 还没开始过试用，也没有激活。
     var canStartTrial: Bool {
@@ -262,6 +274,7 @@ final class LicenseManager: ObservableObject {
             LicenseKeychain.set(nil, for: .instanceID)
             LicenseKeychain.set(nil, for: .lastValidated)
             errorMessage = Self.message(for: response.error, status: response.status)
+            licenseLog.error("License revalidation rejected, status: \(response.status ?? "-", privacy: .public)")
         }
     }
 
@@ -280,6 +293,7 @@ final class LicenseManager: ObservableObject {
             let response = try await LicenseAPI.activate(key: key, instanceName: Self.instanceName)
             guard response.activated == true, let instance = response.instanceID else {
                 errorMessage = Self.message(for: response.error, status: response.status)
+                licenseLog.error("Activation failed: \(response.error ?? "-", privacy: .public)")
                 return false
             }
             guard response.matchesConfig else {
