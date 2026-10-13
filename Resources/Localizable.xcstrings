@@ -8130,6 +8130,22 @@
         }
       }
     },
+    "文件夹颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder Color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹颜色"
+          }
+        }
+      }
+    },
     "文件提醒": {
       "localizations": {
         "en": {
@@ -11422,6 +11438,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "自定义…"
+          }
+        }
+      }
+    },
+    "自定义颜色…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom Color…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义颜色…"
           }
         }
       }

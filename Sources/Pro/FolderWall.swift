@@ -99,6 +99,32 @@ final class FolderWallModel: ObservableObject {
     @Published var manualColors: [String: Int] = (UserDefaults.standard.dictionary(forKey: "folderWall.colors") as? [String: Int]) ?? [:] {
         didSet { UserDefaults.standard.set(manualColors, forKey: "folderWall.colors") }
     }
+    /// 用色盘自己调的颜色（十六进制 RRGGBB），优先于预设颜色。
+    @Published var customColors: [String: String] = (UserDefaults.standard.dictionary(forKey: "folderWall.customColors") as? [String: String]) ?? [:] {
+        didSet { UserDefaults.standard.set(customColors, forKey: "folderWall.customColors") }
+    }
+
+    func setPreset(_ index: Int?, for path: String) {
+        customColors[path] = nil
+        manualColors[path] = index
+    }
+
+    func setCustom(_ color: NSColor, for path: String) {
+        manualColors[path] = nil
+        customColors[path] = FolderPalette.hex(color)
+    }
+
+    func movePath(_ old: String, to new: String) {
+        if let color = manualColors.removeValue(forKey: old) { manualColors[new] = color }
+        if let color = customColors.removeValue(forKey: old) { customColors[new] = color }
+    }
+
+    /// 打开系统色盘，拖动时实时改这个文件夹的颜色。
+    func openColorPanel(for s: FolderSummary) {
+        FolderColorPanel.shared.open(initial: tint(for: s)) { [weak self] color in
+            self?.setCustom(color, for: s.path)
+        }
+    }
 
     func reload(_ paths: [String]) {
         Task.detached(priority: .userInitiated) {
@@ -121,6 +147,7 @@ final class FolderWallModel: ObservableObject {
     }
 
     func tint(for s: FolderSummary) -> NSColor {
+        if let hex = customColors[s.path], let c = FolderPalette.color(hex: hex) { return c }
         if let i = manualColors[s.path], FolderPalette.colors.indices.contains(i) { return FolderPalette.colors[i].1 }
         if let tag = FolderPalette.finderLabel(s.label) { return tag }
         switch s.look {
@@ -134,7 +161,42 @@ final class FolderWallModel: ObservableObject {
     }
 }
 
+/// 系统色盘（NSColorPanel）的小帮手：一次只给一个文件夹调色。
+@MainActor
+final class FolderColorPanel: NSObject {
+    static let shared = FolderColorPanel()
+    private var onChange: ((NSColor) -> Void)?
+
+    func open(initial: NSColor, onChange: @escaping (NSColor) -> Void) {
+        self.onChange = nil
+        let panel = NSColorPanel.shared
+        panel.showsAlpha = false
+        panel.setTarget(self)
+        panel.setAction(#selector(changed(_:)))
+        panel.color = initial
+        self.onChange = onChange
+        panel.title = String(localized: "文件夹颜色")
+        panel.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func changed(_ sender: NSColorPanel) {
+        onChange?(sender.color)
+    }
+}
+
 enum FolderPalette {
+    static func hex(_ color: NSColor) -> String {
+        let c = color.usingColorSpace(.sRGB) ?? color
+        return String(format: "%02X%02X%02X", Int(round(c.redComponent * 255)), Int(round(c.greenComponent * 255)), Int(round(c.blueComponent * 255)))
+    }
+
+    static func color(hex: String) -> NSColor? {
+        guard hex.count == 6, let v = Int(hex, radix: 16) else { return nil }
+        return NSColor(srgbRed: CGFloat((v >> 16) & 0xFF) / 255, green: CGFloat((v >> 8) & 0xFF) / 255,
+                       blue: CGFloat(v & 0xFF) / 255, alpha: 1)
+    }
+
     static let colors: [(String, NSColor)] = [
         (String(localized: "珊瑚"), NSColor(srgbRed: 0.94, green: 0.45, blue: 0.39, alpha: 1)),
         (String(localized: "橙"), NSColor(srgbRed: 0.96, green: 0.53, blue: 0.36, alpha: 1)),
@@ -566,6 +628,7 @@ struct FolderCard: View {
                         renaming = true
                     }
                     actionButton("folder", help: String(localized: "移动到…")) { moveFolder() }
+                    actionButton("paintpalette", help: String(localized: "自定义颜色…")) { model.openColorPanel(for: summary) }
                     actionButton("pin.slash", help: String(localized: "取消固定"), tint: .red) { store.unpin(summary.path) }
                 }
                 .padding(.horizontal, 6)
@@ -628,11 +691,13 @@ struct FolderCard: View {
         }
         Button("移动到…") { moveFolder() }
         Menu("颜色") {
-            Button("自动") { model.manualColors[summary.path] = nil }
+            Button("自动") { model.setPreset(nil, for: summary.path) }
             Divider()
             ForEach(FolderPalette.colors.indices, id: \.self) { i in
-                Button(FolderPalette.colors[i].0) { model.manualColors[summary.path] = i }
+                Button(FolderPalette.colors[i].0) { model.setPreset(i, for: summary.path) }
             }
+            Divider()
+            Button("自定义颜色…") { model.openColorPanel(for: summary) }
         }
         Divider()
         Button("取消固定") { store.unpin(summary.path) }
@@ -644,7 +709,7 @@ struct FolderCard: View {
         if let i = store.pinnedFolders.firstIndex(of: old) {
             store.pinnedFolders[i] = new
         }
-        if let color = model.manualColors.removeValue(forKey: old) { model.manualColors[new] = color }
+        model.movePath(old, to: new)
         if store.selection == .pinned(old) { store.selection = .pinned(new) }
     }
 
