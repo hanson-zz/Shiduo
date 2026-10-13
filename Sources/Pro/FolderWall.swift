@@ -247,7 +247,7 @@ extension NSColor {
 
     var isLight: Bool {
         guard let c = usingColorSpace(.sRGB) else { return false }
-        return 0.299 * c.redComponent + 0.587 * c.greenComponent + 0.114 * c.blueComponent > 0.78
+        return 0.299 * c.redComponent + 0.587 * c.greenComponent + 0.114 * c.blueComponent > 0.70
     }
 }
 
@@ -653,10 +653,10 @@ struct FolderCard: View {
                 if let badge, !hovering {
                     Text(badge)
                         .font(.system(size: 11, weight: summary.look == .archive ? .bold : .medium))
-                        .foregroundStyle(summary.look == .archive ? Color.black.opacity(0.72) : ink)
+                        .foregroundStyle(Color.black.opacity(0.68))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Capsule().fill(.white.opacity(summary.look == .archive || light ? 0.92 : 0.24)))
+                        .background(Capsule().fill(.white.opacity(0.88)))
                         .overlay(Capsule().strokeBorder(.white.opacity(0.5)))
                 }
             }
