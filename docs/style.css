@@ -38,3 +38,11 @@ html[data-lang="zh"] .lang-toggle .zh,html:not([data-lang="zh"]) .lang-toggle .e
 .codebtn{font:600 14px ui-monospace,monospace;letter-spacing:.5px;padding:4px 10px;border-radius:8px;border:1px dashed var(--acc);background:transparent;color:var(--acc);cursor:pointer}
 .codebtn.ok::after{content:" ✓"}
 .hero{display:flex;flex-direction:column;align-items:center}
+.btn.demo{display:inline-flex;align-items:center;gap:8px;background:#1c1c20;color:#fff;border-radius:999px;padding:12px 24px}
+.btn.demo svg{flex:none}
+.demo-modal{position:fixed;inset:0;z-index:50;background:rgba(10,14,28,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px}
+.demo-modal[hidden]{display:none}
+.demo-box{position:relative;width:min(1100px,100%);max-height:100%}
+.demo-box video{display:block;width:100%;max-height:calc(100vh - 48px);border-radius:16px;background:#000;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.demo-close{position:absolute;top:-14px;right:-14px;width:38px;height:38px;border-radius:50%;border:0;background:#fff;color:#111;font-size:24px;line-height:38px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+@media (max-aspect-ratio:3/4){.demo-box{width:min(440px,100%)}}

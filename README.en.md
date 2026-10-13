@@ -13,6 +13,8 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT"></a>
 </p>
 
+<p align="center"><a href="https://hanson-zz.github.io/Shiduo/#demo"><img src="docs/demo/readme-en.png" alt="Watch the Shiduo demo video" width="720"></a></p>
+
 <p align="center"><img src="docs/screenshots/en/home.png" alt="Shiduo home" width="880"></p>
 
 Shiduo (拾掇, “to tidy up”) gathers the images, videos, documents and installers scattered around your Mac into one visual library. Search in plain English or Chinese, see where every download came from, and find duplicates and files you can safely remove. Nothing is uploaded.

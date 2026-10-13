@@ -13,6 +13,8 @@
 
 <p align="center">简体中文 · <a href="README.en.md">English</a></p>
 
+<p align="center"><a href="https://hanson-zz.github.io/Shiduo/#demo"><img src="docs/demo/readme-zh.png" alt="观看拾掇演示视频" width="720"></a></p>
+
 <p align="center"><img src="docs/screenshots/home.png" alt="拾掇首页" width="880"></p>
 
 拾掇是一款开源的 macOS 文件整理助手，和“访达”配合使用：把散落在各处的图片、视频、文稿、安装包按类型归拢，用一句话就能找到文件，还能帮你找出重复文件和可以放心清理的东西。所有处理都在本机完成，不上传任何文件。

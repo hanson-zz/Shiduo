@@ -41,3 +41,25 @@
     });
   }
 })();
+
+/* 观看演示：弹窗播放；竖屏设备播放竖版视频。打开 #demo 链接时自动弹出。 */
+(function () {
+  var modal = document.getElementById('demo-modal');
+  if (!modal) return;
+  var video = document.getElementById('demo-video');
+  function open(e) {
+    if (e) e.preventDefault();
+    var tall = window.innerHeight > window.innerWidth * 1.2;
+    var src = tall ? 'demo/shiduo-demo-vertical.mp4' : 'demo/shiduo-demo.mp4';
+    if (video.getAttribute('src') !== src) video.setAttribute('src', src);
+    modal.hidden = false;
+    var p = video.play(); if (p && p.catch) p.catch(function () {});
+  }
+  function close() { video.pause(); modal.hidden = true; if (location.hash === '#demo') history.replaceState(null, '', location.pathname); }
+  var btns = document.querySelectorAll('[data-demo]');
+  for (var i = 0; i < btns.length; i++) btns[i].addEventListener('click', open);
+  document.getElementById('demo-close').addEventListener('click', close);
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) close(); });
+  if (location.hash === '#demo') open();
+})();
