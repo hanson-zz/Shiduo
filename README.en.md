@@ -36,7 +36,9 @@ The app is in English and Simplified Chinese. It follows your system language, a
 
 ## Shiduo Pro
 
-Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, 7-day free trial, payments by Creem) adds auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, a floating shelf that opens under the notch or at the screen edge, file reminders (on time or when you open WeChat, DingTalk, Feishu or Mail), and ⌃⌘1–0 number keys that copy your 10 most recent files. Enter your license key in **Settings › License**.
+Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, 7-day free trial, payments by Creem) adds auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, a floating shelf that opens under the notch or at the screen edge, file reminders (on time or when you open WeChat, DingTalk, Feishu or Mail), ⌃⌘1–0 number keys that copy your 10 most recent files, and a **Folder Wall** that turns pinned folders into glossy cards with the newest photos and papers peeking out. Enter your license key in **Settings › License**.
+
+<p align="center"><img src="docs/screenshots/en/folderwall.png" alt="Folder Wall" width="880"></p>
 
 ## Install
 

@@ -467,7 +467,7 @@ struct FolderCard: View {
         guard let date = summary.updated, date > .distantPast else { return nil }
         let f = RelativeDateTimeFormatter()
         f.unitsStyle = .short
-        return String(localized: "\(f.localizedString(for: date, relativeTo: Date()))更新")
+        return String(localized: "\(f.localizedString(for: min(date, Date().addingTimeInterval(-1)), relativeTo: Date()))更新")
     }
 
     // MARK: 文件夹本体

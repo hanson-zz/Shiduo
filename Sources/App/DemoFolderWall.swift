@@ -46,8 +46,11 @@ extension LibraryStore {
         for (fi, folder) in folders.enumerated() {
             let dir = folder.parent.appendingPathComponent(folder.name, isDirectory: true)
             try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-            for sub in folder.subfolders {
-                try? fm.createDirectory(at: dir.appendingPathComponent(sub, isDirectory: true), withIntermediateDirectories: true)
+            for (si, sub) in folder.subfolders.enumerated() {
+                let subURL = dir.appendingPathComponent(sub, isDirectory: true)
+                try? fm.createDirectory(at: subURL, withIntermediateDirectories: true)
+                let date = Date().addingTimeInterval(-(folder.hoursAgo + 3 + Double(si)) * 3600)
+                try? fm.setAttributes([.modificationDate: date], ofItemAtPath: subURL.path)
             }
             for (i, file) in folder.files.enumerated() {
                 let url = dir.appendingPathComponent(file.0)
