@@ -162,6 +162,9 @@ struct DetailView: View {
             case .reminders:
                 RemindersPageView()
                     .proGated(.fileReminder)
+            case .folderWall:
+                FolderWallView()
+                    .proGated(.folderWall)
             case .category(let category):
                 BrowserView(title: category.title, showsOCRTools: category == .images)
             case .largeFiles:

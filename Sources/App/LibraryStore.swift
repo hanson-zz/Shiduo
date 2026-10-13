@@ -7,6 +7,8 @@ enum SidebarItem: Hashable {
     case shelf
     /// Pro：文件提醒。
     case reminders
+    /// Pro：文件夹墙。
+    case folderWall
     case category(FileCategory)
     case largeFiles
     case screenshots
@@ -184,7 +186,7 @@ final class LibraryStore: ObservableObject {
         case .home:
             await refreshDashboard()
             return
-        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf:
+        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf, .folderWall:
             items = []
             return
         default:

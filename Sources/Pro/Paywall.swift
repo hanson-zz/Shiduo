@@ -32,6 +32,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case floatingShelf
     case fileReminder
     case quickPick
+    case folderWall
 
     var id: Self { self }
 
@@ -45,6 +46,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .floatingShelf: return String(localized: "刘海 / 悬浮暂存架")
         case .fileReminder: return String(localized: "文件提醒")
         case .quickPick: return String(localized: "数字键直达")
+        case .folderWall: return String(localized: "文件夹墙")
         }
     }
 
@@ -58,6 +60,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .floatingShelf: return String(localized: "拖着文件碰到刘海或屏幕边缘，就有地方先放一下")
         case .fileReminder: return String(localized: "右键「提醒我处理…」，到点或打开微信时提醒你")
         case .quickPick: return String(localized: "⌃⌘1–0 拷贝最近 10 个文件，到哪都能 ⌘V 粘贴")
+        case .folderWall: return String(localized: "固定的文件夹变成卡片墙，照片和文稿从文件夹里探出来")
         }
     }
 
@@ -71,6 +74,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .floatingShelf: return "tray.and.arrow.down"
         case .fileReminder: return "alarm"
         case .quickPick: return "number.square"
+        case .folderWall: return "square.grid.2x2"
         }
     }
 
@@ -84,6 +88,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .floatingShelf: return .indigo
         case .fileReminder: return .red
         case .quickPick: return .green
+        case .folderWall: return .mint
         }
     }
 }

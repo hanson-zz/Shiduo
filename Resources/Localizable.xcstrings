@@ -184,6 +184,22 @@
         }
       }
     },
+    "%@更新": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@更新"
+          }
+        }
+      }
+    },
     "%@里没有第 %lld 个文件": {
       "localizations": {
         "en": {
@@ -327,6 +343,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld 个多余的副本，共 %2$lld 组"
+          }
+        }
+      }
+    },
+    "%lld 个子文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld subfolders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个子文件夹"
+          }
+        }
+      }
+    },
+    "%lld 个提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld reminders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个提醒"
           }
         }
       }
@@ -4262,6 +4310,22 @@
         }
       }
     },
+    "固定常用的文件夹，这里会变成一面卡片墙，一眼看到里面有什么。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin the folders you use most and they become a wall of cards that show what's inside at a glance."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定常用的文件夹，这里会变成一面卡片墙，一眼看到里面有什么。"
+          }
+        }
+      }
+    },
     "固定所在文件夹": {
       "localizations": {
         "en": {
@@ -4306,6 +4370,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "固定文件夹…"
+          }
+        }
+      }
+    },
+    "固定的文件夹变成卡片墙": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned folders as a wall of cards"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定的文件夹变成卡片墙"
+          }
+        }
+      }
+    },
+    "固定的文件夹变成卡片墙，照片和文稿从文件夹里探出来": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned folders become a wall of cards, with photos and documents peeking out"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定的文件夹变成卡片墙，照片和文稿从文件夹里探出来"
           }
         }
       }
@@ -4782,6 +4878,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "大缩略图，一眼认出要找的那个"
+          }
+        }
+      }
+    },
+    "天蓝": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sky"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "天蓝"
           }
         }
       }
@@ -5594,6 +5706,38 @@
         }
       }
     },
+    "已移到「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved to “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已移到「%@」"
+          }
+        }
+      }
+    },
+    "已移到「%@」：%lld 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved to “%1$@”: %2$lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已移到「%1$@」：%2$lld 个"
+          }
+        }
+      }
+    },
     "已移到废纸篓，可随时恢复": {
       "localizations": {
         "en": {
@@ -5874,6 +6018,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "已重命名 %lld 个文件"
+          }
+        }
+      }
+    },
+    "已重命名为「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renamed to “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已重命名为「%@」"
           }
         }
       }
@@ -6458,6 +6618,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "把 Mac 上的照片、视频、音乐、文稿按类别摆好，一句话就能找到，顺手把空间腾出来。"
+          }
+        }
+      }
+    },
+    "把「%@」移到哪个文件夹？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move “%@” to which folder?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把「%@」移到哪个文件夹？"
           }
         }
       }
@@ -7170,6 +7346,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "按名称"
+          }
+        }
+      }
+    },
+    "按名称或路径搜索 %lld 个文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search %lld folders by name or path"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按名称或路径搜索 %lld 个文件夹"
           }
         }
       }
@@ -7918,6 +8110,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "文件夹"
+          }
+        }
+      }
+    },
+    "文件夹墙": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder Wall"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹墙"
           }
         }
       }
@@ -8926,6 +9134,22 @@
         }
       }
     },
+    "松绿": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pine"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松绿"
+          }
+        }
+      }
+    },
     "查找": {
       "localizations": {
         "en": {
@@ -9082,6 +9306,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "橘猫"
+          }
+        }
+      }
+    },
+    "橙": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "橙"
           }
         }
       }
@@ -9842,6 +10082,22 @@
         }
       }
     },
+    "淡紫": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lavender"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "淡紫"
+          }
+        }
+      }
+    },
     "添加文件夹…": {
       "localizations": {
         "en": {
@@ -10226,6 +10482,22 @@
         }
       }
     },
+    "珊瑚": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coral"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "珊瑚"
+          }
+        }
+      }
+    },
     "理解为": {
       "localizations": {
         "en": {
@@ -10494,6 +10766,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "相机"
+          }
+        }
+      }
+    },
+    "石墨": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graphite"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "石墨"
           }
         }
       }
@@ -10814,6 +11102,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "类型"
+          }
+        }
+      }
+    },
+    "粉": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粉"
           }
         }
       }
@@ -11902,6 +12206,22 @@
         }
       }
     },
+    "还没有固定文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pinned folders yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有固定文件夹"
+          }
+        }
+      }
+    },
     "还没有固定文件夹。": {
       "localizations": {
         "en": {
@@ -12302,6 +12622,22 @@
         }
       }
     },
+    "重命名文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名文件夹"
+          }
+        }
+      }
+    },
     "重复文件": {
       "localizations": {
         "en": {
@@ -12458,6 +12794,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "钉钉"
+          }
+        }
+      }
+    },
+    "银灰": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silver"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "银灰"
           }
         }
       }
@@ -12734,6 +13086,22 @@
         }
       }
     },
+    "颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "颜色"
+          }
+        }
+      }
+    },
     "飞书": {
       "localizations": {
         "en": {
@@ -12778,6 +13146,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "马林巴上行"
+          }
+        }
+      }
+    },
+    "麦黄": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wheat"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "麦黄"
           }
         }
       }

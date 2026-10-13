@@ -60,6 +60,20 @@ struct SidebarView: View {
                 .badge(reminders.count == 0 ? nil : Text("\(reminders.count)"))
                 .tag(SidebarItem.reminders)
 
+            HStack {
+                Label("文件夹墙", systemImage: "square.grid.2x2")
+                Spacer()
+                if !store.pinnedFolders.isEmpty {
+                    Text("\(store.pinnedFolders.count)")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                ProBadge()
+                    .opacity(license.isPro ? 0.55 : 1)
+            }
+            .tag(SidebarItem.folderWall)
+            .help("固定的文件夹变成卡片墙")
+
             Section("资料库") {
                 ForEach(FileCategory.allCases) { category in
                     Label {
