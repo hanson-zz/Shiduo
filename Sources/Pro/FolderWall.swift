@@ -435,7 +435,7 @@ struct FolderCard: View {
                 .fill(Color.primary.opacity(hovering || dropTargeted ? 0.055 : 0))
         )
         .contentShape(RoundedRectangle(cornerRadius: 22))
-        .onHover { h in withAnimation(.spring(response: 0.32, dampingFraction: 0.7)) { hovering = h } }
+        .onHover { h in guard !Demo.isOn else { return }; withAnimation(.spring(response: 0.32, dampingFraction: 0.7)) { hovering = h } }
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: dropTargeted)
         .onTapGesture { store.selection = .pinned(summary.path) }
         .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
