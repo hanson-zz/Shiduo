@@ -115,7 +115,7 @@ struct ShelfPageView: View {
         HStack(spacing: 8) {
             Toggle(isOn: floatingBinding) {
                 HStack(spacing: 6) {
-                    Text("拖到屏幕边缘时弹出悬浮暂存架")
+                    Text("悬浮暂存架：拖文件到刘海或屏幕边缘时弹出")
                     ProBadge()
                 }
             }

@@ -205,7 +205,7 @@ struct SettingsView: View {
                 .disabled(!license.isPro)
             Toggle("在菜单栏图标旁显示可腾出的空间", isOn: $menuBarShowsReclaimable)
                 .disabled(!license.isPro || !menuBarEnabled)
-            Toggle("拖到屏幕边缘时弹出悬浮暂存架", isOn: $floatingShelfEnabled)
+            Toggle("悬浮暂存架：拖文件到刘海或屏幕边缘时弹出", isOn: $floatingShelfEnabled)
                 .disabled(!license.isPro)
                 .onChange(of: floatingShelfEnabled) { applyFloatingShelf() }
             Toggle(isOn: $floatingShelfHotKey) {
@@ -226,6 +226,8 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
+            ShelfStyleSettings()
+                .disabled(!license.isPro || !floatingShelfEnabled)
             Toggle("每周提醒我清理", isOn: $reminderEnabled)
                 .disabled(!license.isPro)
             HStack {

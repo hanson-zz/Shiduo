@@ -51,7 +51,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .photoSearch: return String(localized: "搜「猫」「海边」「收据」，在本机识别照片画面")
         case .volumes: return String(localized: "在侧边栏里直接浏览移动硬盘、U 盘")
         case .menuBar: return String(localized: "剩余空间、最近下载、快速搜索，一点就到")
-        case .floatingShelf: return String(localized: "拖着文件碰到屏幕边缘，就有地方先放一下")
+        case .floatingShelf: return String(localized: "拖着文件碰到刘海或屏幕边缘，就有地方先放一下")
         }
     }
 

@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 /// 悬浮暂存架（Pro）：拖着文件碰到屏幕左边或右边时，从边上弹出一个小小的玻璃面板，
+/// （刘海样式见 NotchShelf.swift，由这里的鼠标监听统一触发）
 /// 先把文件放上去，切到别的 App 再拖出来。和主窗口的「暂存架」是同一份。
 @MainActor
 final class FloatingShelfController: NSObject {
@@ -46,7 +47,10 @@ final class FloatingShelfController: NSObject {
             installMonitors()
         } else {
             removeMonitors()
-            if !LicenseManager.shared.isPro { hide() }
+            if !LicenseManager.shared.isPro {
+                hide()
+                NotchShelfController.shared.hide()
+            }
         }
         let hotKeyOn = isActive && !Demo.isOn && FloatingShelfHotKey.isEnabled
         hotKeyAvailable = HotKeyCenter.shared.applyFloatingShelf(active: hotKeyOn) {
@@ -61,10 +65,16 @@ final class FloatingShelfController: NSObject {
             LicenseManager.shared.showPaywall = true
             return
         }
-        if isVisible {
+        let mouse = NSEvent.mouseLocation
+        let mouseScreen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main
+        if NotchShelfController.shared.isVisible {
+            NotchShelfController.shared.hide()
+        } else if isVisible {
             hide()
+        } else if let mouseScreen, ShelfStyle.usesNotch(on: mouseScreen) {
+            NotchShelfController.shared.show(on: mouseScreen, byDrag: false)
         } else {
-            let screen = NSScreen.main ?? NSScreen.screens.first
+            let screen = mouseScreen ?? NSScreen.screens.first
             let frame = screen?.visibleFrame ?? .zero
             show(onRightOf: true, screen: screen, mouseY: frame.midY)
         }
@@ -82,6 +92,13 @@ final class FloatingShelfController: NSObject {
         }
         if let m = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown, handler: down) { monitors.append(m) }
         if let m = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDragged, handler: dragged) { monitors.append(m) }
+        let moved: (NSEvent) -> Void = { _ in
+            MainActor.assumeIsolated { NotchShelfController.shared.mouseMoved(to: NSEvent.mouseLocation) }
+        }
+        if let m = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved, handler: moved) { monitors.append(m) }
+        if let m = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved, handler: { event in moved(event); return event }) {
+            monitors.append(m)
+        }
         if let m = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown, handler: { event in down(event); return event }) {
             monitors.append(m)
         }
@@ -124,12 +141,19 @@ final class FloatingShelfController: NSObject {
     }
 
     private func checkDrag() {
-        guard isActive, !isVisible else { return }
+        guard isActive, !isVisible, !NotchShelfController.shared.isVisible else { return }
         let pasteboard = NSPasteboard(name: .drag)
         guard pasteboard.changeCount != dragCountAtMouseDown,
               pasteboard.canReadObject(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) else { return }
         let mouse = NSEvent.mouseLocation
         guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) else { return }
+        // 刘海样式：拖到屏幕顶部中间就从刘海展开；边缘样式：碰左右两边。
+        if ShelfStyle.usesNotch(on: screen) {
+            if NotchShelfController.shared.isAtNotch(mouse, on: screen) {
+                NotchShelfController.shared.show(on: screen, byDrag: true)
+            }
+            return
+        }
         if mouse.x <= screen.frame.minX + edgeThreshold {
             show(onRightOf: false, screen: screen, mouseY: mouse.y)
         } else if mouse.x >= screen.frame.maxX - edgeThreshold {

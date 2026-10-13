@@ -1000,6 +1000,38 @@
     "+99": {
       "shouldTranslate": false
     },
+    "0.2 秒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0.2 s"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0.2 秒"
+          }
+        }
+      }
+    },
+    "0.5 秒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0.5 s"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0.5 秒"
+          }
+        }
+      }
+    },
     "0001": {
       "shouldTranslate": false
     },
@@ -2002,6 +2034,22 @@
         }
       }
     },
+    "中": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中"
+          }
+        }
+      }
+    },
     "中午好": {
       "localizations": {
         "en": {
@@ -2750,6 +2798,22 @@
         }
       }
     },
+    "刘海": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刘海"
+          }
+        }
+      }
+    },
     "创建时间": {
       "localizations": {
         "en": {
@@ -2938,6 +3002,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "半年以前"
+          }
+        }
+      }
+    },
+    "卡片大小": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card size"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卡片大小"
           }
         }
       }
@@ -3954,6 +4034,22 @@
         }
       }
     },
+    "大": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大"
+          }
+        }
+      }
+    },
     "大于100MB的压缩包": {
       "localizations": {
         "en": {
@@ -4314,6 +4410,22 @@
         }
       }
     },
+    "小": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小"
+          }
+        }
+      }
+    },
     "小红书": {
       "localizations": {
         "en": {
@@ -4342,6 +4454,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "尺寸"
+          }
+        }
+      }
+    },
+    "屏幕边缘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen edge"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕边缘"
+          }
+        }
+      }
+    },
+    "展开延迟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open delay"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开延迟"
           }
         }
       }
@@ -5286,6 +5430,38 @@
         }
       }
     },
+    "悬浮暂存架样式": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Floating shelf style"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬浮暂存架样式"
+          }
+        }
+      }
+    },
+    "悬浮暂存架：拖文件到刘海或屏幕边缘时弹出": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Floating shelf: pops up when you drag files to the notch or screen edge"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬浮暂存架：拖文件到刘海或屏幕边缘时弹出"
+          }
+        }
+      }
+    },
     "截图": {
       "localizations": {
         "en": {
@@ -5638,6 +5814,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "拖到屏幕边缘时弹出悬浮暂存架"
+          }
+        }
+      }
+    },
+    "拖着文件碰到刘海或屏幕边缘，就有地方先放一下": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag files to the notch or screen edge to park them for a moment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖着文件碰到刘海或屏幕边缘，就有地方先放一下"
           }
         }
       }
@@ -9282,6 +9474,22 @@
         }
       }
     },
+    "立即": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instantly"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即"
+          }
+        }
+      }
+    },
     "立即整理": {
       "localizations": {
         "en": {
@@ -9538,6 +9746,22 @@
         }
       }
     },
+    "自动": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动"
+          }
+        }
+      }
+    },
     "自动下载，退出拾掇时安装": {
       "localizations": {
         "en": {
@@ -9598,6 +9822,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "自动识别截图和近期照片里的文字"
+          }
+        }
+      }
+    },
+    "自动：有刘海的屏幕用刘海，外接显示器和没有刘海的 Mac 用屏幕边缘。两种样式放的是同一份暂存架。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto: screens with a notch use the notch; external displays and Macs without a notch use the screen edge. Both styles show the same shelf."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动：有刘海的屏幕用刘海，外接显示器和没有刘海的 Mac 用屏幕边缘。两种样式放的是同一份暂存架。"
           }
         }
       }
@@ -10154,6 +10394,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "超过1GB的视频"
+          }
+        }
+      }
+    },
+    "跟随上面的设置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same as above"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随上面的设置"
           }
         }
       }
@@ -11050,6 +11306,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "首页"
+          }
+        }
+      }
+    },
+    "鼠标移到刘海处就展开（不用拖文件）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open when the pointer reaches the notch (no drag needed)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鼠标移到刘海处就展开（不用拖文件）"
+          }
+        }
+      }
+    },
+    "鼠标移开 0.5 秒后自动收起刘海暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the notch shelf 0.5 s after the pointer leaves"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鼠标移开 0.5 秒后自动收起刘海暂存架"
           }
         }
       }
