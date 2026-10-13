@@ -2194,6 +2194,22 @@
         }
       }
     },
+    "专注结束提示音": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus end sound"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注结束提示音"
+          }
+        }
+      }
+    },
     "严格": {
       "localizations": {
         "en": {
@@ -2286,6 +2302,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "中午好"
+          }
+        }
+      }
+    },
+    "乒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ping"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "乒"
           }
         }
       }
@@ -2606,6 +2638,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "休息结束"
+          }
+        }
+      }
+    },
+    "休息结束提示音": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break end sound"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "休息结束提示音"
           }
         }
       }
@@ -3766,6 +3814,22 @@
         }
       }
     },
+    "叮": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tink"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "叮"
+          }
+        }
+      }
+    },
     "可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点": {
       "localizations": {
         "en": {
@@ -3958,6 +4022,22 @@
         }
       }
     },
+    "吹气": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "吹气"
+          }
+        }
+      }
+    },
     "周一": {
       "localizations": {
         "en": {
@@ -4070,6 +4150,22 @@
         }
       }
     },
+    "呼噜": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purr"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "呼噜"
+          }
+        }
+      }
+    },
     "哔哩哔哩": {
       "localizations": {
         "en": {
@@ -4082,6 +4178,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "哔哩哔哩"
+          }
+        }
+      }
+    },
+    "啵": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pop"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啵"
           }
         }
       }
@@ -7286,6 +7398,22 @@
         }
       }
     },
+    "提示音连响 %lld 次": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play sound %lld times"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示音连响 %lld 次"
+          }
+        }
+      }
+    },
     "提醒": {
       "localizations": {
         "en": {
@@ -7446,6 +7574,22 @@
         }
       }
     },
+    "摩尔斯": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morse"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "摩尔斯"
+          }
+        }
+      }
+    },
     "撤销": {
       "localizations": {
         "en": {
@@ -7570,6 +7714,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "放上暂存架"
+          }
+        }
+      }
+    },
+    "放克": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funk"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放克"
           }
         }
       }
@@ -7822,6 +7982,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "方式"
+          }
+        }
+      }
+    },
+    "无": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无"
           }
         }
       }
@@ -9778,6 +9954,22 @@
         }
       }
     },
+    "潜水艇": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submarine"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "潜水艇"
+          }
+        }
+      }
+    },
     "激活": {
       "localizations": {
         "en": {
@@ -9954,6 +10146,22 @@
         }
       }
     },
+    "玻璃": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "玻璃"
+          }
+        }
+      }
+    },
     "理解为": {
       "localizations": {
         "en": {
@@ -9966,6 +10174,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "理解为"
+          }
+        }
+      }
+    },
+    "瓶子": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottle"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "瓶子"
           }
         }
       }
@@ -10866,6 +11090,22 @@
         }
       }
     },
+    "英雄": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hero"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "英雄"
+          }
+        }
+      }
+    },
     "菜单栏小助手": {
       "localizations": {
         "en": {
@@ -11086,6 +11326,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "诊断信息预览（不含授权码；路径里的主目录已替换为 ~）"
+          }
+        }
+      }
+    },
+    "试听": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试听"
           }
         }
       }

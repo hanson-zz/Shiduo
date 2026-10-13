@@ -169,8 +169,10 @@ final class FocusTimer: ObservableObject {
                    body: String(localized: "已专注 \(Self.focusMinutes) 分钟，起来活动一下，休息 \(Self.restMinutes) 分钟。"))
             phase = .rest
             justFinished = true
+            FocusSound.focusEnd.play()
         } else {
             notify(title: String(localized: "休息结束"), body: String(localized: "准备好开始下一轮专注了吗？"))
+            FocusSound.restEnd.play()
             phase = .focus
         }
         remaining = total
@@ -207,7 +209,8 @@ final class FocusTimer: ObservableObject {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
-        content.sound = .default
+        // 提示音由拾掇自己播（更响、可选），通知就不再叮一声，免得叠在一起。
+        content.sound = nil
         let request = UNNotificationRequest(identifier: "shiduo.focus." + UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
@@ -438,9 +441,100 @@ struct FocusSettings: View {
             Text("休息时长：\(restMinutes) 分钟")
         }
         .onChange(of: restMinutes) { FocusTimer.shared.durationsChanged() }
+        FocusSoundRow(slot: .focusEnd, title: String(localized: "专注结束提示音"))
+        FocusSoundRow(slot: .restEnd, title: String(localized: "休息结束提示音"))
         FocusMascotPicker()
         Toggle("专注时在刘海两侧显示吉祥物和剩余时间", isOn: $showInNotch)
             .onChange(of: showInNotch) { FocusNotchIndicator.shared.update() }
+    }
+}
+
+// MARK: - 提示音
+
+/// 阶段结束时的提示音：用 macOS 自带的系统声音（/System/Library/Sounds），不打包任何音频文件。
+enum FocusSound {
+    case focusEnd, restEnd
+
+    static let choices = ["Glass", "Hero", "Ping", "Purr", "Submarine", "Funk", "Blow", "Bottle", "Pop", "Tink", "Morse", "Sosumi"]
+    static let none = "none"
+    static let repeatKey = "focus.sound.repeat"
+
+    var key: String { self == .focusEnd ? "focus.sound.focusEnd" : "focus.sound.restEnd" }
+    var defaultName: String { self == .focusEnd ? "Glass" : "Hero" }
+
+    var name: String { UserDefaults.standard.string(forKey: key) ?? defaultName }
+
+    static var repeats: Int {
+        let n = UserDefaults.standard.integer(forKey: repeatKey)
+        return n == 0 ? 3 : n
+    }
+
+    @MainActor func play() { Self.play(name, times: Self.repeats) }
+
+    /// 连响几次，隔 0.9 秒，确保离开电脑一会儿也能听到。
+    @MainActor static func play(_ name: String, times: Int) {
+        guard name != none else { return }
+        for i in 0..<max(times, 1) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.9) {
+                NSSound(named: NSSound.Name(name))?.play()
+            }
+        }
+    }
+
+    static func title(_ name: String) -> String {
+        switch name {
+        case none: return String(localized: "无")
+        case "Glass": return String(localized: "玻璃")
+        case "Hero": return String(localized: "英雄")
+        case "Ping": return String(localized: "乒")
+        case "Purr": return String(localized: "呼噜")
+        case "Submarine": return String(localized: "潜水艇")
+        case "Funk": return String(localized: "放克")
+        case "Blow": return String(localized: "吹气")
+        case "Bottle": return String(localized: "瓶子")
+        case "Pop": return String(localized: "啵")
+        case "Tink": return String(localized: "叮")
+        case "Morse": return String(localized: "摩尔斯")
+        case "Sosumi": return "Sosumi"
+        default: return name
+        }
+    }
+}
+
+struct FocusSoundRow: View {
+    let slot: FocusSound
+    let title: String
+    @AppStorage private var name: String
+    @AppStorage(FocusSound.repeatKey) private var repeats = 3
+
+    init(slot: FocusSound, title: String) {
+        self.slot = slot
+        self.title = title
+        _name = AppStorage(wrappedValue: slot.defaultName, slot.key)
+    }
+
+    var body: some View {
+        HStack {
+            Picker(title, selection: $name) {
+                ForEach(FocusSound.choices, id: \.self) { Text(FocusSound.title($0)).tag($0) }
+                Divider()
+                Text(FocusSound.title(FocusSound.none)).tag(FocusSound.none)
+            }
+            .onChange(of: name) { FocusSound.play(name, times: 1) }
+            Button {
+                FocusSound.play(name, times: repeats)
+            } label: {
+                Image(systemName: "speaker.wave.2")
+            }
+            .buttonStyle(.borderless)
+            .help("试听")
+            .disabled(name == FocusSound.none)
+        }
+        if slot == .restEnd {
+            Stepper(value: $repeats, in: 1...5) {
+                Text("提示音连响 \(repeats) 次")
+            }
+        }
     }
 }
 
