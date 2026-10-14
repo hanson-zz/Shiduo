@@ -89,6 +89,8 @@ final class LibraryStore: ObservableObject {
 
     /// 清理页里正在审阅的卡片（nil 时显示卡片总览）。
     @Published var cleanupReview: CleanupKind?
+    /// 文件被清理 / 搬走 / 放回后加一，空间占用图等界面据此重新统计。
+    @Published var filesChangedTick = 0
     @Published var duplicatesTab: DuplicatesTab = .exact
     /// 底部的小提示，例如“已拷贝 3 张图片的文字”。
     @Published var toast: String?
@@ -417,7 +419,7 @@ final class LibraryStore: ObservableObject {
         let outcome = await CleanupHistory.shared.restore(records)
         if !outcome.restored.isEmpty {
             showToast(String(localized: "已放回原处：\(outcome.restored.count) 个"))
-            reload()
+            filesChanged()
         }
         if !outcome.failed.isEmpty {
             let names = outcome.failed.prefix(5).joined(separator: String(localized: "、"))
@@ -526,6 +528,7 @@ final class LibraryStore: ObservableObject {
             }
             let batch = CleanupHistory.shared.recordTrash(entries)
             showUndoToast(String(localized: "已移到废纸篓 · 30 天内可在「清理记录」里恢复"), batch: batch)
+            filesChangedTick += 1
         }
 
         var notes: [String] = []
@@ -538,6 +541,15 @@ final class LibraryStore: ObservableObject {
         }
         if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
         return moved.count
+    }
+
+    /// 文件被清理、搬走或放回之后：重新统计清理建议、首页和空间占用图。
+    func filesChanged() {
+        filesChangedTick += 1
+        Task {
+            if !cleanup.isRunning { await cleanup.scan() }
+        }
+        reload()
     }
 
     /// 文件被移走后，从各个列表和扫描结果里拿掉。

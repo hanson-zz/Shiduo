@@ -298,6 +298,16 @@ final class AutoOrganizer: ObservableObject {
         guard !entries.isEmpty else { return }
         log = Array((Array(entries.reversed()) + log).prefix(50))
         saveLog()
+        // 规则移到废纸篓的文件也记进「清理记录」，30 天内可以放回原处。
+        let trashed = entries.filter { $0.action == .trash }
+        if !trashed.isEmpty {
+            CleanupHistory.shared.recordTrash(trashed.map { entry in
+                let size = entry.to.flatMap {
+                    (try? FileManager.default.attributesOfItem(atPath: $0)[.size] as? NSNumber)?.int64Value
+                } ?? 0
+                return (name: entry.fileName, original: entry.from, trashed: entry.to, size: size)
+            }, date: trashed.first?.date ?? Date())
+        }
     }
 
     func undo(_ entry: OrganizeLogEntry) -> Bool {

@@ -291,7 +291,7 @@ struct MoveOutSheet: View {
                 }
                 Button("完成") {
                     dismiss()
-                    store.reload()
+                    store.filesChanged()
                 }
                 .keyboardShortcut(.defaultAction)
             }

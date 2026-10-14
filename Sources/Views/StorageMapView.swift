@@ -199,6 +199,7 @@ struct StorageMapView: View {
         .navigationTitle("空间占用图")
         .navigationSubtitle("\(model.current.lastPathComponent) · \(model.total.byteText)")
         .onAppear { if model.nodes.isEmpty { model.load() } }
+        .onChange(of: store.filesChangedTick) { model.rescan() }
     }
 
     private var header: some View {

@@ -169,6 +169,8 @@ final class AirDropHoop: ObservableObject {
             guard hoop.generation == gen else { return }
             if success { hoop.finished() } else { hoop.cancelled() }
         }
+        // 兜底：个别情况下系统不回调（投送窗口被直接关掉），3 分钟后篮筐自己回到空闲。
+        later(180) { hoop in if hoop.phase == .sending { hoop.cancelled() } }
     }
 
     private func finished() {
