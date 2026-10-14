@@ -24,6 +24,8 @@ enum SidebarItem: Hashable {
     case autoOrganize
     /// Pro：外接磁盘（路径是挂载点）。
     case volume(String)
+    /// 清理记录：30 天内移到废纸篓 / 搬走的文件，可以放回原处。
+    case cleanupHistory
 }
 
 enum DuplicatesTab: String, Hashable {
@@ -90,6 +92,10 @@ final class LibraryStore: ObservableObject {
     @Published var duplicatesTab: DuplicatesTab = .exact
     /// 底部的小提示，例如“已拷贝 3 张图片的文字”。
     @Published var toast: String?
+    /// 小提示上的「撤销」：移到废纸篓后可以把这一批放回去（清理记录里的 batchID）。
+    @Published var toastUndoBatch: UUID?
+    /// 正在选择搬家目标的文件（Pro：大文件搬家，非空时弹出面板）。
+    @Published var moveOutItems: [FileItem] = []
     /// 刚拷贝的文字预览（标题, 内容）。
     @Published var copiedPreview: CopiedPreview?
     /// 顶部搜索框是否获得焦点（用来显示搜索示例）。
@@ -186,7 +192,7 @@ final class LibraryStore: ObservableObject {
         case .home:
             await refreshDashboard()
             return
-        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf, .folderWall:
+        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf, .folderWall, .cleanupHistory:
             items = []
             return
         default:
@@ -378,10 +384,44 @@ final class LibraryStore: ObservableObject {
 
     func showToast(_ text: String) {
         toast = text
+        toastUndoBatch = nil
         let current = text
         Task {
             try? await Task.sleep(nanoseconds: 2_200_000_000)
-            if toast == current { toast = nil }
+            if toast == current, toastUndoBatch == nil { toast = nil }
+        }
+    }
+
+    /// 带「撤销」按钮的小提示，停留久一点。
+    func showUndoToast(_ text: String, batch: UUID) {
+        toast = text
+        toastUndoBatch = batch
+        Task {
+            try? await Task.sleep(nanoseconds: 7_000_000_000)
+            if toastUndoBatch == batch {
+                toast = nil
+                toastUndoBatch = nil
+            }
+        }
+    }
+
+    /// 撤销一批清理（放回原处）。
+    func undoBatch(_ batch: UUID) {
+        toast = nil
+        toastUndoBatch = nil
+        Task { await restore(CleanupHistory.shared.records(inBatch: batch)) }
+    }
+
+    /// 把清理记录里的文件放回原处，结果用小提示 / 提示框告诉用户。
+    func restore(_ records: [CleanupRecord]) async {
+        let outcome = await CleanupHistory.shared.restore(records)
+        if !outcome.restored.isEmpty {
+            showToast(String(localized: "已放回原处：\(outcome.restored.count) 个"))
+            reload()
+        }
+        if !outcome.failed.isEmpty {
+            let names = outcome.failed.prefix(5).joined(separator: String(localized: "、"))
+            alertMessage = String(localized: "\(outcome.failed.count) 个项目无法恢复（废纸篓已清空、目标盘未连接或文件已不在）：\(names)")
         }
     }
 
@@ -477,6 +517,32 @@ final class LibraryStore: ObservableObject {
     func moveToTrash(_ list: [FileItem]) -> Int {
         let outcome = FileActions.trash(list.map(\.url))
         let moved = Set(outcome.moved.map(\.path))
+        forget(paths: moved)
+
+        // 记到「清理记录」，30 天内可以放回原处。
+        if !moved.isEmpty {
+            let entries: [(name: String, original: String, trashed: String?, size: Int64)] = list.filter { moved.contains($0.path) }.map {
+                (name: $0.name, original: $0.path, trashed: outcome.trashed[$0.path], size: $0.size)
+            }
+            let batch = CleanupHistory.shared.recordTrash(entries)
+            showUndoToast(String(localized: "已移到废纸篓 · 30 天内可在「清理记录」里恢复"), batch: batch)
+        }
+
+        var notes: [String] = []
+        if !outcome.skipped.isEmpty {
+            notes.append(String(localized: "\(outcome.skipped.count) 个项目只在 iCloud 云端或已不存在，已跳过。"))
+        }
+        if !outcome.failed.isEmpty {
+            let names = outcome.failed.prefix(5).map(\.lastPathComponent).joined(separator: String(localized: "、"))
+            notes.append(String(localized: "\(outcome.failed.count) 个项目无法移到废纸篓（可能需要管理员权限）：\(names)"))
+        }
+        if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
+        return moved.count
+    }
+
+    /// 文件被移走后，从各个列表和扫描结果里拿掉。
+    func forget(paths moved: Set<String>) {
+        guard !moved.isEmpty else { return }
         items.removeAll { moved.contains($0.path) }
         selectedIDs.subtract(moved)
         for path in moved { known[path] = nil }
@@ -489,17 +555,18 @@ final class LibraryStore: ObservableObject {
         cleanup.remove(paths: moved)
         chat.remove(paths: moved)
         ShelfStore.shared.remove(paths: moved)
+    }
 
-        var notes: [String] = []
-        if !outcome.skipped.isEmpty {
-            notes.append(String(localized: "\(outcome.skipped.count) 个项目只在 iCloud 云端或已不存在，已跳过。"))
+    // MARK: - 大文件搬家（Pro）
+
+    func requestMoveOut(_ list: [FileItem]) {
+        guard !list.isEmpty else { return }
+        license.startTrialIfNeeded()
+        if license.isPro {
+            moveOutItems = list
+        } else {
+            license.showPaywall = true
         }
-        if !outcome.failed.isEmpty {
-            let names = outcome.failed.prefix(5).map(\.lastPathComponent).joined(separator: String(localized: "、"))
-            notes.append(String(localized: "\(outcome.failed.count) 个项目无法移到废纸篓（可能需要管理员权限）：\(names)"))
-        }
-        if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
-        return moved.count
     }
 
     // MARK: - 更新

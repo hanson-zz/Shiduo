@@ -33,6 +33,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case fileReminder
     case quickPick
     case folderWall
+    case moveOut
 
     var id: Self { self }
 
@@ -47,6 +48,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fileReminder: return String(localized: "文件提醒")
         case .quickPick: return String(localized: "数字键直达")
         case .folderWall: return String(localized: "文件夹墙")
+        case .moveOut: return String(localized: "大文件搬家")
         }
     }
 
@@ -61,6 +63,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fileReminder: return String(localized: "右键「提醒我处理…」，到点或打开微信时提醒你")
         case .quickPick: return String(localized: "⌃⌘1–0 拷贝最近 10 个文件，到哪都能 ⌘V 粘贴")
         case .folderWall: return String(localized: "固定的文件夹变成卡片墙，照片和文稿从文件夹里探出来")
+        case .moveOut: return String(localized: "大文件一键搬到移动硬盘、NAS 或网盘，原处留替身，双击照样打开")
         }
     }
 
@@ -75,6 +78,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fileReminder: return "alarm"
         case .quickPick: return "number.square"
         case .folderWall: return "square.grid.2x2"
+        case .moveOut: return "shippingbox.and.arrow.backward"
         }
     }
 
@@ -89,6 +93,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fileReminder: return .red
         case .quickPick: return .green
         case .folderWall: return .mint
+        case .moveOut: return .cyan
         }
     }
 }

@@ -154,6 +154,16 @@ struct CleanupReviewPage: View {
                 Text(selected.isEmpty ? String(localized: "点缩略图选择要移除的文件") : String(localized: "已选 \(selected.count) 项 · \(selectedBytes.byteText)"))
                     .foregroundStyle(.secondary)
                 Spacer()
+                Button {
+                    store.requestMoveOut(selected.isEmpty ? items : selectedItems)
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(selected.isEmpty ? String(localized: "全部搬到…") : String(localized: "搬到…"))
+                        ProBadge()
+                    }
+                }
+                .disabled(items.isEmpty)
+                .help("搬到移动硬盘、NAS 或网盘，不删除")
                 Button("移除所选") { confirm = selectedItems }
                     .disabled(selected.isEmpty)
                 Button {
@@ -177,9 +187,8 @@ struct CleanupReviewPage: View {
             Button("移到废纸篓", role: .destructive) {
                 let list = confirm
                 confirm = []
-                let moved = store.moveToTrash(list)
+                store.moveToTrash(list)
                 selected.subtract(list.map(\.id))
-                if moved > 0 { store.showToast(String(localized: "已把 \(moved) 个项目移到废纸篓")) }
             }
             Button("取消", role: .cancel) { confirm = [] }
         } message: {

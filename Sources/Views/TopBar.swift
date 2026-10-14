@@ -124,12 +124,21 @@ struct NowPlayingView: View {
 /// 窗口底部的小提示。
 struct ToastView: View {
     let text: String
+    /// 有值时右边显示「撤销」按钮。
+    var undo: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
             Text(text)
+            if let undo {
+                Divider().frame(height: 14)
+                Button("撤销", action: undo)
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Color.accentColor)
+                    .fontWeight(.semibold)
+            }
         }
         .font(.callout.weight(.medium))
         .padding(.horizontal, 16)

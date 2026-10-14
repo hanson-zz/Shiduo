@@ -76,6 +76,7 @@ struct FileContextMenu: View {
             Button("固定所在文件夹") { store.pin(item.url.deletingLastPathComponent().path) }
         }
         Divider()
+        Button("搬到…") { store.requestMoveOut(items) }
         Button("移到废纸篓", role: .destructive) { store.requestTrash(items) }
     }
 }

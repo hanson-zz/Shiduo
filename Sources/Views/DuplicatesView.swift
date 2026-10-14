@@ -62,8 +62,7 @@ struct DuplicatesView: View {
         ) {
             Button("全部移到废纸篓", role: .destructive) {
                 let list = allExtras
-                let moved = store.moveToTrash(list)
-                if moved > 0 { store.showToast(String(localized: "已把 \(moved) 个副本移到废纸篓")) }
+                store.moveToTrash(list)
             }
             Button("取消", role: .cancel) {}
         } message: {
@@ -257,8 +256,7 @@ struct DuplicatesView: View {
     private func trashExtras(_ group: FileGroup) {
         let list = extras(group)
         guard !list.isEmpty else { return }
-        let moved = store.moveToTrash(list)
-        if moved > 0 { store.showToast(String(localized: "已移到废纸篓，可随时恢复")) }
+        store.moveToTrash(list)
     }
 }
 

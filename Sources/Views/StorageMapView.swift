@@ -287,6 +287,13 @@ struct StorageMapView: View {
                 Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([node.url]) }
                 Button("拷贝路径") { FileActions.copy(node.url.path) }
                 Divider()
+                Button("搬到…") {
+                    if let item = FileItem(url: node.url) {
+                        var copy = item
+                        copy.size = node.size
+                        store.requestMoveOut([copy])
+                    }
+                }
                 Button("移到废纸篓…", role: .destructive) {
                     if let item = FileItem(url: node.url) {
                         var copy = item

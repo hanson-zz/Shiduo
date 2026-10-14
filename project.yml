@@ -54,6 +54,7 @@ targets:
       - path: Sources/Pro/PhotoConcepts.swift
       - path: Sources/Pro/License.swift
       - path: Sources/Pro/ShakeDetector.swift
+      - path: Sources/Services/CleanupHistory.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests

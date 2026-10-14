@@ -16,25 +16,28 @@ enum FileActions {
         return true
     }
 
-    /// 只会移到废纸篓，从不直接删除。
-    static func trash(_ urls: [URL]) -> (moved: [URL], failed: [URL], skipped: [URL]) {
+    /// 只会移到废纸篓，从不直接删除。trashed 记下每个文件在废纸篓里的新位置（拿不到时没有这一项），用于「清理记录」恢复。
+    static func trash(_ urls: [URL]) -> (moved: [URL], failed: [URL], skipped: [URL], trashed: [String: String]) {
         var moved: [URL] = []
         var failed: [URL] = []
         var skipped: [URL] = []
+        var trashed: [String: String] = [:]
         for url in urls {
             guard isLocal(url) else {
                 skipped.append(url)
                 continue
             }
             do {
-                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                var resulting: NSURL?
+                try FileManager.default.trashItem(at: url, resultingItemURL: &resulting)
                 moved.append(url)
+                if let path = resulting?.path { trashed[url.path] = path }
             } catch {
                 AppLog.files.error("Move to Trash failed: \(AppLog.describe(error), privacy: .public)")
                 failed.append(url)
             }
         }
-        return (moved, failed, skipped)
+        return (moved, failed, skipped, trashed)
     }
 
     static func open(_ items: [FileItem]) {

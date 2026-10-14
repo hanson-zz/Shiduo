@@ -121,6 +121,9 @@ struct SidebarView: View {
                     .tag(SidebarItem.similarPhotos)
                 Label("空间占用图", systemImage: "square.grid.3x3.square")
                     .tag(SidebarItem.storageMap)
+                Label("清理记录", systemImage: "clock.arrow.circlepath")
+                    .tag(SidebarItem.cleanupHistory)
+                    .help("30 天内移到废纸篓或搬走的文件，可以放回原处")
                 HStack {
                     Label("自动整理", systemImage: "wand.and.stars")
                     Spacer()

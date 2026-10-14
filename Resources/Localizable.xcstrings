@@ -13737,6 +13737,898 @@
           }
         }
       }
+    },
+    "已放回原处：%lld 个": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restored %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restored %lld items"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已放回原处：%lld 个"
+          }
+        }
+      }
+    },
+    "%lld 个项目无法恢复（废纸篓已清空、目标盘未连接或文件已不在）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't restore %1$lld item(s) (Trash emptied, drive not connected, or file gone): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个项目无法恢复（废纸篓已清空、目标盘未连接或文件已不在）：%2$@"
+          }
+        }
+      }
+    },
+    "已移到废纸篓 · 30 天内可在「清理记录」里恢复": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved to Trash · Restore within 30 days in Cleanup History"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已移到废纸篓 · 30 天内可在「清理记录」里恢复"
+          }
+        }
+      }
+    },
+    "网络磁盘 / NAS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network Drive / NAS"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络磁盘 / NAS"
+          }
+        }
+      }
+    },
+    "iCloud 云盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud 云盘"
+          }
+        }
+      }
+    },
+    "网盘同步文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud Sync Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网盘同步文件夹"
+          }
+        }
+      }
+    },
+    "坚果云": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutstore"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "坚果云"
+          }
+        }
+      }
+    },
+    "拾掇搬家": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo Moved"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇搬家"
+          }
+        }
+      }
+    },
+    "「%@」空间不够：需要 %@，只剩 %@。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough space on “%1$@”: needs %2$@, only %3$@ left."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」空间不够：需要 %2$@，只剩 %3$@。"
+          }
+        }
+      }
+    },
+    "搬到其他地方": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Elsewhere"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搬到其他地方"
+          }
+        }
+      }
+    },
+    "「%@」· %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” · %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」· %2$@"
+          }
+        }
+      }
+    },
+    "%lld 个项目 · 共 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld items · %2$@ total"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个项目 · 共 %2$@"
+          }
+        }
+      }
+    },
+    "没有找到移动硬盘、NAS 或网盘文件夹。接上移动硬盘，或者点「选择文件夹…」。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No external drive, NAS or cloud folder found. Connect a drive, or click “Choose Folder…”."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有找到移动硬盘、NAS 或网盘文件夹。接上移动硬盘，或者点「选择文件夹…」。"
+          }
+        }
+      }
+    },
+    "在原位置留替身": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave an alias in the original place"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在原位置留替身"
+          }
+        }
+      }
+    },
+    "原来的位置会留一个访达替身，双击它就能打开搬走的文件（目标盘要连着）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Finder alias stays where the file was. Double-click it to open the moved file (the destination must be connected)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原来的位置会留一个访达替身，双击它就能打开搬走的文件（目标盘要连着）。"
+          }
+        }
+      }
+    },
+    "按原文件夹分类存放": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group by original folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按原文件夹分类存放"
+          }
+        }
+      }
+    },
+    "放在目标里的「拾掇搬家/原文件夹名」下。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files go into “Shiduo Moved/<original folder>” at the destination."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放在目标里的「拾掇搬家/原文件夹名」下。"
+          }
+        }
+      }
+    },
+    "直接放在目标文件夹里。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files go directly into the destination folder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接放在目标文件夹里。"
+          }
+        }
+      }
+    },
+    "iCloud 和网盘同步文件夹也在这台 Mac 的磁盘上：要等上传完成，再在访达里右键「移除下载」，才会真正腾出空间。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud and cloud sync folders are on this Mac's disk too: space is only freed after the upload finishes and you choose “Remove Download” in Finder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud 和网盘同步文件夹也在这台 Mac 的磁盘上：要等上传完成，再在访达里右键「移除下载」，才会真正腾出空间。"
+          }
+        }
+      }
+    },
+    "跨盘时先完整拷贝、核对大小，再删除原文件；出错会保留原文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Across drives, each file is fully copied and size-checked before the original is removed. On any error the original is kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跨盘时先完整拷贝、核对大小，再删除原文件；出错会保留原文件。"
+          }
+        }
+      }
+    },
+    "开始搬家": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始搬家"
+          }
+        }
+      }
+    },
+    "正在搬第 %lld / %lld 个：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving %1$lld of %2$lld: %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在搬第 %1$lld / %2$lld 个：%3$@"
+          }
+        }
+      }
+    },
+    "正在准备…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在准备…"
+          }
+        }
+      }
+    },
+    "取消后，已经搬完的文件留在新位置（可以在「清理记录」里放回），没搬完的保持原样。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you cancel, files already moved stay at the destination (you can move them back in Cleanup History); the rest are left untouched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消后，已经搬完的文件留在新位置（可以在「清理记录」里放回），没搬完的保持原样。"
+          }
+        }
+      }
+    },
+    "已搬走 %lld 个文件，腾出 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved %1$lld file(s), freed %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已搬走 %1$lld 个文件，腾出 %2$@"
+          }
+        }
+      }
+    },
+    "搬家已取消。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move cancelled."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搬家已取消。"
+          }
+        }
+      }
+    },
+    "目标和原文件在同一块磁盘上，这台 Mac 暂时没有腾出空间。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The destination is on the same disk, so no space has been freed on this Mac yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标和原文件在同一块磁盘上，这台 Mac 暂时没有腾出空间。"
+          }
+        }
+      }
+    },
+    "跳过 %lld 个（已是替身、只在 iCloud 云端或已在目标里）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped %1$lld (already an alias, iCloud-only, or already at the destination): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳过 %1$lld 个（已是替身、只在 iCloud 云端或已在目标里）：%2$@"
+          }
+        }
+      }
+    },
+    "%lld 个没搬成，原文件还在：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld couldn't be moved, originals are untouched: %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个没搬成，原文件还在：%2$@"
+          }
+        }
+      }
+    },
+    "30 天内可以在「清理记录」里把它们搬回原处。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Within 30 days you can move them back in Cleanup History."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 天内可以在「清理记录」里把它们搬回原处。"
+          }
+        }
+      }
+    },
+    "撤销这次搬家": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo This Move"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撤销这次搬家"
+          }
+        }
+      }
+    },
+    "搬到这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搬到这里"
+          }
+        }
+      }
+    },
+    "无法写入「%@」：可能是只读磁盘（例如 NTFS 格式的移动硬盘）或没有权限。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't write to “%@”: it may be read-only (for example an NTFS-formatted drive), or you don't have permission."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法写入「%@」：可能是只读磁盘（例如 NTFS 格式的移动硬盘）或没有权限。"
+          }
+        }
+      }
+    },
+    "大文件搬家": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Large Files Out"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大文件搬家"
+          }
+        }
+      }
+    },
+    "大文件一键搬到移动硬盘、NAS 或网盘，原处留替身，双击照样打开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move big files to an external drive, NAS or cloud folder in one go. An alias stays behind and still opens them"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大文件一键搬到移动硬盘、NAS 或网盘，原处留替身，双击照样打开"
+          }
+        }
+      }
+    },
+    "还没有清理记录": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cleanup history yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有清理记录"
+          }
+        }
+      }
+    },
+    "用拾掇移到废纸篓或搬走的文件会记在这里，30 天内可以放回原处。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files Shiduo moves to the Trash or elsewhere are listed here and can be put back within 30 days."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用拾掇移到废纸篓或搬走的文件会记在这里，30 天内可以放回原处。"
+          }
+        }
+      }
+    },
+    "清理记录": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleanup History"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理记录"
+          }
+        }
+      }
+    },
+    "拾掇移到废纸篓或搬走的文件，30 天内都能放回原处": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files Shiduo moved to the Trash or elsewhere. Put them back within 30 days"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇移到废纸篓或搬走的文件，30 天内都能放回原处"
+          }
+        }
+      }
+    },
+    "恢复所选（%lld）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Selected (%lld)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复所选（%lld）"
+          }
+        }
+      }
+    },
+    "全部恢复今天的": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore All from Today"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部恢复今天的"
+          }
+        }
+      }
+    },
+    "如果你清空了废纸篓，文件就无法恢复了。记录只保留 30 天。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you empty the Trash, those files can't be restored. History is kept for 30 days."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果你清空了废纸篓，文件就无法恢复了。记录只保留 30 天。"
+          }
+        }
+      }
+    },
+    "恢复": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复"
+          }
+        }
+      }
+    },
+    "拷贝原路径": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Original Path"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝原路径"
+          }
+        }
+      }
+    },
+    "搬到 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved to %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搬到 %@"
+          }
+        }
+      }
+    },
+    "可恢复": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restorable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可恢复"
+          }
+        }
+      }
+    },
+    "已恢复": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restored"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已恢复"
+          }
+        }
+      }
+    },
+    "废纸篓已清空": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trash emptied"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "废纸篓已清空"
+          }
+        }
+      }
+    },
+    "目标盘未连接": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive not connected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标盘未连接"
+          }
+        }
+      }
+    },
+    "文件已不在": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File gone"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件已不在"
+          }
+        }
+      }
+    },
+    "全部搬到…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move All To…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部搬到…"
+          }
+        }
+      }
+    },
+    "搬到…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move To…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搬到…"
+          }
+        }
+      }
+    },
+    "搬到移动硬盘、NAS 或网盘，不删除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to an external drive, NAS or cloud folder. Nothing is deleted"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搬到移动硬盘、NAS 或网盘，不删除"
+          }
+        }
+      }
+    },
+    "30 天内移到废纸篓或搬走的文件，可以放回原处": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files trashed or moved in the last 30 days. Put them back"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 天内移到废纸篓或搬走的文件，可以放回原处"
+          }
+        }
+      }
+    },
+    "restore.suffix": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "restored"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

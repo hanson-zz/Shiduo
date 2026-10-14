@@ -59,6 +59,9 @@ struct ContentView: View {
         .sheet(isPresented: Binding(get: { !store.convertItems.isEmpty }, set: { if !$0 { store.convertItems = [] } })) {
             ConvertSheet(items: store.convertItems)
         }
+        .sheet(isPresented: Binding(get: { !store.moveOutItems.isEmpty }, set: { if !$0 { store.moveOutItems = [] } })) {
+            MoveOutSheet(items: store.moveOutItems)
+        }
         .confirmationDialog(
             trashTitle,
             isPresented: Binding(
@@ -133,7 +136,7 @@ struct DetailView: View {
                         .padding(.bottom, 24)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if let toast = store.toast {
-                    ToastView(text: toast)
+                    ToastView(text: toast, undo: toastUndo)
                         .padding(.bottom, 24)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -147,6 +150,13 @@ struct DetailView: View {
                 InspectorView(item: store.inspectedItem)
                     .inspectorColumnWidth(min: 240, ideal: 280, max: 420)
             }
+    }
+
+    /// 移到废纸篓后小提示上的「撤销」。
+    private var toastUndo: (() -> Void)? {
+        guard let batch = store.toastUndoBatch else { return nil }
+        let store = store
+        return { store.undoBatch(batch) }
     }
 
     @ViewBuilder
@@ -190,6 +200,8 @@ struct DetailView: View {
             case .autoOrganize:
                 AutoOrganizeView()
                     .proGated(.autoOrganize)
+            case .cleanupHistory:
+                CleanupHistoryView()
             case .volume(let path):
                 BrowserView(title: FileManager.default.displayName(atPath: path), showsOCRTools: false)
                     .proGated(.volumes)
