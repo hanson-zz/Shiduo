@@ -144,9 +144,16 @@ struct SponsorView: View {
 
             VStack(spacing: 12) {
                 Picker("", selection: $method) {
-                    Text("微信").tag(0)
-                    Text("支付宝").tag(1)
-                    Text(verbatim: "Ko-fi").tag(2)
+                    if isChinese {
+                        Text("微信").tag(0)
+                        Text("支付宝").tag(1)
+                        Text(verbatim: "Ko-fi").tag(2)
+                    } else {
+                        // 英文界面：海外常用的 Ko-fi 放最前，微信 / 支付宝留给在中国的朋友。
+                        Text(verbatim: "Ko-fi").tag(2)
+                        Text(verbatim: "WeChat Pay").tag(0)
+                        Text(verbatim: "Alipay").tag(1)
+                    }
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
@@ -154,6 +161,10 @@ struct SponsorView: View {
 
                 if method == 2 {
                     KofiCard()
+                        .frame(width: 240, height: 340)
+                } else if !isChinese {
+                    // 官方收款码卡片上全是中文，英文界面换成只含二维码的简洁卡片。
+                    QRPayCard(method: method)
                         .frame(width: 240, height: 340)
                 } else {
                     Image(method == 0 ? "SponsorWeChat" : "SponsorAlipay")
@@ -175,12 +186,54 @@ struct SponsorView: View {
         .frame(width: 700, height: 500)
     }
 
+    private var isChinese: Bool { AppLanguage.effective == .simplifiedChinese }
+
     private var caption: String {
         switch method {
         case 0: return String(localized: "用微信扫一扫，金额随意")
         case 1: return String(localized: "用支付宝扫一扫，金额随意")
         default: return String(localized: "银行卡、PayPal、Apple Pay 都可以，金额随意")
         }
+    }
+}
+
+/// 英文界面的微信 / 支付宝卡片：品牌色标题 + 裁出来的二维码，不带官方卡片上的中文字。
+private struct QRPayCard: View {
+    let method: Int
+
+    private var isWeChat: Bool { method == 0 }
+    private var brand: Color {
+        isWeChat ? Color(red: 0.03, green: 0.76, blue: 0.38) : Color(red: 0.09, green: 0.47, blue: 1.0)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Image(systemName: isWeChat ? "message.fill" : "creditcard.fill")
+                Text(verbatim: isWeChat ? "WeChat Pay" : "Alipay")
+            }
+            .font(.system(size: 20, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 18)
+            .background(brand)
+
+            Spacer(minLength: 0)
+            Image(isWeChat ? "SponsorWeChatQR" : "SponsorAlipayQR")
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: 190, height: 190)
+            Spacer(minLength: 0)
+            Text("在中国？打开 App 扫一扫")
+                .font(.callout.weight(.medium))
+                .foregroundStyle(Color.black.opacity(0.55))
+                .padding(.bottom, 20)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
     }
 }
 

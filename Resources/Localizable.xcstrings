@@ -10567,7 +10567,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scan with WeChat. Any amount is welcome."
+            "value": "Any amount is welcome."
           }
         },
         "zh-Hans": {
@@ -10583,7 +10583,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scan with Alipay. Any amount is welcome."
+            "value": "Any amount is welcome."
           }
         },
         "zh-Hans": {
@@ -14882,6 +14882,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "或者买一份拾掇 Pro"
+          }
+        }
+      }
+    },
+    "在中国？打开 App 扫一扫": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In China? Scan with the app."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在中国？打开 App 扫一扫"
           }
         }
       }
