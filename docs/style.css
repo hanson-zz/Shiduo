@@ -85,7 +85,7 @@ html[data-lang="zh"] .lang-toggle .zh,html:not([data-lang="zh"]) .lang-toggle .e
 .ab.red{color:#e5352b;font-weight:600}
 @media (prefers-color-scheme:dark){.alert{background:rgba(52,52,56,.94);border-color:rgba(255,255,255,.1);color:#f2f2f2;box-shadow:0 22px 50px rgba(0,0,0,.5)}
  .alert .am{color:#b5b5ba}.ab{background:#5b5b60;border-color:rgba(255,255,255,.08);color:#f2f2f2}.ab.red{color:#ff6b61}}
-.seen figcaption{margin:18px auto 0;max-width:290px;font-size:16px;font-weight:600;line-height:1.45;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.seen figcaption{text-wrap:balance;margin:18px auto 0;max-width:290px;font-size:16px;font-weight:600;line-height:1.45;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
 .seen figcaption .arrow{color:var(--acc);font-weight:700}
 .protag{font-size:11px;font-weight:700;color:var(--acc);border:1px solid var(--acc);border-radius:6px;padding:0 5px;line-height:1.5}
 /* 三个数字 / numbers */
@@ -93,16 +93,17 @@ html[data-lang="zh"] .lang-toggle .zh,html:not([data-lang="zh"]) .lang-toggle .e
 .nums{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:1px solid var(--line);border-radius:18px}
 .num{padding:26px 24px;text-align:center}.num+.num{border-left:1px solid var(--line)}
 .num strong{display:block;font-size:44px;line-height:1.1;letter-spacing:-.02em;color:var(--acc);margin-bottom:8px}
-.num span{font-size:15px;color:var(--mut)}
+.num>span{display:block;font-size:15px;color:var(--mut);text-wrap:balance}
 @media (max-width:720px){.nums{grid-template-columns:1fr}.num+.num{border-left:0;border-top:1px solid var(--line)}}
 /* 拾掇 vs 访达 vs CleanMyMac */
-.cmp.vs td,.cmp.vs thead th:not(:first-child){width:130px}
+.cmp.vs td,.cmp.vs thead th:not(:first-child){width:150px}
+.cmp.vs .eb{white-space:nowrap}
 .cmp .part{display:inline-block;font-size:13px;color:#b7791f;background:rgba(214,158,46,.14);padding:1px 8px;border-radius:999px}
 .cmp .eb.mut{color:var(--mut)}
-.vs-note{font-size:13px;color:var(--mut);margin:12px 4px 0}
-@media (max-width:560px){.cmp.vs td,.cmp.vs thead th:not(:first-child){width:76px}.cmp .part{font-size:12px;padding:1px 5px}}
+.vs-note{font-size:13px;color:var(--fg);opacity:.72;margin:12px 16px 0;text-wrap:pretty}
+@media (max-width:560px){.cmp.vs td,.cmp.vs thead th:not(:first-child){width:76px}.cmp.vs .eb{white-space:normal}.cmp .part{font-size:12px;padding:1px 5px}}
 /* 三步上手 */
 .steps{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;counter-reset:none}
 .steps li{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 22px 20px}
 .steps .sn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--acc);color:#fff;font-weight:700;margin-bottom:10px}
-.steps h3{margin:0 0 6px;font-size:18px}.steps p{margin:0;color:var(--mut);font-size:15px}
+.steps h3{margin:0 0 6px;font-size:18px}.steps p{margin:0;color:var(--mut);font-size:15px;text-wrap:pretty}
