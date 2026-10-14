@@ -13,7 +13,7 @@
 
 <p align="center">简体中文 · <a href="README.en.md">English</a></p>
 
-<p align="center"><a href="https://hanson-zz.github.io/Shiduo/#demo"><img src="docs/demo/readme-zh.png" alt="观看拾掇演示视频" width="720"></a></p>
+<p align="center"><a href="https://shiduo.app/#demo"><img src="docs/demo/readme-zh.png" alt="观看拾掇演示视频" width="720"></a></p>
 
 <p align="center"><img src="docs/screenshots/home.png" alt="拾掇首页" width="880"></p>
 
@@ -194,8 +194,8 @@ README 里的截图由“截图”工作流生成：在 Actions 里手动运行�
 
 ## 隐私与条款
 
-- 官网：https://hanson-zz.github.io/Shiduo/
-- [隐私政策 Privacy Policy](https://hanson-zz.github.io/Shiduo/privacy.html) · [服务条款 Terms of Service](https://hanson-zz.github.io/Shiduo/terms.html) · [退款政策 Refund Policy](https://hanson-zz.github.io/Shiduo/refund.html)
+- 官网：https://shiduo.app/
+- [隐私政策 Privacy Policy](https://shiduo.app/privacy.html) · [服务条款 Terms of Service](https://shiduo.app/terms.html) · [退款政策 Refund Policy](https://shiduo.app/refund.html)
 - 客服邮箱：694561981@qq.com
 
 ## 许可

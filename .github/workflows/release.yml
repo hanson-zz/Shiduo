@@ -102,7 +102,7 @@ jobs:
           2. 如果提示“Apple 无法验证…”且没有“打开”按钮（macOS 15 Sequoia 常见）：先点“完成”，打开“系统设置 ▸ 隐私与安全性”，滚动到底部点“仍要打开”，输入开机密码
           3. 也可以在“终端”里运行：`xattr -dr com.apple.quarantine /Applications/拾掇.app`
 
-          图文步骤见 DMG 里的“首次打开请看我.png”，或 https://hanson-zz.github.io/Shiduo/#first-open
+          图文步骤见 DMG 里的“首次打开请看我.png”，或 https://shiduo.app/#first-open
 
           ## 更新后的权限
 

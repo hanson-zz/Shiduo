@@ -13,7 +13,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT"></a>
 </p>
 
-<p align="center"><a href="https://hanson-zz.github.io/Shiduo/#demo"><img src="docs/demo/readme-en.png" alt="Watch the Shiduo demo video" width="720"></a></p>
+<p align="center"><a href="https://shiduo.app/#demo"><img src="docs/demo/readme-en.png" alt="Watch the Shiduo demo video" width="720"></a></p>
 
 <p align="center"><img src="docs/screenshots/en/home.png" alt="Shiduo home" width="880"></p>
 
@@ -66,7 +66,7 @@ xattr -dr com.apple.quarantine /Applications/拾掇.app
 
 ## Privacy
 
-Shiduo only goes online to check for updates (GitHub) and to activate or verify a Pro license. Your files, file names and searches never leave your Mac. See the [Privacy Policy](https://hanson-zz.github.io/Shiduo/privacy.html), [Terms of Service](https://hanson-zz.github.io/Shiduo/terms.html) and [Refund Policy](https://hanson-zz.github.io/Shiduo/refund.html).
+Shiduo only goes online to check for updates (GitHub) and to activate or verify a Pro license. Your files, file names and searches never leave your Mac. See the [Privacy Policy](https://shiduo.app/privacy.html), [Terms of Service](https://shiduo.app/terms.html) and [Refund Policy](https://shiduo.app/refund.html).
 
 ## Build it yourself
 
@@ -82,7 +82,7 @@ UI strings live in `Resources/Localizable.xcstrings` (source language: Simplifie
 
 ## Contact
 
-Email 694561981@qq.com or open an [issue](https://github.com/hanson-zz/Shiduo/issues). Website: https://hanson-zz.github.io/Shiduo/
+Email 694561981@qq.com or open an [issue](https://github.com/hanson-zz/Shiduo/issues). Website: https://shiduo.app/
 
 ## License
 

@@ -5,6 +5,7 @@ import AppKit
 enum Support {
     static let email = "694561981@qq.com"
     static let repoURL = UpdateChecker.repoURL
+    static let websiteURL = URL(string: "https://shiduo.app")!
     static let shareText = String(localized: "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。")
 
     static func mailURL(subject: String, body: String = "") -> URL {
@@ -48,8 +49,12 @@ struct SupportSections: View {
 
     var body: some View {
         Section {
-            LabeledContent("网站") {
-                Link("GitHub · hanson-zz/Shiduo", destination: Support.repoURL)
+            LabeledContent("官网") {
+                Link("shiduo.app", destination: Support.websiteURL)
+                    .contextMenu { Button("拷贝链接") { Support.copy(Support.websiteURL.absoluteString) } }
+            }
+            LabeledContent("GitHub") {
+                Link("hanson-zz/Shiduo", destination: Support.repoURL)
                     .contextMenu { Button("拷贝链接") { Support.copy(Support.repoURL.absoluteString) } }
             }
             LabeledContent("邮箱") {
@@ -66,7 +71,7 @@ struct SupportSections: View {
 
         Section("推广") {
             HStack(spacing: 10) {
-                ShareLink(item: Support.repoURL, message: Text(Support.shareText)) {
+                ShareLink(item: Support.websiteURL, message: Text(Support.shareText)) {
                     Label("分享给朋友", systemImage: "square.and.arrow.up.fill")
                         .frame(maxWidth: .infinity)
                 }
@@ -119,7 +124,7 @@ struct SponsorView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 HStack(spacing: 10) {
-                    ShareLink(item: Support.repoURL, message: Text(Support.shareText)) {
+                    ShareLink(item: Support.websiteURL, message: Text(Support.shareText)) {
                         Label("分享给朋友", systemImage: "square.and.arrow.up")
                     }
                     Button { Support.openRepo() } label: {
