@@ -55,6 +55,12 @@ jobs:
             > build.log 2>&1 || { grep -E "error:" build.log | head -80; exit 1; }
           lipo -info build/Build/Products/Release/Shiduo.app/Contents/MacOS/Shiduo
 
+      - name: 签名（固定的自签名证书，没有就退回 ad-hoc）
+        env:
+          SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: scripts/sign-app.sh build/Build/Products/Release/Shiduo.app
+
       - name: 打包 DMG 和 ZIP
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
@@ -97,6 +103,10 @@ jobs:
           3. 也可以在“终端”里运行：`xattr -dr com.apple.quarantine /Applications/拾掇.app`
 
           图文步骤见 DMG 里的“首次打开请看我.png”，或 https://hanson-zz.github.io/Shiduo/#first-open
+
+          ## 更新后的权限
+
+          v0.13.1 之后的版本改用固定的自签名证书签名。如果你是从 v0.13.1 或更早的版本升级上来，需要最后一次重新授权“完全磁盘访问权限”（App 里会弹出指引）：在“系统设置 ▸ 隐私与安全性 ▸ 完全磁盘访问权限”里删掉旧的“拾掇”，再点“+”重新添加。以后的更新不用再弄。
 
           ## 隐私
 

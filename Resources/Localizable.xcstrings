@@ -14629,6 +14629,150 @@
           }
         }
       }
+    },
+    "更新后需要重新授权一次": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant access once more after this update"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新后需要重新授权一次"
+          }
+        }
+      }
+    },
+    "macOS 把新版本的拾掇当成了一个新的 App，之前开的「完全磁盘访问权限」暂时失效了，微信 / QQ 专区和空间占用图会读不到文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS treats the new version of Shiduo as a different app, so the Full Disk Access you granted earlier has stopped working. The WeChat / QQ section and the storage map can't read files until you grant it again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 把新版本的拾掇当成了一个新的 App，之前开的「完全磁盘访问权限」暂时失效了，微信 / QQ 专区和空间占用图会读不到文件。"
+          }
+        }
+      }
+    },
+    "如果你之前给拾掇开过「完全磁盘访问权限」：macOS 把新版本当成了一个新的 App，这个权限暂时失效了，微信 / QQ 专区和空间占用图会读不到文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you gave Shiduo Full Disk Access before: macOS treats the new version as a different app, so that access has stopped working. The WeChat / QQ section and the storage map can't read files until you grant it again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果你之前给拾掇开过「完全磁盘访问权限」：macOS 把新版本当成了一个新的 App，这个权限暂时失效了，微信 / QQ 专区和空间占用图会读不到文件。"
+          }
+        }
+      }
+    },
+    "点下面的「打开系统设置」，进入「隐私与安全性 › 完全磁盘访问权限」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click “Open System Settings” below to go to Privacy & Security › Full Disk Access"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点下面的「打开系统设置」，进入「隐私与安全性 › 完全磁盘访问权限」"
+          }
+        }
+      }
+    },
+    "在列表里选中旧的「拾掇」，点下方的「−」把它删掉": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the old “Shiduo” entry in the list and click “−” to remove it"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在列表里选中旧的「拾掇」，点下方的「−」把它删掉"
+          }
+        }
+      }
+    },
+    "点「+」，在「应用程序」里选择「拾掇」添加进去（也可以直接把拾掇拖进列表）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click “+” and choose Shiduo in Applications (or just drag Shiduo into the list)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点「+」，在「应用程序」里选择「拾掇」添加进去（也可以直接把拾掇拖进列表）"
+          }
+        }
+      }
+    },
+    "打开拾掇的开关；系统提示退出重开时点「退出并重新打开」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Shiduo on. When macOS asks to quit and reopen, click “Quit & Reopen”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开拾掇的开关；系统提示退出重开时点「退出并重新打开」"
+          }
+        }
+      }
+    },
+    "从这个版本起换了固定签名，以后更新不用再弄了。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting with this version Shiduo uses a fixed signature, so future updates won't need this again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从这个版本起换了固定签名，以后更新不用再弄了。"
+          }
+        }
+      }
+    },
+    "稍后": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍后"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

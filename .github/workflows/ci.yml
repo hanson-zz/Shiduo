@@ -29,7 +29,7 @@ jobs:
       - name: 生成 Xcode 工程
         run: xcodegen generate
 
-      - name: 构建（通用二进制，ad-hoc 签名）
+      - name: 构建（通用二进制）
         run: |
           xcodebuild build \
             -project Shiduo.xcodeproj \
@@ -43,6 +43,12 @@ jobs:
             DEVELOPMENT_TEAM="" \
             > build.log 2>&1 || { grep -E "error:|\*\* BUILD" build.log | head -80; exit 1; }
           grep -E "\*\* BUILD" build.log
+
+      - name: 签名（有证书就用固定的自签名证书，PR / fork 用 ad-hoc）
+        env:
+          SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: scripts/sign-app.sh build/Build/Products/Release/Shiduo.app
 
       - name: 单元测试
         run: |

@@ -29,6 +29,15 @@ jobs:
             CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" DEVELOPMENT_TEAM="" \
             > build.log 2>&1 || { grep -E "error:" build.log | head -80; exit 1; }
 
+      - name: 签名（固定的自签名证书，没有就退回 ad-hoc）
+        env:
+          SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          scripts/sign-app.sh build/Build/Products/Release/Shiduo.app 2>&1 | tee sign.log
+          DR=$(codesign -d -r- build/Build/Products/Release/Shiduo.app 2>&1 | sed -n 's/^designated => //p')
+          echo "::notice title=签名方式 ${SIGNING_MODE:-?}::designated => $DR"
+
       - name: 打包 DMG
         run: scripts/dmg/make-dmg.sh build/Build/Products/Release/Shiduo.app "$TAG" "Shiduo-${TAG}.dmg"
 
@@ -39,6 +48,8 @@ jobs:
           echo "挂载在：$MNT"
           ls -la "$MNT" "$MNT/.background" || true
           test -d "$MNT/拾掇.app"
+          echo "DMG 里的 App 的指定要求："; codesign -d -r- "$MNT/拾掇.app" 2>&1
+          codesign --verify --deep --strict "$MNT/拾掇.app"
           test -L "$MNT/Applications"
           test -f "$MNT/首次打开请看我.png"
           test -f "$MNT/First launch guide.png"
@@ -56,4 +67,5 @@ jobs:
           path: |
             Shiduo-*.dmg
             dmg-window.png
+            sign.log
           if-no-files-found: warn

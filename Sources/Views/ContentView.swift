@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var license: LicenseManager
     @ObservedObject private var reminders = ReminderStore.shared
+    @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
 
     var body: some View {
         NavigationSplitView {
@@ -25,6 +26,8 @@ struct ContentView: View {
             QuickPickController.shared.apply()
             TrialReminder.shared.start()
             if !UserDefaults.standard.bool(forKey: "onboardingDone") { store.showOnboarding = true }
+            // 更新后“完全磁盘访问权限”丢了就提醒重新授权；切回拾掇时自动重新检查。
+            FullDiskAccessMonitor.shared.start()
             // 拾掇 Pro：最多每 24 小时联网校验一次授权（不挡住首页加载）；之后马上自动整理一次，再每 10 分钟一次。
             Task { @MainActor in
                 await license.revalidateIfNeeded()
@@ -42,6 +45,12 @@ struct ContentView: View {
                 store.searchText = text
                 store.submitSearch()
             })
+        }
+        .sheet(isPresented: Binding(
+            get: { fullDiskAccess.showLostSheet && !store.showOnboarding },
+            set: { if !$0 { fullDiskAccess.showLostSheet = false } }
+        )) {
+            FullDiskAccessLostSheet(monitor: fullDiskAccess)
         }
         .sheet(isPresented: $license.showPaywall) {
             PaywallView()
