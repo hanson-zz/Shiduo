@@ -223,6 +223,7 @@ final class NotchShelfController: NSObject, ObservableObject {
 
     func hide() {
         cancelHover()
+        AirDropHoop.shared.cancelDrag()
         ShelfTools.shared.pendingImages = []
         watchTimer?.invalidate()
         watchTimer = nil
@@ -421,6 +422,9 @@ struct NotchShelfView: View {
         .padding(.horizontal, 22)
         .padding(.bottom, 12)
         .padding(.top, 2)
+        // 甩向篮筐的文件在整个面板上飞，卡片、篮筐都用这个坐标系对齐。
+        .overlay { HoopFlightLayer() }
+        .coordinateSpace(.named(notchShelfSpace))
         .foregroundStyle(.white)
         .background {
             // 透明度 100% 是纯黑，和刘海融为一体；调低后透出桌面并做模糊。
@@ -555,7 +559,7 @@ struct NotchShelfView: View {
             FocusTabView(height: cardSize + 30)
         case .shelf:
             HStack(spacing: 10) {
-                AirDropDropPane(height: cardSize + 40) {
+                HoopView {
                     if let item = controller.selectedItem { return [item.url] }
                     return shelf.urls
                 }
@@ -675,6 +679,8 @@ struct NotchShelfView: View {
         )
         .contentShape(Rectangle())
         .onDrag { NSItemProvider(object: item.url as NSURL) }
+        // 按住 ⌥ 拖动：不拖出文件，而是把它甩向左边的隔空投送篮筐。
+        .modifier(HoopFlingModifier(url: item.url, enabled: controller.tab == .shelf))
         .onTapGesture(count: 2) {
             NSWorkspace.shared.open(item.url)
             controller.hide()
@@ -686,6 +692,7 @@ struct NotchShelfView: View {
             Divider()
             switch controller.tab {
             case .shelf:
+                Button("投进篮筐（隔空投送）") { AirDropHoop.shared.swish([item.url]) }
                 Button("压缩为 ZIP") { ShelfTools.shared.startZip([item.url]) }
                 if ImageConverter.canConvert(item.url) {
                     ShelfConvertMenu(urls: { [item.url] })

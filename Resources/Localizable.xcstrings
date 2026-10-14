@@ -13577,6 +13577,166 @@
           }
         }
       }
+    },
+    "把文件投进篮筐": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shoot a file into the hoop"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把文件投进篮筐"
+          }
+        }
+      }
+    },
+    "松手投篮": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release to shoot"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松手投篮"
+          }
+        }
+      }
+    },
+    "没进！": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missed!"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没进！"
+          }
+        }
+      }
+    },
+    "再甩一次": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fling again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再甩一次"
+          }
+        }
+      }
+    },
+    "正在投送…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在投送…"
+          }
+        }
+      }
+    },
+    "已送达": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivered"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已送达"
+          }
+        }
+      }
+    },
+    "已取消": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消"
+          }
+        }
+      }
+    },
+    "%@ 等 %lld 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ and %2$lld more"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 等 %2$lld 个"
+          }
+        }
+      }
+    },
+    "投进篮筐（隔空投送）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shoot into Hoop (AirDrop)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "投进篮筐（隔空投送）"
+          }
+        }
+      }
+    },
+    "把文件拖到篮筐上，用隔空投送发给附近的 iPhone、iPad 或 Mac；也可以在暂存架卡片上按住 ⌥ 拖动，把文件甩进篮筐；点一下发送暂存架里选中的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop files on the hoop to AirDrop them to a nearby iPhone, iPad or Mac. You can also hold ⌥ and drag a shelf card to fling it into the hoop. Click to send the selected shelf file."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把文件拖到篮筐上，用隔空投送发给附近的 iPhone、iPad 或 Mac；也可以在暂存架卡片上按住 ⌥ 拖动，把文件甩进篮筐；点一下发送暂存架里选中的文件"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

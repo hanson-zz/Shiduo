@@ -654,55 +654,48 @@ struct FocusSoundRow: View {
 enum AirDropShare {
     /// 系统分享服务要一直持有，否则窗口一闪就没了。
     @MainActor private static var service: NSSharingService?
+    @MainActor private static var delegate: AirDropShareDelegate?
 
     @MainActor static var isAvailable: Bool {
         NSSharingService(named: .sendViaAirDrop) != nil
     }
 
-    @MainActor static func send(_ urls: [URL]) {
-        guard !urls.isEmpty, let s = NSSharingService(named: .sendViaAirDrop) else { return }
-        guard s.canPerform(withItems: urls) else { return }
+    /// 用隔空投送发送文件。completion：true 表示发出去了，false 表示取消或失败（没法发也是 false）。
+    @MainActor static func send(_ urls: [URL], completion: (@MainActor (Bool) -> Void)? = nil) {
+        guard !urls.isEmpty, let s = NSSharingService(named: .sendViaAirDrop), s.canPerform(withItems: urls) else {
+            completion?(false)
+            return
+        }
+        let delegate = AirDropShareDelegate(completion: completion)
+        s.delegate = delegate
         service = s
+        self.delegate = delegate
         NSApp.activate(ignoringOtherApps: true)
         s.perform(withItems: urls)
     }
 }
 
-/// 刘海暂存架「暂存架」标签最左边的隔空投送格：拖进来就发，点一下发暂存架里选中的文件。
-struct AirDropDropPane: View {
-    let height: CGFloat
-    let selected: () -> [URL]
-    @State private var targeted = false
+/// 接系统分享服务的回调：发完或取消时告诉篮筐。
+final class AirDropShareDelegate: NSObject, NSSharingServiceDelegate {
+    private var completion: (@MainActor (Bool) -> Void)?
 
-    var body: some View {
-        Button {
-            let urls = selected()
-            if !urls.isEmpty { AirDropShare.send(urls) }
-        } label: {
-            VStack(spacing: 6) {
-                Image(systemName: "airplayaudio")
-                    .font(.system(size: 18, weight: .medium))
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Color.white.opacity(targeted ? 0.22 : 0.1)))
-                Text("隔空投送")
-                    .font(.caption.weight(.semibold))
-                Text(targeted ? String(localized: "松手发送") : String(localized: "拖到这里发送"))
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.5))
-            }
-            .frame(width: 96)
-            .frame(maxHeight: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(targeted ? Color.accentColor : Color.white.opacity(0.25),
-                                  style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
-            )
-            .contentShape(Rectangle())
+    init(completion: (@MainActor (Bool) -> Void)?) {
+        self.completion = completion
+    }
+
+    private func finish(_ success: Bool) {
+        let done = completion
+        completion = nil
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated { done?(success) }
         }
-        .buttonStyle(.plain)
-        .help("把文件拖到这里，用隔空投送发给附近的 iPhone、iPad 或 Mac；点一下发送暂存架里选中的文件")
-        .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
-            return FileDrop.load(providers) { urls in AirDropShare.send(urls) }
-        }
+    }
+
+    func sharingService(_ sharingService: NSSharingService, didShareItems items: [Any]) {
+        finish(true)
+    }
+
+    func sharingService(_ sharingService: NSSharingService, didFailToShareItems items: [Any], error: Error) {
+        finish(false)
     }
 }
