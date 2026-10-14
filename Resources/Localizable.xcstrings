@@ -14805,6 +14805,22 @@
           }
         }
       }
+    },
+    "官方网站": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "官方网站"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

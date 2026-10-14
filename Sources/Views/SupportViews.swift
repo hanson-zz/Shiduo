@@ -130,9 +130,14 @@ struct SponsorView: View {
                     Button { Support.openRepo() } label: {
                         Label("去 GitHub 点星", systemImage: "star")
                     }
+                    Button { NSWorkspace.shared.open(Support.websiteURL) } label: {
+                        Label("官方网站", systemImage: "safari")
+                    }
+                    .help("https://shiduo.app")
                 }
+                .fixedSize()
             }
-            .frame(width: 330)
+            .frame(width: 370)
 
             VStack(spacing: 12) {
                 Picker("", selection: $method) {
@@ -157,7 +162,7 @@ struct SponsorView: View {
             }
         }
         .padding(28)
-        .frame(width: 660, height: 500)
+        .frame(width: 700, height: 500)
     }
 }
 
