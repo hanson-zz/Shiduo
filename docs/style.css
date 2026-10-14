@@ -69,3 +69,40 @@ html[data-lang="zh"] .lang-toggle .zh,html:not([data-lang="zh"]) .lang-toggle .e
 .cmp .eb{display:block;font-size:12px;font-weight:500;color:#2f9e6a}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (max-width:560px){.cmp{font-size:14px}.cmp th,.cmp td{padding:9px 8px}.cmp td,.cmp thead th:not(:first-child){width:64px}.guide{padding:12px}.hero h1{font-size:34px}}
+/* 这些你都见过吧 / Seen these before */
+.seen-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px;align-items:start}
+.seen{margin:0}
+.alert{width:100%;max-width:272px;margin:0 auto;padding:22px 18px 16px;border-radius:14px;text-align:center;
+ background:rgba(236,236,236,.92);border:1px solid rgba(0,0,0,.08);box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 22px 50px rgba(0,0,0,.16),0 2px 6px rgba(0,0,0,.08);
+ font:13px/1.35 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;color:#1d1d1f;transform:rotate(-1deg)}
+.seen:nth-child(2) .alert{transform:rotate(1deg)}.seen:nth-child(3) .alert{transform:rotate(-.4deg)}
+.alert .ai svg{width:56px;height:56px;display:block;margin:0 auto 10px}
+.alert .at{font-weight:700;font-size:13.5px;margin-bottom:4px}
+.alert .am{font-size:11.5px;color:#4a4a4f;margin-bottom:14px}
+.abtns{display:flex;gap:8px}
+.ab{flex:1;padding:5px 0;border-radius:7px;background:#fff;border:1px solid rgba(0,0,0,.12);font-size:13px;box-shadow:0 1px 1px rgba(0,0,0,.06)}
+.ab.def{background:linear-gradient(#3b8ff7,#1f74ea);color:#fff;border-color:#1c6bd8}
+.ab.red{color:#e5352b;font-weight:600}
+@media (prefers-color-scheme:dark){.alert{background:rgba(52,52,56,.94);border-color:rgba(255,255,255,.1);color:#f2f2f2;box-shadow:0 22px 50px rgba(0,0,0,.5)}
+ .alert .am{color:#b5b5ba}.ab{background:#5b5b60;border-color:rgba(255,255,255,.08);color:#f2f2f2}.ab.red{color:#ff6b61}}
+.seen figcaption{margin:18px auto 0;max-width:290px;font-size:16px;font-weight:600;line-height:1.45;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.seen figcaption .arrow{color:var(--acc);font-weight:700}
+.protag{font-size:11px;font-weight:700;color:var(--acc);border:1px solid var(--acc);border-radius:6px;padding:0 5px;line-height:1.5}
+/* 三个数字 / numbers */
+.nums-sec{padding:10px 0 30px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:1px solid var(--line);border-radius:18px}
+.num{padding:26px 24px;text-align:center}.num+.num{border-left:1px solid var(--line)}
+.num strong{display:block;font-size:44px;line-height:1.1;letter-spacing:-.02em;color:var(--acc);margin-bottom:8px}
+.num span{font-size:15px;color:var(--mut)}
+@media (max-width:720px){.nums{grid-template-columns:1fr}.num+.num{border-left:0;border-top:1px solid var(--line)}}
+/* 拾掇 vs 访达 vs CleanMyMac */
+.cmp.vs td,.cmp.vs thead th:not(:first-child){width:130px}
+.cmp .part{display:inline-block;font-size:13px;color:#b7791f;background:rgba(214,158,46,.14);padding:1px 8px;border-radius:999px}
+.cmp .eb.mut{color:var(--mut)}
+.vs-note{font-size:13px;color:var(--mut);margin:12px 4px 0}
+@media (max-width:560px){.cmp.vs td,.cmp.vs thead th:not(:first-child){width:76px}.cmp .part{font-size:12px;padding:1px 5px}}
+/* 三步上手 */
+.steps{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;counter-reset:none}
+.steps li{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 22px 20px}
+.steps .sn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--acc);color:#fff;font-weight:700;margin-bottom:10px}
+.steps h3{margin:0 0 6px;font-size:18px}.steps p{margin:0;color:var(--mut);font-size:15px}
