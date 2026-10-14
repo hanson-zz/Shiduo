@@ -14821,6 +14821,70 @@
           }
         }
       }
+    },
+    "银行卡、PayPal、Apple Pay 都可以，金额随意": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card, PayPal or Apple Pay. Any amount is welcome."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "银行卡、PayPal、Apple Pay 都可以，金额随意"
+          }
+        }
+      }
+    },
+    "请我喝杯咖啡": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buy me a coffee"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请我喝杯咖啡"
+          }
+        }
+      }
+    },
+    "在 Ko-fi 上支持": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support on Ko-fi"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Ko-fi 上支持"
+          }
+        }
+      }
+    },
+    "或者买一份拾掇 Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or get Shiduo Pro"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或者买一份拾掇 Pro"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

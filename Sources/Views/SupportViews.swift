@@ -6,6 +6,8 @@ enum Support {
     static let email = "694561981@qq.com"
     static let repoURL = UpdateChecker.repoURL
     static let websiteURL = URL(string: "https://shiduo.app")!
+    /// 海外赞助（Ko-fi，支持银行卡 / PayPal / Apple Pay）。
+    static let kofiURL = URL(string: "https://ko-fi.com/hanson528")!
     static let shareText = String(localized: "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。")
 
     static func mailURL(subject: String, body: String = "") -> URL {
@@ -109,7 +111,8 @@ struct SupportSections: View {
 struct SponsorView: View {
     static let windowID = "sponsor"
 
-    @State private var method = 0
+    /// 0 微信、1 支付宝、2 Ko-fi。英文界面默认显示 Ko-fi。
+    @State private var method = AppLanguage.effective == .simplifiedChinese ? 0 : 2
 
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
@@ -143,26 +146,87 @@ struct SponsorView: View {
                 Picker("", selection: $method) {
                     Text("微信").tag(0)
                     Text("支付宝").tag(1)
+                    Text(verbatim: "Ko-fi").tag(2)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .frame(width: 200)
+                .frame(width: 240)
 
-                Image(method == 0 ? "SponsorWeChat" : "SponsorAlipay")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(width: 240, height: 340)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
+                if method == 2 {
+                    KofiCard()
+                        .frame(width: 240, height: 340)
+                } else {
+                    Image(method == 0 ? "SponsorWeChat" : "SponsorAlipay")
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFit()
+                        .frame(width: 240, height: 340)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
+                }
 
-                Text(method == 0 ? String(localized: "用微信扫一扫，金额随意") : String(localized: "用支付宝扫一扫，金额随意"))
+                Text(caption)
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
         }
         .padding(28)
         .frame(width: 700, height: 500)
+    }
+
+    private var caption: String {
+        switch method {
+        case 0: return String(localized: "用微信扫一扫，金额随意")
+        case 1: return String(localized: "用支付宝扫一扫，金额随意")
+        default: return String(localized: "银行卡、PayPal、Apple Pay 都可以，金额随意")
+        }
+    }
+}
+
+/// 海外赞助卡片：在浏览器里打开 Ko-fi 页面，也可以直接买 Pro。
+private struct KofiCard: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            Spacer(minLength: 0)
+            Image(systemName: "cup.and.saucer.fill")
+                .font(.system(size: 54))
+                .foregroundStyle(.white)
+            Text("请我喝杯咖啡")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+            Text(verbatim: "ko-fi.com/hanson528")
+                .font(.callout)
+                .foregroundStyle(.white.opacity(0.85))
+            Button {
+                NSWorkspace.shared.open(Support.kofiURL)
+            } label: {
+                Label("在 Ko-fi 上支持", systemImage: "heart.fill")
+                    .padding(.horizontal, 6)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.white)
+            .foregroundStyle(Color(red: 0.16, green: 0.45, blue: 0.85))
+            .controlSize(.large)
+            Spacer(minLength: 0)
+            Button {
+                NSWorkspace.shared.open(LicenseConfig.buyURL)
+            } label: {
+                Text("或者买一份拾掇 Pro")
+                    .underline()
+            }
+            .buttonStyle(.plain)
+            .font(.callout)
+            .foregroundStyle(.white.opacity(0.9))
+            .padding(.bottom, 18)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            LinearGradient(colors: [Color(red: 0.36, green: 0.66, blue: 0.97), Color(red: 0.16, green: 0.45, blue: 0.85)],
+                           startPoint: .top, endPoint: .bottom)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
     }
 }
 
