@@ -14901,6 +14901,38 @@
           }
         }
       }
+    },
+    "推出「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eject “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推出「%@」"
+          }
+        }
+      }
+    },
+    "已推出「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ejected “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已推出「%@」"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

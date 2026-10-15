@@ -92,6 +92,20 @@ struct VolumesSidebarSection: View {
                         }
                         Spacer()
                         if !license.isPro { ProBadge() }
+                        if volume.isEjectable {
+                            // 跟访达侧边栏一样，名字右边一个小小的推出按钮
+                            Button {
+                                eject(volume)
+                            } label: {
+                                Image(systemName: "eject.fill")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 18, height: 18)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .help(String(localized: "推出「\(volume.name)」"))
+                        }
                     }
                     .help("\(volume.path) · 可用 \(volume.availableBytes.byteText)")
                     .tag(SidebarItem.volume(volume.path))
@@ -100,16 +114,22 @@ struct VolumesSidebarSection: View {
                             NSWorkspace.shared.activateFileViewerSelecting([volume.url])
                         }
                         if volume.isEjectable {
-                            Button("推出") {
-                                if store.selection == .volume(volume.path) { store.selection = .home }
-                                if let message = monitor.eject(volume) { store.alertMessage = message }
-                            }
+                            Button("推出") { eject(volume) }
                         }
                     }
                 }
             } header: {
                 Text("外接磁盘")
             }
+        }
+    }
+
+    private func eject(_ volume: ExternalVolume) {
+        if store.selection == .volume(volume.path) { store.selection = .home }
+        if let message = monitor.eject(volume) {
+            store.alertMessage = message
+        } else {
+            store.showToast(String(localized: "已推出「\(volume.name)」"))
         }
     }
 }
