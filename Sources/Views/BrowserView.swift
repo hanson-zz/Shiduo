@@ -52,10 +52,11 @@ struct BrowserView: View {
                 FolderPathBar()
                 Divider()
             }
-            if showsOCRTools || !sourceGroups.isEmpty {
+            // 设了来源筛选时菜单一直显示，免得列表里没有下载文件时没法清掉筛选。
+            if showsOCRTools || !sourceGroups.isEmpty || sourceFilter != nil {
                 HStack(spacing: 12) {
                     if showsOCRTools { ocrBar }
-                    if !sourceGroups.isEmpty { sourceMenu }
+                    if !sourceGroups.isEmpty || sourceFilter != nil { sourceMenu }
                     Spacer()
                 }
                 .padding(.horizontal, 16)
@@ -65,6 +66,9 @@ struct BrowserView: View {
             content
         }
         .onChange(of: store.selection) { sourceFilter = nil }
+        // 进子文件夹、换一个搜索也清掉来源筛选。
+        .onChange(of: store.browsePath) { sourceFilter = nil }
+        .onChange(of: store.activeQuery) { sourceFilter = nil }
         .navigationTitle(title)
         .navigationSubtitle(subtitle)
     }

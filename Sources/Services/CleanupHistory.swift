@@ -29,6 +29,10 @@ struct CleanupRecord: Codable, Identifiable, Hashable {
     var aliasPath: String?
     /// 已经恢复的时间。
     var restoredAt: Date?
+    /// 记录时 currentPath 那个文件的身份（inode + 大小）。旧记录没有，解码为 nil。
+    /// 用来防止废纸篓清空后，同名的新文件落到同一个路径时被当成这条记录「可恢复」。
+    var fileNumber: UInt64?
+    var fileBytes: Int64?
 
     var originalFolder: String { (originalPath as NSString).deletingLastPathComponent }
 }
@@ -63,9 +67,28 @@ enum CleanupHistoryLogic {
         records.filter { now.timeIntervalSince($0.date) < maxAge }
     }
 
-    static func status(of record: CleanupRecord, exists: (String) -> Bool) -> CleanupRecordStatus {
+    /// 文件的身份：inode 和大小（拿不到时为 nil）。
+    static func identity(atPath path: String, fileManager fm: FileManager = .default) -> (number: UInt64?, bytes: Int64?) {
+        guard let attrs = try? fm.attributesOfItem(atPath: path) else { return (nil, nil) }
+        let number = (attrs[.systemFileNumber] as? NSNumber)?.uint64Value
+        let bytes = (attrs[.size] as? NSNumber)?.int64Value
+        return (number, bytes)
+    }
+
+    /// 现在 currentPath 上的文件还是不是记录时的那一个。记录里没有身份（旧记录）或现在拿不到时，当作是同一个。
+    static func sameFile(_ record: CleanupRecord, identity: (number: UInt64?, bytes: Int64?)) -> Bool {
+        if let expected = record.fileNumber, let actual = identity.number, expected != actual { return false }
+        if let expected = record.fileBytes, let actual = identity.bytes, expected != actual { return false }
+        return true
+    }
+
+    static func status(of record: CleanupRecord, exists: (String) -> Bool,
+                       identity: ((String) -> (number: UInt64?, bytes: Int64?))? = nil) -> CleanupRecordStatus {
         if record.restoredAt != nil { return .restored }
-        if let current = record.currentPath, exists(current) { return .restorable }
+        if let current = record.currentPath, exists(current),
+           identity.map({ sameFile(record, identity: $0(current)) }) ?? true {
+            return .restorable
+        }
         switch record.action {
         case .trash:
             return .trashEmptied
@@ -115,9 +138,20 @@ enum CleanupHistoryLogic {
     static func restore(_ record: CleanupRecord, suffix: String = "恢复", fileManager fm: FileManager = .default) throws -> String {
         guard record.restoredAt == nil else { throw RestoreError.alreadyRestored }
         guard let current = record.currentPath, fm.fileExists(atPath: current) else { throw RestoreError.sourceMissing }
-        // 搬家时留下的替身先拿掉（只删替身，不会删真文件）。
+        // 路径上已经换成了别的文件（废纸篓清空后又有同名文件进来）：不能把它当成这条记录搬走。
+        guard sameFile(record, identity: identity(atPath: current, fileManager: fm)) else { throw RestoreError.sourceMissing }
+        // 搬家时留下的替身先挪到一边（只动替身，不会动真文件）；文件搬回来以后再删掉，搬失败就把替身放回去。
+        var parkedAlias: (alias: String, parked: String)?
         if let alias = record.aliasPath, fm.fileExists(atPath: alias), isAliasFile(alias) {
-            try? fm.removeItem(atPath: alias)
+            let folder = (alias as NSString).deletingLastPathComponent
+            let name = "." + (alias as NSString).lastPathComponent + ".shiduo-restoring-" + UUID().uuidString
+            let parked = (folder as NSString).appendingPathComponent(name)
+            do {
+                try fm.moveItem(atPath: alias, toPath: parked)
+                parkedAlias = (alias, parked)
+            } catch {
+                throw RestoreError.moveFailed((error as NSError).localizedDescription)
+            }
         }
         let target = restoreTarget(for: record.originalPath, suffix: suffix) { fm.fileExists(atPath: $0) }
         let folder = (target as NSString).deletingLastPathComponent
@@ -125,8 +159,12 @@ enum CleanupHistoryLogic {
             try fm.createDirectory(atPath: folder, withIntermediateDirectories: true)
             try fm.moveItem(atPath: current, toPath: target)
         } catch {
+            if let parkedAlias, !fm.fileExists(atPath: parkedAlias.alias) {
+                try? fm.moveItem(atPath: parkedAlias.parked, toPath: parkedAlias.alias)
+            }
             throw RestoreError.moveFailed((error as NSError).localizedDescription)
         }
+        if let parkedAlias { try? fm.removeItem(atPath: parkedAlias.parked) }
         return target
     }
 }
@@ -188,7 +226,16 @@ final class CleanupHistory: ObservableObject {
 
     func add(_ new: [CleanupRecord]) {
         guard !new.isEmpty else { return }
-        records = CleanupHistoryLogic.prune(new + records)
+        // 新记录占用了旧记录的位置（比如废纸篓清空后同名文件又进了同一个路径）：
+        // 旧的那条已经找不回了，清掉它的 currentPath，免得之后把新文件当成旧文件放回去。
+        let taken = Set(new.compactMap(\.currentPath))
+        var old = records
+        for index in old.indices where old[index].restoredAt == nil {
+            if let current = old[index].currentPath, taken.contains(current) {
+                old[index].currentPath = nil
+            }
+        }
+        records = CleanupHistoryLogic.prune(new + old)
         save()
     }
 
@@ -197,14 +244,22 @@ final class CleanupHistory: ObservableObject {
     func recordTrash(_ entries: [(name: String, original: String, trashed: String?, size: Int64)], date: Date = Date()) -> UUID {
         let batch = UUID()
         add(entries.map {
-            CleanupRecord(batchID: batch, date: date, action: .trash, name: $0.name,
-                          originalPath: $0.original, currentPath: $0.trashed, size: $0.size)
+            var record = CleanupRecord(batchID: batch, date: date, action: .trash, name: $0.name,
+                                       originalPath: $0.original, currentPath: $0.trashed, size: $0.size)
+            if let trashed = $0.trashed {
+                let identity = CleanupHistoryLogic.identity(atPath: trashed)
+                record.fileNumber = identity.number
+                record.fileBytes = identity.bytes
+            }
+            return record
         })
         return batch
     }
 
     func status(of record: CleanupRecord) -> CleanupRecordStatus {
-        CleanupHistoryLogic.status(of: record) { FileManager.default.fileExists(atPath: $0) }
+        CleanupHistoryLogic.status(of: record,
+                                   exists: { FileManager.default.fileExists(atPath: $0) },
+                                   identity: { CleanupHistoryLogic.identity(atPath: $0) })
     }
 
     func records(inBatch batch: UUID) -> [CleanupRecord] {

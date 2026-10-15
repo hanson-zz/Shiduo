@@ -314,8 +314,9 @@ final class NotchShelfController: NSObject, ObservableObject {
 
     func openSelected() {
         guard let item = selectedItem else { return }
-        NSWorkspace.shared.open(item.url)
         hide()
+        // 文件夹在拾掇主窗口里打开，不跳到访达。
+        LibraryStore.openFromOutside(item.url)
     }
 
     /// ⌫：从暂存架移出（「最近下载」里则是放上暂存架）。
@@ -682,12 +683,12 @@ struct NotchShelfView: View {
         // 按住 ⌥ 拖动：不拖出文件，而是把它甩向左边的隔空投送篮筐。
         .modifier(HoopFlingModifier(url: item.url, enabled: controller.tab == .shelf))
         .onTapGesture(count: 2) {
-            NSWorkspace.shared.open(item.url)
             controller.hide()
+            LibraryStore.openFromOutside(item.url)
         }
         .onTapGesture { controller.selectedIndex = index }
         .contextMenu {
-            Button("打开") { NSWorkspace.shared.open(item.url) }
+            Button("打开") { LibraryStore.openFromOutside(item.url) }
             Button("在访达中显示") { FileActions.reveal([item]) }
             Divider()
             switch controller.tab {

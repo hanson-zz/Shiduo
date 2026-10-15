@@ -418,9 +418,9 @@ struct FloatingShelfView: View {
                             .padding(4)
                             .contentShape(Rectangle())
                             .onDrag { NSItemProvider(object: item.url as NSURL) }
-                            .onTapGesture(count: 2) { NSWorkspace.shared.open(item.url) }
+                            .onTapGesture(count: 2) { LibraryStore.openFromOutside(item.url) }
                             .contextMenu {
-                                Button("打开") { NSWorkspace.shared.open(item.url) }
+                                Button("打开") { LibraryStore.openFromOutside(item.url) }
                                 Button("在访达中显示") { FileActions.reveal([item]) }
                                 Divider()
                                 Button("压缩为 ZIP") { tools.startZip([item.url]) }

@@ -24,6 +24,8 @@ final class DuplicateScanner: ObservableObject {
     @Published var hasScanned = false
 
     private var task: Task<Void, Never>?
+    /// 每次扫描加一；旧扫描迟到的进度回调据此丢掉，不会拨动新扫描的进度条。
+    private var generation = 0
 
     var reclaimable: Int64 {
         groups.reduce(0) { total, group in
@@ -62,11 +64,22 @@ final class DuplicateScanner: ObservableObject {
         if Task.isCancelled { return }
         status = String(localized: "正在比对 \(candidates.count) 个文件…")
 
-        let found = await Task.detached(priority: .utility) { () -> [[FileItem]] in
+        generation += 1
+        let gen = generation
+        // 后台任务不会继承取消，这里手动转过去：停止 / 重新扫描时哈希也会停下。
+        let work = Task.detached(priority: .utility) { () -> [[FileItem]] in
             DuplicateScanner.findDuplicates(candidates) { value in
-                Task { @MainActor [weak self] in self?.progress = value }
+                Task { @MainActor [weak self] in
+                    guard let self, self.generation == gen else { return }
+                    self.progress = value
+                }
             }
-        }.value
+        }
+        let found = await withTaskCancellationHandler {
+            await work.value
+        } onCancel: {
+            work.cancel()
+        }
         if Task.isCancelled { return }
 
         groups = found.enumerated().map { index, items in
@@ -88,6 +101,8 @@ final class DuplicateScanner: ObservableObject {
         var hasher = SHA256()
         var read = 0
         while true {
+            // 扫描被取消：大文件不再读完。
+            if Task.isCancelled { return nil }
             guard let data = try? handle.read(upToCount: 1 << 20), !data.isEmpty else { break }
             hasher.update(data: data)
             read += data.count
@@ -116,6 +131,7 @@ final class DuplicateScanner: ObservableObject {
                 }
             }
             for partial in byPartial.values where partial.count > 1 {
+                if Task.isCancelled { break }
                 var byFull: [String: [FileItem]] = [:]
                 for item in partial {
                     if let hash = sha256(of: item.url, limit: nil) {
@@ -147,6 +163,8 @@ final class SimilarPhotoScanner: ObservableObject {
     @Published var threshold: Double = 0.45
 
     private var task: Task<Void, Never>?
+    /// 每次扫描加一；旧扫描迟到的进度回调据此丢掉，不会拨动新扫描的进度条。
+    private var generation = 0
 
     func start(limit: Int = 800) {
         task?.cancel()
@@ -180,11 +198,22 @@ final class SimilarPhotoScanner: ObservableObject {
         status = String(localized: "正在分析 \(images.count) 张照片…")
         let maxDistance = Float(threshold)
 
-        let clusters = await Task.detached(priority: .utility) { () -> [[FileItem]] in
+        generation += 1
+        let gen = generation
+        // 后台任务不会继承取消，这里手动转过去：停止 / 重新扫描时 Vision 分析也会停下。
+        let work = Task.detached(priority: .utility) { () -> [[FileItem]] in
             SimilarPhotoScanner.cluster(images, maxDistance: maxDistance) { value in
-                Task { @MainActor [weak self] in self?.progress = value }
+                Task { @MainActor [weak self] in
+                    guard let self, self.generation == gen else { return }
+                    self.progress = value
+                }
             }
-        }.value
+        }
+        let clusters = await withTaskCancellationHandler {
+            await work.value
+        } onCancel: {
+            work.cancel()
+        }
         if Task.isCancelled { return }
 
         let pairs = SimilarPhotoScanner.namePairs(images.filter { FileActions.isLocal($0.url) })

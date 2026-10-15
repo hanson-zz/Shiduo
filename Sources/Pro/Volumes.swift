@@ -17,6 +17,8 @@ struct ExternalVolume: Identifiable, Hashable {
 final class VolumeMonitor: ObservableObject {
     @Published private(set) var volumes: [ExternalVolume] = []
     private var observers: [NSObjectProtocol] = []
+    /// 每次刷新完调用（LibraryStore 用来在磁盘被拔掉时离开那一页）。
+    var onChange: (@MainActor ([ExternalVolume]) -> Void)?
 
     init() {
         refresh()
@@ -59,6 +61,7 @@ final class VolumeMonitor: ObservableObject {
             )
         }
         .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        onChange?(volumes)
     }
 
     /// 推出磁盘。失败时返回中文原因。
@@ -109,6 +112,7 @@ struct VolumesSidebarSection: View {
                     }
                     .help("\(volume.path) · 可用 \(volume.availableBytes.byteText)")
                     .tag(SidebarItem.volume(volume.path))
+                    .simultaneousGesture(TapGesture().onEnded { store.reselect(.volume(volume.path)) })
                     .contextMenu {
                         Button("在访达中显示") {
                             NSWorkspace.shared.activateFileViewerSelecting([volume.url])
@@ -125,7 +129,7 @@ struct VolumesSidebarSection: View {
     }
 
     private func eject(_ volume: ExternalVolume) {
-        if store.selection == .volume(volume.path) { store.selection = .home }
+        // 推出成功后 monitor.refresh() 会通知 LibraryStore 离开那一页；推不出去就留在原地。
         if let message = monitor.eject(volume) {
             store.alertMessage = message
         } else {

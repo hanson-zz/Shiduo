@@ -253,8 +253,8 @@ final class ReminderStore: ObservableObject {
         case Self.actionDone:
             complete(id)
         default:
-            // 点通知本身或「打开」：打开文件。
-            NSWorkspace.shared.open(reminder.url)
+            // 点通知本身或「打开」：打开文件；文件夹在拾掇里打开。
+            LibraryStore.openFromOutside(reminder.url)
         }
     }
 

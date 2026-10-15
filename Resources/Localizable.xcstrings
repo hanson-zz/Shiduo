@@ -14965,6 +14965,22 @@
           }
         }
       }
+    },
+    "这个文件夹已经在侧边栏的「位置」里了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder is already in Locations in the sidebar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件夹已经在侧边栏的「位置」里了"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -63,9 +63,13 @@ final class MoveOutJob: ObservableObject {
             let batch = UUID()
             let now = Date()
             CleanupHistory.shared.add(result.moved.map {
-                CleanupRecord(batchID: batch, date: now, action: .moveOut, name: $0.name, originalPath: $0.from,
-                              currentPath: $0.to, size: $0.size, destinationName: destination.name,
-                              destinationRoot: destination.path, aliasPath: $0.aliasPath)
+                var record = CleanupRecord(batchID: batch, date: now, action: .moveOut, name: $0.name, originalPath: $0.from,
+                                           currentPath: $0.to, size: $0.size, destinationName: destination.name,
+                                           destinationRoot: destination.path, aliasPath: $0.aliasPath)
+                let identity = CleanupHistoryLogic.identity(atPath: $0.to)
+                record.fileNumber = identity.number
+                record.fileBytes = identity.bytes
+                return record
             })
             self.batch = batch
             store.forget(paths: Set(result.moved.map(\.from)))

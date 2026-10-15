@@ -320,6 +320,13 @@ final class AutoOrganizer: ObservableObject {
         return true
     }
 
+    /// 用户从「清理记录」里放回的文件：规则以后不再自动处理，免得下一轮又被移走。
+    func ignore(_ paths: [String]) {
+        guard !paths.isEmpty else { return }
+        for path in paths { ignored.insert(path) }
+        saveLog()
+    }
+
     func clearLog() {
         log = []
         saveLog()

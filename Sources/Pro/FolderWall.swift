@@ -318,7 +318,8 @@ struct FolderWallView: View {
         .background {
             Button("") { searchFocused = true }
                 .keyboardShortcut("/", modifiers: [])
-                .disabled(searchFocused)
+                // 顶部搜索框正在输入时也不抢「/」。
+                .disabled(searchFocused || store.searchFieldFocused)
                 .opacity(0)
         }
     }

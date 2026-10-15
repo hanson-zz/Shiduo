@@ -144,4 +144,33 @@ final class CleanupHistoryLogicTests: XCTestCase {
         XCTAssertEqual(reloaded.records.count, 1)
         XCTAssertEqual(reloaded.records.first?.originalPath, "/x/a")
     }
+    func testStatusTreatsDifferentFileAtSamePathAsGone() {
+        var r = record()
+        r.fileNumber = 42
+        r.fileBytes = 100
+        XCTAssertEqual(CleanupHistoryLogic.status(of: r, exists: { _ in true }, identity: { _ in (number: 42, bytes: 100) }), .restorable)
+        XCTAssertEqual(CleanupHistoryLogic.status(of: r, exists: { _ in true }, identity: { _ in (number: 43, bytes: 100) }), .trashEmptied)
+        XCTAssertEqual(CleanupHistoryLogic.status(of: r, exists: { _ in true }, identity: { _ in (number: 42, bytes: 7) }), .trashEmptied)
+        // 旧记录没有身份：照旧按路径判断。
+        XCTAssertEqual(CleanupHistoryLogic.status(of: record(), exists: { _ in true }, identity: { _ in (number: 43, bytes: 7) }), .restorable)
+    }
+
+    func testRestoreRefusesReplacedFile() throws {
+        let trashed = tmp.appendingPathComponent("trashed.txt")
+        try Data("new file".utf8).write(to: trashed)
+        var r = record(original: tmp.appendingPathComponent("orig.txt").path, current: trashed.path)
+        r.fileNumber = (CleanupHistoryLogic.identity(atPath: trashed.path).number ?? 0) &+ 1
+        XCTAssertThrowsError(try CleanupHistoryLogic.restore(r))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: trashed.path))
+    }
+
+    @MainActor
+    func testNewerRecordAtSamePathRetiresOlderOne() throws {
+        let store = CleanupHistory(fileURL: tmp.appendingPathComponent("history2.json"))
+        store.recordTrash([(name: "a", original: "/x/a", trashed: "/t/a", size: 1)])
+        store.recordTrash([(name: "a", original: "/y/a", trashed: "/t/a", size: 2)])
+        XCTAssertEqual(store.records.count, 2)
+        XCTAssertEqual(store.records.first(where: { $0.originalPath == "/y/a" })?.currentPath, "/t/a")
+        XCTAssertNil(store.records.first(where: { $0.originalPath == "/x/a" })?.currentPath)
+    }
 }

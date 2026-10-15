@@ -145,9 +145,13 @@ final class LibraryStore: ObservableObject {
             reload()
             return
         }
-        // 2. 落在某个固定文件夹 / 外接磁盘里：切到那一页（选最深的那个）
-        var roots: [(item: SidebarItem, root: String)] = pinnedFolders.map { (item: SidebarItem.pinned($0), root: $0) }
-        roots += volumes.volumes.map { (item: SidebarItem.volume($0.path), root: $0.path) }
+        // 2. 落在侧边栏「位置」/ 固定文件夹 / 外接磁盘里：切到那一页（选最深的那个）
+        var roots: [(item: SidebarItem, root: String)] = Self.builtInLocationPaths.map { (item: SidebarItem.pinned($0), root: $0) }
+        roots += pinnedFolders.map { (item: SidebarItem.pinned($0), root: $0) }
+        // 外接磁盘页是 Pro 功能：免费用户直接把磁盘里的文件夹当「任意文件夹」打开，不显示上锁页，也不悄悄开始试用。
+        if license.isPro {
+            roots += volumes.volumes.map { (item: SidebarItem.volume($0.path), root: $0.path) }
+        }
         let best = roots.filter { inside($0.root) }.max { $0.root.count < $1.root.count }
 
         navigating = true
@@ -157,6 +161,34 @@ final class LibraryStore: ObservableObject {
         // 3. 其他地方的文件夹：当「任意文件夹」打开（上面那行已经切过去了）
         if let best, path != best.root { browsePath = path } else { browsePath = nil }
         reload()
+    }
+
+    /// 再点一次侧边栏里当前这一行（固定文件夹 / 位置 / 外接磁盘）：回到它的根目录。
+    /// List 在选中项没变时不会重新设置 selection，所以由侧边栏行的点按手势调用。
+    func reselect(_ item: SidebarItem) {
+        guard selection == item else { return }
+        guard browsePath != nil || activeQuery != nil else { return }
+        if browsePath != nil {
+            backStack.append(BrowseLocation(selection: selection, browsePath: browsePath))
+        }
+        activeQuery = nil
+        searchText = ""
+        photoConcept = nil
+        lockedPhotoConcept = nil
+        browsePath = nil
+        reload()
+    }
+
+    /// 外接磁盘插拔后：正在看的磁盘 / 文件夹已经不在了，就回到首页，不留一个过期的列表。
+    func volumesChanged(_ list: [ExternalVolume]) {
+        if case .volume(let path) = selection, !list.contains(where: { $0.path == path }) {
+            selection = .home
+            return
+        }
+        if let current = currentFolder, current.hasPrefix("/Volumes/"),
+           !FileManager.default.fileExists(atPath: current) {
+            selection = .home
+        }
     }
 
     /// 回到上一层文件夹（⌘↑）。
@@ -262,6 +294,35 @@ final class LibraryStore: ObservableObject {
     let photos = PhotoContentStore()
 
     var libraryBytes: Int64 { totals.values.reduce(0) { $0 + $1.bytes } }
+
+    /// 主窗口外面的界面（悬浮暂存架、刘海暂存架、提醒通知）用它找到主窗口的状态。
+    static weak var shared: LibraryStore?
+
+    init() {
+        // 外接磁盘插拔时检查当前页面还在不在。
+        volumes.onChange = { [weak self] list in self?.volumesChanged(list) }
+        LibraryStore.shared = self
+    }
+
+    /// 是不是一个能进去浏览的文件夹（.app 等文件包不算）。
+    static func isBrowsableFolder(_ url: URL) -> Bool {
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue else { return false }
+        return !NSWorkspace.shared.isFilePackage(atPath: url.path)
+    }
+
+    /// 从主窗口外面打开：文件夹在拾掇主窗口里打开（拿到前面来），其他文件用默认 App 打开。
+    static func openFromOutside(_ url: URL) {
+        if isBrowsableFolder(url), let store = shared {
+            NSApp.activate(ignoringOtherApps: true)
+            if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
+                window.makeKeyAndOrderFront(nil)
+            }
+            store.openFolder(url)
+        } else {
+            NSWorkspace.shared.open(url)
+        }
+    }
 
     private var reminderScheduled = false
     private var photosQueued = false
@@ -523,6 +584,8 @@ final class LibraryStore: ObservableObject {
     func restore(_ records: [CleanupRecord]) async {
         let outcome = await CleanupHistory.shared.restore(records)
         if !outcome.restored.isEmpty {
+            // 自动整理规则移走的文件被放回后，不要在下一轮又被同一条规则移走。
+            organizer.ignore(outcome.restored)
             showToast(String(localized: "已放回原处：\(outcome.restored.count) 个"))
             filesChanged()
         }
@@ -595,7 +658,19 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    /// 侧边栏「位置」里那几个常用文件夹（桌面、文稿、下载……）。
+    nonisolated static var builtInLocationPaths: [String] {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return ["Desktop", "Documents", "Downloads", "Pictures", "Movies", "Music"].map { home + "/" + $0 }
+    }
+
     func pin(_ path: String) {
+        let path = URL(fileURLWithPath: path).standardizedFileURL.path
+        // 桌面、下载等已经在「位置」里了，再固定一次会出现两个同样的行。
+        if Self.builtInLocationPaths.contains(path) {
+            showToast(String(localized: "这个文件夹已经在侧边栏的「位置」里了"))
+            return
+        }
         guard !pinnedFolders.contains(path) else { return }
         pinnedFolders.append(path)
     }

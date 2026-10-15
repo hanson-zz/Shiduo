@@ -23,6 +23,7 @@ struct SidebarView: View {
     private static func rgb(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r, green: g, blue: b) }
 
     private var locations: [Location] {
+        // 路径和 LibraryStore.builtInLocationPaths 保持一致。
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return [
             Location(name: String(localized: "桌面"), symbol: "menubar.dock.rectangle", path: home + "/Desktop",
@@ -56,9 +57,18 @@ struct SidebarView: View {
                     }
                 }
 
-            Label("提醒", systemImage: "alarm")
-                .badge(reminders.count == 0 ? nil : Text("\(reminders.count)"))
-                .tag(SidebarItem.reminders)
+            HStack {
+                Label("提醒", systemImage: "alarm")
+                Spacer()
+                if reminders.count > 0 {
+                    Text("\(reminders.count)")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                ProBadge()
+                    .opacity(license.isPro ? 0.55 : 1)
+            }
+            .tag(SidebarItem.reminders)
 
             HStack {
                 Label("文件夹墙", systemImage: "square.grid.2x2")
@@ -157,6 +167,8 @@ struct SidebarView: View {
                     }
                     .help(location.path)
                     .tag(SidebarItem.pinned(location.path))
+                    // 在子文件夹里再点一次这一行：回到根目录。
+                    .simultaneousGesture(TapGesture().onEnded { store.reselect(.pinned(location.path)) })
                 }
             }
 
@@ -178,7 +190,8 @@ struct SidebarView: View {
             }
 
             Section {
-                ForEach(store.pinnedFolders, id: \.self) { path in
+                // 和「位置」重复的固定（旧版本固定过桌面等）不再显示第二行。
+                ForEach(store.pinnedFolders.filter { !LibraryStore.builtInLocationPaths.contains($0) }, id: \.self) { path in
                     Label {
                         Text((path as NSString).lastPathComponent)
                     } icon: {
@@ -186,6 +199,7 @@ struct SidebarView: View {
                     }
                         .help(path)
                         .tag(SidebarItem.pinned(path))
+                        .simultaneousGesture(TapGesture().onEnded { store.reselect(.pinned(path)) })
                         .contextMenu {
                             Button("在访达中显示") {
                                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
