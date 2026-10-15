@@ -78,7 +78,7 @@ struct InspectorView: View {
                         .font(.headline)
                         .textSelection(.enabled)
                     HStack {
-                        Button("打开") { FileActions.open([item]) }
+                        Button("打开") { store.openItems([item]) }
                         Button("在访达中显示") { FileActions.reveal([item]) }
                         if TextExtractor.canExtract(item) {
                             Button("拷贝文字") { store.copyText([item]) }

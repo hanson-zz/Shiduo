@@ -422,6 +422,18 @@ struct ReminderSheet: View {
 
 struct RemindersPageView: View {
     @ObservedObject private var store = ReminderStore.shared
+    @EnvironmentObject private var library: LibraryStore
+
+    /// 文件夹在拾掇里打开，其他文件用默认 App 打开。
+    private func openFile(_ reminder: FileReminder) {
+        var isDir: ObjCBool = false
+        if FileManager.default.fileExists(atPath: reminder.url.path, isDirectory: &isDir), isDir.boolValue,
+           !NSWorkspace.shared.isFilePackage(atPath: reminder.url.path) {
+            library.openFolder(reminder.url)
+        } else {
+            NSWorkspace.shared.open(reminder.url)
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -481,7 +493,7 @@ struct RemindersPageView: View {
             }
             Spacer()
             Button {
-                NSWorkspace.shared.open(reminder.url)
+                openFile(reminder)
             } label: {
                 Image(systemName: "arrow.up.forward.app")
             }
@@ -508,7 +520,7 @@ struct RemindersPageView: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { NSWorkspace.shared.open(reminder.url) }
+        .onTapGesture(count: 2) { openFile(reminder) }
         .onDrag { NSItemProvider(object: reminder.url as NSURL) }
     }
 }

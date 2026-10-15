@@ -191,7 +191,7 @@ struct ShelfPageView: View {
                                 onClick: { count, flags in
                                     gridFocused = true
                                     if count >= 2 {
-                                        NSWorkspace.shared.open(item.url)
+                                        store.openItems([item])
                                     } else {
                                         select(item, flags: flags)
                                     }
@@ -227,7 +227,7 @@ struct ShelfPageView: View {
     @ViewBuilder
     private func menu(for item: FileItem) -> some View {
         let list = selection.contains(item.id) ? targets : [item]
-        Button("打开") { FileActions.open(list) }
+        Button("打开") { store.openItems(list) }
         Button("快速查看") { previewURL = item.url }
         Button("在访达中显示") { FileActions.reveal(list) }
         Divider()

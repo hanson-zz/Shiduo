@@ -204,15 +204,15 @@ struct DetailView: View {
                 StorageMapView()
             case .chat(let app):
                 BrowserView(title: String(localized: "\(app.name)文件"), showsOCRTools: false, chatApp: app)
-            case .pinned(let path):
-                BrowserView(title: FileManager.default.displayName(atPath: path), showsOCRTools: false)
+            case .pinned(let path), .folder(let path):
+                BrowserView(title: FileManager.default.displayName(atPath: store.currentFolder ?? path), showsOCRTools: false)
             case .autoOrganize:
                 AutoOrganizeView()
                     .proGated(.autoOrganize)
             case .cleanupHistory:
                 CleanupHistoryView()
             case .volume(let path):
-                BrowserView(title: FileManager.default.displayName(atPath: path), showsOCRTools: false)
+                BrowserView(title: FileManager.default.displayName(atPath: store.currentFolder ?? path), showsOCRTools: false)
                     .proGated(.volumes)
             }
         }

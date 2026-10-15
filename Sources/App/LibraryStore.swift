@@ -26,6 +26,8 @@ enum SidebarItem: Hashable {
     case volume(String)
     /// 清理记录：30 天内移到废纸篓 / 搬走的文件，可以放回原处。
     case cleanupHistory
+    /// 不在侧边栏里的文件夹（从搜索结果、首页等处双击打开），也在拾掇里浏览。
+    case folder(String)
 }
 
 enum DuplicatesTab: String, Hashable {
@@ -83,7 +85,110 @@ final class LibraryStore: ObservableObject {
             cleanupReview = nil
             if selection == .similarPhotos { duplicatesTab = .similar }
             if selection == .duplicates { duplicatesTab = .exact }
+            browsePath = nil
+            if !navigating { backStack = [] }
             reload()
+        }
+    }
+
+    // MARK: 在拾掇里浏览文件夹
+
+    /// 固定文件夹 / 外接磁盘 / 任意文件夹里，当前进到了哪一层子文件夹（nil = 根目录）。
+    @Published private(set) var browsePath: String?
+    /// 「返回」用的历史：之前的页面和子文件夹。
+    @Published private(set) var backStack: [BrowseLocation] = []
+    private var navigating = false
+
+    struct BrowseLocation: Equatable {
+        var selection: SidebarItem?
+        var browsePath: String?
+    }
+
+    /// 当前页面的根文件夹（固定文件夹、外接磁盘或任意文件夹）。
+    var browseRoot: String? {
+        switch selection {
+        case .pinned(let path), .volume(let path), .folder(let path): return path
+        default: return nil
+        }
+    }
+
+    /// 正在看的文件夹。
+    var currentFolder: String? { browseRoot.map { browsePath ?? $0 } }
+
+    var canGoBack: Bool { !backStack.isEmpty }
+
+    var canGoUp: Bool {
+        guard let current = currentFolder, current != "/" else { return false }
+        if browsePath != nil { return true }
+        if case .folder = selection { return true }
+        return false
+    }
+
+    /// 在拾掇里打开一个文件夹，不跳到访达。
+    /// 在当前根目录里就进子文件夹；落在某个固定文件夹 / 外接磁盘里就切过去；都不是就当「任意文件夹」打开。
+    func openFolder(_ url: URL) {
+        let path = url.standardizedFileURL.path
+        let here = BrowseLocation(selection: selection, browsePath: browsePath)
+        if activeQuery != nil {
+            activeQuery = nil
+            searchText = ""
+            photoConcept = nil
+            lockedPhotoConcept = nil
+        }
+        func inside(_ root: String) -> Bool { path == root || path.hasPrefix(root.hasSuffix("/") ? root : root + "/") }
+
+        // 1. 就在当前这个根目录里：进子文件夹
+        if let root = browseRoot, inside(root) {
+            let target = path == root ? nil : path
+            if target != browsePath { backStack.append(here) }
+            browsePath = target
+            reload()
+            return
+        }
+        // 2. 落在某个固定文件夹 / 外接磁盘里：切到那一页（选最深的那个）
+        var roots: [(item: SidebarItem, root: String)] = pinnedFolders.map { (item: SidebarItem.pinned($0), root: $0) }
+        roots += volumes.volumes.map { (item: SidebarItem.volume($0.path), root: $0.path) }
+        let best = roots.filter { inside($0.root) }.max { $0.root.count < $1.root.count }
+
+        navigating = true
+        backStack.append(here)
+        selection = best?.item ?? .folder(path)
+        navigating = false
+        // 3. 其他地方的文件夹：当「任意文件夹」打开（上面那行已经切过去了）
+        if let best, path != best.root { browsePath = path } else { browsePath = nil }
+        reload()
+    }
+
+    /// 回到上一层文件夹（⌘↑）。
+    func goUp() {
+        guard canGoUp, let root = browseRoot, let current = currentFolder else { return }
+        let parent = (current as NSString).deletingLastPathComponent
+        if browsePath != nil {
+            backStack.append(BrowseLocation(selection: selection, browsePath: browsePath))
+            browsePath = parent == root || !parent.hasPrefix(root + "/") ? nil : parent
+            reload()
+        } else {
+            openFolder(URL(fileURLWithPath: parent, isDirectory: true))
+        }
+    }
+
+    /// 返回上一个位置（⌘[）。
+    func goBack() {
+        guard let last = backStack.popLast() else { return }
+        navigating = true
+        if selection != last.selection { selection = last.selection }
+        navigating = false
+        browsePath = last.browsePath
+        reload()
+    }
+
+    /// 打开文件：文件夹在拾掇里进去，其他文件用默认 App 打开。
+    func openItems(_ list: [FileItem]) {
+        if list.count == 1, let item = list.first, item.isDirectory {
+            openFolder(item.url)
+        } else {
+            FileActions.open(list.filter { !$0.isDirectory })
+            if let folder = list.first(where: \.isDirectory) { openFolder(folder.url) }
         }
     }
 
@@ -208,9 +313,9 @@ final class LibraryStore: ObservableObject {
         case .largeFiles: result = await Queries.largeFiles()
         case .screenshots: result = await Queries.screenshots()
         case .downloads: result = await Queries.downloaded()
-        case .pinned(let path): result = await Queries.folder(path)
+        case .pinned(let path), .folder(let path): result = await Queries.folder(browsePath ?? path)
         case .tag(let name): result = await Queries.tagged(name)
-        case .volume(let path): result = await Queries.folder(path)
+        case .volume(let path): result = await Queries.folder(browsePath ?? path)
         case .chat(let app):
             result = await chat.items(for: app)
             cleanup.updateChatCard()
@@ -429,7 +534,9 @@ final class LibraryStore: ObservableObject {
 
     /// 双击：歌曲在工具栏里播放，其他文件用默认应用打开。
     func open(_ item: FileItem, in list: [FileItem]) {
-        if item.category == .music {
+        if item.isDirectory {
+            openFolder(item.url)
+        } else if item.category == .music {
             player.play(item, in: list)
         } else {
             NSWorkspace.shared.open(item.url)

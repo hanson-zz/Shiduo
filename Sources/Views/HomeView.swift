@@ -323,7 +323,7 @@ struct ShelfView: View {
                             tint: store.selectedIDs.contains(item.id) ? .accentColor : .clear,
                             radius: 14, interactive: true
                         )
-                        .onTapGesture(count: 2) { NSWorkspace.shared.open(item.url) }
+                        .onTapGesture(count: 2) { store.openItems([item]) }
                         .onTapGesture { store.selectedIDs = [item.id] }
                         .contextMenu { FileContextMenu(items: [item]) }
                         .onDrag { NSItemProvider(object: item.url as NSURL) }

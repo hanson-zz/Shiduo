@@ -14933,6 +14933,38 @@
           }
         }
       }
+    },
+    "返回（⌘[）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back (⌘[)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回（⌘[）"
+          }
+        }
+      }
+    },
+    "上一层文件夹（⌘↑）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enclosing Folder (⌘↑)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一层文件夹（⌘↑）"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

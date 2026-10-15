@@ -180,6 +180,15 @@ final class QuickSearchController: NSObject, NSWindowDelegate {
 
     private func open(_ item: FileItem) {
         hide()
+        // 文件夹在拾掇主窗口里打开，不跳到访达
+        if item.isDirectory, let store = model.store {
+            NSApp.activate(ignoringOtherApps: true)
+            if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
+                window.makeKeyAndOrderFront(nil)
+            }
+            store.openFolder(item.url)
+            return
+        }
         NSWorkspace.shared.open(item.url)
     }
 

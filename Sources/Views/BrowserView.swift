@@ -48,6 +48,10 @@ struct BrowserView: View {
                 ChatFilesBar(app: chatApp, kind: $chatKind)
                 Divider()
             }
+            if store.activeQuery == nil, store.currentFolder != nil {
+                FolderPathBar()
+                Divider()
+            }
             if showsOCRTools || !sourceGroups.isEmpty {
                 HStack(spacing: 12) {
                     if showsOCRTools { ocrBar }
@@ -356,7 +360,7 @@ struct FileCollectionView: View {
             if list.count == 1, let item = list.first {
                 store.open(item, in: sorted)
             } else {
-                FileActions.open(list)
+                store.openItems(list)
             }
         }
         .onKeyPress(.space) {
@@ -460,5 +464,105 @@ struct FileGridCell: View {
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .animation(.easeOut(duration: 0.12), value: hovering)
+    }
+}
+
+/// 固定文件夹 / 外接磁盘 / 任意文件夹页面顶部：返回、上一层、可点的路径。子文件夹都在拾掇里打开，不跳到访达。
+struct FolderPathBar: View {
+    @EnvironmentObject private var store: LibraryStore
+
+    /// 从根目录（或个人文件夹）到当前文件夹的每一层。
+    private var crumbs: [(name: String, path: String)] {
+        guard let root = store.browseRoot, let current = store.currentFolder else { return [] }
+        // 任意文件夹：从个人文件夹（或磁盘根目录）开始，方便往上走
+        var start = root
+        if case .folder = store.selection {
+            let home = NSHomeDirectory()
+            start = current.hasPrefix(home + "/") || current == home ? home : "/"
+        }
+        var list: [(String, String)] = [(FileManager.default.displayName(atPath: start), start)]
+        guard current != start else { return list }
+        var path = start
+        let rest = current.dropFirst(start == "/" ? 1 : start.count + 1)
+        for part in rest.split(separator: "/") {
+            path = (path as NSString).appendingPathComponent(String(part))
+            list.append((FileManager.default.displayName(atPath: path), path))
+        }
+        return list
+    }
+
+    private var rootSymbol: String {
+        switch store.selection {
+        case .volume: return "externaldrive"
+        case .folder: return "house"
+        default: return "folder"
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button {
+                store.goBack()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .frame(width: 22, height: 20)
+            }
+            .disabled(!store.canGoBack)
+            .keyboardShortcut("[", modifiers: .command)
+            .help("返回（⌘[）")
+            Button {
+                store.goUp()
+            } label: {
+                Image(systemName: "arrow.turn.left.up")
+                    .frame(width: 22, height: 20)
+            }
+            .disabled(!store.canGoUp)
+            .keyboardShortcut(.upArrow, modifiers: .command)
+            .help("上一层文件夹（⌘↑）")
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 2) {
+                    let list = crumbs
+                    ForEach(Array(list.enumerated()), id: \.offset) { index, crumb in
+                        if index > 0 {
+                            Image(systemName: "chevron.right")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        Button {
+                            store.openFolder(URL(fileURLWithPath: crumb.path, isDirectory: true))
+                        } label: {
+                            HStack(spacing: 4) {
+                                if index == 0 {
+                                    Image(systemName: rootSymbol)
+                                }
+                                Text(crumb.name).lineLimit(1)
+                            }
+                            .font(.callout.weight(index == list.count - 1 ? .semibold : .regular))
+                            .foregroundStyle(index == list.count - 1 ? Color.primary : Color.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(index == list.count - 1)
+                        .help(crumb.path)
+                    }
+                }
+            }
+            Spacer(minLength: 8)
+            if let current = store.currentFolder {
+                Button {
+                    NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: current)])
+                } label: {
+                    Image(systemName: "arrow.up.forward.app")
+                }
+                .buttonStyle(.borderless)
+                .help("在访达中显示")
+            }
+        }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
     }
 }

@@ -38,7 +38,7 @@ struct FileContextMenu: View {
     var preview: ((FileItem) -> Void)?
 
     var body: some View {
-        Button("打开") { FileActions.open(items) }
+        Button("打开") { store.openItems(items) }
         Button("在访达中显示") { FileActions.reveal(items) }
         if let first = items.first, let preview {
             Button("快速查看") { preview(first) }

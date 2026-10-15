@@ -131,7 +131,7 @@ struct CleanupReviewPage: View {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
                             ForEach(items) { item in
                                 ReviewCell(item: item, selected: selected.contains(item.id))
-                                    .onTapGesture(count: 2) { NSWorkspace.shared.open(item.url) }
+                                    .onTapGesture(count: 2) { store.openItems([item]) }
                                     .onTapGesture { toggle(item) }
                                     .contextMenu { FileContextMenu(items: [item]) }
                                     .onDrag { NSItemProvider(object: item.url as NSURL) }
