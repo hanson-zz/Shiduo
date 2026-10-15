@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var license: LicenseManager
     @ObservedObject private var reminders = ReminderStore.shared
+    @ObservedObject private var folderIcons = FolderIconService.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
 
     var body: some View {
@@ -58,6 +59,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: Binding(get: { !reminders.composing.isEmpty }, set: { if !$0 { reminders.composing = [] } })) {
             ReminderSheet(items: reminders.composing)
+        }
+        .sheet(isPresented: Binding(get: { !folderIcons.editing.isEmpty }, set: { if !$0 { folderIcons.editing = [] } })) {
+            FolderIconEditor(urls: folderIcons.editing, seedColor: folderIcons.seedColor) { store.showToast($0) }
         }
         .sheet(item: $store.ocrItem) { item in
             OCRSheet(item: item)

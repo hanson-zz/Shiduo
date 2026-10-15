@@ -58,6 +58,16 @@ struct FileContextMenu: View {
                 LicenseManager.shared.showPaywall = true
             }
         }
+        if items.allSatisfy(\.isDirectory) {
+            Button("文件夹上色…") { FolderIconService.shared.openEditor(items.map(\.url)) }
+            Button("还原文件夹图标") {
+                let outcome = FolderIconService.shared.restore(items.map(\.url))
+                if !outcome.succeeded.isEmpty {
+                    store.showToast(String(localized: "已还原 \(outcome.succeeded.count) 个文件夹图标"))
+                }
+                if !outcome.failed.isEmpty { store.alertMessage = outcome.failureText }
+            }
+        }
         if items.contains(where: { !$0.isDirectory }) {
             Button(items.count > 1 ? String(localized: "批量重命名 \(items.count) 个文件…") : String(localized: "重命名…")) { store.renameItems = items }
         }
