@@ -8,6 +8,8 @@ struct LiveTextPreview: View {
     let item: FileItem
     let onClose: () -> Void
     let onStep: (Int) -> Void
+    /// ↑ ↓：上一行 / 下一行（网格里一次跳一整行）。
+    var onStepRow: ((Int) -> Void)? = nil
 
     @State private var highlight = false
     @State private var transcript = ""
@@ -45,6 +47,8 @@ struct LiveTextPreview: View {
         .onKeyPress(.space) { onClose(); return .handled }
         .onKeyPress(.leftArrow) { onStep(-1); return .handled }
         .onKeyPress(.rightArrow) { onStep(1); return .handled }
+        .onKeyPress(.upArrow) { (onStepRow ?? onStep)(-1); return .handled }
+        .onKeyPress(.downArrow) { (onStepRow ?? onStep)(1); return .handled }
         .onChange(of: item.id) {
             highlight = false
             transcript = ""

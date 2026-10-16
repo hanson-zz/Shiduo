@@ -28,6 +28,8 @@ enum SidebarItem: Hashable {
     case cleanupHistory
     /// 不在侧边栏里的文件夹（从搜索结果、首页等处双击打开），也在拾掇里浏览。
     case folder(String)
+    /// Pro：保存的搜索（智能文件夹），每次打开按当前时间重新搜索。
+    case savedSearch(UUID)
 }
 
 enum DuplicatesTab: String, Hashable {
@@ -259,6 +261,8 @@ final class LibraryStore: ObservableObject {
 
     @Published var searchText = ""
     @Published var activeQuery: SearchQuery?
+    /// 这次搜索里用户点 × 去掉的条件（保存搜索时一起存下，下次重新解析后照样去掉）。
+    private(set) var removedChipKeys: [String] = []
     /// Pro：搜索词里认出的画面概念（「画面：猫」），结果里会加上画面符合的照片。
     @Published var photoConcept: PhotoConcept?
     /// 不是 Pro 时认出的画面概念：只显示一个「Pro：按画面内容搜索」的提示。
@@ -377,6 +381,10 @@ final class LibraryStore: ObservableObject {
         case .pinned(let path), .folder(let path): result = await Queries.folder(browsePath ?? path)
         case .tag(let name): result = await Queries.tagged(name)
         case .volume(let path): result = await Queries.folder(browsePath ?? path)
+        case .savedSearch(let id):
+            if let saved = SavedSearchStore.shared.search(id), license.isPro {
+                result = await Queries.search(saved.query())
+            }
         case .chat(let app):
             result = await chat.items(for: app)
             cleanup.updateChatCard()
@@ -463,12 +471,14 @@ final class LibraryStore: ObservableObject {
         }
         let query = QueryParser().parse(text)
         activeQuery = query.isEmpty ? SearchQuery(text: text) : query
+        removedChipKeys = []
         photoConceptRemoved = false
         runSearch()
     }
 
     func removeChip(_ chip: SearchChip) {
         guard var query = activeQuery else { return }
+        removedChipKeys.append(query.chipKey(chip.field))
         query.remove(chip.field)
         if query.isEmpty {
             searchText = ""
@@ -528,6 +538,52 @@ final class LibraryStore: ObservableObject {
             remember(result)
             items = result
             isLoading = false
+        }
+    }
+
+    // MARK: - 保存的搜索（Pro）
+
+    /// 正在搜索的这句话（连同去掉的条件）能不能保存。
+    var canSaveSearch: Bool {
+        activeQuery != nil && !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// 把当前搜索保存到侧边栏，保存后直接打开它。
+    func saveCurrentSearch(name: String) {
+        let text = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard activeQuery != nil, !text.isEmpty else { return }
+        license.startTrialIfNeeded()
+        guard license.isPro else {
+            license.showPaywall = true
+            return
+        }
+        let saved = SavedSearchStore.shared.add(name: name, text: text, removed: removedChipKeys)
+        selection = .savedSearch(saved.id)
+        showToast(String(localized: "已保存到侧边栏：\(saved.displayName)"))
+    }
+
+    /// 把保存的搜索放回搜索框继续改（连同当时去掉的条件）。
+    func editSavedSearch(_ saved: SavedSearch) {
+        searchText = saved.text
+        activeQuery = saved.query()
+        removedChipKeys = saved.removed
+        photoConceptRemoved = false
+        runSearch()
+        focusSearch()
+    }
+
+    /// 定时 / 回到拾掇时：正在看的保存的搜索悄悄重新搜一次，不清空列表、尽量保留选中。
+    func refreshSavedSearchQuietly() {
+        guard case .savedSearch(let id) = selection, activeQuery == nil, !Demo.isOn, license.isPro,
+              let saved = SavedSearchStore.shared.search(id) else { return }
+        Task {
+            let result = await Queries.search(saved.query())
+            guard selection == .savedSearch(id), activeQuery == nil else { return }
+            guard result.map(\.path) != items.map(\.path) else { return }
+            remember(result)
+            items = result
+            let alive = Set(result.map(\.id))
+            selectedIDs = selectedIDs.intersection(alive)
         }
     }
 

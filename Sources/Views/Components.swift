@@ -151,6 +151,8 @@ struct ChipBar: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
+            SaveSearchButton()
+                .padding(.trailing, 10)
             Text(store.isLoading ? String(localized: "正在搜索…") : String(localized: "\(store.items.count) 个结果"))
                 .font(.callout.weight(.semibold))
                 .monospacedDigit()

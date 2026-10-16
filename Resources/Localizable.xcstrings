@@ -14981,6 +14981,278 @@
           }
         }
       }
+    },
+    "已保存到侧边栏：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved to the sidebar: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存到侧边栏：%@"
+          }
+        }
+      }
+    },
+    "自动清理用过的安装包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-clean used installers"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动清理用过的安装包"
+          }
+        }
+      }
+    },
+    "点按在访达中显示，按住拖进其他 App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click to show in Finder, or drag into another app"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点按在访达中显示，按住拖进其他 App"
+          }
+        }
+      }
+    },
+    "保存搜索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Search"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存搜索"
+          }
+        }
+      }
+    },
+    "把「上周超过 5MB 的 PDF」这样的搜索存到侧边栏，自动更新": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save searches like “PDFs over 5 MB from last week” to the sidebar; they stay up to date"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把「上周超过 5MB 的 PDF」这样的搜索存到侧边栏，自动更新"
+          }
+        }
+      }
+    },
+    "“下载”里超过 %lld 天的 .dmg / .pkg 自动移到废纸篓，30 天内可以在「清理记录」里放回。拾掇开着时每 10 分钟检查一次。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moves .dmg / .pkg files older than %lld days in Downloads to the Trash. Put them back from Cleanup History within 30 days. Checked every 10 minutes while Shiduo is open."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“下载”里超过 %lld 天的 .dmg / .pkg 自动移到废纸篓，30 天内可以在「清理记录」里放回。拾掇开着时每 10 分钟检查一次。"
+          }
+        }
+      }
+    },
+    "这个保存的搜索已被删除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved search was deleted"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个保存的搜索已被删除"
+          }
+        }
+      }
+    },
+    "搜索：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索：%@"
+          }
+        }
+      }
+    },
+    "随时自动更新": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates automatically"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "随时自动更新"
+          }
+        }
+      }
+    },
+    "编辑搜索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Search"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑搜索"
+          }
+        }
+      }
+    },
+    "把这句搜索放回搜索框，改好后可以另存一个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put this search back in the search field so you can change it and save a new one"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把这句搜索放回搜索框，改好后可以另存一个"
+          }
+        }
+      }
+    },
+    "重命名保存的搜索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Saved Search"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名保存的搜索"
+          }
+        }
+      }
+    },
+    "存到侧边栏，像文件夹一样随时打开，内容自动更新": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to the sidebar and open it like a folder; its contents stay up to date"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存到侧边栏，像文件夹一样随时打开，内容自动更新"
+          }
+        }
+      }
+    },
+    "保存到侧边栏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to Sidebar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存到侧边栏"
+          }
+        }
+      }
+    },
+    "「上周」「今天」这样的日期每次打开都按当时重新计算。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dates like “last week” or “today” are recalculated every time you open it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「上周」「今天」这样的日期每次打开都按当时重新计算。"
+          }
+        }
+      }
+    },
+    "删除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除"
+          }
+        }
+      }
+    },
+    "保存的搜索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved Searches"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存的搜索"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

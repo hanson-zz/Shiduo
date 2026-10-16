@@ -120,6 +120,8 @@ struct SidebarView: View {
                     .tag(SidebarItem.downloads)
             }
 
+            SavedSearchesSidebarSection()
+
             Section("整理") {
                 Label("清理", systemImage: "sparkles")
                     .badge(cleanup.totalBytes > 0 ? Text(cleanup.totalBytes.byteText).foregroundColor(.green) : nil)
@@ -222,5 +224,6 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .modifier(SavedSearchRenameAlert())
     }
 }

@@ -210,6 +210,10 @@ struct FileCollectionView: View {
     @State private var previewURL: URL?
     /// 图片用自己的预览，能直接划选文字。
     @State private var liveItem: FileItem?
+    /// 网格的宽度，用来算 ↑ ↓ 一次跳几个。
+    @State private var gridWidth: CGFloat = 800
+    /// 点格子后让网格拿到键盘焦点（AppKit 接走了点按，SwiftUI 不会自动给焦点）。
+    @FocusState private var gridFocused: Bool
 
     private var sorted: [FileItem] { items.sorted(using: sortOrder) }
 
@@ -222,9 +226,18 @@ struct FileCollectionView: View {
             }
         }
         .quickLookPreview($previewURL, in: sorted.map(\.url))
+        // 在快速查看窗口里用方向键翻页时，列表 / 网格的选中跟着走。
+        .onChange(of: previewURL) {
+            guard let url = previewURL, let item = sorted.first(where: { $0.url == url }),
+                  store.selectedIDs != [item.id] else { return }
+            store.selectedIDs = [item.id]
+        }
+        // 预览开着时，在列表 / 网格里用方向键换了选中，预览跟着换。
+        .onChange(of: store.selectedIDs) { followSelection() }
         .overlay {
             if let liveItem {
-                LiveTextPreview(item: liveItem, onClose: { self.liveItem = nil }, onStep: { _ = step($0) })
+                LiveTextPreview(item: liveItem, onClose: { self.liveItem = nil }, onStep: { _ = step($0) },
+                                onStepRow: { _ = step($0 * (viewMode == .grid ? gridColumns : 1)) })
                     .transition(.opacity)
             }
         }
@@ -284,27 +297,50 @@ struct FileCollectionView: View {
                 ForEach(sorted) { item in
                     FileGridCell(
                         item: item, size: CGFloat(thumbnailSize), selected: store.selectedIDs.contains(item.id),
-                        copyText: TextExtractor.canExtract(item) ? { store.copyText(targets(for: item)) } : nil
+                        copyText: TextExtractor.canExtract(item) ? { store.copyText(targets(for: item)) } : nil,
+                        // 左键点按、双击和拖动交给 AppKit：拖动选中的格子时一次带上所有选中的文件（macOS 14 起都行）。
+                        mouseArea: FileCellMouseArea(
+                            urls: { targets(for: item).map(\.url) },
+                            onClick: { count, flags in
+                                gridFocused = true
+                                if count >= 2 {
+                                    store.open(item, in: sorted)
+                                } else {
+                                    select(item, flags: flags)
+                                }
+                            }
+                        )
                     )
-                        .onTapGesture(count: 2) { store.open(item, in: sorted) }
-                        .onTapGesture { select(item) }
                         .contextMenu {
                             FileContextMenu(items: targets(for: item), preview: { preview($0) })
                         }
-                        .onDrag { NSItemProvider(object: item.url as NSURL) }
                         .help(item.path)
                 }
             }
             .padding(16)
         }
         .focusable()
+        .focused($gridFocused)
         .focusEffectDisabled()
         .onKeyPress(.space) {
             quickLookSelection()
             return .handled
         }
-        .onKeyPress(.leftArrow) { step(-1) }
-        .onKeyPress(.rightArrow) { step(1) }
+        // ← → 前后一个，↑ ↓ 上下一行；带修饰键的（⌘↑ 上一层等）留给菜单快捷键。
+        .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow]) { press in
+            guard press.modifiers.subtracting([.numericPad, .function]).isEmpty else { return .ignored }
+            switch press.key {
+            case .leftArrow: return step(-1)
+            case .rightArrow: return step(1)
+            case .upArrow: return step(-gridColumns)
+            default: return step(gridColumns)
+            }
+        }
+        .background(GeometryReader { proxy in
+            Color.clear
+                .onAppear { gridWidth = proxy.size.width }
+                .onChange(of: proxy.size.width) { gridWidth = proxy.size.width }
+        })
         .onKeyPress(.escape) {
             guard previewURL != nil || liveItem != nil else { return .ignored }
             previewURL = nil
@@ -313,25 +349,36 @@ struct FileCollectionView: View {
         }
     }
 
-    /// ← → 在文件之间移动；预览打开时跟着翻页。
+    /// 网格每行几个（和 LazyVGrid 的 adaptive 列数算法一致：左右各留 16 的边距，间距 8）。
+    private var gridColumns: Int {
+        let cell = thumbnailSize + 28 + 8
+        return max(1, Int((gridWidth - 32 + 8) / cell))
+    }
+
+    /// 方向键在文件之间移动；预览打开时由 followSelection 跟着翻页。
     private func step(_ offset: Int) -> KeyPress.Result {
         let list = sorted
         guard !list.isEmpty else { return .ignored }
         let index = list.firstIndex { store.selectedIDs.contains($0.id) } ?? (offset > 0 ? -1 : list.count)
         let target = min(max(index + offset, 0), list.count - 1)
         store.selectedIDs = [list[target].id]
-        if previewURL != nil || liveItem != nil {
-            previewURL = nil
-            liveItem = nil
-            preview(list[target])
-        }
         return .handled
+    }
+
+    /// 预览开着、选中换了：预览换成新选中的那个。
+    private func followSelection() {
+        guard previewURL != nil || liveItem != nil,
+              let item = sorted.first(where: { store.selectedIDs.contains($0.id) }) else { return }
+        if item.url == previewURL || item.id == liveItem?.id { return }
+        previewURL = nil
+        liveItem = nil
+        preview(item)
     }
 
     // MARK: 列表
 
     private var table: some View {
-        Table(sorted, selection: $store.selectedIDs, sortOrder: $sortOrder) {
+        Table(of: FileItem.self, selection: $store.selectedIDs, sortOrder: $sortOrder) {
             TableColumn("名称", value: \FileItem.name) { item in
                 HStack(spacing: 6) {
                     ThumbnailView(url: item.url, size: 20)
@@ -339,7 +386,6 @@ struct FileCollectionView: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
-                .onDrag { NSItemProvider(object: item.url as NSURL) }
                 .help(item.path)
             }
             .width(min: 180, ideal: 320)
@@ -355,6 +401,12 @@ struct FileCollectionView: View {
                 Text(item.kindText)
             }
             .width(min: 80, ideal: 120)
+        } rows: {
+            // 每一行自己提供拖动内容：拖动选中的几行时，选中的文件一起拖出去。
+            ForEach(sorted) { item in
+                TableRow(item)
+                    .itemProvider { NSItemProvider(object: item.url as NSURL) }
+            }
         }
         .scrollContentBackground(.hidden)
         .contextMenu(forSelectionType: String.self) { ids in
@@ -383,8 +435,13 @@ struct FileCollectionView: View {
         store.selectedIDs.contains(item.id) ? resolve(store.selectedIDs) : [item]
     }
 
-    private func select(_ item: FileItem) {
-        if NSEvent.modifierFlags.contains(.command) {
+    private func select(_ item: FileItem, flags: NSEvent.ModifierFlags = NSEvent.modifierFlags) {
+        if flags.contains(.shift), let anchor = sorted.firstIndex(where: { store.selectedIDs.contains($0.id) }),
+           let index = sorted.firstIndex(where: { $0.id == item.id }) {
+            // ⇧ 点按：从已选的第一个连选到这里。
+            let range = min(anchor, index)...max(anchor, index)
+            store.selectedIDs = Set(sorted[range].map(\.id))
+        } else if flags.contains(.command) {
             if store.selectedIDs.contains(item.id) {
                 store.selectedIDs.remove(item.id)
             } else {
@@ -420,28 +477,15 @@ struct FileGridCell: View {
     let selected: Bool
     /// 图片和 PDF：鼠标移上去显示“拷贝文字”。
     var copyText: (() -> Void)?
+    /// 盖在格子上处理点按、双击和拖出的 AppKit 视图（可以一次拖出多个文件）。
+    /// 「拷贝文字」按钮放在它上面，仍然点得到。
+    var mouseArea: FileCellMouseArea? = nil
 
     @State private var hovering = false
 
     var body: some View {
         VStack(spacing: 6) {
             ThumbnailView(url: item.url, size: size)
-                .overlay(alignment: .bottomTrailing) {
-                    if hovering, let copyText {
-                        Button(action: copyText) {
-                            Label("拷贝文字", systemImage: "text.viewfinder")
-                                .font(.caption.weight(.semibold))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Capsule().fill(.regularMaterial))
-                                .overlay(Capsule().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.8))
-                        }
-                        .buttonStyle(.plain)
-                        .padding(6)
-                        .help("识别并拷贝图中文字（⇧⌘C）")
-                        .transition(.opacity)
-                    }
-                }
             Text(item.name)
                 .font(.callout)
                 .lineLimit(2)
@@ -466,6 +510,29 @@ struct FileGridCell: View {
                 .strokeBorder(selected ? Color.accentColor.opacity(0.8) : Color.clear, lineWidth: 1.5)
         )
         .contentShape(Rectangle())
+        .overlay { mouseArea }
+        .overlay(alignment: .top) {
+            // 和缩略图一样大、一样位置的透明框，按钮贴在它右下角。
+            Color.clear
+                .frame(width: size, height: size)
+                .overlay(alignment: .bottomTrailing) {
+                    if hovering, let copyText {
+                        Button(action: copyText) {
+                            Label("拷贝文字", systemImage: "text.viewfinder")
+                                .font(.caption.weight(.semibold))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(.regularMaterial))
+                                .overlay(Capsule().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.8))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(6)
+                        .help("识别并拷贝图中文字（⇧⌘C）")
+                        .transition(.opacity)
+                    }
+                }
+                .padding(.top, 8)
+        }
         .onHover { hovering = $0 }
         .animation(.easeOut(duration: 0.12), value: hovering)
     }

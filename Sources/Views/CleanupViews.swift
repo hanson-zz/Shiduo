@@ -52,6 +52,8 @@ struct CleanupView: View {
 
                 FreeUpHero(bytes: total, scanning: scanner.isRunning || duplicates.isRunning)
 
+                AutoCleanInstallersRow()
+
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 16)], spacing: 16) {
                     DuplicatesTile()
                         .onTapGesture { store.selection = .duplicates }
@@ -69,6 +71,53 @@ struct CleanupView: View {
             .padding(.vertical, 24)
         }
         .scrollContentBackground(.hidden)
+    }
+}
+
+/// 清理页上的「自动清理用过的安装包」开关（Pro，默认关闭）：基于自动整理规则，只移到废纸篓。
+private struct AutoCleanInstallersRow: View {
+    @EnvironmentObject private var organizer: AutoOrganizer
+    @EnvironmentObject private var license: LicenseManager
+
+    private var days: Int { organizer.installerRule?.olderThanDays ?? 14 }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "shippingbox")
+                .font(.title3)
+                .foregroundStyle(.orange)
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text("自动清理用过的安装包")
+                        .font(.headline)
+                    ProBadge()
+                        .opacity(license.isPro ? 0.55 : 1)
+                }
+                Text("“下载”里超过 \(days) 天的 .dmg / .pkg 自动移到废纸篓，30 天内可以在「清理记录」里放回。拾掇开着时每 10 分钟检查一次。")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 12)
+            Toggle("自动清理用过的安装包", isOn: Binding(
+                get: { license.isPro && organizer.autoCleansInstallers },
+                set: { on in
+                    if on {
+                        license.startTrialIfNeeded()
+                        guard license.isPro else {
+                            license.showPaywall = true
+                            return
+                        }
+                    }
+                    organizer.setAutoCleanInstallers(on)
+                }
+            ))
+            .toggleStyle(.switch)
+            .labelsHidden()
+        }
+        .padding(14)
+        .glassCard(radius: 16)
     }
 }
 

@@ -25,6 +25,7 @@ struct ContentView: View {
             ReminderStore.shared.start()
             QuickPickController.shared.apply()
             TrialReminder.shared.start()
+            SavedSearchStore.shared.start()
             if !UserDefaults.standard.bool(forKey: "onboardingDone") { store.showOnboarding = true }
             // 更新后“完全磁盘访问权限”丢了就提醒重新授权；切回拾掇时自动重新检查。
             FullDiskAccessMonitor.shared.start()
@@ -211,6 +212,9 @@ struct DetailView: View {
                     .proGated(.autoOrganize)
             case .cleanupHistory:
                 CleanupHistoryView()
+            case .savedSearch(let id):
+                SavedSearchPage(id: id)
+                    .proGated(.savedSearch)
             case .volume(let path):
                 BrowserView(title: FileManager.default.displayName(atPath: store.currentFolder ?? path), showsOCRTools: false)
                     .proGated(.volumes)

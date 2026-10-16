@@ -343,6 +343,46 @@ final class AutoOrganizer: ObservableObject {
     func delete(_ rule: OrganizeRule) {
         rules.removeAll { $0.id == rule.id }
     }
+
+    // MARK: 清理页的「自动清理用过的安装包」开关
+
+    /// 开关新建的那条规则用固定的 id，方便以后找到它。
+    static let installerRuleID = UUID(uuidString: "5A1D0D00-1A57-4A11-8E25-000000000001")!
+    static let installerExtensions = ["dmg", "pkg", "mpkg", "xip"]
+
+    /// 只把“下载”里的安装包移到废纸篓、没有别的条件的规则（开关新建的，或者第一次打开时给的示例规则）。
+    private static func isInstallerRule(_ rule: OrganizeRule) -> Bool {
+        if rule.id == installerRuleID { return true }
+        return rule.action == .trash && rule.watchFolder == Folders.downloads
+            && !rule.extensions.isEmpty && Set(rule.extensions).isSubset(of: Set(installerExtensions))
+            && rule.category == nil && rule.sourceID == nil
+            && rule.nameContains.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    var installerRule: OrganizeRule? {
+        rules.first { $0.id == Self.installerRuleID } ?? rules.first(where: Self.isInstallerRule)
+    }
+
+    /// 开关现在是不是开着（默认关闭）。
+    var autoCleansInstallers: Bool {
+        guard let rule = installerRule else { return false }
+        return rule.enabled && rule.isRunnable
+    }
+
+    /// 打开 / 关上开关：改的是自动整理里那条规则，在「自动整理」页里也看得到、改得了。
+    /// 只移到废纸篓（记进清理记录，30 天内能放回），不会直接删除。
+    func setAutoCleanInstallers(_ on: Bool) {
+        if var rule = installerRule {
+            rule.enabled = on
+            save(rule)
+        } else if on {
+            rules.append(OrganizeRule(
+                id: Self.installerRuleID, name: String(localized: "自动清理用过的安装包"), enabled: true,
+                watchFolder: Folders.downloads, extensions: Self.installerExtensions, olderThanDays: 14, action: .trash
+            ))
+        }
+        if on { Task { await runNow() } }
+    }
 }
 
 // MARK: - 界面

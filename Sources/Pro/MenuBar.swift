@@ -50,25 +50,7 @@ struct MenuBarContent: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(recent) { item in
-                Button {
-                    FileActions.reveal([item])
-                } label: {
-                    HStack(spacing: 8) {
-                        ThumbnailView(url: item.url, size: 24)
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(item.name)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            Text("\(item.sizeText) · \(item.relativeDateText)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help("在访达中显示")
+                RecentDownloadRow(item: item)
             }
 
             Divider()
@@ -107,6 +89,43 @@ struct MenuBarContent: View {
         if Demo.isOn { return }
         let items = await Queries.recentDownloads(limit: 5)
         recent = items
+    }
+}
+
+/// 菜单里的一条最近下载：点一下在访达中显示，按住可以直接拖进邮件、微信、Slack、Figma 等 App。
+private struct RecentDownloadRow: View {
+    let item: FileItem
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ThumbnailView(url: item.url, size: 24)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(item.name)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text("\(item.sizeText) · \(item.relativeDateText)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            if hovering {
+                Image(systemName: "hand.draw")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
+        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(hovering ? Color.primary.opacity(0.07) : .clear))
+        .contentShape(Rectangle())
+        // 点按和拖出交给 AppKit：拖出去的是文件本身（拷贝），原文件留在“下载”里。
+        .overlay(FileCellMouseArea(
+            urls: { [item.url] },
+            onClick: { _, _ in FileActions.reveal([item]) }
+        ))
+        .onHover { hovering = $0 }
+        .help("点按在访达中显示，按住拖进其他 App")
     }
 }
 
