@@ -36,6 +36,9 @@ enum ProFeature: CaseIterable, Identifiable {
     case moveOut
     case savedSearch
     case folderIcon
+    case mediaTools
+    case uninstaller
+    case imageTools
 
     var id: Self { self }
 
@@ -53,6 +56,9 @@ enum ProFeature: CaseIterable, Identifiable {
         case .moveOut: return String(localized: "大文件搬家")
         case .savedSearch: return String(localized: "保存搜索")
         case .folderIcon: return String(localized: "文件夹上色")
+        case .mediaTools: return String(localized: "拖进来就转换")
+        case .uninstaller: return String(localized: "卸载 App 连残留一起清")
+        case .imageTools: return String(localized: "抠图和截图美化")
         }
     }
 
@@ -70,6 +76,9 @@ enum ProFeature: CaseIterable, Identifiable {
         case .moveOut: return String(localized: "大文件一键搬到移动硬盘、NAS 或网盘，原处留替身，双击照样打开")
         case .savedSearch: return String(localized: "把「上周超过 5MB 的 PDF」这样的搜索存到侧边栏，自动更新")
         case .folderIcon: return String(localized: "给文件夹换颜色，盖上图标或 emoji，访达里直接看得到")
+        case .mediaTools: return String(localized: "压缩视频、做 GIF、剪片段、多个文件合并成 PDF，全在本机")
+        case .uninstaller: return String(localized: "列出 App 留在资源库里的偏好、缓存和数据，一起移到废纸篓，可恢复")
+        case .imageTools: return String(localized: "本机一键去背景；截图加渐变背景、圆角和阴影")
         }
     }
 
@@ -87,6 +96,9 @@ enum ProFeature: CaseIterable, Identifiable {
         case .moveOut: return "shippingbox.and.arrow.backward"
         case .savedSearch: return "folder.badge.gearshape"
         case .folderIcon: return "paintpalette"
+        case .mediaTools: return "film.stack"
+        case .uninstaller: return "xmark.app"
+        case .imageTools: return "wand.and.rays"
         }
     }
 
@@ -104,6 +116,9 @@ enum ProFeature: CaseIterable, Identifiable {
         case .moveOut: return .cyan
         case .savedSearch: return .yellow
         case .folderIcon: return .orange
+        case .mediaTools: return .purple
+        case .uninstaller: return .red
+        case .imageTools: return .pink
         }
     }
 }
@@ -135,6 +150,7 @@ struct PaywallView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(ProFeature.allCases) { feature in
                     HStack(spacing: 12) {
@@ -150,6 +166,8 @@ struct PaywallView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxHeight: 430)
             .glassCard(tint: .orange, radius: 16)
 
             HStack(spacing: 6) {

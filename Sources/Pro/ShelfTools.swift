@@ -14,6 +14,13 @@ final class ShelfTools: ObservableObject {
     @Published private(set) var message: String?
     /// 刘海暂存架里刚拖进来、等着选格式的图片。
     @Published var pendingImages: [URL] = []
+    /// 刘海暂存架里刚拖进来的视频 / PDF，等着选要做的事。
+    @Published var pendingFiles: [URL] = []
+
+    /// 拖进来的文件里，除了图片之外还能做点什么（压缩视频、合并 PDF……）。
+    static func hasMediaActions(_ urls: [URL]) -> Bool {
+        urls.contains(where: MediaToolsLogic.isVideo) || MediaToolsLogic.canMergePDF(urls)
+    }
 
     private var messageToken = 0
 
@@ -137,7 +144,7 @@ struct ImageConvertDropPane: View {
 
     var body: some View {
         Group {
-            if tools.pendingImages.isEmpty {
+            if tools.pendingImages.isEmpty && tools.pendingFiles.isEmpty {
                 idle
             } else {
                 chooser
@@ -150,15 +157,19 @@ struct ImageConvertDropPane: View {
                 .strokeBorder(targeted ? Color.accentColor : Color.white.opacity(0.25),
                               style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
         )
-        .help("拖图片到这里转换格式")
+        .help("拖图片、视频或 PDF 到这里转换")
         .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
             FileDrop.load(providers) { urls in
                 ShelfStore.shared.add(urls)
                 let images = ShelfTools.images(in: urls)
-                if images.isEmpty {
-                    ShelfTools.shared.show(String(localized: "没有可以转换的图片"))
-                } else {
+                if !images.isEmpty, !urls.contains(where: { MediaToolsLogic.isVideo($0) || MediaToolsLogic.isPDF($0) }) {
+                    ShelfTools.shared.pendingFiles = []
                     ShelfTools.shared.pendingImages = images
+                } else if ShelfTools.hasMediaActions(urls) {
+                    ShelfTools.shared.pendingImages = []
+                    ShelfTools.shared.pendingFiles = urls
+                } else {
+                    ShelfTools.shared.show(String(localized: "没有可以转换的文件"))
                 }
             }
         }
@@ -166,11 +177,14 @@ struct ImageConvertDropPane: View {
 
     private var idle: some View {
         Button {
-            let images = ShelfTools.images(in: selected())
-            if images.isEmpty {
-                tools.show(String(localized: "拖图片到这里转换格式"))
-            } else {
+            let picked = selected()
+            let images = ShelfTools.images(in: picked)
+            if !images.isEmpty, !picked.contains(where: { MediaToolsLogic.isVideo($0) || MediaToolsLogic.isPDF($0) }) {
                 tools.pendingImages = images
+            } else if ShelfTools.hasMediaActions(picked) {
+                tools.pendingFiles = picked
+            } else {
+                tools.show(String(localized: "拖图片、视频或 PDF 到这里"))
             }
         } label: {
             VStack(spacing: 6) {
@@ -184,9 +198,9 @@ struct ImageConvertDropPane: View {
                 }
                 .frame(width: 40, height: 40)
                 .background(Circle().fill(Color.white.opacity(targeted ? 0.22 : 0.1)))
-                Text("转换格式")
+                Text("转换")
                     .font(.caption.weight(.semibold))
-                Text(tools.message ?? (targeted ? String(localized: "松手选格式") : String(localized: "拖图片到这里")))
+                Text(tools.message ?? (targeted ? String(localized: "松手选要做的事") : String(localized: "拖图片、视频或 PDF 到这里")))
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.white.opacity(0.5))
                     .multilineTextAlignment(.center)
@@ -202,13 +216,15 @@ struct ImageConvertDropPane: View {
     private var chooser: some View {
         VStack(spacing: 5) {
             HStack(spacing: 4) {
-                Text("\(tools.pendingImages.count) 张图片转为")
+                Text(tools.pendingFiles.isEmpty ? String(localized: "\(tools.pendingImages.count) 张图片转为")
+                                                : String(localized: "\(tools.pendingFiles.count) 个文件"))
                     .font(.system(size: 10, weight: .semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Spacer(minLength: 0)
                 Button {
                     tools.pendingImages = []
+                    tools.pendingFiles = []
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.white.opacity(0.6))
@@ -216,7 +232,12 @@ struct ImageConvertDropPane: View {
                 .buttonStyle(.plain)
                 .help("取消")
             }
+            ScrollView(showsIndicators: false) {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)], spacing: 4) {
+                if !tools.pendingFiles.isEmpty {
+                    MediaDropActions(urls: tools.pendingFiles) { tools.pendingFiles = [] }
+                        .disabled(MediaTools.shared.busy)
+                } else {
                 ForEach(ImageConverter.OutputFormat.available) { format in
                     Button {
                         let images = tools.pendingImages
@@ -233,6 +254,10 @@ struct ImageConvertDropPane: View {
                     .buttonStyle(.plain)
                     .disabled(tools.busy)
                 }
+                MediaDropActions(urls: tools.pendingImages) { tools.pendingImages = [] }
+                    .disabled(MediaTools.shared.busy)
+                }
+            }
             }
         }
         .padding(.horizontal, 7)

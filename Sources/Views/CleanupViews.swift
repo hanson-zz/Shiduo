@@ -54,6 +54,8 @@ struct CleanupView: View {
 
                 AutoCleanInstallersRow()
 
+                AppUninstallRow()
+
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 16)], spacing: 16) {
                     DuplicatesTile()
                         .onTapGesture { store.selection = .duplicates }

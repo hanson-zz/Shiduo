@@ -6,6 +6,8 @@ struct ContentView: View {
     @ObservedObject private var reminders = ReminderStore.shared
     @ObservedObject private var folderIcons = FolderIconService.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
+    @ObservedObject private var mediaTools = MediaTools.shared
+    @ObservedObject private var uninstaller = AppUninstaller.shared
 
     var body: some View {
         NavigationSplitView {
@@ -72,6 +74,15 @@ struct ContentView: View {
         }
         .sheet(isPresented: Binding(get: { !store.convertItems.isEmpty }, set: { if !$0 { store.convertItems = [] } })) {
             ConvertSheet(items: store.convertItems)
+        }
+        .sheet(item: Binding(get: { mediaTools.trimming.map(SheetURL.init) }, set: { if $0 == nil { mediaTools.trimming = nil } })) { item in
+            TrimSheet(url: item.url, toShelf: mediaTools.sheetToShelf)
+        }
+        .sheet(isPresented: Binding(get: { !mediaTools.beautifying.isEmpty }, set: { if !$0 { mediaTools.beautifying = [] } })) {
+            BeautifySheet(urls: mediaTools.beautifying, toShelf: mediaTools.sheetToShelf)
+        }
+        .sheet(item: Binding(get: { uninstaller.target.map(SheetURL.init) }, set: { if $0 == nil { uninstaller.target = nil } })) { item in
+            UninstallSheet(app: item.url)
         }
         .sheet(isPresented: Binding(get: { !store.moveOutItems.isEmpty }, set: { if !$0 { store.moveOutItems = [] } })) {
             MoveOutSheet(items: store.moveOutItems)
@@ -228,4 +239,10 @@ struct DetailView: View {
             }
         }
     }
+}
+
+/// 用 URL 驱动 .sheet(item:)。
+struct SheetURL: Identifiable {
+    let url: URL
+    var id: String { url.path }
 }

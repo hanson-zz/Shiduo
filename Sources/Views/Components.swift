@@ -77,6 +77,9 @@ struct FileContextMenu: View {
         if items.contains(where: ImageConverter.canConvert) {
             Button("转换为 JPG / 压缩…") { store.convertItems = items.filter(ImageConverter.canConvert) }
         }
+        MediaToolsMenu(urls: {
+            items.map(\.url).sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+        }, toShelf: false)
         Divider()
         Button(items.count > 1 ? String(localized: "拷贝 \(items.count) 个路径") : String(localized: "拷贝路径")) { FileActions.copyPaths(items) }
         if items.contains(where: TextExtractor.canExtract) {
@@ -89,6 +92,9 @@ struct FileContextMenu: View {
             Button("固定所在文件夹") { store.pin(item.url.deletingLastPathComponent().path) }
         }
         Divider()
+        if items.count == 1, let app = items.first, app.ext == "app" {
+            Button("卸载（连残留一起）…") { AppUninstaller.shared.open(app.url) }
+        }
         Button("搬到…") { store.requestMoveOut(items) }
         Button("移到废纸篓", role: .destructive) { store.requestTrash(items) }
     }

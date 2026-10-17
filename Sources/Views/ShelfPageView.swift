@@ -237,6 +237,7 @@ struct ShelfPageView: View {
         if !ShelfTools.images(in: list.map(\.url)).isEmpty {
             ShelfConvertMenu(urls: { list.map(\.url) })
         }
+        MediaToolsMenu(urls: { list.map(\.url) }, toShelf: true)
         Button("共享…") { ShelfActions.share(list.map(\.url)) }
         Button("隔空投送") { airDrop(list) }
         Divider()

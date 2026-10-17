@@ -427,6 +427,7 @@ struct FloatingShelfView: View {
                                 if ImageConverter.canConvert(item.url) {
                                     ShelfConvertMenu(urls: { [item.url] })
                                 }
+                                MediaToolsMenu(urls: { [item.url] }, toShelf: true)
                                 Divider()
                                 Button("从暂存架移除") { shelf.remove(paths: [item.path]) }
                             }
@@ -470,6 +471,7 @@ struct FloatingShelfView: View {
                         if !ShelfTools.images(in: shelf.urls).isEmpty {
                             ShelfConvertMenu(urls: { ShelfTools.images(in: shelf.urls) })
                         }
+                        MediaToolsMenu(urls: { shelf.urls }, toShelf: true)
                         Divider()
                         Button("清空暂存架") { shelf.clear() }
                     } label: {
