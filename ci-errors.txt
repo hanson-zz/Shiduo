@@ -1,0 +1,14 @@
+run: 39045726738 commit: 318eb4050c0d359a02b4c903ab4eeab085c9162b
+== build ==
+285:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:339:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+348:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:113:44: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+393:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:339:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+456:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:113:44: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+599:** BUILD SUCCEEDED **
+== test ==
+406:/Users/runner/work/Shiduo/Shiduo/Tests/StitchTests.swift:78:9: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+409:/Users/runner/work/Shiduo/Shiduo/Tests/StitchTests.swift:90:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1494:Testing failed:
+1497:	Testing cancelled because the build failed.
+1499:** TEST FAILED **
+1502:The following build commands failed:
