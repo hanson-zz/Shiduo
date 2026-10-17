@@ -35,6 +35,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case folderWall
     case moveOut
     case savedSearch
+    case folderIcon
 
     var id: Self { self }
 
@@ -51,6 +52,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .folderWall: return String(localized: "文件夹墙")
         case .moveOut: return String(localized: "大文件搬家")
         case .savedSearch: return String(localized: "保存搜索")
+        case .folderIcon: return String(localized: "文件夹上色")
         }
     }
 
@@ -67,6 +69,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .folderWall: return String(localized: "固定的文件夹变成卡片墙，照片和文稿从文件夹里探出来")
         case .moveOut: return String(localized: "大文件一键搬到移动硬盘、NAS 或网盘，原处留替身，双击照样打开")
         case .savedSearch: return String(localized: "把「上周超过 5MB 的 PDF」这样的搜索存到侧边栏，自动更新")
+        case .folderIcon: return String(localized: "给文件夹换颜色，盖上图标或 emoji，访达里直接看得到")
         }
     }
 
@@ -83,6 +86,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .folderWall: return "square.grid.2x2"
         case .moveOut: return "shippingbox.and.arrow.backward"
         case .savedSearch: return "folder.badge.gearshape"
+        case .folderIcon: return "paintpalette"
         }
     }
 
@@ -99,6 +103,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .folderWall: return .mint
         case .moveOut: return .cyan
         case .savedSearch: return .yellow
+        case .folderIcon: return .orange
         }
     }
 }

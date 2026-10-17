@@ -117,6 +117,7 @@ final class FolderWallModel: ObservableObject {
     func movePath(_ old: String, to new: String) {
         if let color = manualColors.removeValue(forKey: old) { manualColors[new] = color }
         if let color = customColors.removeValue(forKey: old) { customColors[new] = color }
+        FolderIconService.shared.movePath(old, to: new)
     }
 
     /// 打开系统色盘，拖动时实时改这个文件夹的颜色。
@@ -699,6 +700,14 @@ struct FolderCard: View {
             }
             Divider()
             Button("自定义颜色…") { model.openColorPanel(for: summary) }
+        }
+        Button("在访达里也用这个颜色") {
+            guard let outcome = FolderIconService.shared.quickApply(color: tint, to: [URL(fileURLWithPath: summary.path)]) else { return }
+            if !outcome.succeeded.isEmpty { store.showToast(String(localized: "访达里的「\(summary.name)」已换成这个颜色")) }
+            if !outcome.failed.isEmpty { store.alertMessage = outcome.failureText }
+        }
+        Button("文件夹上色…") {
+            FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path)], color: tint)
         }
         Divider()
         Button("取消固定") { store.unpin(summary.path) }

@@ -73,6 +73,7 @@ final class MoveOutJob: ObservableObject {
             })
             self.batch = batch
             store.forget(paths: Set(result.moved.map(\.from)))
+            for file in result.moved { FolderIconService.shared.movePath(file.from, to: file.to) }
         }
         phase = .finished
     }
