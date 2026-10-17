@@ -353,6 +353,26 @@ final class MediaTools: ObservableObject {
         return CGImageSourceCreateImageAtIndex(source, 0, nil)
     }
 
+    /// 图片带透明通道，而且四个角里至少有一个是透明的（只带 alpha 但整张不透明的截图照常处理）。
+    nonisolated static func hasTransparency(_ image: CGImage) -> Bool {
+        switch image.alphaInfo {
+        case .none, .noneSkipFirst, .noneSkipLast: return false
+        default: break
+        }
+        let side = 64
+        guard let context = CGContext(data: nil, width: side, height: side, bitsPerComponent: 8, bytesPerRow: side * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
+              let data = context.data else { return false }
+        context.clear(CGRect(x: 0, y: 0, width: side, height: side))
+        context.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
+        let pixels = data.bindMemory(to: UInt8.self, capacity: side * side * 4)
+        for (x, y) in [(0, 0), (side - 1, 0), (0, side - 1), (side - 1, side - 1)] where pixels[(y * side + x) * 4 + 3] < 250 {
+            return true
+        }
+        return false
+    }
+
     /// 渐变背景 + 留白 + 圆角 + 阴影。
     nonisolated static func render(_ image: CGImage, style: BeautifyStyle) -> CGImage? {
         let size = CGSize(width: image.width, height: image.height)
@@ -371,6 +391,18 @@ final class MediaTools: ObservableObject {
                                        end: CGPoint(x: layout.canvas.width, y: 0), options: [])
         }
         let path = CGPath(roundedRect: layout.imageRect, cornerWidth: layout.radius, cornerHeight: layout.radius, transform: nil)
+        // 透明图（比如抠好的图）：不垫白底卡片，阴影跟着主体的轮廓走。
+        if hasTransparency(image) {
+            context.saveGState()
+            if style.shadow, layout.imageRect.minX > 0 {
+                let blur = max(layout.imageRect.minX * 0.3, 6)
+                context.setShadow(offset: CGSize(width: 0, height: -blur * 0.35), blur: blur,
+                                  color: CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.35))
+            }
+            context.draw(image, in: layout.imageRect)
+            context.restoreGState()
+            return context.makeImage()
+        }
         if style.shadow, layout.imageRect.minX > 0 {
             context.saveGState()
             let blur = max(layout.imageRect.minX * 0.45, 6)
