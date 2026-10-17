@@ -311,6 +311,8 @@ final class LibraryStore: ObservableObject {
         // 外接磁盘插拔时检查当前页面还在不在。
         volumes.onChange = { [weak self] list in self?.volumesChanged(list) }
         LibraryStore.shared = self
+        // 清理记录里恢复的文件夹：上色记录跟着回到原路径
+        CleanupHistory.shared.onMovedBack = { FolderIconService.shared.movePath($0, to: $1) }
     }
 
     /// 是不是一个能进去浏览的文件夹（.app 等文件包不算）。
