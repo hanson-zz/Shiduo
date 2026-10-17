@@ -15957,6 +15957,38 @@
           }
         }
       }
+    },
+    "这个文件夹的图标不是拾掇改的，不动它": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder's icon wasn't set by Shiduo, so it was left alone"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件夹的图标不是拾掇改的，不动它"
+          }
+        }
+      }
+    },
+    "只还原拾掇上过色的文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only restores folders colored by Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只还原拾掇上过色的文件夹"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

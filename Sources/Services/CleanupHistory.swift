@@ -288,6 +288,10 @@ final class CleanupHistory: ObservableObject {
         var failed: [String] = []
         for (id, path, name) in results {
             if let path {
+                // 上过色的文件夹搬回来，上色记录跟着回到原路径
+                if let from = targets.first(where: { $0.id == id })?.currentPath {
+                    FolderIconService.shared.movePath(from, to: path)
+                }
                 markRestored(id, at: path)
                 restored.append(path)
             } else {

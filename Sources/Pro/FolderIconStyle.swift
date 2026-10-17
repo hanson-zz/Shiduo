@@ -97,6 +97,8 @@ struct FolderIconRecord: Codable, Equatable {
     /// 原自定义图标的备份文件名（在 FolderIcons 目录下）；没有就是 nil。
     var backupFile: String?
     var date: Date
+    /// 文件夹的 inode。文件夹在拾掇外面被移动或改名后，靠它找回记录。旧记录没有。
+    var fileNumber: UInt64?
 }
 
 /// 上色记录 + 最近用过的样式，存成一个 JSON 文件。纯数据逻辑，方便测试。
@@ -118,14 +120,34 @@ struct FolderIconLedger: Codable, Equatable {
     }
 
     /// 记下一次上色。已经上过色的文件夹保留最早的原样信息，这样还原时回到真正的原样。
-    mutating func recordApplied(_ style: FolderIconStyle, path: String, hadCustomIcon: Bool, backupFile: String?, date: Date = Date()) {
+    mutating func recordApplied(_ style: FolderIconStyle, path: String, hadCustomIcon: Bool, backupFile: String?,
+                                fileNumber: UInt64? = nil, date: Date = Date()) {
         if var existing = folders[path] {
             existing.style = style
             existing.date = date
+            if let fileNumber { existing.fileNumber = fileNumber }
             folders[path] = existing
         } else {
-            folders[path] = FolderIconRecord(style: style, hadCustomIcon: hadCustomIcon, backupFile: backupFile, date: date)
+            folders[path] = FolderIconRecord(style: style, hadCustomIcon: hadCustomIcon, backupFile: backupFile,
+                                             date: date, fileNumber: fileNumber)
         }
+    }
+
+    /// 某个路径上没有记录时，找一条「旧路径已经不在了、inode 相同、在同一个磁盘上」的记录——
+    /// 说明这个文件夹是在拾掇外面（访达、其他 App）被移动或改名的。找不到返回 nil。
+    func staleKey(for path: String, fileNumber: UInt64?, exists: (String) -> Bool) -> String? {
+        guard folders[path] == nil, let fileNumber else { return nil }
+        let volume = Self.volumeRoot(path)
+        return folders.first { key, record in
+            key != path && record.fileNumber == fileNumber && Self.volumeRoot(key) == volume && !exists(key)
+        }?.key
+    }
+
+    /// 「/Volumes/盘名」或「/」。inode 只在同一个磁盘里才唯一。
+    static func volumeRoot(_ path: String) -> String {
+        let parts = path.split(separator: "/", omittingEmptySubsequences: true)
+        if parts.count >= 2, parts[0] == "Volumes" { return "/Volumes/" + parts[1] }
+        return "/"
     }
 
     /// 文件夹被移动或重命名：它自己和里面子文件夹的记录都跟着改路径。

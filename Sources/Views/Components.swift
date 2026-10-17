@@ -60,12 +60,15 @@ struct FileContextMenu: View {
         }
         if items.allSatisfy(\.isDirectory) {
             Button("文件夹上色…") { FolderIconService.shared.openEditor(items.map(\.url)) }
-            Button("还原文件夹图标") {
-                let outcome = FolderIconService.shared.restore(items.map(\.url))
-                if !outcome.succeeded.isEmpty {
-                    store.showToast(String(localized: "已还原 \(outcome.succeeded.count) 个文件夹图标"))
+            let colored = items.map(\.url).filter { FolderIconService.shared.hasRecord($0) }
+            if !colored.isEmpty {
+                Button("还原文件夹图标") {
+                    let outcome = FolderIconService.shared.restore(colored)
+                    if !outcome.succeeded.isEmpty {
+                        store.showToast(String(localized: "已还原 \(outcome.succeeded.count) 个文件夹图标"))
+                    }
+                    if !outcome.failed.isEmpty { store.alertMessage = outcome.failureText }
                 }
-                if !outcome.failed.isEmpty { store.alertMessage = outcome.failureText }
             }
         }
         if items.contains(where: { !$0.isDirectory }) {

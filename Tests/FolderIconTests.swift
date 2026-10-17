@@ -77,4 +77,34 @@ final class FolderIconLedgerTests: XCTestCase {
         XCTAssertEqual(ledger.folders["/a"]?.hadCustomIcon, true)
         XCTAssertEqual(ledger.folders["/a"]?.backupFile, "orig.icns")
     }
+
+    func testStaleKeyFindsFolderMovedOutsideShiduo() {
+        var ledger = FolderIconLedger()
+        ledger.recordApplied(FolderIconStyle(color: "111111"), path: "/Users/me/Old", hadCustomIcon: false, backupFile: nil, fileNumber: 42)
+        ledger.recordApplied(FolderIconStyle(color: "222222"), path: "/Volumes/Disk/X", hadCustomIcon: false, backupFile: nil, fileNumber: 7)
+        let gone: Set<String> = ["/Users/me/Old", "/Volumes/Disk/X"]
+        let exists: (String) -> Bool = { !gone.contains($0) }
+
+        XCTAssertEqual(ledger.staleKey(for: "/Users/me/New", fileNumber: 42, exists: exists), "/Users/me/Old")
+        // inode 只在同一个磁盘里算数
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/Y", fileNumber: 7, exists: exists))
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: 99, exists: exists))
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: nil, exists: exists))
+        // 旧路径还在，就不是同一个文件夹被移走
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: 42, exists: { _ in true }))
+        // 路径上本来就有记录，不用找
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/Old", fileNumber: 42, exists: exists))
+    }
+
+    func testVolumeRoot() {
+        XCTAssertEqual(FolderIconLedger.volumeRoot("/Users/me/a"), "/")
+        XCTAssertEqual(FolderIconLedger.volumeRoot("/Volumes/Disk/a/b"), "/Volumes/Disk")
+        XCTAssertEqual(FolderIconLedger.volumeRoot("/Volumes"), "/")
+    }
+
+    func testOldRecordWithoutFileNumberStillDecodes() throws {
+        let json = #"{"folders":{"/a":{"style":{"color":"123456"},"hadCustomIcon":false,"date":0}},"history":[]}"#
+        let ledger = try JSONDecoder().decode(FolderIconLedger.self, from: Data(json.utf8))
+        XCTAssertNil(ledger.folders["/a"]?.fileNumber)
+    }
 }

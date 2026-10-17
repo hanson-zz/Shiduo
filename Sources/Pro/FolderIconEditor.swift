@@ -327,9 +327,11 @@ struct FolderIconEditor: View {
     private var footer: some View {
         HStack(spacing: 10) {
             Button("还原默认") {
-                let outcome = service.restore(folders)
+                let outcome = service.restore(folders.filter { service.hasRecord($0) })
                 finish(outcome, done: String(localized: "已还原 \(outcome.succeeded.count) 个文件夹图标"))
             }
+            .disabled(!folders.contains { service.hasRecord($0) })
+            .help("只还原拾掇上过色的文件夹")
             Button("导出 PNG…", action: exportPNG)
             Spacer()
             Button("取消") { dismiss() }

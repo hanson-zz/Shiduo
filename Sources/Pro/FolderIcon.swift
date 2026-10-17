@@ -175,11 +175,35 @@ final class FolderIconService: ObservableObject {
     var history: [FolderIconStyle] { ledger.history }
 
     func style(for url: URL) -> FolderIconStyle? {
-        ledger.folders[url.standardizedFileURL.path]?.style
+        ledger.folders[lookupKey(url)]?.style
     }
 
+    /// 这个文件夹是不是拾掇上的色（只有这样的才给「还原」）。
     func hasRecord(_ url: URL) -> Bool {
-        ledger.folders[url.standardizedFileURL.path] != nil
+        ledger.folders[lookupKey(url)] != nil
+    }
+
+    /// 只查不改：路径上有记录就用路径，没有就按 inode 找在拾掇外面被移走的那条。
+    private func lookupKey(_ url: URL) -> String {
+        let path = url.standardizedFileURL.path
+        return ledger.staleKey(for: path, fileNumber: Self.fileNumber(path), exists: Self.exists) ?? path
+    }
+
+    /// 查到被移走的记录就把它挪到新路径（连同子文件夹的记录），返回新路径。
+    private func resolveKey(_ url: URL) -> String {
+        let path = url.standardizedFileURL.path
+        if let old = ledger.staleKey(for: path, fileNumber: Self.fileNumber(path), exists: Self.exists) {
+            ledger.movePath(old, to: path)
+        }
+        return path
+    }
+
+    nonisolated static func fileNumber(_ path: String) -> UInt64? {
+        ((try? FileManager.default.attributesOfItem(atPath: path))?[.systemFileNumber] as? NSNumber)?.uint64Value
+    }
+
+    nonisolated static func exists(_ path: String) -> Bool {
+        FileManager.default.fileExists(atPath: path)
     }
 
     // MARK: 入口
@@ -235,15 +259,17 @@ final class FolderIconService: ObservableObject {
 
     // MARK: 上色 / 还原
 
-    func apply(_ style: FolderIconStyle, to urls: [URL]) -> FolderIconOutcome {
+    func apply(_ requested: FolderIconStyle, to urls: [URL]) -> FolderIconOutcome {
         var outcome = FolderIconOutcome()
+        // 叠加的图片先拷一份到拾掇自己的目录，原图删了或挪了，历史里的样式还能用
+        let style = keepOverlayImage(requested)
         let image = FolderIconRenderer.render(style, pixels: 1024)
         for url in unique(urls) {
             if let reason = problem(for: url) {
                 outcome.failed.append((url, reason))
                 continue
             }
-            let path = url.standardizedFileURL.path
+            let path = resolveKey(url)
             // 第一次上色：先把原样记下来
             var hadCustom = false
             var backup: String?
@@ -256,7 +282,7 @@ final class FolderIconService: ObservableObject {
                 outcome.failed.append((url, String(localized: "访达没有接受新图标，可能没有写入权限")))
                 continue
             }
-            ledger.recordApplied(style, path: path, hadCustomIcon: hadCustom, backupFile: backup)
+            ledger.recordApplied(style, path: path, hadCustomIcon: hadCustom, backupFile: backup, fileNumber: Self.fileNumber(path))
             NSWorkspace.shared.noteFileSystemChanged(path)
             outcome.succeeded.append(url)
         }
@@ -268,34 +294,66 @@ final class FolderIconService: ObservableObject {
     }
 
     /// 还原：原来有自定义图标的放回去，没有的清掉自定义图标。
+    /// 只动拾掇上过色的文件夹——别的 App 或用户自己设的图标不碰，免得清掉了找不回来。
     func restore(_ urls: [URL]) -> FolderIconOutcome {
         var outcome = FolderIconOutcome()
+        var changed = false
         for url in unique(urls) {
-            let path = url.standardizedFileURL.path
             var isDir: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
-                ledger.folders[path] = nil
+            guard FileManager.default.fileExists(atPath: url.standardizedFileURL.path, isDirectory: &isDir), isDir.boolValue else {
+                let gone = url.standardizedFileURL.path
+                if let file = ledger.folders[gone]?.backupFile {
+                    try? FileManager.default.removeItem(at: directory.appendingPathComponent(file))
+                }
+                if ledger.folders.removeValue(forKey: gone) != nil { changed = true }
                 outcome.failed.append((url, String(localized: "文件夹不存在了")))
                 continue
             }
-            let record = ledger.folders[path]
+            let path = resolveKey(url)
+            guard let record = ledger.folders[path] else {
+                outcome.failed.append((url, String(localized: "这个文件夹的图标不是拾掇改的，不动它")))
+                continue
+            }
+            changed = true
             var original: NSImage?
-            if let record, record.hadCustomIcon, let file = record.backupFile {
+            if record.hadCustomIcon, let file = record.backupFile {
                 original = NSImage(contentsOf: directory.appendingPathComponent(file))
             }
             guard NSWorkspace.shared.setIcon(original, forFile: path, options: []) else {
                 outcome.failed.append((url, problem(for: url) ?? String(localized: "访达没有接受改动，可能没有写入权限")))
                 continue
             }
-            if let file = record?.backupFile {
+            if let file = record.backupFile {
                 try? FileManager.default.removeItem(at: directory.appendingPathComponent(file))
             }
             ledger.folders[path] = nil
             NSWorkspace.shared.noteFileSystemChanged(path)
             outcome.succeeded.append(url)
         }
-        save()
+        if changed { save() }
         return outcome
+    }
+
+    /// 叠加层是图片时，把图片拷进 FolderIcons/Overlays（按内容哈希命名，同一张图只存一份），样式改指向这份拷贝。
+    private func keepOverlayImage(_ style: FolderIconStyle) -> FolderIconStyle {
+        guard case .image(let path) = style.overlay else { return style }
+        let overlays = directory.appendingPathComponent("Overlays", isDirectory: true)
+        if path.hasPrefix(overlays.path + "/") { return style }
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return style }
+        let hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        let ext = URL(fileURLWithPath: path).pathExtension.lowercased()
+        let target = overlays.appendingPathComponent(String(hash.prefix(32)) + (ext.isEmpty ? "" : "." + ext))
+        if !FileManager.default.fileExists(atPath: target.path) {
+            do {
+                try FileManager.default.createDirectory(at: overlays, withIntermediateDirectories: true)
+                try data.write(to: target, options: .atomic)
+            } catch {
+                return style
+            }
+        }
+        var kept = style
+        kept.overlay = .image(target.path)
+        return kept
     }
 
     /// 拾掇移动或重命名了文件夹：记录跟着走。
