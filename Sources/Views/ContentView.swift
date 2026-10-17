@@ -162,6 +162,9 @@ struct DetailView: View {
             .toolbarBackground(.hidden, for: .windowToolbar)
             .inspector(isPresented: $store.showInspector) {
                 InspectorView(item: store.inspectedItem)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // 窗口是透明的：简介栏自己铺一层毛玻璃，不然会直接透出窗口后面的东西
+                    .background(VisualEffectView(material: .sidebar, blending: .behindWindow).ignoresSafeArea())
                     .inspectorColumnWidth(min: 240, ideal: 280, max: 420)
             }
     }

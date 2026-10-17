@@ -170,7 +170,11 @@ final class LibraryStore: ObservableObject {
     /// 再点一次侧边栏里当前这一行（固定文件夹 / 位置 / 外接磁盘）：回到它的根目录。
     /// List 在选中项没变时不会重新设置 selection，所以由侧边栏行的点按手势调用。
     func reselect(_ item: SidebarItem) {
-        guard selection == item else { return }
+        // macOS 的 List 行上加了点按手势后，点在文字/图标上不会再选中这一行，所以这里顺手选中。
+        guard selection == item else {
+            selection = item
+            return
+        }
         guard browsePath != nil || activeQuery != nil else { return }
         if browsePath != nil {
             backStack.append(BrowseLocation(selection: selection, browsePath: browsePath))
