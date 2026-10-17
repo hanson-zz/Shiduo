@@ -119,6 +119,10 @@ struct SupportCommands: Commands {
         CommandGroup(after: .appInfo) {
             Button("支持拾掇…") { openWindow(id: SponsorView.windowID) }
         }
+        CommandGroup(after: .newItem) {
+            Button("图片工具（拼图 · 美化 · 抠图）…") { ImageStudio.shared.open([], mode: .stitch, toShelf: false) }
+                .keyboardShortcut("i", modifiers: [.command, .option])
+        }
         CommandGroup(replacing: .help) {
             Button("发送反馈…") { openWindow(id: FeedbackView.windowID) }
             Button("在 GitHub 上查看源代码") { Support.openRepo() }

@@ -248,10 +248,6 @@ struct ProToolSheets: ViewModifier {
                                  set: { if $0 == nil { mediaTools.trimming = nil } })) { item in
                 TrimSheet(url: item.url, toShelf: mediaTools.sheetToShelf)
             }
-            .sheet(isPresented: Binding(get: { !mediaTools.beautifying.isEmpty },
-                                        set: { if !$0 { mediaTools.beautifying = [] } })) {
-                BeautifySheet(urls: mediaTools.beautifying, toShelf: mediaTools.sheetToShelf)
-            }
             .sheet(item: Binding(get: { uninstaller.target.map(SheetURL.init) },
                                  set: { if $0 == nil { uninstaller.target = nil } })) { item in
                 UninstallSheet(app: item.url)

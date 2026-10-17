@@ -315,12 +315,17 @@ final class MediaTools: ObservableObject {
 
     // MARK: 截图美化
 
+    /// 打开「图片工具」窗口：一张图先到美化，多张先到拼图。
+    func openImageTools(_ urls: [URL], toShelf: Bool) {
+        let images = urls.filter(MediaToolsLogic.isImage)
+        guard !images.isEmpty else { return }
+        ImageStudio.shared.open(images, mode: images.count > 1 ? .stitch : .beautify, toShelf: toShelf)
+    }
+
     func openBeautify(_ urls: [URL], toShelf: Bool) {
         let images = urls.filter(MediaToolsLogic.isImage)
-        guard Self.requirePro(), !images.isEmpty else { return }
-        sheetToShelf = toShelf
-        Self.bringMainWindow()
-        beautifying = images
+        guard !images.isEmpty else { return }
+        ImageStudio.shared.open(images, mode: .beautify, toShelf: toShelf)
     }
 
     func beautify(_ urls: [URL], style: BeautifyStyle, toShelf: Bool) {
@@ -450,7 +455,9 @@ struct MediaToolsMenu: View {
                 if !images.isEmpty {
                     if !videos.isEmpty || MediaToolsLogic.canMergePDF(list) { Divider() }
                     Button("抠图（去背景）") { MediaTools.shared.removeBackground(images, toShelf: toShelf) }
-                    Button("截图美化…") { MediaTools.shared.openBeautify(images, toShelf: toShelf) }
+                    Button(images.count > 1 ? String(localized: "拼图、美化…") : String(localized: "截图美化…")) {
+                        MediaTools.shared.openImageTools(images, toShelf: toShelf)
+                    }
                 }
             }
         }
@@ -588,6 +595,8 @@ private struct PlayerPreview: NSViewRepresentable {
 struct BeautifySheet: View {
     let urls: [URL]
     let toShelf: Bool
+    /// 放在「图片工具」窗口里：没有取消按钮，保存后不关闭，预览跟着窗口变大。
+    var embedded = false
     @Environment(\.dismiss) private var dismiss
     @AppStorage("beautifyBackground") private var background = 0
     @AppStorage("beautifyPadding") private var padding = 0.08
@@ -622,7 +631,8 @@ struct BeautifySheet: View {
                     ProgressView()
                 }
             }
-            .frame(height: 320)
+            .frame(height: embedded ? nil : 320)
+            .frame(maxHeight: embedded ? .infinity : nil)
 
             HStack(spacing: 10) {
                 Text("背景")
@@ -652,17 +662,24 @@ struct BeautifySheet: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("取消") { dismiss() }
-                    .keyboardShortcut(.cancelAction)
+                if !embedded {
+                    Button("取消") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
+                }
                 Button(urls.count > 1 ? String(localized: "美化 \(urls.count) 张") : String(localized: "保存")) {
                     MediaTools.shared.beautify(urls, style: style, toShelf: toShelf)
-                    dismiss()
+                    if embedded {
+                        ImageStudio.shared.show(String(localized: "正在美化，保存在原图旁边"))
+                    } else {
+                        dismiss()
+                    }
                 }
                 .keyboardShortcut(.defaultAction)
             }
         }
         .padding(22)
-        .frame(width: 620)
+        .frame(width: embedded ? nil : 620)
+        .frame(maxWidth: embedded ? .infinity : nil, maxHeight: embedded ? .infinity : nil)
         .task {
             guard let first = urls.first else { return }
             source = await Task.detached(priority: .userInitiated) { MediaTools.loadCGImage(first, maxPixel: 1200) }.value
@@ -704,6 +721,9 @@ struct MediaDropActions: View {
         }
         if !images.isEmpty {
             chip(String(localized: "去背景")) { MediaTools.shared.removeBackground(images, toShelf: true) }
+            if images.count > 1 {
+                chip(String(localized: "拼图")) { MediaTools.shared.openImageTools(images, toShelf: true) }
+            }
             chip(String(localized: "美化截图")) { MediaTools.shared.openBeautify(images, toShelf: true) }
         }
     }

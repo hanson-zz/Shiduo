@@ -58,7 +58,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .folderIcon: return String(localized: "文件夹上色")
         case .mediaTools: return String(localized: "拖进来就转换")
         case .uninstaller: return String(localized: "卸载 App 连残留一起清")
-        case .imageTools: return String(localized: "抠图和截图美化")
+        case .imageTools: return String(localized: "图片工具：拼图、抠图、美化")
         }
     }
 
@@ -78,7 +78,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .folderIcon: return String(localized: "给文件夹换颜色，盖上图标或 emoji，访达里直接看得到")
         case .mediaTools: return String(localized: "压缩视频、做 GIF、剪片段、多个文件合并成 PDF，全在本机")
         case .uninstaller: return String(localized: "列出 App 留在资源库里的偏好、缓存和数据，一起移到废纸篓，可恢复")
-        case .imageTools: return String(localized: "本机一键去背景；截图加渐变背景、圆角和阴影")
+        case .imageTools: return String(localized: "长截图自动去重叠拼接，宫格、瀑布流、水印；本机去背景；截图加渐变背景和阴影")
         }
     }
 
