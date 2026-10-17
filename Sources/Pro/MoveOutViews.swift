@@ -277,6 +277,11 @@ struct MoveOutSheet: View {
                     .font(.callout)
                     .foregroundStyle(.red)
             }
+            if !result.aliasFailed.isEmpty {
+                Text(String(localized: "\(result.aliasFailed.count) 个已经搬走，但原位置没能留下替身，要去新位置打开：\(result.aliasFailed.prefix(5).joined(separator: String(localized: "、")))"))
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            }
             Text("30 天内可以在「清理记录」里把它们搬回原处。")
                 .font(.caption)
                 .foregroundStyle(.secondary)

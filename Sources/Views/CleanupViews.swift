@@ -79,7 +79,11 @@ private struct AutoCleanInstallersRow: View {
     @EnvironmentObject private var organizer: AutoOrganizer
     @EnvironmentObject private var license: LicenseManager
 
-    private var days: Int { organizer.installerRule?.olderThanDays ?? 14 }
+    /// 显示规则里真实的天数；规则还没建时显示默认的 14 天。
+    private var days: Int {
+        guard let rule = organizer.installerRule else { return AutoOrganizer.installerDefaultDays }
+        return max(rule.olderThanDays ?? 0, 0)
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -94,7 +98,9 @@ private struct AutoCleanInstallersRow: View {
                     ProBadge()
                         .opacity(license.isPro ? 0.55 : 1)
                 }
-                Text("“下载”里超过 \(days) 天的 .dmg / .pkg 自动移到废纸篓，30 天内可以在「清理记录」里放回。拾掇开着时每 10 分钟检查一次。")
+                (days > 0
+                     ? Text("“下载”里超过 \(days) 天的 .dmg / .pkg 自动移到废纸篓，30 天内可以在「清理记录」里放回。拾掇开着时每 10 分钟检查一次。")
+                     : Text("“下载”里所有 .dmg / .pkg 都会移到废纸篓（这条规则没设天数，可以在「自动整理」里改）。30 天内可以在「清理记录」里放回。"))
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

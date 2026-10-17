@@ -284,9 +284,10 @@ final class AutoOrganizer: ObservableObject {
         }
     }
 
-    func runNow() async {
+    /// only 不为空时只跑这一条规则（例如刚在清理页打开安装包开关）。
+    func runNow(only ruleID: UUID? = nil) async {
         guard LicenseManager.shared.isPro, !isRunning else { return }
-        let active = rules.filter { $0.enabled && $0.isRunnable }
+        let active = rules.filter { $0.enabled && $0.isRunnable && (ruleID == nil || $0.id == ruleID) }
         lastRun = Date()
         guard !active.isEmpty else { return }
         isRunning = true
@@ -349,6 +350,7 @@ final class AutoOrganizer: ObservableObject {
     /// 开关新建的那条规则用固定的 id，方便以后找到它。
     static let installerRuleID = UUID(uuidString: "5A1D0D00-1A57-4A11-8E25-000000000001")!
     static let installerExtensions = ["dmg", "pkg", "mpkg", "xip"]
+    static let installerDefaultDays = 14
 
     /// 只把“下载”里的安装包移到废纸篓、没有别的条件的规则（开关新建的，或者第一次打开时给的示例规则）。
     private static func isInstallerRule(_ rule: OrganizeRule) -> Bool {
@@ -357,6 +359,8 @@ final class AutoOrganizer: ObservableObject {
             && !rule.extensions.isEmpty && Set(rule.extensions).isSubset(of: Set(installerExtensions))
             && rule.category == nil && rule.sourceID == nil
             && rule.nameContains.trimmingCharacters(in: .whitespaces).isEmpty
+            // 没设天数的规则不认领：否则一打开开关，刚下载的安装包也会立刻进废纸篓。
+            && (rule.olderThanDays ?? 0) > 0
     }
 
     var installerRule: OrganizeRule? {
@@ -372,16 +376,22 @@ final class AutoOrganizer: ObservableObject {
     /// 打开 / 关上开关：改的是自动整理里那条规则，在「自动整理」页里也看得到、改得了。
     /// 只移到废纸篓（记进清理记录，30 天内能放回），不会直接删除。
     func setAutoCleanInstallers(_ on: Bool) {
+        var ruleID = Self.installerRuleID
         if var rule = installerRule {
             rule.enabled = on
+            // 安装包开关一定带天数：没设（或在自动整理页改成了 0）就补回 14 天。
+            if on, (rule.olderThanDays ?? 0) <= 0 { rule.olderThanDays = Self.installerDefaultDays }
             save(rule)
+            ruleID = rule.id
         } else if on {
             rules.append(OrganizeRule(
                 id: Self.installerRuleID, name: String(localized: "自动清理用过的安装包"), enabled: true,
-                watchFolder: Folders.downloads, extensions: Self.installerExtensions, olderThanDays: 14, action: .trash
+                watchFolder: Folders.downloads, extensions: Self.installerExtensions,
+                olderThanDays: Self.installerDefaultDays, action: .trash
             ))
         }
-        if on { Task { await runNow() } }
+        // 只跑这一条，不顺带触发其他自动整理规则。
+        if on { Task { await runNow(only: ruleID) } }
     }
 }
 

@@ -169,6 +169,8 @@ struct MoveOutResult: Sendable {
     var moved: [MovedFile] = []
     var skipped: [String] = []
     var failed: [String] = []
+    /// 搬成了，但原位置的替身没建成（原位置现在是空的）。
+    var aliasFailed: [String] = []
     var cancelled = false
     /// 源磁盘上腾出的空间（只算跨盘搬走的）。
     var freedBytes: Int64 { moved.filter(\.crossVolume).reduce(0) { $0 + $1.size } }
@@ -326,6 +328,7 @@ enum MoveOutEngine {
                     aliasPath = url.path
                 } catch {
                     AppLog.files.error("Move out: alias failed: \(AppLog.describe(error), privacy: .public)")
+                    result.aliasFailed.append(source.name)
                 }
             }
             result.moved.append(MovedFile(name: source.name, from: source.path, to: target.path,

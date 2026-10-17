@@ -15253,6 +15253,38 @@
           }
         }
       }
+    },
+    "%lld 个已经搬走，但原位置没能留下替身，要去新位置打开：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld moved, but no alias could be left in the original location — open them from the new location: %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个已经搬走，但原位置没能留下替身，要去新位置打开：%2$@"
+          }
+        }
+      }
+    },
+    "“下载”里所有 .dmg / .pkg 都会移到废纸篓（这条规则没设天数，可以在「自动整理」里改）。30 天内可以在「清理记录」里放回。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every .dmg / .pkg in Downloads will be moved to the Trash (this rule has no age limit — change it in Auto-Organize). You can put them back from Cleanup History within 30 days."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“下载”里所有 .dmg / .pkg 都会移到废纸篓（这条规则没设天数，可以在「自动整理」里改）。30 天内可以在「清理记录」里放回。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
