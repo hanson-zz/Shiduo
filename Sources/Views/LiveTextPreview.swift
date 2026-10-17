@@ -34,6 +34,8 @@ struct LiveTextPreview: View {
                     }
                 )
                 .id(item.id)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
                 .padding(.horizontal, 24)
                 .padding(.bottom, 12)
                 footer
@@ -167,6 +169,13 @@ struct LiveTextImageView: NSViewRepresentable {
         overlay.preferredInteractionTypes = .automatic
         container.addSubview(overlay)
 
+        // NSImageView 的固有尺寸就是图片的像素尺寸：不压低优先级的话，大图会把预览撑出窗口。
+        for view in [imageView, overlay] {
+            for orientation in [NSLayoutConstraint.Orientation.horizontal, .vertical] {
+                view.setContentCompressionResistancePriority(.init(1), for: orientation)
+                view.setContentHuggingPriority(.init(1), for: orientation)
+            }
+        }
         for view in [imageView, overlay] {
             NSLayoutConstraint.activate([
                 view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
