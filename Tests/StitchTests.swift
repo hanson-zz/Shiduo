@@ -75,7 +75,17 @@ final class StitchTests: XCTestCase {
 
     /// 一张「长页面」：每行内容不同，带一点横向变化。
     private func page(_ rows: Int) -> [[UInt8]] {
-        (0..<rows).map { r in (0..<32).map { c in UInt8((r * 37 + c * (r % 7 + 1) * 11) % 251) } }
+        var out: [[UInt8]] = []
+        for r in 0..<rows {
+            var line: [UInt8] = []
+            for c in 0..<32 {
+                let mul: Int = (r % 7 + 1) * 11
+                let v: Int = (r * 37 + c * mul) % 251
+                line.append(UInt8(v))
+            }
+            out.append(line)
+        }
+        return out
     }
 
     func testOverlapFound() {
@@ -87,7 +97,15 @@ final class StitchTests: XCTestCase {
 
     func testNoOverlapOnUnrelatedImages() {
         let a = page(100)
-        let b = (0..<100).map { r in (0..<32).map { c in UInt8((r * 13 + c * 29 + 101) % 233) } }
+        var b: [[UInt8]] = []
+        for r in 0..<100 {
+            var line: [UInt8] = []
+            for c in 0..<32 {
+                let v: Int = (r * 13 + c * 29 + 101) % 233
+                line.append(UInt8(v))
+            }
+            b.append(line)
+        }
         XCTAssertEqual(StitchLogic.overlap(a, b), 0)
     }
 
