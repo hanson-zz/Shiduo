@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-// MARK: - 图片工具窗口：拼图 / 美化 / 抠图（Pro）
+// MARK: - 图片工具窗口：拼图 / 美化 / 标注 / 抠图（Pro）
 
 struct ImageStudioView: View {
     @EnvironmentObject private var studio: ImageStudio
@@ -23,6 +23,8 @@ struct ImageStudioView: View {
                         .frame(width: 290)
                 case .beautify:
                     beautify
+                case .annotate:
+                    AnnotatePanel()
                 case .cutout:
                     CutoutPanel()
                 }
@@ -53,7 +55,7 @@ struct ImageStudioView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 200)
+            .frame(width: 260)
             ProBadge()
 
             Button {

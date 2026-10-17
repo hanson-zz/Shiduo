@@ -61,6 +61,7 @@ targets:
       - path: Sources/Pro/MediaToolsLogic.swift
       - path: Sources/Pro/UninstallLogic.swift
       - path: Sources/Pro/StitchLogic.swift
+      - path: Sources/Pro/AnnotateLogic.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests

@@ -458,6 +458,9 @@ struct MediaToolsMenu: View {
                     Button(images.count > 1 ? String(localized: "拼图、美化…") : String(localized: "截图美化…")) {
                         MediaTools.shared.openImageTools(images, toShelf: toShelf)
                     }
+                    Button("标注、打码…") {
+                        ImageStudio.shared.open(images, mode: .annotate, toShelf: toShelf)
+                    }
                 }
             }
         }

@@ -354,12 +354,13 @@ final class ImageStudio: ObservableObject {
     static let shared = ImageStudio()
 
     enum Mode: String, CaseIterable, Identifiable {
-        case stitch, beautify, cutout
+        case stitch, beautify, annotate, cutout
         var id: String { rawValue }
         var title: String {
             switch self {
             case .stitch: return String(localized: "拼图")
             case .beautify: return String(localized: "美化")
+            case .annotate: return String(localized: "标注")
             case .cutout: return String(localized: "抠图")
             }
         }
@@ -390,6 +391,8 @@ final class ImageStudio: ObservableObject {
     @Published private(set) var working = false
     @Published var message: String?
     var toShelf = false
+    /// 标注页的状态（每张图的标注、撤销）。
+    let marker = MarkEditor()
 
     private var window: NSWindow?
     private var renderTask: Task<Void, Never>?
@@ -492,12 +495,14 @@ final class ImageStudio: ObservableObject {
     }
 
     func remove(_ id: Item.ID) {
+        marker.forget(id)
         items.removeAll { $0.id == id }
         if selection == id { selection = items.first?.id }
         refresh()
     }
 
     func clear() {
+        for item in items { marker.forget(item.id) }
         items = []
         selection = nil
         refresh()
