@@ -51,7 +51,7 @@ private struct SavedSearchBar: View {
             } label: {
                 Label("编辑搜索", systemImage: "pencil")
             }
-            .help("把这句搜索放回搜索框，改好后可以另存一个")
+            .help("把这句搜索放回搜索框，改好后可以更新这个，也可以另存一个")
             Button {
                 newName = search.displayName
                 renaming = true
@@ -80,7 +80,7 @@ struct SaveSearchButton: View {
     var body: some View {
         if store.canSaveSearch {
             Button {
-                name = store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                name = store.editingSavedSearch?.displayName ?? store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
                 naming = true
             } label: {
                 HStack(spacing: 4) {
@@ -92,7 +92,13 @@ struct SaveSearchButton: View {
             .help("存到侧边栏，像文件夹一样随时打开，内容自动更新")
             .alert("保存到侧边栏", isPresented: $naming) {
                 TextField("名称", text: $name)
-                Button("保存") { store.saveCurrentSearch(name: name) }
+                if store.editingSavedSearch != nil {
+                    // 从「编辑搜索」进来的：默认更新原来那个，也可以另存一个新的。
+                    Button("更新原来的") { store.updateEditedSavedSearch(name: name) }
+                    Button("另存为新的") { store.saveCurrentSearch(name: name) }
+                } else {
+                    Button("保存") { store.saveCurrentSearch(name: name) }
+                }
                 Button("取消", role: .cancel) {}
             } message: {
                 Text("「上周」「今天」这样的日期每次打开都按当时重新计算。")

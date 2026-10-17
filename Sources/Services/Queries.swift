@@ -186,6 +186,16 @@ enum Queries {
         return items
     }
 
+    /// 只要数量（侧边栏「保存的搜索」用）：不构造文件列表，省内存、省电。
+    /// 需要逐个检查文件的情况（只看下载来的、拼音）退回到完整搜索再数。
+    static func count(_ q: SearchQuery) async -> Int {
+        let word = q.text.trimmingCharacters(in: .whitespaces)
+        if q.downloadedOnly || Pinyin.looksLikePinyin(word) {
+            return await search(q).count
+        }
+        return await SpotlightSearch.run(predicate: q.predicate, scopes: q.scopes, maxItems: 0).totalCount
+    }
+
     /// 固定文件夹：直接读磁盘，不依赖 Spotlight 索引。
     static func tagged(_ name: String) async -> [FileItem] {
         await SpotlightSearch.run(

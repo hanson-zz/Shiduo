@@ -214,6 +214,8 @@ struct FileCollectionView: View {
     @State private var gridWidth: CGFloat = 800
     /// 点格子后让网格拿到键盘焦点（AppKit 接走了点按，SwiftUI 不会自动给焦点）。
     @FocusState private var gridFocused: Bool
+    /// ⇧ 连选的起点：上一次普通点按 / ⌘ 点按 / 方向键选中的那个（和访达一样）。
+    @State private var selectionAnchor: FileItem.ID?
 
     private var sorted: [FileItem] { items.sorted(using: sortOrder) }
 
@@ -317,6 +319,12 @@ struct FileCollectionView: View {
                         .help(item.path)
                 }
             }
+            // 量网格本身的宽度（不含边距和滚动条），↑ ↓ 的每行个数才和实际排版一致。
+            .background(GeometryReader { proxy in
+                Color.clear
+                    .onAppear { gridWidth = proxy.size.width }
+                    .onChange(of: proxy.size.width) { gridWidth = proxy.size.width }
+            })
             .padding(16)
         }
         .focusable()
@@ -336,11 +344,6 @@ struct FileCollectionView: View {
             default: return step(gridColumns)
             }
         }
-        .background(GeometryReader { proxy in
-            Color.clear
-                .onAppear { gridWidth = proxy.size.width }
-                .onChange(of: proxy.size.width) { gridWidth = proxy.size.width }
-        })
         .onKeyPress(.escape) {
             guard previewURL != nil || liveItem != nil else { return .ignored }
             previewURL = nil
@@ -349,10 +352,10 @@ struct FileCollectionView: View {
         }
     }
 
-    /// 网格每行几个（和 LazyVGrid 的 adaptive 列数算法一致：左右各留 16 的边距，间距 8）。
+    /// 网格每行几个（和 LazyVGrid 的 adaptive 列数算法一致：间距 8）。gridWidth 已是网格本身的宽度。
     private var gridColumns: Int {
         let cell = thumbnailSize + 28 + 8
-        return max(1, Int((gridWidth - 32 + 8) / cell))
+        return max(1, Int((gridWidth + 8) / cell))
     }
 
     /// 方向键在文件之间移动；预览打开时由 followSelection 跟着翻页。
@@ -362,6 +365,7 @@ struct FileCollectionView: View {
         let index = list.firstIndex { store.selectedIDs.contains($0.id) } ?? (offset > 0 ? -1 : list.count)
         let target = min(max(index + offset, 0), list.count - 1)
         store.selectedIDs = [list[target].id]
+        selectionAnchor = list[target].id
         return .handled
     }
 
@@ -436,19 +440,26 @@ struct FileCollectionView: View {
     }
 
     private func select(_ item: FileItem, flags: NSEvent.ModifierFlags = NSEvent.modifierFlags) {
-        if flags.contains(.shift), let anchor = sorted.firstIndex(where: { store.selectedIDs.contains($0.id) }),
-           let index = sorted.firstIndex(where: { $0.id == item.id }) {
-            // ⇧ 点按：从已选的第一个连选到这里。
+        let list = sorted
+        // 起点优先用上一次点的那个；它不在当前列表或已不在选中里，再退回到排在最前的已选文件。
+        let anchorIndex = list.firstIndex { $0.id == selectionAnchor && store.selectedIDs.contains($0.id) }
+            ?? list.firstIndex { store.selectedIDs.contains($0.id) }
+        if flags.contains(.shift), let anchor = anchorIndex,
+           let index = list.firstIndex(where: { $0.id == item.id }) {
+            // ⇧ 点按：从起点连选到这里（起点不变，可以反复调整范围）。
             let range = min(anchor, index)...max(anchor, index)
-            store.selectedIDs = Set(sorted[range].map(\.id))
+            store.selectedIDs = Set(list[range].map(\.id))
+            if selectionAnchor == nil { selectionAnchor = list[anchor].id }
         } else if flags.contains(.command) {
             if store.selectedIDs.contains(item.id) {
                 store.selectedIDs.remove(item.id)
             } else {
                 store.selectedIDs.insert(item.id)
             }
+            selectionAnchor = item.id
         } else {
             store.selectedIDs = [item.id]
+            selectionAnchor = item.id
         }
     }
 

@@ -15142,22 +15142,6 @@
         }
       }
     },
-    "把这句搜索放回搜索框，改好后可以另存一个": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Put this search back in the search field so you can change it and save a new one"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "把这句搜索放回搜索框，改好后可以另存一个"
-          }
-        }
-      }
-    },
     "重命名保存的搜索": {
       "localizations": {
         "en": {
@@ -15282,6 +15266,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "“下载”里所有 .dmg / .pkg 都会移到废纸篓（这条规则没设天数，可以在「自动整理」里改）。30 天内可以在「清理记录」里放回。"
+          }
+        }
+      }
+    },
+    "已更新：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已更新：%@"
+          }
+        }
+      }
+    },
+    "把这句搜索放回搜索框，改好后可以更新这个，也可以另存一个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put this search back in the search field — when you're done, update this one or save it as a new one"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把这句搜索放回搜索框，改好后可以更新这个，也可以另存一个"
+          }
+        }
+      }
+    },
+    "更新原来的": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update Existing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新原来的"
+          }
+        }
+      }
+    },
+    "另存为新的": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as New"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另存为新的"
           }
         }
       }

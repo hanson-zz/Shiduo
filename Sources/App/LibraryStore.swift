@@ -82,6 +82,7 @@ final class LibraryStore: ObservableObject {
             guard oldValue != selection else { return }
             activeQuery = nil
             searchText = ""
+            editingSavedSearchID = nil
             photoConcept = nil
             lockedPhotoConcept = nil
             cleanupReview = nil
@@ -134,6 +135,7 @@ final class LibraryStore: ObservableObject {
         if activeQuery != nil {
             activeQuery = nil
             searchText = ""
+            editingSavedSearchID = nil
             photoConcept = nil
             lockedPhotoConcept = nil
         }
@@ -175,6 +177,7 @@ final class LibraryStore: ObservableObject {
         }
         activeQuery = nil
         searchText = ""
+        editingSavedSearchID = nil
         photoConcept = nil
         lockedPhotoConcept = nil
         browsePath = nil
@@ -263,6 +266,8 @@ final class LibraryStore: ObservableObject {
     @Published var activeQuery: SearchQuery?
     /// 这次搜索里用户点 × 去掉的条件（保存搜索时一起存下，下次重新解析后照样去掉）。
     private(set) var removedChipKeys: [String] = []
+    /// 从哪个保存的搜索点「编辑搜索」进来的：保存时可以直接更新它，而不是另存一个。
+    @Published private(set) var editingSavedSearchID: UUID?
     /// Pro：搜索词里认出的画面概念（「画面：猫」），结果里会加上画面符合的照片。
     @Published var photoConcept: PhotoConcept?
     /// 不是 Pro 时认出的画面概念：只显示一个「Pro：按画面内容搜索」的提示。
@@ -490,6 +495,7 @@ final class LibraryStore: ObservableObject {
     }
 
     func clearSearch() {
+        editingSavedSearchID = nil
         photoConcept = nil
         lockedPhotoConcept = nil
         guard activeQuery != nil else { return }
@@ -558,12 +564,35 @@ final class LibraryStore: ObservableObject {
             return
         }
         let saved = SavedSearchStore.shared.add(name: name, text: text, removed: removedChipKeys)
+        editingSavedSearchID = nil
         selection = .savedSearch(saved.id)
         showToast(String(localized: "已保存到侧边栏：\(saved.displayName)"))
     }
 
+    /// 正在编辑的那个保存的搜索（还存在时）。
+    var editingSavedSearch: SavedSearch? {
+        editingSavedSearchID.flatMap { SavedSearchStore.shared.search($0) }
+    }
+
+    /// 「编辑搜索」改好后，更新原来那个保存的搜索并打开它。
+    func updateEditedSavedSearch(name: String) {
+        let text = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let saved = editingSavedSearch, activeQuery != nil, !text.isEmpty else { return }
+        guard license.isPro else {
+            license.showPaywall = true
+            return
+        }
+        SavedSearchStore.shared.update(saved.id, text: text, removed: removedChipKeys, name: name)
+        editingSavedSearchID = nil
+        searchText = ""
+        clearSearch()
+        if selection != .savedSearch(saved.id) { selection = .savedSearch(saved.id) }
+        showToast(String(localized: "已更新：\(SavedSearchStore.shared.search(saved.id)?.displayName ?? text)"))
+    }
+
     /// 把保存的搜索放回搜索框继续改（连同当时去掉的条件）。
     func editSavedSearch(_ saved: SavedSearch) {
+        editingSavedSearchID = saved.id
         searchText = saved.text
         activeQuery = saved.query()
         removedChipKeys = saved.removed
@@ -579,7 +608,9 @@ final class LibraryStore: ObservableObject {
         Task {
             let result = await Queries.search(saved.query())
             guard selection == .savedSearch(id), activeQuery == nil else { return }
-            guard result.map(\.path) != items.map(\.path) else { return }
+            // 路径、大小、修改时间都一样才算没变（文件内容改了也要刷新）。
+            let signature: ([FileItem]) -> [String] = { $0.map { "\($0.path)|\($0.size)|\($0.modified?.timeIntervalSince1970 ?? 0)" } }
+            guard signature(result) != signature(items) else { return }
             remember(result)
             items = result
             let alive = Set(result.map(\.id))
