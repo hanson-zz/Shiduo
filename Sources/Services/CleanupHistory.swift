@@ -177,7 +177,7 @@ final class CleanupHistory: ObservableObject {
     @Published private(set) var records: [CleanupRecord] = []
     private let fileURL: URL
     /// 恢复成功后通知别的模块（旧路径 → 新路径），比如文件夹上色记录跟着走。由 App 设置。
-    var onMovedBack: ((_ from: String, _ to: String) -> Void)?
+    var onMovedBack: (@MainActor (_ from: String, _ to: String) -> Void)?
 
     /// 测试时可以传一个临时文件。
     init(fileURL: URL? = nil) {
