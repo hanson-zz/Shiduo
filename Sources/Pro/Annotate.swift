@@ -617,10 +617,11 @@ final class MarkEditor: ObservableObject {
             let region = AnnotateLogic.pixelCrop(crop, in: size) ?? CGRect(origin: .zero, size: size)
             let width = Int(region.width), height = Int(region.height)
             let jpeg = ["jpg", "jpeg", "heic", "heif"].contains(url.pathExtension.lowercased())
+            // 沿用原图的色彩空间（P3 等）和位深；存 JPEG 时 8 位。
+            let source = ImageExport.format(of: url) ?? ImageExport.format(of: image)
             guard width > 0, height > 0,
-                  let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-                                          space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+                  let context = ImageExport.context(width: width, height: height, format: jpeg ? source.eightBit : source)
+            else { return nil }
             context.translateBy(x: 0, y: CGFloat(height))
             context.scaleBy(x: 1, y: -1)
             if jpeg {
@@ -664,9 +665,9 @@ final class MarkEditor: ObservableObject {
             return nil
         }
         let suffix = marks.isEmpty ? String(localized: "裁剪") : String(localized: "标注")
-        let target = MediaTools.outputURL(for: url, suffix: suffix, ext: output.ext)
+        let target: URL
         do {
-            try output.data.write(to: target)
+            target = try ImageExport.writeUnique(output.data, to: MediaTools.outputURL(for: url, suffix: suffix, ext: output.ext))
         } catch {
             studio.show(String(localized: "保存失败：\(error.localizedDescription)"))
             return nil

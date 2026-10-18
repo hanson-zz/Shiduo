@@ -35,6 +35,25 @@ enum MediaToolsLogic {
         ext(url) == "mov" ? "mov" : "mp4"
     }
 
+    /// 剪辑方式：精确 = 重新编码，起止点和预览一致；快速 = 不重新编码（Passthrough），开始位置会落到关键帧。
+    enum TrimMode: String, CaseIterable {
+        case precise
+        case fast
+    }
+
+    /// 依次尝试的导出预设（预设名由调用方传入，这里不碰 AVFoundation）。
+    /// 精确：原视频是 HEVC 时优先用 HEVC 最高质量，否则用最高质量（H.264）；快速：先 Passthrough，失败再重新编码。
+    /// compatible 为空时不过滤（拿不到兼容列表时照样尝试）。
+    static func trimPresets(mode: TrimMode, sourceIsHEVC: Bool, compatible: [String],
+                            passthrough: String, hevcHighest: String, highest: String) -> [String] {
+        var reencode: [String] = []
+        if sourceIsHEVC { reencode.append(hevcHighest) }
+        reencode.append(highest)
+        let list = mode == .fast ? [passthrough] + reencode : reencode
+        guard !compatible.isEmpty else { return list }
+        return list.filter { compatible.contains($0) }
+    }
+
     /// 把开始 / 结束时间收进 [0, duration]，并保证片段至少 minTrimLength 秒。
     static func clampTrim(start: Double, end: Double, duration: Double) -> (start: Double, end: Double) {
         let total = max(duration, 0)

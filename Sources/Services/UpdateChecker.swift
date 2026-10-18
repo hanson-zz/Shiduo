@@ -157,6 +157,13 @@ final class Updater: ObservableObject {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     static weak var updater: Updater?
 
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        MainActor.assumeIsolated {
+            // 拾掇 Pro 介绍页用独立窗口：主窗口关着也能弹出（见 PaywallWindow）。
+            PaywallWindow.shared.start()
+        }
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated {
             AppDelegate.updater?.installIfReady()

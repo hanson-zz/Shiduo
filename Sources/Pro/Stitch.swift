@@ -180,10 +180,13 @@ enum StitchRenderer {
         guard layout.canvas.width > 0, layout.placements.count == inputs.count else { return nil }
         let width = max(Int((layout.canvas.width * scale).rounded()), 1)
         let height = max(Int((layout.canvas.height * scale).rounded()), 1)
+        // 沿用原图的色彩空间和位深（几张图不一样时用 Display P3）；JPEG 输出用 8 位。
+        let merged = ImageExport.format(merging: inputs.compactMap { input in
+            input.url.flatMap(ImageExport.format(of:)) ?? input.image.map(ImageExport.format(of:))
+        })
+        let format = opaque ? merged.eightBit : merged
         guard width * height <= maxCanvasPixels,
-              let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+              let context = ImageExport.context(width: width, height: height, format: format) else { return nil }
         // 换成左上角为原点。
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: 1, y: -1)
@@ -324,18 +327,13 @@ enum StitchRenderer {
 
     // MARK: 编码
 
+    /// 编码（色彩描述文件跟着图片走，PNG 保留 16 位），见 ImageExport.encode。
     static func encode(_ image: CGImage, quality: StitchQuality) -> Data? {
-        let data = NSMutableData()
-        let type = quality == .png ? UTType.png : UTType.jpeg
-        guard let destination = CGImageDestinationCreateWithData(data, type.identifier as CFString, 1, nil) else { return nil }
-        var options: [CFString: Any] = [:]
         switch quality {
-        case .png: break
-        case .jpegHigh: options[kCGImageDestinationLossyCompressionQuality] = 0.9
-        case .jpegMedium: options[kCGImageDestinationLossyCompressionQuality] = 0.72
+        case .png: return ImageExport.encode(image, type: .png)
+        case .jpegHigh: return ImageExport.encode(image, type: .jpeg, quality: 0.9)
+        case .jpegMedium: return ImageExport.encode(image, type: .jpeg, quality: 0.72)
         }
-        CGImageDestinationAddImage(destination, image, options as CFDictionary)
-        return CGImageDestinationFinalize(destination) ? data as Data : nil
     }
 
     // MARK: 自动拼接的采样
@@ -625,7 +623,7 @@ final class ImageStudio: ObservableObject {
         for (type, ext) in [(NSPasteboard.PasteboardType.png, "png"), (.tiff, "tiff")] {
             if let data = board.data(forType: type), CGImageSourceCreateWithData(data as CFData, nil) != nil {
                 let url = folder.appendingPathComponent(name + "." + ext)
-                if (try? data.write(to: url)) != nil {
+                if (try? data.write(to: url, options: .withoutOverwriting)) != nil {
                     add([url])
                     return
                 }
@@ -637,7 +635,7 @@ final class ImageStudio: ObservableObject {
             return
         }
         let url = folder.appendingPathComponent(name + ".png")
-        if MediaTools.writePNG(cg, to: url) { add([url]) }
+        if let saved = MediaTools.writePNG(cg, to: url) { add([saved]) }
     }
 
     func chooseFiles() {
@@ -825,9 +823,9 @@ final class ImageStudio: ObservableObject {
             }
             let (data, quality, _) = output
             let name = String(localized: "拼图") + "." + quality.ext
-            let target = OrganizeEngine.uniqueURL(for: name, in: MediaTools.outputFolder(for: first))
+            let target: URL
             do {
-                try data.write(to: target)
+                target = try ImageExport.writeUnique(data, to: OrganizeEngine.uniqueURL(for: name, in: MediaTools.outputFolder(for: first)))
             } catch {
                 show(String(localized: "保存失败：\(error.localizedDescription)"))
                 return

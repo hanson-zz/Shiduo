@@ -49,4 +49,29 @@ final class FinderTagEntriesTests: XCTestCase {
         XCTAssertEqual(FinderTagEntries.coverage(of: "A", in: [["B"], []]), .none)
         XCTAssertEqual(FinderTagEntries.coverage(of: "A", in: []), .none)
     }
+
+    func testDistinctTags() {
+        let files = [
+            ["工作\n4", "Red\n6"],
+            ["工作\n4", "旅行"],
+            ["工作\n2", "旅行\n0", " \n3"],
+            ["家庭\n0", "家庭\n5"],
+        ]
+        let found = FinderTagEntries.distinctTags(files)
+        XCTAssertEqual(Set(found.map(\.name)), ["工作", "Red", "旅行", "家庭"])
+        let byName = Dictionary(uniqueKeysWithValues: found.map { ($0.name, $0.color) })
+        XCTAssertEqual(byName["工作"], 4) // 出现最多的颜色
+        XCTAssertEqual(byName["旅行"], 0) // 都没颜色
+        XCTAssertEqual(byName["家庭"], 5) // 有颜色的优先
+        XCTAssertEqual(byName["Red"], 6)
+        // 同样多：取先出现的
+        XCTAssertEqual(FinderTagEntries.distinctTags([["A\n3"], ["A\n2"]]), [.init(name: "A", color: 3)])
+        XCTAssertEqual(FinderTagEntries.distinctTags([]), [])
+    }
+
+    func testImportable() {
+        let found: [FinderTagEntries.FoundTag] = [.init(name: "工作", color: 4), .init(name: "红色", color: 6), .init(name: "旅行", color: 0)]
+        let result = FinderTagEntries.importable(found, existing: ["工作"], reserved: ["红色"])
+        XCTAssertEqual(result, [.init(name: "旅行", color: 0)])
+    }
 }

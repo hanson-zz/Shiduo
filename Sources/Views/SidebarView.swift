@@ -177,7 +177,7 @@ struct SidebarView: View {
 
             VolumesSidebarSection()
 
-            Section("标签") {
+            Section {
                 ForEach(FinderTag.colorTags) { tag in
                     Label {
                         Text(tag.name)
@@ -209,17 +209,28 @@ struct SidebarView: View {
                         Button("删除标签（同时从文件上去掉）…", role: .destructive) {
                             Task { await TagSync.delete(tag.name, store: store) }
                         }
+                        Divider()
+                        importFinderTagsButton
                     }
                 }
                 Button {
-                    if let new = CustomTagStore.prompt() {
-                        Task { await TagSync.addOrRecolor(new.name, color: new.color, store: store) }
+                    switch CustomTagStore.promptNewOrImport() {
+                    case .tag(let name, let color):
+                        Task { await TagSync.addOrRecolor(name, color: color, store: store) }
+                    case .importFinder:
+                        Task { await TagSync.importFinderTags(store: store) }
+                    case .cancel:
+                        break
                     }
                 } label: {
                     Label("新建标签…", systemImage: "plus.circle")
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .contextMenu { importFinderTagsButton }
+            } header: {
+                Text("标签")
+                    .contextMenu { importFinderTagsButton }
             }
 
             Section {
@@ -256,5 +267,10 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .modifier(SavedSearchRenameAlert())
+    }
+
+    /// 「导入访达标签…」：把文件上已经有的标签（访达里建的）加进侧边栏。
+    private var importFinderTagsButton: some View {
+        Button("导入访达标签…") { Task { await TagSync.importFinderTags(store: store) } }
     }
 }

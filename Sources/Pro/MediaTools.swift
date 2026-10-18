@@ -238,7 +238,7 @@ final class MediaTools: ObservableObject {
         }
     }
 
-    func trim(_ url: URL, start: Double, end: Double, toShelf: Bool) {
+    func trim(_ url: URL, start: Double, end: Double, mode: MediaToolsLogic.TrimMode = .precise, toShelf: Bool) {
         guard Self.requirePro(), begin(String(localized: "正在剪辑…"), toShelf: toShelf) else { return }
         let sink = progressSink
         run { [self] in
@@ -248,15 +248,33 @@ final class MediaTools: ObservableObject {
             let ext = MediaToolsLogic.trimExtension(for: url)
             let type: AVFileType = ext == "mov" ? .mov : .mp4
             let target = Self.outputURL(for: url, suffix: String(localized: "片段"), ext: ext)
-            var result = await Self.export(asset, preset: AVAssetExportPresetPassthrough, to: target, type: type, range: range, progress: sink)
-            if result == nil, !Task.isCancelled {
-                result = await Self.export(asset, preset: AVAssetExportPresetHighestQuality, to: target, type: type, range: range, progress: sink)
+            let hevc = await Self.isHEVC(asset)
+            let presets = MediaToolsLogic.trimPresets(
+                mode: mode, sourceIsHEVC: hevc,
+                compatible: AVAssetExportSession.exportPresets(compatibleWith: asset),
+                passthrough: AVAssetExportPresetPassthrough, hevcHighest: AVAssetExportPresetHEVCHighestQuality,
+                highest: AVAssetExportPresetHighestQuality)
+            var result: URL?
+            for preset in presets {
+                if Task.isCancelled { break }
+                result = await Self.export(asset, preset: preset, to: target, type: type, range: range, progress: sink)
+                if result != nil { break }
             }
             if let result {
                 finish([result], text: String(localized: "已剪出 \(result.lastPathComponent)"), toShelf: toShelf)
             } else {
                 finish([], text: Task.isCancelled ? String(localized: "已取消") : String(localized: "没能剪辑这个视频"), toShelf: toShelf)
             }
+        }
+    }
+
+    /// 画面轨是不是 HEVC（精确剪辑时尽量保持原来的编码）。
+    nonisolated static func isHEVC(_ asset: AVAsset) async -> Bool {
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
+              let formats = try? await track.load(.formatDescriptions) else { return false }
+        return formats.contains { format in
+            let codec = CMFormatDescriptionGetMediaSubType(format)
+            return codec == kCMVideoCodecType_HEVC || codec == kCMVideoCodecType_HEVCWithAlpha
         }
     }
 
@@ -389,7 +407,8 @@ final class MediaTools: ObservableObject {
         guard output.pageCount > 0 else { return MergeResult(url: nil, skipped: skipped) }
         let name = String(localized: "合并") + ".pdf"
         let target = OrganizeEngine.uniqueURL(for: name, in: outputFolder(for: first))
-        return MergeResult(url: output.write(to: target) ? target : nil, skipped: skipped)
+        guard let data = output.dataRepresentation() else { return MergeResult(url: nil, skipped: skipped) }
+        return MergeResult(url: try? ImageExport.writeUnique(data, to: target), skipped: skipped)
     }
 
     // MARK: 抠图
@@ -439,19 +458,55 @@ final class MediaTools: ObservableObject {
             return .failed
         }
         guard let observation = request.results?.first, !observation.allInstances.isEmpty else { return .noSubject }
-        guard let buffer = try? observation.generateMaskedImage(ofInstances: observation.allInstances, from: handler,
-                                                                croppedToInstancesExtent: false) else { return .failed }
-        let ciImage = CIImage(cvPixelBuffer: buffer)
-        let context = CIContext()
-        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return .failed }
+        // 只用 Vision 要遮罩，原图像素自己画：色彩空间（P3 等）和 16 位深度都照原图保留。
+        guard let mask = try? observation.generateScaledMaskForImage(forInstances: observation.allInstances, from: handler),
+              let maskCG = Self.maskImage(mask) else { return .failed }
+        let width = oriented.width, height = oriented.height
+        let format = ImageExport.format(of: url) ?? ImageExport.format(of: oriented)
+        guard let context = ImageExport.context(width: width, height: height, format: format) else { return .failed }
+        let rect = CGRect(x: 0, y: 0, width: width, height: height)
+        context.clip(to: rect, mask: maskCG)
+        context.draw(oriented, in: rect)
+        guard let cgImage = context.makeImage() else { return .failed }
         let target = outputURL(for: url, suffix: String(localized: "抠图"), ext: "png")
-        return writePNG(cgImage, to: target) ? .success(target) : .failed
+        guard let saved = ImageExport.write(cgImage, type: .png, to: target) else { return .failed }
+        return .success(saved)
     }
 
-    nonisolated static func writePNG(_ image: CGImage, to url: URL) -> Bool {
-        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else { return false }
-        CGImageDestinationAddImage(destination, image, nil)
-        return CGImageDestinationFinalize(destination)
+    /// Vision 给的遮罩（单通道 Float32 或 8 位）转成 DeviceGray 图，白色 = 保留。
+    nonisolated static func maskImage(_ buffer: CVPixelBuffer) -> CGImage? {
+        CVPixelBufferLockBaseAddress(buffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
+        guard let base = CVPixelBufferGetBaseAddress(buffer) else { return nil }
+        let width = CVPixelBufferGetWidth(buffer), height = CVPixelBufferGetHeight(buffer)
+        let rowBytes = CVPixelBufferGetBytesPerRow(buffer)
+        guard width > 0, height > 0 else { return nil }
+        var bytes = [UInt8](repeating: 0, count: width * height)
+        switch CVPixelBufferGetPixelFormatType(buffer) {
+        case kCVPixelFormatType_OneComponent32Float:
+            for y in 0..<height {
+                let row = (base + y * rowBytes).assumingMemoryBound(to: Float32.self)
+                for x in 0..<width {
+                    bytes[y * width + x] = UInt8(max(0, min(255, (row[x] * 255).rounded())))
+                }
+            }
+        case kCVPixelFormatType_OneComponent8:
+            for y in 0..<height {
+                let row = (base + y * rowBytes).assumingMemoryBound(to: UInt8.self)
+                for x in 0..<width { bytes[y * width + x] = row[x] }
+            }
+        default:
+            return nil
+        }
+        guard let provider = CGDataProvider(data: Data(bytes) as CFData) else { return nil }
+        return CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: width,
+                       space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    }
+
+    /// 写 PNG（不覆盖；目标被占用时换下一个不重名的名字）。返回实际写入的文件。
+    nonisolated static func writePNG(_ image: CGImage, to url: URL) -> URL? {
+        ImageExport.write(image, type: .png, to: url)
     }
 
     // MARK: 截图美化
@@ -480,7 +535,7 @@ final class MediaTools: ObservableObject {
                     guard let image = Self.loadCGImage(url, maxPixel: nil),
                           let result = Self.render(image, style: style) else { return nil }
                     let target = Self.outputURL(for: url, suffix: String(localized: "美化"), ext: "png")
-                    return Self.writePNG(result, to: target) ? target : nil
+                    return Self.writePNG(result, to: target)
                 }.value
                 if let result { out.append(result) }
             }
@@ -492,14 +547,15 @@ final class MediaTools: ObservableObject {
     /// 读图并按 EXIF 方向转正。maxPixel 为 nil 时按原图尺寸（最长边 = 原图最长边）。
     nonisolated static func loadCGImage(_ url: URL, maxPixel: Int?) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
-        let side: Int
-        if let maxPixel {
-            side = maxPixel
-        } else {
-            let info = pixelInfo(source)
-            side = max(info.width, info.height)
-            // 读不到尺寸时退回原始像素（不转方向总比读不出来好）。
-            guard side > 0 else { return CGImageSourceCreateImageAtIndex(source, 0, nil) }
+        let info = pixelInfo(source)
+        let fullSide = max(info.width, info.height)
+        // 读不到尺寸时退回原始像素（不转方向总比读不出来好）。
+        guard fullSide > 0 || maxPixel != nil else { return CGImageSourceCreateImageAtIndex(source, 0, nil) }
+        let side = maxPixel ?? fullSide
+        // 要原图大小、又不用转方向：直接用原图（保留 16 位深度和原来的色彩空间；缩略图可能被压成 8 位）。
+        if info.orientation == 1, fullSide > 0, side >= fullSide,
+           let image = CGImageSourceCreateImageAtIndex(source, 0, nil) {
+            return image
         }
         let options = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -603,6 +659,9 @@ struct TrimSheet: View {
     @State private var duration: Double = 0
     @State private var start: Double = 0
     @State private var end: Double = 0
+    @AppStorage("trimMode") private var modeRaw = MediaToolsLogic.TrimMode.precise.rawValue
+
+    private var mode: MediaToolsLogic.TrimMode { MediaToolsLogic.TrimMode(rawValue: modeRaw) ?? .precise }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -643,6 +702,20 @@ struct TrimSheet: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                VStack(alignment: .leading, spacing: 6) {
+                    Picker("剪辑方式", selection: $modeRaw) {
+                        Text("精确").tag(MediaToolsLogic.TrimMode.precise.rawValue)
+                        Text("快速").tag(MediaToolsLogic.TrimMode.fast.rawValue)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 260)
+                    Text(mode == .precise
+                         ? String(localized: "重新编码，起止点和预览完全一致，画质尽量保持原样，稍慢一些。")
+                         : String(localized: "不重新编码，几乎瞬间完成；但开始位置可能挪到最近的关键帧，片段会早开始一点。"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             HStack {
@@ -660,7 +733,7 @@ struct TrimSheet: View {
                 }
                 .disabled(duration == 0)
                 Button("剪出片段") {
-                    MediaTools.shared.trim(url, start: start, end: end, toShelf: toShelf)
+                    MediaTools.shared.trim(url, start: start, end: end, mode: mode, toShelf: toShelf)
                     close()
                 }
                 .keyboardShortcut(.defaultAction)

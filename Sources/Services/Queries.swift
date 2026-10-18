@@ -203,6 +203,13 @@ enum Queries {
         ).items
     }
 
+    /// 打了任意标签的文件（导入访达标签用）：个人文件夹 + 已挂载的外接磁盘。
+    static func anyTagged(limit: Int = 5000) async -> [FileItem] {
+        let predicate = NSPredicate(fromMetadataQueryString: "kMDItemUserTags == \"*\"")
+            ?? NSPredicate(format: "kMDItemUserTags LIKE %@", "*")
+        return await SpotlightSearch.run(predicate: predicate, scopes: Scopes.home + mountedVolumes, maxItems: limit).items
+    }
+
     /// /Volumes 下已挂载的磁盘（不含隐藏的系统卷）。
     static var mountedVolumes: [Any] {
         let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: nil, options: [.skipHiddenVolumes]) ?? []

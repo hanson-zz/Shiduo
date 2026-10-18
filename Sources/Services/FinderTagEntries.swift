@@ -57,6 +57,53 @@ enum FinderTagEntries {
         try? PropertyListSerialization.data(fromPropertyList: entries, format: .binary, options: 0)
     }
 
+    /// 文件上找到的一个标签（导入访达标签用）。
+    struct FoundTag: Equatable {
+        var name: String
+        var color: Int
+    }
+
+    /// 从一批文件的原始条目里收集不重复的标签。同名标签在不同文件上颜色不一样时，取出现最多的颜色
+    /// （有颜色的优先于无颜色；一样多时取先出现的）。按名字排序。
+    static func distinctTags(_ perFile: [[String]]) -> [FoundTag] {
+        var order: [String] = []
+        var counts: [String: [Int: Int]] = [:]
+        var firstSeen: [String: [Int: Int]] = [:]
+        var seen = 0
+        for entries in perFile {
+            for raw in entries {
+                let name = self.name(of: raw).trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !name.isEmpty else { continue }
+                let color = self.color(of: raw)
+                if counts[name] == nil {
+                    order.append(name)
+                    counts[name] = [:]
+                    firstSeen[name] = [:]
+                }
+                counts[name]![color, default: 0] += 1
+                if firstSeen[name]![color] == nil { firstSeen[name]![color] = seen }
+                seen += 1
+            }
+        }
+        let tags = order.map { name -> FoundTag in
+            let byColor = counts[name] ?? [:]
+            let colored = byColor.filter { $0.key != 0 }
+            let pool = colored.isEmpty ? byColor : colored
+            let first = firstSeen[name] ?? [:]
+            let best = pool.max { a, b in
+                if a.value != b.value { return a.value < b.value }
+                return (first[a.key] ?? 0) > (first[b.key] ?? 0)
+            }?.key ?? 0
+            return FoundTag(name: name, color: best)
+        }
+        return tags.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    /// 要导入的：去掉已经在拾掇里的、和系统颜色标签同名的（reserved）。
+    static func importable(_ found: [FoundTag], existing: Set<String>, reserved: Set<String>) -> [FoundTag] {
+        found.filter { !existing.contains($0.name) && !reserved.contains($0.name) }
+    }
+
     /// 多选时菜单里的勾选状态：全部都有 / 部分有 / 都没有。
     enum Coverage: Equatable {
         case all, some, none

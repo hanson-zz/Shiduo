@@ -18,9 +18,9 @@ enum BeautifyRenderer {
         let style = raw.clamped()
         let layout = style.layout(for: CGSize(width: image.width, height: image.height))
         let W = layout.canvas.width, H = layout.canvas.height
+        // 画布沿用截图的色彩空间（P3 截图不会变灰）和位深，见 ImageExport。
         guard W > 0, H > 0, W * H < 400_000_000,
-              let context = CGContext(data: nil, width: Int(W), height: Int(H), bitsPerComponent: 8, bytesPerRow: 0,
-                                      space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+              let context = ImageExport.context(width: Int(W), height: Int(H), format: ImageExport.format(of: image)) else { return nil }
         func flip(_ r: CGRect) -> CGRect { CGRect(x: r.minX, y: H - r.maxY, width: r.width, height: r.height) }
         let full = CGRect(x: 0, y: 0, width: W, height: H)
         drawBackground(style, source: image, in: context, rect: full)

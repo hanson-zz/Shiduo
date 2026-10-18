@@ -100,7 +100,8 @@ enum Upscaler {
         defer { runLock.unlock() }
         if isCancelled() { throw Failure.cancelled }
         let model = try model(kind)
-        let space = CGColorSpace(name: CGColorSpace.sRGB)!
+        // 沿用原图的色彩空间（P3 等，不能当输出的换成 P3）。模型按 8 位工作，所以位深保持 8 位。
+        let space = ImageExport.format(of: image).space
 
         // 原图读成 RGBA 字节（不透明的图 alpha 都是 255）。CG 的内存是从上到下一行一行存的。
         guard let src = CGContext(data: nil, width: W, height: H, bitsPerComponent: 8, bytesPerRow: W * 4, space: space,
@@ -268,12 +269,10 @@ enum Upscaler {
             let jpeg = ["jpg", "jpeg", "heic", "heif"].contains(ext) && !MediaTools.hasTransparency(image)
             let target = MediaTools.outputURL(for: url, suffix: String(localized: "放大\(scale)x"), ext: jpeg ? "jpg" : "png")
             let type = jpeg ? UTType.jpeg : UTType.png
-            guard let destination = CGImageDestinationCreateWithURL(target as CFURL, type.identifier as CFString, 1, nil) else {
+            guard let saved = ImageExport.write(result, type: type, quality: jpeg ? 0.92 : nil, to: target) else {
                 return .failure(.failed)
             }
-            let options = jpeg ? [kCGImageDestinationLossyCompressionQuality: 0.92] as CFDictionary : nil
-            CGImageDestinationAddImage(destination, result, options)
-            return CGImageDestinationFinalize(destination) ? .success(target) : .failure(.failed)
+            return .success(saved)
         } catch let failure as Failure {
             return .failure(failure)
         } catch {

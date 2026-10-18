@@ -54,10 +54,6 @@ struct ContentView: View {
         )) {
             FullDiskAccessLostSheet(monitor: fullDiskAccess)
         }
-        .sheet(isPresented: $license.showPaywall) {
-            PaywallView()
-                .environmentObject(license)
-        }
         .sheet(isPresented: Binding(get: { !reminders.composing.isEmpty }, set: { if !$0 { reminders.composing = [] } })) {
             ReminderSheet(items: reminders.composing)
         }

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 /// 小小的「PRO」胶囊，标在 Pro 功能旁边。
@@ -126,7 +127,6 @@ enum ProFeature: CaseIterable, Identifiable {
 /// 拾掇 Pro 介绍页：功能清单、开始试用、购买、输入授权码。
 struct PaywallView: View {
     @EnvironmentObject private var license: LicenseManager
-    @Environment(\.dismiss) private var dismiss
     @State private var key = ""
 
     var body: some View {
@@ -137,7 +137,7 @@ struct PaywallView: View {
                 ProBadge()
                 Spacer()
                 Button {
-                    dismiss()
+                    close()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.title2)
@@ -181,7 +181,7 @@ struct PaywallView: View {
                 if license.canStartTrial {
                     Button {
                         license.startTrialIfNeeded()
-                        dismiss()
+                        close()
                     } label: {
                         Text("开始 \(LicenseConfig.trialDays) 天免费试用")
                             .frame(minWidth: 150)
@@ -207,7 +207,73 @@ struct PaywallView: View {
         .frame(width: 480)
         .background(GlassBackdrop())
         .onChange(of: license.state) {
-            if license.state == .pro { dismiss() }
+            if license.state == .pro { close() }
+        }
+    }
+
+    /// 关掉介绍页（独立窗口跟着 showPaywall 关闭）。
+    private func close() {
+        license.showPaywall = false
+    }
+}
+
+/// 拾掇 Pro 介绍页的独立窗口（全 App 只有一个）。不挂在主窗口上：主窗口关着时，
+/// 从暂存架、菜单栏、图片工具调用 requirePro 也能弹出来。任何地方把 showPaywall 设成 true 就会打开（或拿到前面）。
+@MainActor
+final class PaywallWindow: NSObject, NSWindowDelegate {
+    static let shared = PaywallWindow()
+    private var window: NSWindow?
+    private var cancellable: AnyCancellable?
+
+    /// App 启动时调用一次，开始跟随 LicenseManager.showPaywall。
+    func start() {
+        guard cancellable == nil else { return }
+        cancellable = LicenseManager.shared.$showPaywall
+            .receive(on: DispatchQueue.main)
+            .sink { show in
+                MainActor.assumeIsolated {
+                    if show { PaywallWindow.shared.show() } else { PaywallWindow.shared.hide() }
+                }
+            }
+    }
+
+    private func show() {
+        let window: NSWindow
+        if let existing = self.window {
+            window = existing
+        } else {
+            window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 640),
+                              styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
+            window.title = String(localized: "拾掇 Pro")
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.isMovableByWindowBackground = true
+            window.isReleasedWhenClosed = false
+            window.delegate = self
+            self.window = window
+        }
+        if window.contentViewController == nil {
+            let hosting = NSHostingController(rootView: PaywallView().environmentObject(LicenseManager.shared))
+            hosting.sizingOptions = [.preferredContentSize]
+            window.contentViewController = hosting
+            window.center()
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    private func hide() {
+        guard let window, window.isVisible else { return }
+        window.close()
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        // 点了窗口的关闭按钮：同步回 showPaywall，下次设成 true 才会再弹。
+        if LicenseManager.shared.showPaywall { LicenseManager.shared.showPaywall = false }
+        // 关掉后拆掉内容，下次打开重新建（状态文字、试用按钮都是最新的）。
+        DispatchQueue.main.async { [weak self] in
+            guard let window = self?.window, !window.isVisible else { return }
+            window.contentViewController = nil
         }
     }
 }

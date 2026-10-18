@@ -21701,6 +21701,198 @@
           }
         }
       }
+    },
+    "剪辑方式": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trim mode"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪辑方式"
+          }
+        }
+      }
+    },
+    "精确": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precise"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "精确"
+          }
+        }
+      }
+    },
+    "快速": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fast"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速"
+          }
+        }
+      }
+    },
+    "重新编码，起止点和预览完全一致，画质尽量保持原样，稍慢一些。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Re-encodes so the start and end match the preview exactly, keeping quality as close to the original as possible. A bit slower."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新编码，起止点和预览完全一致，画质尽量保持原样，稍慢一些。"
+          }
+        }
+      }
+    },
+    "不重新编码，几乎瞬间完成；但开始位置可能挪到最近的关键帧，片段会早开始一点。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No re-encoding, almost instant — but the start may shift to the nearest keyframe, so the clip can begin slightly earlier."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不重新编码，几乎瞬间完成；但开始位置可能挪到最近的关键帧，片段会早开始一点。"
+          }
+        }
+      }
+    },
+    "导入访达标签…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Finder Tags…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导入访达标签…"
+          }
+        }
+      }
+    },
+    "正在查找文件上的访达标签…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking for Finder tags on your files…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在查找文件上的访达标签…"
+          }
+        }
+      }
+    },
+    "没有找到新的访达标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No new Finder tags found"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有找到新的访达标签"
+          }
+        }
+      }
+    },
+    "导入 %lld 个访达标签？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import %lld Finder tags?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导入 %lld 个访达标签？"
+          }
+        }
+      }
+    },
+    "%@ 等。只加到拾掇的标签列表里，不会改动任何文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ and more. They are only added to Shiduo's tag list; no files are changed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 等。只加到拾掇的标签列表里，不会改动任何文件。"
+          }
+        }
+      }
+    },
+    "%@。只加到拾掇的标签列表里，不会改动任何文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@. They are only added to Shiduo's tag list; no files are changed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@。只加到拾掇的标签列表里，不会改动任何文件。"
+          }
+        }
+      }
+    },
+    "已导入 %lld 个访达标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported %lld Finder tags"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已导入 %lld 个访达标签"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

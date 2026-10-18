@@ -217,11 +217,32 @@ final class CustomTagStore: ObservableObject {
 
     /// 通用弹窗：标题、初始名字和颜色。showsName 为 false 时只选颜色。
     static func prompt(title: String, name initial: String, color initialColor: Int, showsName: Bool = true) -> (name: String, color: Int)? {
+        if case .tag(let name, let color) = promptChoice(title: title, name: initial, color: initialColor, showsName: showsName,
+                                                        offersImport: false) {
+            return (name, color)
+        }
+        return nil
+    }
+
+    enum PromptChoice {
+        case tag(name: String, color: Int)
+        case importFinder
+        case cancel
+    }
+
+    /// 侧边栏的「新建标签…」：多一个「导入访达标签…」按钮。
+    static func promptNewOrImport() -> PromptChoice {
+        promptChoice(title: String(localized: "新建标签"), name: "", color: 4, showsName: true, offersImport: true)
+    }
+
+    private static func promptChoice(title: String, name initial: String, color initialColor: Int, showsName: Bool,
+                                     offersImport: Bool) -> PromptChoice {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = String(localized: "访达只支持这几种标签颜色，选好后在访达里也能看到。")
         alert.addButton(withTitle: String(localized: "好"))
         alert.addButton(withTitle: String(localized: "取消"))
+        if offersImport { alert.addButton(withTitle: String(localized: "导入访达标签…")) }
 
         let field = NSTextField(frame: NSRect(x: 0, y: 30, width: 240, height: 24))
         field.placeholderString = String(localized: "标签名字")
@@ -239,10 +260,12 @@ final class CustomTagStore: ObservableObject {
         alert.accessoryView = box
         alert.window.initialFirstResponder = showsName ? (field as NSView) : (popup as NSView)
 
-        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        let response = alert.runModal()
+        if offersImport, response == .alertThirdButtonReturn { return .importFinder }
+        guard response == .alertFirstButtonReturn else { return .cancel }
         let name = showsName ? field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) : initial
-        guard !name.isEmpty else { return nil }
-        return (name, popup.selectedTag())
+        guard !name.isEmpty else { return .cancel }
+        return .tag(name: name, color: popup.selectedTag())
     }
 
     /// 只输入名字的弹窗（重命名）。取消或没改返回 nil。
@@ -331,6 +354,40 @@ enum TagSync {
         CustomTagStore.shared.remove(name)
         report(result, store: store)
         store.showToast(String(localized: "已删除标签，从 \(result.changed) 个文件上去掉"))
+    }
+
+    /// 导入访达标签：用聚焦找出打了标签的文件，从扩展属性读出不重复的「名字 + 颜色」，加进拾掇（已有的、系统颜色标签跳过）。
+    /// 只读文件，不改任何文件上的标签。
+    static func importFinderTags(store: LibraryStore) async {
+        store.showToast(String(localized: "正在查找文件上的访达标签…"))
+        let urls = await Queries.anyTagged().map(\.url)
+        let perFile = await Task.detached(priority: .userInitiated) { () -> [[String]] in
+            urls.compactMap { url in
+                if case .success(let entries?) = FinderTag.readEntries(url) { return entries }
+                return nil
+            }
+        }.value
+        let custom = CustomTagStore.shared
+        let found = FinderTagEntries.distinctTags(perFile)
+        let candidates = FinderTagEntries.importable(found, existing: Set(custom.tags.map(\.name)),
+                                                     reserved: Set(FinderTag.colorTags.map(\.name)))
+        guard !candidates.isEmpty else {
+            store.showToast(String(localized: "没有找到新的访达标签"))
+            return
+        }
+        let alert = NSAlert()
+        alert.messageText = String(localized: "导入 \(candidates.count) 个访达标签？")
+        let names = candidates.prefix(30).map(\.name).joined(separator: String(localized: "、"))
+        alert.informativeText = candidates.count > 30
+            ? String(localized: "\(names) 等。只加到拾掇的标签列表里，不会改动任何文件。")
+            : String(localized: "\(names)。只加到拾掇的标签列表里，不会改动任何文件。")
+        alert.addButton(withTitle: String(localized: "导入"))
+        alert.addButton(withTitle: String(localized: "取消"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        for tag in candidates where !custom.contains(tag.name) {
+            custom.add(tag.name, color: tag.color)
+        }
+        store.showToast(String(localized: "已导入 \(candidates.count) 个访达标签"))
     }
 
     /// 新建标签时名字已经有了、颜色不一样：当作改颜色，连文件一起改。

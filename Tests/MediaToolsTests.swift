@@ -20,6 +20,22 @@ final class MediaToolsLogicTests: XCTestCase {
         XCTAssertEqual(MediaToolsLogic.trimExtension(for: URL(fileURLWithPath: "/a/b.m4v")), "mp4")
     }
 
+    func testTrimPresets() {
+        let all = ["P", "H", "Q"]
+        XCTAssertEqual(MediaToolsLogic.trimPresets(mode: .precise, sourceIsHEVC: true, compatible: all,
+                                                   passthrough: "P", hevcHighest: "H", highest: "Q"), ["H", "Q"])
+        XCTAssertEqual(MediaToolsLogic.trimPresets(mode: .precise, sourceIsHEVC: false, compatible: all,
+                                                   passthrough: "P", hevcHighest: "H", highest: "Q"), ["Q"])
+        XCTAssertEqual(MediaToolsLogic.trimPresets(mode: .fast, sourceIsHEVC: true, compatible: all,
+                                                   passthrough: "P", hevcHighest: "H", highest: "Q"), ["P", "H", "Q"])
+        // 不兼容的预设不尝试；兼容列表为空时不过滤
+        XCTAssertEqual(MediaToolsLogic.trimPresets(mode: .precise, sourceIsHEVC: true, compatible: ["P", "Q"],
+                                                   passthrough: "P", hevcHighest: "H", highest: "Q"), ["Q"])
+        XCTAssertEqual(MediaToolsLogic.trimPresets(mode: .precise, sourceIsHEVC: true, compatible: [],
+                                                   passthrough: "P", hevcHighest: "H", highest: "Q"), ["H", "Q"])
+        XCTAssertEqual(MediaToolsLogic.TrimMode(rawValue: "fast"), .fast)
+    }
+
     func testClampTrim() {
         var r = MediaToolsLogic.clampTrim(start: -3, end: 99, duration: 10)
         XCTAssertEqual(r.start, 0)
