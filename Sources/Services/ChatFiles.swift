@@ -128,8 +128,12 @@ final class ChatFilesStore: ObservableObject {
     }
 
     func remove(paths: Set<String>) {
+        remove { paths.contains($0) }
+    }
+
+    func remove(where gone: (String) -> Bool) {
         for (app, list) in files {
-            files[app] = list.filter { !paths.contains($0.path) }
+            files[app] = list.filter { !gone($0.path) }
         }
     }
 

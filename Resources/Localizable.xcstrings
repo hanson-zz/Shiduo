@@ -22309,6 +22309,118 @@
           }
         }
       }
+    },
+    "正在移到废纸篓：%lld 个…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving %lld items to the Trash…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在移到废纸篓：%lld 个…"
+          }
+        }
+      }
+    },
+    "%lld 个文件没能改回原名（已经被移走，或原名被别的文件占用了）：": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld files couldn’t be renamed back (moved away, or the original name is now taken): "
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件没能改回原名（已经被移走，或原名被别的文件占用了）："
+          }
+        }
+      }
+    },
+    "已改回原名：%lld 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renamed back: %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已改回原名：%lld 个"
+          }
+        }
+      }
+    },
+    "目标文件夹不见了（被改名、移走或删除），请编辑规则重新选择": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The destination folder is gone (renamed, moved or deleted). Edit the rule to choose it again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标文件夹不见了（被改名、移走或删除），请编辑规则重新选择"
+          }
+        }
+      }
+    },
+    "监视的文件夹不见了（被改名、移走或删除），请编辑规则重新选择": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The watched folder is gone (renamed, moved or deleted). Edit the rule to choose it again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "监视的文件夹不见了（被改名、移走或删除），请编辑规则重新选择"
+          }
+        }
+      }
+    },
+    "刚才撤销了移到废纸篓，放回的文件不会自动回到结果里。重新扫描一下更准确。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You just undid a move to the Trash. Restored files don’t reappear in these results automatically — rescan for accurate results."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刚才撤销了移到废纸篓，放回的文件不会自动回到结果里。重新扫描一下更准确。"
+          }
+        }
+      }
+    },
+    "%lld 组在扫描之后有变化（保留的文件被移走、删除或改过），这几组没有动。请重新扫描。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld groups changed since the scan (the kept file was moved, deleted or edited), so they were left alone. Please rescan."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 组在扫描之后有变化（保留的文件被移走、删除或改过），这几组没有动。请重新扫描。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

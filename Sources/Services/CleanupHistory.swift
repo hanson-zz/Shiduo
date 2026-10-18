@@ -275,10 +275,12 @@ final class CleanupHistory: ObservableObject {
         save()
     }
 
-    /// 放回原处（在后台线程搬文件）。返回 (恢复成功的原路径, 失败的文件名)。
-    func restore(_ list: [CleanupRecord]) async -> (restored: [String], failed: [String]) {
-        let targets = list.filter { status(of: $0) == .restorable }
-        let unavailable = list.filter { status(of: $0) != .restorable && status(of: $0) != .restored }.map(\.name)
+    /// 放回原处（在后台线程搬文件）。返回 (恢复成功后的新路径, 失败的文件名, 每个成功的 原路径 → 新路径)。
+    func restore(_ list: [CleanupRecord]) async -> (restored: [String], failed: [String], pairs: [(original: String, restored: String)]) {
+        // 状态要 stat 文件，在后台算一次（目标是断开的 NAS 时 fileExists 可能卡住）。
+        let statuses = await Self.statuses(of: list)
+        let targets = list.filter { statuses[$0.id] == .restorable }
+        let unavailable = list.filter { statuses[$0.id] != .restorable && statuses[$0.id] != .restored }.map(\.name)
         let suffix = String(localized: "restore.suffix", defaultValue: "恢复")
         let results: [(UUID, String?, String)] = await Task.detached(priority: .userInitiated) {
             targets.map { (record: CleanupRecord) -> (UUID, String?, String) in
@@ -288,17 +290,41 @@ final class CleanupHistory: ObservableObject {
         }.value
         var restored: [String] = []
         var failed: [String] = []
+        var pairs: [(original: String, restored: String)] = []
         for (id, path, name) in results {
-            if let path {
-                if let from = targets.first(where: { $0.id == id })?.currentPath { onMovedBack?(from, path) }
+            if let path, let record = targets.first(where: { $0.id == id }) {
+                if let from = record.currentPath { onMovedBack?(from, path) }
                 markRestored(id, at: path)
                 restored.append(path)
+                pairs.append((original: record.originalPath, restored: path))
             } else {
                 failed.append(name)
             }
         }
         failed += unavailable
-        return (restored, failed)
+        return (restored, failed, pairs)
+    }
+
+    /// 在后台线程算每条记录的状态。
+    nonisolated static func statuses(of records: [CleanupRecord]) async -> [UUID: CleanupRecordStatus] {
+        await Task.detached(priority: .userInitiated) {
+            var result: [UUID: CleanupRecordStatus] = [:]
+            let fm = FileManager.default
+            for record in records {
+                result[record.id] = CleanupHistoryLogic.status(of: record,
+                                                               exists: { fm.fileExists(atPath: $0) },
+                                                               identity: { CleanupHistoryLogic.identity(atPath: $0) })
+            }
+            return result
+        }.value
+    }
+
+    /// 自动整理那边撤销了一条（文件从废纸篓放回了原处）：对应的清理记录也标成已恢复。
+    func markRestored(original: String, trashed: String?, at path: String) {
+        guard let index = records.firstIndex(where: {
+            $0.restoredAt == nil && $0.originalPath == original && (trashed == nil || $0.currentPath == trashed)
+        }) else { return }
+        markRestored(records[index].id, at: path)
     }
 
     func removeAll() {

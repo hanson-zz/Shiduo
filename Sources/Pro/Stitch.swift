@@ -831,7 +831,7 @@ final class ImageStudio: ObservableObject {
                 return
             }
             if toShelf { ShelfStore.shared.add([target]) }
-            LibraryStore.shared?.filesChangedTick += 1
+            LibraryStore.shared?.filesWritten([target])
             show(String(localized: "已保存「\(target.lastPathComponent)」，在第一张图旁边"))
         }
     }

@@ -317,6 +317,94 @@ final class LibraryStore: ObservableObject {
         LibraryStore.shared = self
         // 清理记录里恢复的文件夹：上色记录跟着回到原路径
         CleanupHistory.shared.onMovedBack = { FolderIconService.shared.movePath($0, to: $1) }
+        // 回到拾掇时：正在看的列表悄悄重新读一次（在访达里新建、改名、删除的文件跟着变）。
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.appBecameActive() }
+        }
+    }
+
+    // MARK: - 列表跟着磁盘变（访达里的改动、自动整理、拾掇自己写出的文件）
+
+    /// 正在看的文件夹（固定文件夹、位置、外接磁盘、任意文件夹）有变化时悄悄重读。
+    private lazy var folderWatcher = FolderWatcher { [weak self] in self?.refreshQuietly() }
+    private var quietTask: Task<Void, Never>?
+    private var lastActivationRefresh = Date.distantPast
+
+    private func appBecameActive() {
+        // Spotlight 类页面每次都要重新查，节流一下；文件夹页面直接读磁盘，很便宜。
+        let isFolderPage = currentFolder != nil
+        guard isFolderPage || Date().timeIntervalSince(lastActivationRefresh) > 30 else { return }
+        lastActivationRefresh = Date()
+        refreshQuietly()
+    }
+
+    /// 悄悄重新读当前页面：不清空列表、不显示加载中，内容没变就什么也不做，选中的文件还在就保留。
+    func refreshQuietly() {
+        guard !Demo.isOn, activeQuery == nil, !isLoading else { return }
+        let target = selection ?? .home
+        if case .savedSearch = target {
+            refreshSavedSearchQuietly()
+            return
+        }
+        guard Self.quietlyRefreshable(target) else { return }
+        let folder = currentFolder
+        quietTask?.cancel()
+        quietTask = Task {
+            let result = await fetch(target)
+            guard !Task.isCancelled, selection == target, currentFolder == folder,
+                  activeQuery == nil, !isLoading else { return }
+            let signature: ([FileItem]) -> [String] = { $0.map { "\($0.path)|\($0.size)|\($0.modified?.timeIntervalSince1970 ?? 0)" } }
+            guard Set(signature(result)) != Set(signature(items)) else { return }
+            remember(result)
+            items = result
+            let alive = Set(result.map(\.id))
+            selectedIDs = selectedIDs.intersection(alive)
+        }
+    }
+
+    private static func quietlyRefreshable(_ target: SidebarItem) -> Bool {
+        switch target {
+        case .category, .largeFiles, .screenshots, .downloads, .pinned, .folder, .tag, .volume: return true
+        default: return false
+        }
+    }
+
+    /// 拾掇自己在磁盘上写出了新文件（标注、拼图、放大、压缩、GIF……）：
+    /// 输出就在正在看的文件夹里时悄悄刷新列表。urls 为空表示不知道具体位置，当前是文件夹页面就刷新。
+    func filesWritten(_ urls: [URL]) {
+        filesChangedTick += 1
+        ThumbnailService.shared.invalidate(urls)
+        guard let folder = currentFolder else {
+            if case .savedSearch = selection { refreshSavedSearchQuietly() }
+            return
+        }
+        let touches = urls.isEmpty || urls.contains { $0.deletingLastPathComponent().standardizedFileURL.path == folder }
+        if touches { refreshQuietly() }
+    }
+
+    /// 自动整理在后台移走 / 移到废纸篓了一些文件：从各个列表里拿掉，来源或目标就是正在看的文件夹时悄悄刷新。
+    func organizerMoved(_ entries: [OrganizeLogEntry]) {
+        guard !entries.isEmpty else { return }
+        forget(paths: Set(entries.map(\.from)))
+        filesChangedTick += 1
+        scheduleCountsRefresh()
+        if let folder = currentFolder {
+            let folders = Set(entries.flatMap { entry -> [String] in
+                var list = [(entry.from as NSString).deletingLastPathComponent]
+                if entry.action == .move, let to = entry.to { list.append((to as NSString).deletingLastPathComponent) }
+                return list
+            })
+            if folders.contains(folder) { refreshQuietly() }
+        } else {
+            refreshQuietly()
+        }
+    }
+
+    /// 只在文件夹页面监视当前文件夹。
+    private func updateFolderWatch() {
+        folderWatcher.watch(Demo.isOn || activeQuery != nil ? nil : currentFolder)
     }
 
     /// 是不是一个能进去浏览的文件夹（.app 等文件包不算）。
@@ -363,6 +451,8 @@ final class LibraryStore: ObservableObject {
         loadTask?.cancel()
         selectedIDs = []
         if skipNextReload { return }
+        quietTask?.cancel()
+        updateFolderWatch()
         if activeQuery != nil {
             runSearch()
             return
@@ -389,35 +479,47 @@ final class LibraryStore: ObservableObject {
         }
         items = []
         isLoading = true
-        var result: [FileItem] = []
-        switch target {
-        case .category(let c): result = await Queries.category(c)
-        case .largeFiles: result = await Queries.largeFiles()
-        case .screenshots: result = await Queries.screenshots()
-        case .downloads: result = await Queries.downloaded()
-        case .pinned(let path), .folder(let path): result = await Queries.folder(browsePath ?? path)
-        case .tag(let name): result = await Queries.tagged(name)
-        case .volume(let path): result = await Queries.folder(browsePath ?? path)
-        case .savedSearch(let id):
-            if let saved = SavedSearchStore.shared.search(id), license.isPro {
-                result = await Queries.search(saved.query())
-            }
-        case .chat(let app):
-            result = await chat.items(for: app)
-            cleanup.updateChatCard()
-        default: break
-        }
+        let result = await fetch(target)
+        if case .chat = target { cleanup.updateChatCard() }
         guard !Task.isCancelled else { return }
         remember(result)
         items = result
         isLoading = false
     }
 
+    /// 读出一个页面的文件列表（不改界面状态）。
+    private func fetch(_ target: SidebarItem) async -> [FileItem] {
+        switch target {
+        case .category(let c): return await Queries.category(c)
+        case .largeFiles: return await Queries.largeFiles()
+        case .screenshots: return await Queries.screenshots()
+        case .downloads: return await Queries.downloaded()
+        case .pinned(let path), .folder(let path), .volume(let path): return await Queries.folder(browsePath ?? path)
+        case .tag(let name): return await Queries.tagged(name)
+        case .savedSearch(let id):
+            if let saved = SavedSearchStore.shared.search(id), license.isPro {
+                return await Queries.search(saved.query())
+            }
+            return []
+        case .chat(let app):
+            return await chat.items(for: app)
+        default:
+            return []
+        }
+    }
+
+    /// 每次刷新首页加一：后开始的一轮作数，先开始、晚结束的旧一轮不会把旧计数写回去。
+    private var dashboardGeneration = 0
+
     func refreshDashboard() async {
         if Demo.isOn {
             applyDemoDashboard()
             return
         }
+        dashboardGeneration += 1
+        let generation = dashboardGeneration
+        /// 这一轮已经被取消或被新的一轮取代。
+        var stale: Bool { Task.isCancelled || generation != dashboardGeneration }
         var totals: [FileCategory: CategoryTotal] = [:]
         var previews: [FileCategory: [FileItem]] = [:]
         for category in FileCategory.dashboard {
@@ -425,6 +527,7 @@ final class LibraryStore: ObservableObject {
                 predicate: category.predicate(), scopes: category.scopes, maxItems: 3,
                 sortKey: category == .apps ? "kMDItemLastUsedDate" : category.sortKey
             )
+            if stale { return }
             totals[category] = CategoryTotal(count: r.totalCount, bytes: r.totalBytes)
             previews[category] = r.items
             self.totals = totals
@@ -434,6 +537,7 @@ final class LibraryStore: ObservableObject {
         let screenshots = await Queries.screenshots(limit: 16)
         let documents = await Queries.recentDocuments(limit: 16)
         let images = await Queries.recentImages(limit: 16)
+        if stale { return }
         let all = downloads + screenshots + documents + images
         remember(all)
         shelves = [
@@ -444,13 +548,15 @@ final class LibraryStore: ObservableObject {
         ].filter { !$0.items.isEmpty }
         dashboardLoaded = true
         let downloaded = await Queries.downloaded(limit: 3000)
+        if stale { return }
         sourceGroups = SourceGroup.make(from: downloaded)
-        largeFileCount = await SpotlightSearch.run(
-            predicate: P.all([P.sizeAtLeast(200_000_000), P.notFolder]), scopes: Scopes.home, maxItems: 0
-        ).totalCount
+        let large = await Self.countLargeFiles()
+        if stale { return }
+        largeFileCount = large
         // 后台识别截图和近期照片里的文字。
         let recentPhotos = await Queries.recentImages(limit: 200)
         let allShots = await Queries.screenshots(limit: 300)
+        if stale { return }
         ocr.autoRecognize(allShots + recentPhotos)
         if chat.autoScan && !chat.hasScanned {
             await chat.scan()
@@ -470,6 +576,35 @@ final class LibraryStore: ObservableObject {
             photosQueued = true
             let images = await Queries.recentImages(limit: PhotoContentStore.limit)
             photos.autoClassify(images)
+        }
+    }
+
+    private static func countLargeFiles() async -> Int {
+        await SpotlightSearch.run(
+            predicate: P.all([P.sizeAtLeast(200_000_000), P.notFolder]), scopes: Scopes.home, maxItems: 0
+        ).totalCount
+    }
+
+    private var countsTask: Task<Void, Never>?
+
+    /// 文件被清理 / 搬走以后：过几秒（等 Spotlight 更新索引）重新数一下各分类和大文件的数量。
+    /// 只数数量，不跑整个首页（预览、下载来源、清理扫描都不动）。
+    func scheduleCountsRefresh() {
+        guard !Demo.isOn, dashboardLoaded else { return }
+        countsTask?.cancel()
+        countsTask = Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if Task.isCancelled { return }
+            var fresh: [FileCategory: CategoryTotal] = [:]
+            for category in FileCategory.dashboard {
+                let r = await SpotlightSearch.run(predicate: category.predicate(), scopes: category.scopes, maxItems: 0)
+                if Task.isCancelled { return }
+                fresh[category] = CategoryTotal(count: r.totalCount, bytes: r.totalBytes)
+            }
+            let large = await Self.countLargeFiles()
+            if Task.isCancelled { return }
+            totals = fresh
+            largeFileCount = large
         }
     }
 
@@ -676,7 +811,20 @@ final class LibraryStore: ObservableObject {
     func undoBatch(_ batch: UUID) {
         toast = nil
         toastUndoBatch = nil
+        if let action = customUndo.removeValue(forKey: batch) {
+            action()
+            return
+        }
         Task { await restore(CleanupHistory.shared.records(inBatch: batch)) }
+    }
+
+    /// 带「撤销」按钮的小提示，按钮执行自定义动作（不是清理记录里的一批）。
+    func showUndoToast(_ text: String, undo: @escaping @MainActor () -> Void) {
+        let batch = UUID()
+        // 只留最近几个，旧的小提示早就消失了。
+        if customUndo.count > 20 { customUndo.removeAll() }
+        customUndo[batch] = undo
+        showUndoToast(text, batch: batch)
     }
 
     /// 把清理记录里的文件放回原处，结果用小提示 / 提示框告诉用户。
@@ -685,6 +833,19 @@ final class LibraryStore: ObservableObject {
         if !outcome.restored.isEmpty {
             // 自动整理规则移走的文件被放回后，不要在下一轮又被同一条规则移走。
             organizer.ignore(outcome.restored)
+            organizer.markRestored(records.filter { record in outcome.pairs.contains { $0.original == record.originalPath } })
+            // 删之前在暂存架上的，放回暂存架。
+            let byOriginal = Dictionary(outcome.pairs.map { ($0.original, $0.restored) }, uniquingKeysWith: { a, _ in a })
+            var backToShelf: [URL] = []
+            for record in records {
+                guard let shelfPaths = trashedFromShelf[record.batchID], shelfPaths.contains(record.originalPath),
+                      let restored = byOriginal[record.originalPath] else { continue }
+                backToShelf.append(URL(fileURLWithPath: restored))
+            }
+            if !backToShelf.isEmpty { ShelfStore.shared.add(backToShelf) }
+            // 放回来的文件不会自己回到重复 / 相似照片的结果里：提示重新扫描。
+            if duplicates.hasScanned { duplicates.mayBeStale = true }
+            if similar.hasScanned { similar.mayBeStale = true }
             showToast(String(localized: "已放回原处：\(outcome.restored.count) 个"))
             filesChanged()
         }
@@ -796,20 +957,59 @@ final class LibraryStore: ObservableObject {
         pendingTrash = list
     }
 
-    @discardableResult
-    func moveToTrash(_ list: [FileItem]) -> Int {
-        let outcome = FileActions.trash(list.map(\.url))
+    /// 正在移到废纸篓的文件数（大批量时界面上显示进度）。
+    @Published private(set) var trashingCount = 0
+    /// 每一批移到废纸篓时在暂存架上的文件（batchID → 原路径），撤销时放回暂存架。
+    private var trashedFromShelf: [UUID: Set<String>] = [:]
+    /// 小提示上「撤销」按钮的自定义动作（比如撤销重命名），按 batchID 找。
+    private var customUndo: [UUID: @MainActor () -> Void] = [:]
+
+    /// 移到废纸篓。真正的移动在后台线程做（几千个文件、iCloud 云盘或网络盘上也不卡界面），完成后再更新列表和清理记录。
+    func moveToTrash(_ list: [FileItem]) {
+        guard !list.isEmpty else { return }
+        let urls = list.map(\.url)
+        let onShelf = Set(list.map(\.path).filter { ShelfStore.shared.contains($0) })
+        trashingCount += list.count
+        if list.count >= 30 {
+            toast = String(localized: "正在移到废纸篓：\(list.count) 个…")
+            toastUndoBatch = nil
+        }
+        Task {
+            let outcome = await Task.detached(priority: .userInitiated) { FileActions.trash(urls) }.value
+            trashingCount = max(0, trashingCount - list.count)
+            finishTrash(list, outcome: outcome, onShelf: onShelf)
+        }
+    }
+
+    private func finishTrash(_ list: [FileItem],
+                             outcome: (moved: [URL], failed: [URL], skipped: [URL], trashed: [String: String]),
+                             onShelf: Set<String>) {
         let moved = Set(outcome.moved.map(\.path))
+        let movedItems = list.filter { moved.contains($0.path) }
         forget(paths: moved)
 
         // 记到「清理记录」，30 天内可以放回原处。
         if !moved.isEmpty {
-            let entries: [(name: String, original: String, trashed: String?, size: Int64)] = list.filter { moved.contains($0.path) }.map {
+            let entries: [(name: String, original: String, trashed: String?, size: Int64)] = movedItems.map {
                 (name: $0.name, original: $0.path, trashed: outcome.trashed[$0.path], size: $0.size)
             }
             let batch = CleanupHistory.shared.recordTrash(entries)
+            let shelfPaths = onShelf.intersection(moved)
+            if !shelfPaths.isEmpty { trashedFromShelf[batch] = shelfPaths }
             showUndoToast(String(localized: "已移到废纸篓 · 30 天内可在「清理记录」里恢复"), batch: batch)
             filesChangedTick += 1
+            // 首页、侧边栏的数量先按刚移走的减掉，过几秒再按 Spotlight 重新数一次。
+            for item in movedItems where !item.isDirectory {
+                if let category = item.category, var total = totals[category] {
+                    total.count = max(0, total.count - 1)
+                    total.bytes = max(0, total.bytes - item.size)
+                    totals[category] = total
+                }
+                if item.size >= 200_000_000 { largeFileCount = max(0, largeFileCount - 1) }
+            }
+            scheduleCountsRefresh()
+        } else if toastUndoBatch == nil, toast != nil, list.count >= 30 {
+            toast = nil
         }
 
         var notes: [String] = []
@@ -821,7 +1021,6 @@ final class LibraryStore: ObservableObject {
             notes.append(String(localized: "\(outcome.failed.count) 个项目无法移到废纸篓（可能需要管理员权限）：\(names)"))
         }
         if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
-        return moved.count
     }
 
     /// 文件被清理、搬走或放回之后：重新统计清理建议、首页和空间占用图。
@@ -830,7 +1029,49 @@ final class LibraryStore: ObservableObject {
         Task {
             if !cleanup.isRunning { await cleanup.scan() }
         }
+        scheduleCountsRefresh()
         reload()
+    }
+
+    // MARK: - 重命名的撤销
+
+    /// 重命名完成后：小提示上带「撤销」，也注册到窗口的撤销（⌘Z）。
+    func renamed(_ done: [(old: URL, new: URL)], undoManager: UndoManager?) {
+        reload()
+        guard !done.isEmpty else { return }
+        showUndoToast(String(localized: "已重命名 \(done.count) 个文件")) { [weak self] in
+            guard let self else { return }
+            // 点了小提示上的「撤销」：窗口撤销栈里这一条已经不能再撤一次了。
+            undoManager?.removeAllActions(withTarget: self)
+            self.undoRename(done, undoManager: undoManager)
+        }
+        undoManager?.registerUndo(withTarget: self) { store in
+            MainActor.assumeIsolated { store.undoRename(done, undoManager: undoManager) }
+        }
+        undoManager?.setActionName(String(localized: "重命名"))
+    }
+
+    /// 把一批重命名改回去。改回去之后也能再「重做」。
+    func undoRename(_ done: [(old: URL, new: URL)], undoManager: UndoManager?) {
+        toast = nil
+        toastUndoBatch = nil
+        let outcome = Renamer.undo(done)
+        if !outcome.failed.isEmpty {
+            alertMessage = String(localized: "\(outcome.failed.count) 个文件没能改回原名（已经被移走，或原名被别的文件占用了）：")
+                + outcome.failed.prefix(5).joined(separator: String(localized: "、"))
+        }
+        reload()
+        guard !outcome.done.isEmpty else { return }
+        showToast(String(localized: "已改回原名：\(outcome.done.count) 个"))
+        // 再做一次（⌘⇧Z）：把改回去的再改成新名字。
+        undoManager?.registerUndo(withTarget: self) { store in
+            MainActor.assumeIsolated {
+                let redo = Renamer.undo(outcome.done)
+                store.reload()
+                if !redo.done.isEmpty { store.renamed(redo.done, undoManager: undoManager) }
+            }
+        }
+        undoManager?.setActionName(String(localized: "重命名"))
     }
 
     // MARK: - 标签页
@@ -852,21 +1093,30 @@ final class LibraryStore: ObservableObject {
         isLoading = false
     }
 
-    /// 文件被移走后，从各个列表和扫描结果里拿掉。
+    /// 文件被移走后，从各个列表和扫描结果里拿掉。文件夹被移走时，里面的文件也一起拿掉。
     func forget(paths moved: Set<String>) {
         guard !moved.isEmpty else { return }
-        items.removeAll { moved.contains($0.path) }
-        selectedIDs.subtract(moved)
-        for path in moved { known[path] = nil }
+        let removed = PathLogic.Removed(moved)
+        let gone: (String) -> Bool = { removed.contains($0) }
+        items.removeAll { gone($0.path) }
+        selectedIDs = selectedIDs.filter { !gone($0) }
+        known = known.filter { !gone($0.key) }
         shelves = shelves.map { shelf in
             Shelf(id: shelf.id, title: shelf.title, symbol: shelf.symbol,
-                  items: shelf.items.filter { !moved.contains($0.path) }, target: shelf.target)
+                  items: shelf.items.filter { !gone($0.path) }, target: shelf.target)
         }
-        duplicates.remove(paths: moved)
-        similar.remove(paths: moved)
-        cleanup.remove(paths: moved)
-        chat.remove(paths: moved)
-        ShelfStore.shared.remove(paths: moved)
+        previews = previews.mapValues { $0.filter { !gone($0.path) } }
+        sourceGroups = sourceGroups.compactMap { group in
+            let left = group.items.filter { !gone($0.path) }
+            if left.count == group.items.count { return group }
+            return left.isEmpty ? nil : SourceGroup(source: group.source, items: left)
+        }
+        duplicates.remove(where: gone)
+        similar.remove(where: gone)
+        cleanup.remove(where: gone)
+        chat.remove(where: gone)
+        let shelf = ShelfStore.shared
+        shelf.remove(paths: Set(shelf.items.map(\.path).filter(gone)).union(moved))
     }
 
     // MARK: - 大文件搬家（Pro）

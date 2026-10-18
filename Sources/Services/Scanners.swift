@@ -22,6 +22,8 @@ final class DuplicateScanner: ObservableObject {
     @Published var progress: Double = 0
     @Published var status = ""
     @Published var hasScanned = false
+    /// 撤销了一次移到废纸篓之后：放回来的文件不会自己回到结果里，提示重新扫描。
+    @Published var mayBeStale = false
 
     private var task: Task<Void, Never>?
     /// 每次扫描加一；旧扫描迟到的进度回调据此丢掉，不会拨动新扫描的进度条。
@@ -35,6 +37,7 @@ final class DuplicateScanner: ObservableObject {
 
     func start(minSize: Int64 = 1_000_000) {
         task?.cancel()
+        mayBeStale = false
         task = Task { await run(minSize: minSize) }
     }
 
@@ -45,9 +48,14 @@ final class DuplicateScanner: ObservableObject {
     }
 
     func remove(paths: Set<String>) {
+        remove { paths.contains($0) }
+    }
+
+    /// 去掉判断为「已经不在」的文件（文件夹被移走时，里面的文件也一起去掉）。
+    func remove(where gone: (String) -> Bool) {
         groups = groups.compactMap { group in
             var g = group
-            g.items.removeAll { paths.contains($0.path) }
+            g.items.removeAll { gone($0.path) }
             return g.items.count > 1 ? g : nil
         }
     }
@@ -159,6 +167,8 @@ final class SimilarPhotoScanner: ObservableObject {
     @Published var progress: Double = 0
     @Published var status = ""
     @Published var hasScanned = false
+    /// 撤销了一次移到废纸篓之后：放回来的文件不会自己回到结果里，提示重新扫描。
+    @Published var mayBeStale = false
     /// 距离阈值，越小越严格。
     @Published var threshold: Double = 0.45
 
@@ -168,6 +178,7 @@ final class SimilarPhotoScanner: ObservableObject {
 
     func start(limit: Int = 800) {
         task?.cancel()
+        mayBeStale = false
         task = Task { await run(limit: limit) }
     }
 
@@ -178,9 +189,14 @@ final class SimilarPhotoScanner: ObservableObject {
     }
 
     func remove(paths: Set<String>) {
+        remove { paths.contains($0) }
+    }
+
+    /// 去掉判断为「已经不在」的文件（文件夹被移走时，里面的文件也一起去掉）。
+    func remove(where gone: (String) -> Bool) {
         groups = groups.compactMap { group in
             var g = group
-            g.items.removeAll { paths.contains($0.path) }
+            g.items.removeAll { gone($0.path) }
             return g.items.count > 1 ? g : nil
         }
     }
@@ -401,9 +417,13 @@ final class CleanupScanner: ObservableObject {
     var totalBytes: Int64 { cards.reduce(0) { $0 + $1.bytes } }
 
     func remove(paths: Set<String>) {
+        remove { paths.contains($0) }
+    }
+
+    func remove(where gone: (String) -> Bool) {
         cards = cards.map { card in
             var c = card
-            c.items.removeAll { paths.contains($0.path) }
+            c.items.removeAll { gone($0.path) }
             return c
         }
     }

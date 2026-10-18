@@ -10,20 +10,31 @@ struct CleanupHistoryView: View {
     @State private var working = false
     /// 插拔磁盘、恢复之后刷新一下状态。
     @State private var refreshTick = 0
+    /// 每条记录的状态：要 stat 文件（目标是断开的 NAS 时可能卡住），在后台算好存起来，界面只读这个字典。
+    @State private var statuses: [UUID: CleanupRecordStatus] = [:]
 
     private var groups: [CleanupDayGroup] {
         CleanupHistoryLogic.groupByDay(history.records)
     }
 
+    private func status(_ record: CleanupRecord) -> CleanupRecordStatus? {
+        record.restoredAt != nil ? .restored : statuses[record.id]
+    }
+
     private var todayRestorable: [CleanupRecord] {
         let today = Calendar.current.startOfDay(for: Date())
         return history.records.filter {
-            Calendar.current.startOfDay(for: $0.date) == today && history.status(of: $0) == .restorable
+            Calendar.current.startOfDay(for: $0.date) == today && status($0) == .restorable
         }
     }
 
     private var selectedRestorable: [CleanupRecord] {
-        history.records.filter { selection.contains($0.id) && history.status(of: $0) == .restorable }
+        history.records.filter { selection.contains($0.id) && status($0) == .restorable }
+    }
+
+    /// 记录或刷新计数变了就重新在后台算一遍状态。
+    private var statusKey: [AnyHashable] {
+        [refreshTick, history.records.map { "\($0.id)|\($0.currentPath ?? "")|\($0.restoredAt?.timeIntervalSince1970 ?? 0)" }]
     }
 
     var body: some View {
@@ -42,7 +53,7 @@ struct CleanupHistoryView: View {
                     ForEach(groups) { group in
                         Section(dayTitle(group.day)) {
                             ForEach(group.records) { record in
-                                HistoryRow(record: record, status: history.status(of: record), restore: { restore([record]) })
+                                HistoryRow(record: record, status: status(record), restore: { restore([record]) })
                                     .tag(record.id)
                                     .contextMenu { rowMenu(record) }
                             }
@@ -57,6 +68,11 @@ struct CleanupHistoryView: View {
         }
         .navigationTitle("清理记录")
         .onAppear { history.load() }
+        .task(id: statusKey) {
+            let records = history.records
+            let fresh = await CleanupHistory.statuses(of: records)
+            if !Task.isCancelled { statuses = fresh }
+        }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didMountNotification)) { _ in refreshTick += 1 }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didUnmountNotification)) { _ in refreshTick += 1 }
     }
@@ -99,10 +115,10 @@ struct CleanupHistoryView: View {
 
     @ViewBuilder
     private func rowMenu(_ record: CleanupRecord) -> some View {
-        if history.status(of: record) == .restorable {
+        if status(record) == .restorable {
             Button("恢复") { restore([record]) }
         }
-        if let current = record.currentPath, FileManager.default.fileExists(atPath: current) {
+        if let current = record.currentPath, status(record) == .restorable || status(record) == .restored {
             Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: current)]) }
         }
         Button("拷贝原路径") { FileActions.copy(record.originalPath) }
@@ -129,7 +145,8 @@ struct CleanupHistoryView: View {
 
 private struct HistoryRow: View {
     let record: CleanupRecord
-    let status: CleanupRecordStatus
+    /// 还没在后台算好时为 nil。
+    let status: CleanupRecordStatus?
     let restore: () -> Void
 
     private var actionText: String {
@@ -140,6 +157,7 @@ private struct HistoryRow: View {
     }
 
     private var statusText: String {
+        guard let status else { return String(localized: "正在检查…") }
         switch status {
         case .restorable: return String(localized: "可恢复")
         case .restored: return String(localized: "已恢复")
@@ -150,6 +168,7 @@ private struct HistoryRow: View {
     }
 
     private var statusColor: Color {
+        guard let status else { return .secondary }
         switch status {
         case .restorable: return .green
         case .restored: return .blue
@@ -160,7 +179,8 @@ private struct HistoryRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(nsImage: NSWorkspace.shared.icon(forFile: (record.currentPath.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil }) ?? "/System/Library/CoreServices/Finder.app"))
+            // 图标只在确认文件还在时按文件取（状态在后台算好），不在每次重绘时 stat。
+            Image(nsImage: NSWorkspace.shared.icon(forFile: (status == .restorable || status == .restored ? record.currentPath : nil) ?? "/System/Library/CoreServices/Finder.app"))
                 .resizable()
                 .frame(width: 30, height: 30)
             VStack(alignment: .leading, spacing: 2) {

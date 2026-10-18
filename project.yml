@@ -54,6 +54,9 @@ targets:
       - path: Sources/Model/FileCategory.swift
       - path: Sources/Model/SourceCatalog.swift
       - path: Sources/Model/FileStamp.swift
+      - path: Sources/Model/PathLogic.swift
+      - path: Sources/Services/DuplicateSafety.swift
+      - path: Sources/Services/OCRCacheKeys.swift
       - path: Sources/Pro/PhotoConcepts.swift
       - path: Sources/Pro/License.swift
       - path: Sources/Pro/ShakeDetector.swift

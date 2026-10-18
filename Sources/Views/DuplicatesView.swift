@@ -44,6 +44,19 @@ struct DuplicatesView: View {
                 }
                 banner
                 tabs
+                if tab == .exact ? exact.mayBeStale : similar.mayBeStale {
+                    HStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.arrow.circlepath")
+                        Text("刚才撤销了移到废纸篓，放回的文件不会自动回到结果里。重新扫描一下更准确。")
+                        Spacer()
+                        Button("重新扫描") { rescan() }
+                            .disabled(isRunning)
+                    }
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .padding(14)
+                    .glassCard(radius: 14)
+                }
                 content
                 Label("不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。", systemImage: "checkmark.shield")
                     .font(.callout)
@@ -61,8 +74,7 @@ struct DuplicatesView: View {
             titleVisibility: .visible
         ) {
             Button("全部移到废纸篓", role: .destructive) {
-                let list = allExtras
-                store.moveToTrash(list)
+                safeTrash(groups)
             }
             Button("取消", role: .cancel) {}
         } message: {
@@ -254,9 +266,38 @@ struct DuplicatesView: View {
     }
 
     private func trashExtras(_ group: FileGroup) {
-        let list = extras(group)
-        guard !list.isEmpty else { return }
-        store.moveToTrash(list)
+        guard !extras(group).isEmpty else { return }
+        safeTrash([group])
+    }
+
+    /// 移到废纸篓前先核对每组「保留」的那份还在、没被改过（扫描之后可能在访达里动过）。
+    /// 对不上的组跳过，免得把这个文件的所有副本都删掉。
+    private func safeTrash(_ list: [FileGroup]) {
+        let exactTab = tab == .exact
+        let plans = list.map { group -> (extras: [FileItem], check: DuplicateSafety.Group) in
+            let k = kept(group)
+            let keptItems = group.items.filter { k.contains($0.id) }
+            let extraItems = group.items.filter { !k.contains($0.id) }
+            let check = DuplicateSafety.Group(
+                kept: keptItems.map { .init(path: $0.path, size: $0.size) },
+                extras: extraItems.map { .init(path: $0.path, size: $0.size) },
+                exact: exactTab
+            )
+            return (extraItems, check)
+        }.filter { !$0.extras.isEmpty }
+        guard !plans.isEmpty else { return }
+        let checks = plans.map(\.check)
+        Task {
+            let safe = await Task.detached(priority: .userInitiated) {
+                checks.map { DuplicateSafety.isSafe($0) }
+            }.value
+            let toTrash = zip(plans, safe).filter { $0.1 }.flatMap { $0.0.extras }
+            let changed = safe.filter { !$0 }.count
+            if !toTrash.isEmpty { store.moveToTrash(toTrash) }
+            if changed > 0 {
+                store.alertMessage = String(localized: "\(changed) 组在扫描之后有变化（保留的文件被移走、删除或改过），这几组没有动。请重新扫描。")
+            }
+        }
     }
 }
 

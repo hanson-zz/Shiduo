@@ -109,6 +109,11 @@ enum Renamer {
         return result
     }
 
+    /// 两步改名时用的临时名：不以点开头（中途崩溃也不会变成看不见的隐藏文件），一看就知道原名。
+    static func temporaryName(for name: String) -> String {
+        "\(name).shiduo-renaming-\(UUID().uuidString.prefix(8))"
+    }
+
     /// 两步改名（先改成临时名），避免 a→b、b→a 互相覆盖。返回成功数和失败的文件名。
     static func apply(_ plans: [RenamePlan]) -> (done: [(old: URL, new: URL)], failed: [String]) {
         let fm = FileManager.default
@@ -116,7 +121,7 @@ enum Renamer {
         var failed: [String] = []
         for plan in plans where plan.changed {
             let tmp = plan.item.url.deletingLastPathComponent()
-                .appendingPathComponent(".shiduo-rename-\(UUID().uuidString)")
+                .appendingPathComponent(temporaryName(for: plan.item.name))
             do {
                 try fm.moveItem(at: plan.item.url, to: tmp)
                 temps.append((plan, tmp))
@@ -140,11 +145,36 @@ enum Renamer {
         ThumbnailService.shared.invalidate(done.flatMap { [$0.0, $0.1] })
         return (done, failed)
     }
+
+    /// 撤销一次重命名：把每个文件改回原来的名字（同样两步改名，避免互相覆盖）。
+    /// 已经不在新位置的文件、原名又被别的文件占了的跳过。
+    static func undo(_ done: [(old: URL, new: URL)]) -> (done: [(old: URL, new: URL)], failed: [String]) {
+        let fm = FileManager.default
+        var plans: [RenamePlan] = []
+        var failed: [String] = []
+        let renamedNow = Set(done.map { $0.new.standardizedFileURL.path })
+        for pair in done {
+            guard let item = FileItem(url: pair.new) else {
+                failed.append(pair.new.lastPathComponent)
+                continue
+            }
+            let original = pair.old.standardizedFileURL.path
+            // 原名被别的文件占了（不是这批里正要改回去的）：不覆盖。
+            if fm.fileExists(atPath: original), !renamedNow.contains(original) {
+                failed.append(pair.new.lastPathComponent)
+                continue
+            }
+            plans.append(RenamePlan(item: item, newName: pair.old.lastPathComponent))
+        }
+        let outcome = apply(plans)
+        return (outcome.done, failed + outcome.failed)
+    }
 }
 
 struct RenameSheet: View {
     @EnvironmentObject private var store: LibraryStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.undoManager) private var undoManager
     let items: [FileItem]
 
     @AppStorage("renameMode") private var mode: RenameMode = .sequence
@@ -286,7 +316,6 @@ struct RenameSheet: View {
         if !outcome.failed.isEmpty {
             store.alertMessage = String(localized: "\(outcome.failed.count) 个文件没能改名（可能被占用或没有权限）：") + outcome.failed.prefix(5).joined(separator: String(localized: "、"))
         }
-        store.showToast(String(localized: "已重命名 \(outcome.done.count) 个文件"))
-        store.reload()
+        store.renamed(outcome.done, undoManager: undoManager)
     }
 }

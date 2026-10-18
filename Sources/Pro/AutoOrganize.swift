@@ -119,11 +119,33 @@ enum OrganizeEngine {
     /// 还没下载完的文件。
     static let partialExtensions: Set<String> = ["crdownload", "download", "part", "partial", "tmp", "opdownload"]
 
-    static func run(_ rules: [OrganizeRule], ignoring ignored: Set<String>, now: Date = Date()) -> [OrganizeLogEntry] {
+    /// 规则跑不了的原因（显示在规则下面）。
+    enum Problem: String, Codable, Hashable {
+        /// 监视的文件夹不在了（被改名、移走或删除）。
+        case watchFolderMissing
+        /// 要移去的文件夹不在了。不会自动重新建一个，免得在旧位置冒出一个同名文件夹。
+        case destinationMissing
+    }
+
+    static func run(_ rules: [OrganizeRule], ignoring ignored: Set<String>, now: Date = Date())
+        -> (entries: [OrganizeLogEntry], problems: [UUID: Problem]) {
         let fm = FileManager.default
         var entries: [OrganizeLogEntry] = []
+        var problems: [UUID: Problem] = [:]
         var handled = Set<String>()
         for rule in rules where rule.enabled && rule.isRunnable {
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: rule.watchFolder, isDirectory: &isDir), isDir.boolValue else {
+                problems[rule.id] = .watchFolderMissing
+                continue
+            }
+            if rule.action == .move, let destination = rule.destination {
+                var destIsDir: ObjCBool = false
+                guard fm.fileExists(atPath: destination, isDirectory: &destIsDir), destIsDir.boolValue else {
+                    problems[rule.id] = .destinationMissing
+                    continue
+                }
+            }
             let folder = URL(fileURLWithPath: rule.watchFolder, isDirectory: true)
             guard let urls = try? fm.contentsOfDirectory(
                 at: folder, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]
@@ -140,7 +162,7 @@ enum OrganizeEngine {
                 }
             }
         }
-        return entries
+        return (entries, problems)
     }
 
     static func apply(_ rule: OrganizeRule, to url: URL, now: Date) -> OrganizeLogEntry? {
@@ -151,8 +173,9 @@ enum OrganizeEngine {
             let folder = URL(fileURLWithPath: destination, isDirectory: true)
             let source = url.deletingLastPathComponent().standardizedFileURL.path
             if folder.standardizedFileURL.path == source { return nil }
+            // 目标文件夹不在了就不动（run 里已经记成问题）；不自动重新建，免得在旧位置冒出一个同名文件夹。
+            guard fm.fileExists(atPath: folder.path) else { return nil }
             do {
-                try fm.createDirectory(at: folder, withIntermediateDirectories: true)
                 let target = uniqueURL(for: url.lastPathComponent, in: folder)
                 // moveItem 遇到同名文件会失败而不是覆盖；uniqueURL 已经避开了同名。
                 try fm.moveItem(at: url, to: target)
@@ -216,14 +239,21 @@ enum OrganizeEngine {
 @MainActor
 final class AutoOrganizer: ObservableObject {
     @Published var rules: [OrganizeRule] = [] {
-        didSet { if loaded { saveRules() } }
+        didSet {
+            guard loaded else { return }
+            saveRules()
+            createDestinationsForNewlyEnabled(old: oldValue)
+        }
     }
+    /// 上一轮发现跑不了的规则（监视 / 目标文件夹不在了）。
+    @Published private(set) var problems: [UUID: OrganizeEngine.Problem] = [:]
     @Published private(set) var log: [OrganizeLogEntry] = []
     @Published private(set) var isRunning = false
     @Published private(set) var lastRun: Date?
 
-    /// 撤销过的文件不再被规则自动处理。
-    private var ignored: Set<String> = []
+    /// 撤销过的文件不再被规则自动处理。按加入的先后排，超过上限时去掉最旧的。
+    private var ignored: [String] = []
+    private static let ignoredLimit = 500
     private var loaded = false
     private var timer: Task<Void, Never>?
 
@@ -255,7 +285,7 @@ final class AutoOrganizer: ObservableObject {
         if let data = try? Data(contentsOf: logURL),
            let decoded = try? JSONDecoder().decode(LogFile.self, from: data) {
             log = decoded.entries
-            ignored = Set(decoded.ignored)
+            ignored = decoded.ignored
         }
         loaded = true
     }
@@ -267,7 +297,7 @@ final class AutoOrganizer: ObservableObject {
     }
 
     private func saveLog() {
-        let file = LogFile(entries: log, ignored: Array(ignored.prefix(500)))
+        let file = LogFile(entries: log, ignored: ignored)
         if let data = try? JSONEncoder().encode(file) {
             try? data.write(to: logURL, options: .atomic)
         }
@@ -291,11 +321,15 @@ final class AutoOrganizer: ObservableObject {
         lastRun = Date()
         guard !active.isEmpty else { return }
         isRunning = true
-        let skip = ignored
-        let entries = await Task.detached(priority: .utility) { () -> [OrganizeLogEntry] in
+        let skip = Set(ignored)
+        let (entries, found) = await Task.detached(priority: .utility) {
             OrganizeEngine.run(active, ignoring: skip)
         }.value
         isRunning = false
+        // 只更新这次跑过的规则的问题标记。
+        var merged = problems.filter { id, _ in !active.contains { $0.id == id } }
+        merged.merge(found) { _, new in new }
+        if merged != problems { problems = merged }
         guard !entries.isEmpty else { return }
         log = Array((Array(entries.reversed()) + log).prefix(50))
         saveLog()
@@ -309,23 +343,83 @@ final class AutoOrganizer: ObservableObject {
                 return (name: entry.fileName, original: entry.from, trashed: entry.to, size: size)
             }, date: trashed.first?.date ?? Date())
         }
+        // 主窗口的列表、清理卡片、重复文件、暂存架里去掉这些文件；正在看来源或目标文件夹时悄悄刷新。
+        LibraryStore.shared?.organizerMoved(entries)
     }
 
     func undo(_ entry: OrganizeLogEntry) -> Bool {
         guard entry.canUndo, let restored = OrganizeEngine.undo(entry) else { return false }
-        ignored.insert(restored)
+        addIgnored([restored])
         if let index = log.firstIndex(where: { $0.id == entry.id }) {
             log[index].undone = true
         }
         saveLog()
+        // 清理记录里对应的那条（移到废纸篓的）也标成已恢复。
+        if entry.action == .trash {
+            CleanupHistory.shared.markRestored(original: entry.from, trashed: entry.to, at: restored)
+        }
+        LibraryStore.shared?.filesChanged()
         return true
     }
 
     /// 用户从「清理记录」里放回的文件：规则以后不再自动处理，免得下一轮又被移走。
     func ignore(_ paths: [String]) {
         guard !paths.isEmpty else { return }
-        for path in paths { ignored.insert(path) }
+        addIgnored(paths)
         saveLog()
+    }
+
+    private func addIgnored(_ paths: [String]) {
+        ignored = OrganizeIgnoreList.adding(paths, to: ignored, limit: Self.ignoredLimit)
+    }
+
+    /// 清理记录里恢复了自动整理移到废纸篓的文件：整理日志里那条标成已撤销，不再显示「撤销」按钮。
+    func markRestored(_ records: [CleanupRecord]) {
+        var changed = false
+        for record in records where record.action == .trash {
+            if let index = log.firstIndex(where: {
+                !$0.undone && $0.action == .trash && $0.from == record.originalPath
+            }) {
+                log[index].undone = true
+                changed = true
+            }
+        }
+        if changed { saveLog() }
+    }
+
+    /// 文件夹在拾掇里改名 / 移动了（文件夹墙）：规则里的监视文件夹和目标文件夹跟着改。
+    func retarget(from old: String, to new: String) {
+        var updated = rules
+        var changed = false
+        for index in updated.indices {
+            if let path = PathLogic.rewrite(updated[index].watchFolder, from: old, to: new) {
+                updated[index].watchFolder = path
+                changed = true
+            }
+            if let destination = updated[index].destination,
+               let path = PathLogic.rewrite(destination, from: old, to: new) {
+                updated[index].destination = path
+                changed = true
+            }
+        }
+        if changed {
+            rules = updated
+            problems = problems.filter { id, _ in !updated.contains { $0.id == id } }
+        }
+    }
+
+    /// 用户刚打开开关（或新建、改了目标）的移动规则：目标文件夹还没有就在这时建好（这是用户自己的操作）。
+    /// 之后每 10 分钟跑的时候不会再自动建。
+    private func createDestinationsForNewlyEnabled(old: [OrganizeRule]) {
+        let fm = FileManager.default
+        for rule in rules where rule.enabled && rule.action == .move {
+            guard let destination = rule.destination, !destination.isEmpty else { continue }
+            let before = old.first { $0.id == rule.id }
+            let justEnabled = before == nil || before?.enabled == false || before?.destination != destination
+            guard justEnabled, !fm.fileExists(atPath: destination) else { continue }
+            try? fm.createDirectory(atPath: destination, withIntermediateDirectories: true)
+            problems[rule.id] = nil
+        }
     }
 
     func clearLog() {
@@ -414,7 +508,8 @@ struct AutoOrganizeView: View {
                         .glassCard()
                 }
                 ForEach($organizer.rules) { $rule in
-                    RuleRow(rule: $rule, onEdit: { editing = rule }, onDelete: { organizer.delete(rule) })
+                    RuleRow(rule: $rule, problem: organizer.problems[rule.id],
+                            onEdit: { editing = rule }, onDelete: { organizer.delete(rule) })
                 }
                 logSection
                 Label("只移动、不覆盖：同名文件会自动加编号；只在 iCloud 云端的文件会跳过。移到废纸篓的随时可以放回。", systemImage: "checkmark.shield")
@@ -504,6 +599,7 @@ struct AutoOrganizeView: View {
 
 private struct RuleRow: View {
     @Binding var rule: OrganizeRule
+    var problem: OrganizeEngine.Problem?
     let onEdit: () -> Void
     let onDelete: () -> Void
 
@@ -520,6 +616,12 @@ private struct RuleRow: View {
                     .lineLimit(2)
                 if !rule.isRunnable {
                     Text(rule.hasCondition ? String(localized: "请选择目标文件夹") : String(localized: "至少设置一个条件才会生效"))
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                } else if rule.enabled, let problem {
+                    Text(problem == .destinationMissing
+                         ? String(localized: "目标文件夹不见了（被改名、移走或删除），请编辑规则重新选择")
+                         : String(localized: "监视的文件夹不见了（被改名、移走或删除），请编辑规则重新选择"))
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }

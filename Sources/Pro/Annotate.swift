@@ -673,7 +673,7 @@ final class MarkEditor: ObservableObject {
             return nil
         }
         if studio.toShelf { ShelfStore.shared.add([target]) }
-        LibraryStore.shared?.filesChangedTick += 1
+        LibraryStore.shared?.filesWritten([target])
         return target
     }
 

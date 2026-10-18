@@ -720,6 +720,8 @@ struct FolderCard: View {
             store.pinnedFolders[i] = new
         }
         model.movePath(old, to: new)
+        // 自动整理规则里用到这个文件夹（监视或目标）的也跟着改，不然会在旧位置重新冒出一个同名文件夹。
+        store.organizer.retarget(from: old, to: new)
         if store.selection == .pinned(old) { store.selection = .pinned(new) }
     }
 

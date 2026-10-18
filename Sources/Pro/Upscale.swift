@@ -356,7 +356,7 @@ final class UpscaleJob: ObservableObject {
             if tooLarge > 0 { text += String(localized: "；\(tooLarge) 张太大没处理") }
             if failed > 0 { text += String(localized: "；\(failed) 张失败") }
             status = text
-            if done > 0 { LibraryStore.shared?.filesChangedTick += 1 }
+            if done > 0 { LibraryStore.shared?.filesWritten([]) }
             task = nil
         }
     }

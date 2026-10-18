@@ -94,7 +94,7 @@ final class MediaTools: ObservableObject {
         task = nil
         if !outputs.isEmpty {
             if toShelf { ShelfStore.shared.add(outputs) }
-            LibraryStore.shared?.filesChangedTick += 1
+            LibraryStore.shared?.filesWritten(outputs)
         }
         report(text, toShelf: toShelf)
     }

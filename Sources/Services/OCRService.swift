@@ -45,12 +45,15 @@ final class OCRStore: ObservableObject {
     init() {
         if let data = try? Data(contentsOf: fileURL),
            let decoded = try? JSONDecoder().decode([String: String].self, from: data) {
-            texts = decoded
+            // 旧版本会给同一个文件的每个版本各存一条：只留修改时间最新的那条。
+            let deduped = OCRCacheKeys.latestPerPath(decoded)
+            texts = deduped
+            if deduped.count != decoded.count { save() }
         }
     }
 
     private func key(_ item: FileItem) -> String {
-        item.path + "|" + String(Int(item.modified?.timeIntervalSince1970 ?? 0))
+        OCRCacheKeys.key(path: item.path, modified: item.modified)
     }
 
     func text(for item: FileItem) -> String? {
@@ -63,10 +66,28 @@ final class OCRStore: ObservableObject {
         func norm(_ s: String) -> String { s.lowercased().replacingOccurrences(of: "-", with: "") }
         let words = needle.split(separator: " ").map { norm(String($0)) }.filter { !$0.isEmpty }
         guard !words.isEmpty else { return [] }
-        return texts.compactMap { key, value in
+        let hits = texts.compactMap { key, value -> String? in
             let text = norm(value)
-            return words.allSatisfy { text.contains($0) } ? String(key.split(separator: "|").first ?? "") : nil
+            return words.allSatisfy { text.contains($0) } ? key : nil
         }
+        // 只认和现在的文件对得上的那一版：文件被编辑（比如涂掉了手机号）或换成了同名的新文件后，
+        // 旧的文字不能再让它被搜出来。对不上的顺手清掉。
+        var result: [String] = []
+        var stale: [String] = []
+        for key in hits {
+            guard let parts = OCRCacheKeys.split(key) else { continue }
+            let stamp = FileStamp(path: parts.path)
+            if stamp.exists, stamp.secondsKey == parts.seconds {
+                result.append(parts.path)
+            } else {
+                stale.append(key)
+            }
+        }
+        if !stale.isEmpty {
+            for key in stale { texts[key] = nil }
+            save()
+        }
+        return result
     }
 
     private func save() {
@@ -79,6 +100,11 @@ final class OCRStore: ObservableObject {
     func recognize(_ item: FileItem, persist: Bool = true) async -> String {
         if let cached = text(for: item) { return cached }
         let text = (try? await OCRService.recognize(url: item.url)) ?? ""
+        // 同一个文件的旧版本的文字一起去掉（不然旧文字永远能被搜到）。
+        let prefix = item.path + "|"
+        for old in texts.keys where old.hasPrefix(prefix) && OCRCacheKeys.split(old)?.path == item.path {
+            texts[old] = nil
+        }
         texts[key(item)] = text
         if persist { save() }
         return text

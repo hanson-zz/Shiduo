@@ -638,7 +638,7 @@ struct CutoutPanel: View {
             running = false
             status = missed == 0 ? String(localized: "已抠好 \(done) 张，存在原图旁边")
                                  : String(localized: "已抠好 \(done) 张，\(missed) 张没认出主体")
-            if done > 0 { LibraryStore.shared?.filesChangedTick += 1 }
+            if done > 0 { LibraryStore.shared?.filesWritten([]) }
         }
     }
 

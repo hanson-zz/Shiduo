@@ -79,7 +79,8 @@ struct HomeView: View {
             }
             Spacer()
             Button {
-                Task { await store.refreshDashboard() }
+                // 走 reload：和切页面共用一个任务，连点只算最后一次。
+                store.reload()
             } label: {
                 Label("刷新", systemImage: "arrow.clockwise")
                     .glassCapsule()
