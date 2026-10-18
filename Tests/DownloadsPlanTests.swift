@@ -126,7 +126,7 @@ final class DownloadsPlanTests: XCTestCase {
             file("q.jpg", .images, addedDaysAgo: 3),
             file("d.pdf", .documents, addedDaysAgo: 20),
             file("z.zip", .archives, addedDaysAgo: 100),
-            file("Sub", dir: true, addedDaysAgo: 1.5),
+            file("Sub", addedDaysAgo: 1.5, dir: true),
             file("x.crdownload", addedDaysAgo: 0),
         ]
         let byType = DownloadsPlanLogic.group(list, by: .type, now: now, calendar: cal)
