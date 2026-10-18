@@ -43,6 +43,8 @@ final class FloatingShelfController: NSObject {
     private var summonedByShake = false
     private var droppedSinceShow = false
     private var pollTick = 0
+    /// 每次显示加一：收起动画的完成回调只在期间没有再次显示时才真正 orderOut。
+    private var showGeneration = 0
 
     func configure(store: LibraryStore) {
         self.store = store
@@ -246,6 +248,7 @@ final class FloatingShelfController: NSObject {
         if let frame { panel.setFrame(frame, display: false) }
         summonedByShake = false
         droppedSinceShow = false
+        showGeneration += 1
         ShelfStore.shared.refresh()
         panel.alphaValue = 0
         panel.orderFrontRegardless()
@@ -260,11 +263,14 @@ final class FloatingShelfController: NSObject {
         idleTimer?.invalidate()
         idleTimer = nil
         guard let panel, panel.isVisible else { return }
+        let generation = showGeneration
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.15
             panel.animator().alphaValue = 0
         }, completionHandler: {
             MainActor.assumeIsolated {
+                // 收起动画还没结束就又显示了：别把新显示的面板关掉。
+                guard FloatingShelfController.shared.showGeneration == generation else { return }
                 panel.orderOut(nil)
                 panel.alphaValue = 1
             }

@@ -142,6 +142,11 @@ enum FolderIconRenderer {
 // MARK: - 服务
 
 /// 一次上色 / 还原的结果。
+/// 把渲染好的图标交给后台线程写入（NSImage 渲染完以后只读，不会再改）。
+private struct FolderIconImageBox: @unchecked Sendable {
+    let image: NSImage
+}
+
 struct FolderIconOutcome {
     var succeeded: [URL] = []
     var failed: [(url: URL, reason: String)] = []
@@ -315,6 +320,57 @@ final class FolderIconService: ObservableObject {
             ledger.recordApplied(style, path: path, hadCustomIcon: hadCustom, backupFile: backup, fileNumber: Self.fileNumber(path))
             NSWorkspace.shared.noteFileSystemChanged(path)
             outcome.succeeded.append(url)
+        }
+        if !outcome.succeeded.isEmpty {
+            ledger.remember(style)
+            save()
+        }
+        ThumbnailService.shared.invalidate(outcome.succeeded)
+        return outcome
+    }
+
+    /// 和 apply 一样，但写图标（每个约 1MB 的图标资源）放到后台做：一次选几十个文件夹也不会卡住界面。
+    /// 图标只渲染一次；检查、备份原图标和更新记录仍在主线程。
+    func applyInBackground(_ requested: FolderIconStyle, to urls: [URL]) async -> FolderIconOutcome {
+        var outcome = FolderIconOutcome()
+        let style = keepOverlayImage(requested)
+        let image = FolderIconRenderer.render(style, pixels: 1024)
+        var jobs: [(url: URL, path: String, hadCustom: Bool, backup: String?)] = []
+        for url in unique(urls) {
+            if let reason = problem(for: url) {
+                outcome.failed.append((url, reason))
+                continue
+            }
+            let path = resolveKey(url)
+            var hadCustom = false
+            var backup: String?
+            if ledger.folders[path] == nil {
+                hadCustom = Self.hasCustomIcon(url)
+                if hadCustom {
+                    backup = backupOriginal(url)
+                    guard backup != nil else {
+                        outcome.failed.append((url, String(localized: "原来的自定义图标备份不了，为了安全没改")))
+                        continue
+                    }
+                }
+            }
+            jobs.append((url, path, hadCustom, backup))
+        }
+        let box = FolderIconImageBox(image: image)
+        let paths = jobs.map(\.path)
+        let results: [Bool] = await Task.detached(priority: .userInitiated) {
+            paths.map { NSWorkspace.shared.setIcon(box.image, forFile: $0, options: []) }
+        }.value
+        for (job, ok) in zip(jobs, results) {
+            guard ok else {
+                if let backup = job.backup { try? FileManager.default.removeItem(at: directory.appendingPathComponent(backup)) }
+                outcome.failed.append((job.url, String(localized: "访达没有接受新图标，可能没有写入权限")))
+                continue
+            }
+            ledger.recordApplied(style, path: job.path, hadCustomIcon: job.hadCustom, backupFile: job.backup,
+                                 fileNumber: Self.fileNumber(job.path))
+            NSWorkspace.shared.noteFileSystemChanged(job.path)
+            outcome.succeeded.append(job.url)
         }
         if !outcome.succeeded.isEmpty {
             ledger.remember(style)

@@ -11,7 +11,7 @@ enum ShelfStyle: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     nonisolated static let key = "floatingShelfStyle"
-    /// 按显示器单独设置：[显示器名称: 样式]。没有记录的显示器跟随全局设置。
+    /// 按显示器单独设置：[显示器 UUID: 样式]（旧版本用显示器名称做键，读的时候兼容）。没有记录的显示器跟随全局设置。
     nonisolated static let perDisplayKey = "floatingShelfStylePerDisplay"
 
     var title: String {
@@ -32,14 +32,40 @@ enum ShelfStyle: String, CaseIterable, Identifiable {
 
     /// 某块屏幕单独设定的样式；nil 表示跟随全局。
     static func override(for screen: NSScreen) -> ShelfStyle? {
-        perDisplay[screen.localizedName].flatMap(ShelfStyle.init(rawValue:))
+        let map = perDisplay
+        return (map[screen.styleKey] ?? map[screen.localizedName]).flatMap(ShelfStyle.init(rawValue:))
     }
 
-    static func setOverride(_ style: ShelfStyle?, for name: String) {
+    /// key 用 NSScreen.styleKey（显示器 UUID）。同时删掉旧版本按名称存的记录，免得两台同型号显示器互相影响。
+    static func setOverride(_ style: ShelfStyle?, for key: String, legacyName: String? = nil) {
         var map = perDisplay
-        map[name] = style?.rawValue
+        map[key] = style?.rawValue
+        if let legacyName { map[legacyName] = nil }
         UserDefaults.standard.set(map, forKey: perDisplayKey)
     }
+
+    /// 设置里列出的显示器：键是 UUID，名称重复时加「(2)」区分。
+    static func displayRows(_ screens: [(key: String, name: String)]) -> [ShelfDisplayRow] {
+        var seenKeys = Set<String>()
+        var counts: [String: Int] = [:]
+        var rows: [ShelfDisplayRow] = []
+        for screen in screens where seenKeys.insert(screen.key).inserted {
+            counts[screen.name, default: 0] += 1
+            let n = counts[screen.name] ?? 1
+            rows.append(ShelfDisplayRow(key: screen.key, title: n > 1 ? "\(screen.name) (\(n))" : screen.name, name: screen.name))
+        }
+        return rows
+    }
+}
+
+/// 设置里一台显示器的一行。
+struct ShelfDisplayRow: Hashable {
+    let key: String
+    let title: String
+    let name: String
+}
+
+extension ShelfStyle {
 
     /// 这块屏幕最终用不用刘海样式。「自动」：有刘海用刘海，外接屏和没有刘海的 Mac 用边缘。
     static func usesNotch(on screen: NSScreen) -> Bool {
@@ -53,6 +79,16 @@ enum ShelfStyle: String, CaseIterable, Identifiable {
 
 extension NSScreen {
     var hasNotch: Bool { safeAreaInsets.top > 0 }
+
+    /// 区分显示器用的键：显示器 UUID（同型号的两台也不一样）；拿不到时退回名称。
+    var styleKey: String {
+        guard let number = deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber,
+              let uuid = CGDisplayCreateUUIDFromDisplayID(CGDirectDisplayID(number.uint32Value))?.takeRetainedValue() else {
+            return localizedName
+        }
+        let text: String = CFUUIDCreateString(nil, uuid) as String
+        return text.isEmpty ? localizedName : text
+    }
 
     /// 刘海宽度；没有刘海时给一个和刘海差不多的虚拟宽度，好让顶部中间也能触发。
     var notchWidth: CGFloat {
@@ -124,6 +160,8 @@ final class NotchShelfController: NSObject, ObservableObject {
     private var outsideSince: Date?
     private var hoverTimer: Timer?
     private var openedByDrag = false
+    /// 每次显示加一：收起动画的完成回调只在期间没有再次显示时才真正 orderOut。
+    private var showGeneration = 0
 
     /// 刘海两边各多出这么宽也算碰到。
     private let triggerSlack: CGFloat = 60
@@ -203,6 +241,7 @@ final class NotchShelfController: NSObject, ObservableObject {
         let start = NSRect(x: screen.frame.midX - screen.notchWidth / 2, y: screen.frame.maxY - screen.notchHeight,
                            width: screen.notchWidth, height: screen.notchHeight)
         if byDrag { tab = .shelf }
+        showGeneration += 1
         ShelfStore.shared.refresh()
         ReminderStore.shared.refresh()
         selectedIndex = 0
@@ -225,11 +264,13 @@ final class NotchShelfController: NSObject, ObservableObject {
         cancelHover()
         AirDropHoop.shared.cancelDrag()
         ShelfTools.shared.pendingImages = []
+        ShelfTools.shared.pendingFiles = []
         watchTimer?.invalidate()
         watchTimer = nil
         outsideSince = nil
         guard let panel, panel.isVisible else { return }
         let screen = self.screen
+        let generation = showGeneration
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.16
             if let screen {
@@ -240,6 +281,8 @@ final class NotchShelfController: NSObject, ObservableObject {
             panel.animator().alphaValue = 0
         }, completionHandler: {
             MainActor.assumeIsolated {
+                // 收起动画还没结束就又展开了：别把新展开的面板关掉。
+                guard NotchShelfController.shared.showGeneration == generation else { return }
                 panel.orderOut(nil)
                 panel.alphaValue = 1
                 FocusNotchIndicator.shared.update()
@@ -731,9 +774,8 @@ struct ShelfStyleSettings: View {
     @AppStorage(FloatingShelfController.shakeKey) private var shakeToSummon = true
     @State private var overrides: [String: String] = ShelfStyle.perDisplay
 
-    private var screenNames: [String] {
-        var seen = Set<String>()
-        return NSScreen.screens.map(\.localizedName).filter { seen.insert($0).inserted }
+    private var screenRows: [ShelfDisplayRow] {
+        ShelfStyle.displayRows(NSScreen.screens.map { (key: $0.styleKey, name: $0.localizedName) })
     }
 
     var body: some View {
@@ -745,19 +787,21 @@ struct ShelfStyleSettings: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         Toggle("晃一晃呼出暂存架：拖着文件左右快速晃几下，在鼠标旁边弹出", isOn: $shakeToSummon)
-        if screenNames.count > 1 {
-            ForEach(screenNames, id: \.self) { name in
+        let rows = screenRows
+        if rows.count > 1 {
+            ForEach(rows, id: \.key) { row in
                 Picker(selection: Binding(
-                    get: { overrides[name] ?? "" },
+                    get: { overrides[row.key] ?? overrides[row.name] ?? "" },
                     set: { value in
-                        overrides[name] = value.isEmpty ? nil : value
-                        ShelfStyle.setOverride(ShelfStyle(rawValue: value), for: name)
+                        overrides[row.key] = value.isEmpty ? nil : value
+                        overrides[row.name] = nil
+                        ShelfStyle.setOverride(ShelfStyle(rawValue: value), for: row.key, legacyName: row.name)
                     }
                 )) {
                     Text("跟随上面的设置").tag("")
                     ForEach(ShelfStyle.allCases) { Text($0.title).tag($0.rawValue) }
                 } label: {
-                    Label(name, systemImage: "display")
+                    Label(row.title, systemImage: "display")
                 }
             }
         }

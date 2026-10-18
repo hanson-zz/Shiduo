@@ -201,6 +201,24 @@ struct PaywallView: View {
 
             if !license.isActivated {
                 LicenseKeyField(key: $key)
+            } else if license.needsOnlineCheck {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("这台 Mac 已经激活，但离线太久或系统时间不对，需要联网校验一次授权。")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        Button("立即校验") {
+                            Task { await license.verifyNow() }
+                        }
+                        .disabled(license.isWorking)
+                        if license.isWorking { ProgressView().controlSize(.small) }
+                    }
+                    if let message = license.errorMessage {
+                        Text(message)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
             }
         }
         .padding(26)

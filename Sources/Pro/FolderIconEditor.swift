@@ -33,6 +33,8 @@ struct FolderIconEditor: View {
     @State private var symbolQuery = ""
     @State private var preview: NSImage?
     @State private var historyImages: [FolderIconStyle: NSImage] = [:]
+    /// 正在后台写图标。
+    @State private var applying = false
     @State private var dropTargeted = false
     @State private var errorText: String?
 
@@ -343,13 +345,20 @@ struct FolderIconEditor: View {
             Spacer()
             Button("取消") { dismiss() }
                 .keyboardShortcut(.cancelAction)
+            if applying { ProgressView().controlSize(.small) }
             Button("应用") {
-                let outcome = service.apply(style, to: folders)
-                finish(outcome, done: String(localized: "已给 \(outcome.succeeded.count) 个文件夹上色"))
+                applying = true
+                let style = style
+                let folders = folders
+                Task {
+                    let outcome = await service.applyInBackground(style, to: folders)
+                    applying = false
+                    finish(outcome, done: String(localized: "已给 \(outcome.succeeded.count) 个文件夹上色"))
+                }
             }
             .keyboardShortcut(.defaultAction)
             .buttonStyle(.borderedProminent)
-            .disabled(folders.isEmpty)
+            .disabled(folders.isEmpty || applying)
         }
     }
 
