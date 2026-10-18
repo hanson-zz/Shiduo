@@ -618,7 +618,7 @@ final class ImageStudio: ObservableObject {
             add(urls)
             return
         }
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("ShiduoPaste", isDirectory: true)
+        let folder = MediaTools.pasteFolder
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let name = "粘贴-\(UUID().uuidString.prefix(6))"
         // 优先原样写入剪贴板里的 PNG / TIFF 数据，保住分辨率（Retina 的 DPI）和颜色描述文件。
