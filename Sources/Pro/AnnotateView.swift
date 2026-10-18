@@ -34,6 +34,8 @@ struct AnnotateCanvas: View {
     }
 
     @State private var drag: DragState?
+    /// 裁剪：拖动开始时的框，以及是在移动旧框还是画新框。
+    @State private var cropDrag: (original: CGRect?, moving: Bool)?
 
     var body: some View {
         GeometryReader { geo in
@@ -48,6 +50,29 @@ struct AnnotateCanvas: View {
                 CheckerboardBackground()
                 Canvas { context, _ in
                     context.withCGContext { cg in renderer.draw(marks, in: cg, scale: scale) }
+                }
+                if let crop = editor.crops[item.id] {
+                    let r = CGRect(x: crop.minX * scale, y: crop.minY * scale, width: crop.width * scale, height: crop.height * scale)
+                    Path { p in
+                        p.addRect(CGRect(origin: .zero, size: fit))
+                        p.addRect(r)
+                    }
+                    .fill(Color.black.opacity(0.5), style: FillStyle(eoFill: true))
+                    .allowsHitTesting(false)
+                    Path { p in
+                        for i in 1...2 {
+                            let x = r.minX + r.width * CGFloat(i) / 3, y = r.minY + r.height * CGFloat(i) / 3
+                            p.move(to: CGPoint(x: x, y: r.minY)); p.addLine(to: CGPoint(x: x, y: r.maxY))
+                            p.move(to: CGPoint(x: r.minX, y: y)); p.addLine(to: CGPoint(x: r.maxX, y: y))
+                        }
+                    }
+                    .stroke(Color.white.opacity(editor.tool == .crop ? 0.45 : 0), lineWidth: 0.5)
+                    .allowsHitTesting(false)
+                    Rectangle()
+                        .strokeBorder(Color.white, lineWidth: 1.5)
+                        .frame(width: r.width, height: r.height)
+                        .offset(x: r.minX, y: r.minY)
+                        .allowsHitTesting(false)
                 }
                 if let selected = marks.first(where: { $0.id == editor.selected }) {
                     let b = selected.bounds
@@ -87,13 +112,45 @@ struct AnnotateCanvas: View {
             .onChanged { value in
                 let start = point(value.startLocation, scale)
                 let p = point(value.location, scale)
+                if editor.tool == .crop {
+                    cropChanged(start: start, to: p)
+                    return
+                }
                 if drag == nil { begin(at: start, scale: scale) }
                 update(start: start, to: p)
             }
             .onEnded { value in
+                if editor.tool == .crop {
+                    cropEnded(start: point(value.startLocation, scale), at: point(value.location, scale), scale: scale)
+                    return
+                }
                 finish(start: point(value.startLocation, scale), at: point(value.location, scale), scale: scale)
                 drag = nil
             }
+    }
+
+    private func cropChanged(start: CGPoint, to p: CGPoint) {
+        let size = item.originalSize
+        if cropDrag == nil {
+            let current = editor.crops[item.id]
+            cropDrag = (current, current?.contains(start) ?? false)
+        }
+        guard let cropDrag else { return }
+        if cropDrag.moving, let original = cropDrag.original {
+            editor.crops[item.id] = AnnotateLogic.clamp(original.offsetBy(dx: p.x - start.x, dy: p.y - start.y), in: size)
+        } else {
+            editor.crops[item.id] = AnnotateLogic.cropRect(from: start, to: p, ratio: editor.cropRatio.value, in: size)
+        }
+    }
+
+    private func cropEnded(start: CGPoint, at p: CGPoint, scale: CGFloat) {
+        defer { cropDrag = nil }
+        guard let cropDrag else { return }
+        let tiny = 8 / max(scale, 0.01)
+        if !cropDrag.moving, let r = editor.crops[item.id], r.width < tiny || r.height < tiny {
+            // 单击（没拖出框）：保留原来的框。
+            editor.crops[item.id] = cropDrag.original
+        }
     }
 
     private func point(_ p: CGPoint, _ scale: CGFloat) -> CGPoint {
@@ -115,6 +172,7 @@ struct AnnotateCanvas: View {
         case .step: return .step
         case .emoji: return .emoji
         case .mosaic: return .mosaic
+        case .crop: return nil
         }
     }
 
@@ -247,6 +305,7 @@ struct AnnotateInspector: View {
                     style
                     if let mark = selectedMark, mark.kind == .text { textField(mark) }
                     if editor.tool == .emoji || selectedMark?.kind == .emoji { emojiPicker }
+                    if editor.tool == .crop || editor.crops[item.id] != nil { cropSection }
                     redaction
                     edit
                 }
@@ -277,7 +336,7 @@ struct AnnotateInspector: View {
                     .buttonStyle(.plain)
                 }
             }
-            Text("拖动画框、箭头、马赛克，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。")
+            Text("拖动画框、箭头、马赛克和裁剪范围，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -418,6 +477,36 @@ struct AnnotateInspector: View {
         }
     }
 
+    private var cropSection: some View {
+        section("裁剪") {
+            Picker("比例", selection: $editor.cropRatio) {
+                ForEach(CropRatio.allCases) { ratio in
+                    Text(ratio == .free ? String(localized: "自由") : ratio.label).tag(ratio)
+                }
+            }
+            .onChange(of: editor.cropRatio) {
+                let size = item.originalSize
+                let base = editor.crops[item.id] ?? CGRect(origin: .zero, size: size).insetBy(dx: size.width * 0.1, dy: size.height * 0.1)
+                if editor.cropRatio != .free || editor.crops[item.id] != nil {
+                    editor.crops[item.id] = AnnotateLogic.fit(base, ratio: editor.cropRatio.value, in: size)
+                }
+            }
+            if let crop = AnnotateLogic.pixelCrop(editor.crops[item.id], in: item.originalSize) {
+                HStack {
+                    Text(verbatim: "\(Int(crop.width)) × \(Int(crop.height))")
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("取消裁剪") { editor.crops[item.id] = nil }
+                }
+            }
+            Text("在图上拖出要保留的范围，拖动框可以移动。存图和拷贝时只留框里的部分，标注照样保留。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     private func pickEmoji(_ symbol: String) {
         editor.emoji = symbol
         editor.updateSelected(item.id) { if $0.kind == .emoji { $0.text = symbol } }
@@ -474,8 +563,11 @@ struct AnnotateInspector: View {
                 Button("删除选中") { editor.deleteSelected(item.id) }
                     .disabled(editor.selected == nil)
                 Spacer()
-                Button("清空", role: .destructive) { editor.clear(item.id) }
-                    .disabled(editor.list(item.id).isEmpty)
+                Button("清空", role: .destructive) {
+                    editor.clear(item.id)
+                    editor.crops[item.id] = nil
+                }
+                .disabled(editor.list(item.id).isEmpty && editor.crops[item.id] == nil)
             }
         }
     }

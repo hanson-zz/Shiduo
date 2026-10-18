@@ -105,4 +105,25 @@ final class AnnotateTests: XCTestCase {
         m = m.moved(by: CGSize(width: 10, height: 0))
         XCTAssertEqual(m.rect.minX, 85)
     }
+
+    func testCrop() {
+        let size = CGSize(width: 1000, height: 500)
+        XCTAssertEqual(AnnotateLogic.cropRect(from: CGPoint(x: 100, y: 100), to: CGPoint(x: 300, y: 50), ratio: nil, in: size),
+                       CGRect(x: 100, y: 50, width: 200, height: 50))
+        // 1:1 往右下拖，放不下时按剩余高度缩。
+        XCTAssertEqual(AnnotateLogic.cropRect(from: CGPoint(x: 100, y: 300), to: CGPoint(x: 900, y: 350), ratio: 1, in: size),
+                       CGRect(x: 100, y: 300, width: 200, height: 200))
+        XCTAssertEqual(AnnotateLogic.cropRect(from: CGPoint(x: -50, y: 0), to: CGPoint(x: 1200, y: 600), ratio: nil, in: size),
+                       CGRect(origin: .zero, size: size))
+        XCTAssertEqual(AnnotateLogic.clamp(CGRect(x: 900, y: -20, width: 200, height: 100), in: size),
+                       CGRect(x: 800, y: 0, width: 200, height: 100))
+        let fitted = AnnotateLogic.fit(CGRect(x: 0, y: 0, width: 400, height: 100), ratio: 1, in: size)
+        XCTAssertEqual(fitted.width, fitted.height, accuracy: 0.001)
+        XCTAssertEqual(fitted.width, 200, accuracy: 0.001)
+        XCTAssertEqual(fitted.minX, 100, accuracy: 0.001)
+        XCTAssertNil(AnnotateLogic.pixelCrop(CGRect(origin: .zero, size: size), in: size))
+        XCTAssertNil(AnnotateLogic.pixelCrop(nil, in: size))
+        XCTAssertEqual(AnnotateLogic.pixelCrop(CGRect(x: 10.4, y: 10.6, width: 99.2, height: 50), in: size),
+                       CGRect(x: 10, y: 10, width: 100, height: 51))
+    }
 }

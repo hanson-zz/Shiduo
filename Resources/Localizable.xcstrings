@@ -20758,22 +20758,6 @@
         }
       }
     },
-    "拖动画框、箭头、马赛克，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drag to draw boxes, arrows and mosaics; click to place text, numbers and emoji. Hold ⇧ for squares or 45° arrows. Click a mark to drag it; press ⌫ to delete."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "拖动画框、箭头、马赛克，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。"
-          }
-        }
-      }
-    },
     "其他表情": {
       "localizations": {
         "en": {
@@ -20834,6 +20818,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "在本机识别真人的脸，每张脸盖一个表情。点中表情可以换、拖动，滑块改大小。"
+          }
+        }
+      }
+    },
+    "裁剪": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crop"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裁剪"
+          }
+        }
+      }
+    },
+    "自由": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自由"
+          }
+        }
+      }
+    },
+    "拖动画框、箭头、马赛克和裁剪范围，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to draw boxes, arrows, mosaics and crop areas; click to place text, numbers and emoji. Hold ⇧ for squares or 45° arrows. Click a mark to drag it; press ⌫ to delete."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动画框、箭头、马赛克和裁剪范围，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。"
+          }
+        }
+      }
+    },
+    "在图上拖出要保留的范围，拖动框可以移动。存图和拷贝时只留框里的部分，标注照样保留。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag over the area to keep; drag the box to move it. Saving and copying keep only what is inside, marks included."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在图上拖出要保留的范围，拖动框可以移动。存图和拷贝时只留框里的部分，标注照样保留。"
           }
         }
       }

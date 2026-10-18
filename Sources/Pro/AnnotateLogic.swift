@@ -23,8 +23,36 @@ struct MarkColor: Codable, Equatable, Hashable {
 }
 
 enum MarkTool: String, CaseIterable, Identifiable, Codable {
-    case select, rect, ellipse, arrow, pen, text, step, emoji, mosaic
+    case select, rect, ellipse, arrow, pen, text, step, emoji, mosaic, crop
     var id: String { rawValue }
+}
+
+enum CropRatio: String, CaseIterable, Identifiable, Codable {
+    case free, square, r4x3, r3x4, r16x9, r9x16
+    var id: String { rawValue }
+
+    /// 宽 / 高；自由比例为 nil。
+    var value: CGFloat? {
+        switch self {
+        case .free: return nil
+        case .square: return 1
+        case .r4x3: return 4.0 / 3
+        case .r3x4: return 3.0 / 4
+        case .r16x9: return 16.0 / 9
+        case .r9x16: return 9.0 / 16
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .free: return ""
+        case .square: return "1:1"
+        case .r4x3: return "4:3"
+        case .r3x4: return "3:4"
+        case .r16x9: return "16:9"
+        case .r9x16: return "9:16"
+        }
+    }
 }
 
 enum MosaicStyle: String, CaseIterable, Identifiable, Codable {
@@ -168,6 +196,52 @@ enum AnnotateLogic {
     }
 
     static let quickEmojis = ["😀", "😎", "🥸", "😂", "🥰", "😴", "🙈", "🤡", "👻", "🐶", "🐱", "🐼", "🐸", "🌝", "⭐️", "❤️"]
+
+    // MARK: 裁剪
+
+    /// 从 a 拖到 b 的裁剪框：按比例约束（以 a 为锚点），并限制在图片里面。
+    static func cropRect(from a: CGPoint, to b: CGPoint, ratio: CGFloat?, in size: CGSize) -> CGRect {
+        let ax = min(max(a.x, 0), size.width), ay = min(max(a.y, 0), size.height)
+        var w = min(max(b.x, 0), size.width) - ax
+        var h = min(max(b.y, 0), size.height) - ay
+        if let ratio, ratio > 0 {
+            // 取能放下的较小一边，再按方向限制在图片内。
+            let maxW = w >= 0 ? size.width - ax : ax
+            let maxH = h >= 0 ? size.height - ay : ay
+            var cw = max(abs(w), abs(h) * ratio)
+            cw = min(cw, maxW, maxH * ratio)
+            let ch = cw / ratio
+            w = w >= 0 ? cw : -cw
+            h = h >= 0 ? ch : -ch
+        }
+        return CGRect(x: min(ax, ax + w), y: min(ay, ay + h), width: abs(w), height: abs(h))
+    }
+
+    /// 换比例：以原框中心为准，尽量保持面积，放不下就缩。
+    static func fit(_ rect: CGRect, ratio: CGFloat?, in size: CGSize) -> CGRect {
+        guard let ratio, ratio > 0, rect.width > 0, rect.height > 0 else { return clamp(rect, in: size) }
+        let area = rect.width * rect.height
+        var w = sqrt(area * ratio), h = w / ratio
+        let s = min(1, size.width / w, size.height / h)
+        w *= s; h *= s
+        return clamp(CGRect(x: rect.midX - w / 2, y: rect.midY - h / 2, width: w, height: h), in: size)
+    }
+
+    /// 移动后把框推回图片里面（不改大小）。
+    static func clamp(_ rect: CGRect, in size: CGSize) -> CGRect {
+        let w = min(rect.width, size.width), h = min(rect.height, size.height)
+        let x = min(max(rect.minX, 0), size.width - w)
+        let y = min(max(rect.minY, 0), size.height - h)
+        return CGRect(x: x, y: y, width: w, height: h)
+    }
+
+    /// 导出用的整数像素裁剪框；太小或等于整图时返回 nil。
+    static func pixelCrop(_ rect: CGRect?, in size: CGSize) -> CGRect? {
+        guard let rect else { return nil }
+        let r = clamp(rect, in: size).integral.intersection(CGRect(origin: .zero, size: size))
+        guard r.width >= 2, r.height >= 2, r.size != size else { return nil }
+        return r
+    }
 
     static func nextStepNumber(_ marks: [Mark]) -> Int {
         (marks.filter { $0.kind == .step }.map(\.number).max() ?? 0) + 1

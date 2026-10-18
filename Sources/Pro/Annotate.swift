@@ -228,6 +228,7 @@ extension MarkTool {
         case .text: return String(localized: "文字")
         case .step: return String(localized: "步骤")
         case .emoji: return String(localized: "表情")
+        case .crop: return String(localized: "裁剪")
         case .mosaic: return String(localized: "马赛克")
         }
     }
@@ -242,6 +243,7 @@ extension MarkTool {
         case .text: return "textformat"
         case .step: return "1.circle"
         case .emoji: return "face.smiling"
+        case .crop: return "crop"
         case .mosaic: return "checkerboard.rectangle"
         }
     }
@@ -275,6 +277,9 @@ final class MarkEditor: ObservableObject {
     @Published var focusTextTick = 0
     /// 表情工具当前要放的表情。
     @Published var emoji = "😀"
+    /// 每张图的裁剪框（原图像素，左上角原点）。没有就是整张图。
+    @Published var crops: [UUID: CGRect] = [:]
+    @Published var cropRatio: CropRatio = .free
     @Published private(set) var redacting = false
     @Published private(set) var saving = false
     /// 预览用的马赛克 / 模糊底图（按图片 id 缓存）。
@@ -329,6 +334,7 @@ final class MarkEditor: ObservableObject {
     }
 
     func forget(_ item: UUID) {
+        crops[item] = nil
         marks[item] = nil
         undoStack[item] = nil
         redoStack[item] = nil
@@ -438,7 +444,7 @@ final class MarkEditor: ObservableObject {
     // MARK: 导出
 
     /// 用原图画出带标注的结果。JPEG / HEIC 原图存成 JPEG，其余存 PNG。
-    nonisolated static func renderFull(_ url: URL, size: CGSize, marks: [Mark], strength: Double) -> (Data, String)? {
+    nonisolated static func renderFull(_ url: URL, size: CGSize, marks: [Mark], strength: Double, crop: CGRect? = nil) -> (Data, String)? {
         guard let image = MediaTools.loadCGImage(url, maxPixel: Int(max(size.width, size.height))) else { return nil }
         let width = Int(size.width), height = Int(size.height)
         let jpeg = ["jpg", "jpeg", "heic", "heif"].contains(url.pathExtension.lowercased())
@@ -456,8 +462,9 @@ final class MarkEditor: ObservableObject {
             context.fill(CGRect(x: 0, y: 0, width: width, height: height))
         }
         renderer.draw(marks, in: context, scale: 1)
-        guard let output = context.makeImage(),
-              let data = StitchRenderer.encode(output, quality: jpeg ? .jpegHigh : .png) else { return nil }
+        guard var output = context.makeImage() else { return nil }
+        if let crop = AnnotateLogic.pixelCrop(crop, in: size), let cropped = output.cropping(to: crop) { output = cropped }
+        guard let data = StitchRenderer.encode(output, quality: jpeg ? .jpegHigh : .png) else { return nil }
         return (data, jpeg ? "jpg" : "png")
     }
 
@@ -465,7 +472,8 @@ final class MarkEditor: ObservableObject {
     func save(_ item: ImageStudio.Item, studio: ImageStudio) async -> URL? {
         guard MediaTools.requirePro(), !saving else { return nil }
         let marks = list(item.id)
-        guard !marks.isEmpty else {
+        let crop = AnnotateLogic.pixelCrop(crops[item.id], in: item.originalSize)
+        guard !marks.isEmpty || crop != nil else {
             studio.show(String(localized: "还没有标注"))
             return nil
         }
@@ -473,14 +481,15 @@ final class MarkEditor: ObservableObject {
         defer { saving = false }
         let url = item.url, size = item.originalSize, strength = mosaicStrength
         let output = await Task.detached(priority: .userInitiated) {
-            Self.renderFull(url, size: size, marks: marks, strength: strength)
+            Self.renderFull(url, size: size, marks: marks, strength: strength, crop: crop)
         }.value
         guard let output else {
             studio.show(String(localized: "没能生成标注图"))
             return nil
         }
         let (data, ext) = output
-        let target = MediaTools.outputURL(for: url, suffix: String(localized: "标注"), ext: ext)
+        let suffix = marks.isEmpty ? String(localized: "裁剪") : String(localized: "标注")
+        let target = MediaTools.outputURL(for: url, suffix: suffix, ext: ext)
         do {
             try data.write(to: target)
         } catch {
@@ -495,11 +504,12 @@ final class MarkEditor: ObservableObject {
     func copy(_ item: ImageStudio.Item, studio: ImageStudio) {
         guard MediaTools.requirePro(), !saving else { return }
         let marks = list(item.id)
+        let crop = AnnotateLogic.pixelCrop(crops[item.id], in: item.originalSize)
         saving = true
         let url = item.url, size = item.originalSize, strength = mosaicStrength
         Task {
             let output = await Task.detached(priority: .userInitiated) {
-                Self.renderFull(url, size: size, marks: marks, strength: strength)
+                Self.renderFull(url, size: size, marks: marks, strength: strength, crop: crop)
             }.value
             saving = false
             guard let output else {
