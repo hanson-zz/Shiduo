@@ -23,7 +23,7 @@ struct MarkColor: Codable, Equatable, Hashable {
 }
 
 enum MarkTool: String, CaseIterable, Identifiable, Codable {
-    case select, rect, ellipse, arrow, pen, text, step, mosaic
+    case select, rect, ellipse, arrow, pen, text, step, emoji, mosaic
     var id: String { rawValue }
 }
 
@@ -34,7 +34,7 @@ enum MosaicStyle: String, CaseIterable, Identifiable, Codable {
 
 /// 一个标注。坐标一律是原图像素，左上角为原点、y 向下。
 struct Mark: Identifiable, Codable, Equatable {
-    enum Kind: String, Codable { case rect, ellipse, arrow, pen, text, step, mosaic }
+    enum Kind: String, Codable { case rect, ellipse, arrow, pen, text, step, emoji, mosaic }
 
     var id = UUID()
     var kind: Kind
@@ -97,7 +97,7 @@ struct Mark: Identifiable, Codable, Equatable {
             let outer = rect.insetBy(dx: -tol, dy: -tol)
             let inner = rect.insetBy(dx: tol, dy: tol)
             return outer.contains(p) && (inner.isNull || inner.width <= 0 || inner.height <= 0 || !inner.contains(p))
-        case .text, .step, .mosaic:
+        case .text, .step, .emoji, .mosaic:
             return rect.insetBy(dx: -tol / 2, dy: -tol / 2).contains(p)
         }
     }
@@ -150,6 +150,25 @@ enum AnnotateLogic {
     }
 
     /// 新序号 = 已有序号里最大的 + 1。
+    /// 表情盖住人脸：以人脸中心为圆心的正方形，比脸大一圈，免得露出下巴和耳朵。
+    static func emojiRect(covering face: CGRect, scale: CGFloat = 1.35) -> CGRect {
+        let side = max(face.width, face.height) * scale
+        return CGRect(x: face.midX - side / 2, y: face.midY - side / 2, width: side, height: side)
+    }
+
+    /// 改表情大小时保持中心不动。
+    static func resized(_ rect: CGRect, side: CGFloat) -> CGRect {
+        CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2, width: side, height: side)
+    }
+
+    /// 只留第一个字符（一个表情可能由多个 Unicode 标量组成，比如 👨‍👩‍👧 或肤色）。
+    static func firstEmoji(_ text: String) -> String? {
+        guard let first = text.trimmingCharacters(in: .whitespacesAndNewlines).first else { return nil }
+        return String(first)
+    }
+
+    static let quickEmojis = ["😀", "😎", "🥸", "😂", "🥰", "😴", "🙈", "🤡", "👻", "🐶", "🐱", "🐼", "🐸", "🌝", "⭐️", "❤️"]
+
     static func nextStepNumber(_ marks: [Mark]) -> Int {
         (marks.filter { $0.kind == .step }.map(\.number).max() ?? 0) + 1
     }

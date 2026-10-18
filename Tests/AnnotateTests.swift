@@ -92,4 +92,17 @@ final class AnnotateTests: XCTestCase {
         XCTAssertFalse(SensitiveText.luhn("4111111111111112"))
         XCTAssertFalse(SensitiveText.luhn("1234"))
     }
+
+    func testEmojiHelpers() {
+        let r = AnnotateLogic.emojiRect(covering: CGRect(x: 100, y: 100, width: 40, height: 60), scale: 1.5)
+        XCTAssertEqual(r, CGRect(x: 75, y: 85, width: 90, height: 90))
+        XCTAssertEqual(AnnotateLogic.resized(r, side: 30), CGRect(x: 105, y: 115, width: 30, height: 30))
+        XCTAssertEqual(AnnotateLogic.firstEmoji(" 👨‍👩‍👧😀"), "👨‍👩‍👧")
+        XCTAssertEqual(AnnotateLogic.firstEmoji("👍🏽"), "👍🏽")
+        XCTAssertNil(AnnotateLogic.firstEmoji("  "))
+        var m = Mark(kind: .emoji, rect: r)
+        XCTAssertTrue(m.hit(CGPoint(x: 120, y: 130), tolerance: 2))
+        m = m.moved(by: CGSize(width: 10, height: 0))
+        XCTAssertEqual(m.rect.minX, 85)
+    }
 }

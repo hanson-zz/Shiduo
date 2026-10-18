@@ -109,6 +109,10 @@ struct MarkRenderer {
             let font = NSFont.systemFont(ofSize: rect.height * (text.count > 1 ? 0.5 : 0.58), weight: .bold)
             let color: NSColor = mark.color.isLight ? .black : .white
             drawText(text, font: font, color: color, centeredIn: rect, context: context)
+        case .emoji:
+            // 系统表情字体在字号的约 1.17 倍高度里画满，缩一点让它正好落在框里。
+            let font = NSFont.systemFont(ofSize: rect.height * 0.84)
+            drawText(mark.text.isEmpty ? "😀" : mark.text, font: font, color: .black, centeredIn: rect, context: context)
         case .text:
             let font = NSFont.systemFont(ofSize: mark.width * s, weight: .semibold)
             if mark.filled {
@@ -223,6 +227,7 @@ extension MarkTool {
         case .pen: return String(localized: "画笔")
         case .text: return String(localized: "文字")
         case .step: return String(localized: "步骤")
+        case .emoji: return String(localized: "表情")
         case .mosaic: return String(localized: "马赛克")
         }
     }
@@ -236,6 +241,7 @@ extension MarkTool {
         case .pen: return "scribble"
         case .text: return "textformat"
         case .step: return "1.circle"
+        case .emoji: return "face.smiling"
         case .mosaic: return "checkerboard.rectangle"
         }
     }
@@ -267,6 +273,8 @@ final class MarkEditor: ObservableObject {
     @Published var redactKinds: Set<SensitiveKind> = [.phone, .email, .idNumber, .bankCard, .secret, .face]
     /// 刚放下一个文字标注：让右边的输入框获得焦点。
     @Published var focusTextTick = 0
+    /// 表情工具当前要放的表情。
+    @Published var emoji = "😀"
     @Published private(set) var redacting = false
     @Published private(set) var saving = false
     /// 预览用的马赛克 / 模糊底图（按图片 id 缓存）。
@@ -340,6 +348,7 @@ final class MarkEditor: ObservableObject {
         if mark.kind != .mosaic { color = mark.color }
         if mark.kind == .mosaic { mosaicStyle = mark.mosaic }
         if [.rect, .ellipse, .text].contains(mark.kind) { filled = mark.filled }
+        if mark.kind == .emoji, !mark.text.isEmpty { emoji = mark.text }
     }
 
     /// 线宽 / 字号 / 序号直径（原图像素）。
@@ -348,6 +357,7 @@ final class MarkEditor: ObservableObject {
         switch kind {
         case .text: return (base * 5).rounded()
         case .step: return (base * 6).rounded()
+        case .emoji: return (base * 16).rounded()
         default: return base
         }
     }
@@ -396,6 +406,32 @@ final class MarkEditor: ObservableObject {
             commit(item.id, existing + marks)
             selected = nil
             studio.show(String(localized: "已打码 \(marks.count) 处，可以拖动、删掉或改样式"))
+        }
+    }
+
+    /// 识别人脸，每张脸盖一个当前选中的表情。
+    func coverFaces(_ item: ImageStudio.Item, studio: ImageStudio) {
+        guard MediaTools.requirePro(), !redacting else { return }
+        redacting = true
+        let url = item.url
+        let size = item.originalSize
+        let symbol = emoji
+        let basis = width(for: .emoji, imageSize: size)
+        Task {
+            let faces = await Task.detached(priority: .userInitiated) { Redactor.find(url, size: size, kinds: [.face]) }.value
+            redacting = false
+            let existing = list(item.id)
+            let fresh = faces.map { AnnotateLogic.emojiRect(covering: $0, scale: 1.1) }.filter { r in
+                !existing.contains { $0.kind == .emoji && $0.rect.contains(CGPoint(x: r.midX, y: r.midY)) }
+            }
+            guard !fresh.isEmpty else {
+                studio.show(faces.isEmpty ? String(localized: "没找到人脸") : String(localized: "人脸都已经盖上表情了"))
+                return
+            }
+            let marks = fresh.map { Mark(kind: .emoji, rect: $0, width: basis, text: symbol) }
+            commit(item.id, existing + marks)
+            selected = marks.count == 1 ? marks[0].id : nil
+            studio.show(String(localized: "已给 \(marks.count) 张脸盖上表情，点中可以换表情、拖动或改大小"))
         }
     }
 

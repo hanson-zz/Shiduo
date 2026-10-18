@@ -113,6 +113,7 @@ struct AnnotateCanvas: View {
         case .pen: return .pen
         case .text: return .text
         case .step: return .step
+        case .emoji: return .emoji
         case .mosaic: return .mosaic
         }
     }
@@ -137,6 +138,7 @@ struct AnnotateCanvas: View {
         mark.width = editor.width(for: kind, imageSize: item.originalSize)
         mark.filled = kind == .text || kind == .rect || kind == .ellipse ? editor.filled : false
         mark.mosaic = editor.mosaicStyle
+        if kind == .emoji { mark.text = editor.emoji }
         mark.start = start
         mark.end = start
         mark.points = [start]
@@ -163,6 +165,10 @@ struct AnnotateCanvas: View {
                 if let last = mark.points.last, hypot(last.x - p.x, last.y - p.y) >= mark.width * 0.4 {
                     mark.points.append(p)
                 }
+            case .emoji:
+                // 拖动：从起点拉出正方形；单击则在 finish 里按默认大小放。
+                let side = max(abs(p.x - start.x), abs(p.y - start.y))
+                mark.rect = CGRect(x: start.x - side, y: start.y - side, width: side * 2, height: side * 2)
             case .text, .step:
                 return
             }
@@ -198,6 +204,10 @@ struct AnnotateCanvas: View {
                 }
             case .pen:
                 break
+            case .emoji:
+                if mark.rect.width < tiny * 3 {
+                    mark.rect = AnnotateLogic.resized(CGRect(origin: p, size: .zero), side: mark.width)
+                }
             case .step:
                 let d = mark.width
                 mark.number = AnnotateLogic.nextStepNumber(before)
@@ -222,6 +232,8 @@ struct AnnotateInspector: View {
     @ObservedObject var editor: MarkEditor
     @EnvironmentObject private var studio: ImageStudio
     @FocusState private var textFocused: Bool
+    @FocusState private var emojiFocused: Bool
+    @State private var customEmoji = ""
 
     private var selectedMark: Mark? {
         editor.list(item.id).first { $0.id == editor.selected }
@@ -234,6 +246,7 @@ struct AnnotateInspector: View {
                     tools
                     style
                     if let mark = selectedMark, mark.kind == .text { textField(mark) }
+                    if editor.tool == .emoji || selectedMark?.kind == .emoji { emojiPicker }
                     redaction
                     edit
                 }
@@ -264,7 +277,7 @@ struct AnnotateInspector: View {
                     .buttonStyle(.plain)
                 }
             }
-            Text("拖动画框、箭头、马赛克，单击放文字和序号；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。")
+            Text("拖动画框、箭头、马赛克，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -277,6 +290,7 @@ struct AnnotateInspector: View {
         let showMosaic = editor.tool == .mosaic || kind == .mosaic
         section("样式") {
             if !(kind == .mosaic) {
+                if !(kind == .emoji || (kind == nil && editor.tool == .emoji)) {
                 HStack(spacing: 7) {
                     ForEach(MarkColor.palette, id: \.self) { color in
                         Button {
@@ -293,16 +307,19 @@ struct AnnotateInspector: View {
                     }
                 }
                 .padding(.vertical, 2)
+                }
                 HStack {
-                    Text("粗细 / 字号")
+                    Text(kind == .emoji || (kind == nil && editor.tool == .emoji) ? LocalizedStringKey("大小") : LocalizedStringKey("粗细 / 字号"))
                     Slider(value: $editor.strokeScale, in: 0.4...3)
                         .onChange(of: editor.strokeScale) { applyWidth() }
                 }
+                if !(kind == .emoji || (kind == nil && editor.tool == .emoji)) {
                 Toggle("填充 / 文字底色", isOn: $editor.filled)
                     .onChange(of: editor.filled) {
                         let filled = editor.filled
                         editor.updateSelected(item.id) { if [.rect, .ellipse, .text].contains($0.kind) { $0.filled = filled } }
                     }
+                }
             }
             if showMosaic {
                 Picker("马赛克", selection: $editor.mosaicStyle) {
@@ -328,6 +345,13 @@ struct AnnotateInspector: View {
         editor.updateSelected(item.id) { mark in
             guard mark.kind != .mosaic else { return }
             let w = editor.width(for: mark.kind, imageSize: size)
+            if mark.kind == .emoji {
+                // 盖脸的表情大小各不相同：按滑块比例缩放当前这一个。
+                let side = max(4, mark.rect.width * w / max(mark.width, 1))
+                mark.rect = AnnotateLogic.resized(mark.rect, side: side)
+                mark.width = w
+                return
+            }
             if mark.kind == .step {
                 let center = CGPoint(x: mark.rect.midX, y: mark.rect.midY)
                 mark.rect = CGRect(x: center.x - w / 2, y: center.y - w / 2, width: w, height: w)
@@ -346,6 +370,57 @@ struct AnnotateInspector: View {
             .textFieldStyle(.roundedBorder)
             .focused($textFocused)
         }
+    }
+
+    private var emojiPicker: some View {
+        section("表情") {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 8), spacing: 4) {
+                ForEach(AnnotateLogic.quickEmojis, id: \.self) { symbol in
+                    Button {
+                        pickEmoji(symbol)
+                    } label: {
+                        Text(symbol)
+                            .font(.system(size: 20))
+                            .frame(maxWidth: .infinity, minHeight: 30)
+                            .background(editor.emoji == symbol ? Color.accentColor.opacity(0.2) : Color.primary.opacity(0.05),
+                                        in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            HStack {
+                TextField("其他表情", text: $customEmoji)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 90)
+                    .focused($emojiFocused)
+                    .onChange(of: customEmoji) {
+                        if let symbol = AnnotateLogic.firstEmoji(customEmoji) { pickEmoji(symbol) }
+                        if customEmoji.count > 1 { customEmoji = AnnotateLogic.firstEmoji(customEmoji) ?? "" }
+                    }
+                Button("全部表情…") {
+                    emojiFocused = true
+                    DispatchQueue.main.async { NSApp.orderFrontCharacterPalette(nil) }
+                }
+            }
+            HStack {
+                Button {
+                    editor.coverFaces(item, studio: studio)
+                } label: {
+                    Label("给人脸盖上表情", systemImage: "face.smiling")
+                }
+                .disabled(editor.redacting)
+                if editor.redacting { ProgressView().controlSize(.small) }
+            }
+            Text("在本机识别真人的脸，每张脸盖一个表情。点中表情可以换、拖动，滑块改大小。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func pickEmoji(_ symbol: String) {
+        editor.emoji = symbol
+        editor.updateSelected(item.id) { if $0.kind == .emoji { $0.text = symbol } }
     }
 
     private var redaction: some View {

@@ -19382,22 +19382,6 @@
         }
       }
     },
-    "拖动画框、箭头、马赛克，单击放文字和序号；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drag to draw boxes, arrows, and mosaic; click to place text and steps. Hold ⇧ for squares or 45° arrows. Drag an existing mark to move it, press ⌫ to delete."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "拖动画框、箭头、马赛克，单击放文字和序号；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。"
-          }
-        }
-      }
-    },
     "文字": {
       "localizations": {
         "en": {
@@ -20706,6 +20690,150 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在放大第 %1$lld / %2$lld 张…"
+          }
+        }
+      }
+    },
+    "表情": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emoji"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表情"
+          }
+        }
+      }
+    },
+    "没找到人脸": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No faces found"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没找到人脸"
+          }
+        }
+      }
+    },
+    "人脸都已经盖上表情了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All faces are already covered"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "人脸都已经盖上表情了"
+          }
+        }
+      }
+    },
+    "已给 %lld 张脸盖上表情，点中可以换表情、拖动或改大小": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covered %lld faces with emoji. Click one to change it, drag it, or resize it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已给 %lld 张脸盖上表情，点中可以换表情、拖动或改大小"
+          }
+        }
+      }
+    },
+    "拖动画框、箭头、马赛克，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to draw boxes, arrows and mosaics; click to place text, numbers and emoji. Hold ⇧ for squares or 45° arrows. Click a mark to drag it; press ⌫ to delete."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动画框、箭头、马赛克，单击放文字、序号和表情；按住 ⇧ 画正方形或 45° 箭头。点中已有的标注可以拖动，按 ⌫ 删除。"
+          }
+        }
+      }
+    },
+    "其他表情": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other emoji"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他表情"
+          }
+        }
+      }
+    },
+    "全部表情…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Emoji…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部表情…"
+          }
+        }
+      }
+    },
+    "给人脸盖上表情": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cover Faces with Emoji"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "给人脸盖上表情"
+          }
+        }
+      }
+    },
+    "在本机识别真人的脸，每张脸盖一个表情。点中表情可以换、拖动，滑块改大小。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds real faces on this Mac and covers each with an emoji. Click one to change or drag it; use the slider to resize."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在本机识别真人的脸，每张脸盖一个表情。点中表情可以换、拖动，滑块改大小。"
           }
         }
       }
