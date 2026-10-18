@@ -78,6 +78,8 @@ struct Mark: Identifiable, Codable, Equatable {
     var text = ""
     var number = 1
     var mosaic: MosaicStyle = .pixelate
+    /// 马赛克 / 模糊的强度（每个标注各自一份，调一个不影响别的）。
+    var strength: Double = 1
 
     /// 包住整个标注的框（用于选中、移动）。
     var bounds: CGRect {
@@ -243,6 +245,127 @@ enum AnnotateLogic {
         return r
     }
 
+    /// 裁剪框的缩放手柄：四个角、四条边。
+    enum CropHandle: CaseIterable {
+        case topLeft, top, topRight, right, bottomRight, bottom, bottomLeft, left
+
+        /// 手柄在框上的位置（0、0.5、1）。
+        var unit: (x: CGFloat, y: CGFloat) {
+            switch self {
+            case .topLeft: return (0, 0)
+            case .top: return (0.5, 0)
+            case .topRight: return (1, 0)
+            case .right: return (1, 0.5)
+            case .bottomRight: return (1, 1)
+            case .bottom: return (0.5, 1)
+            case .bottomLeft: return (0, 1)
+            case .left: return (0, 0.5)
+            }
+        }
+
+        var isCorner: Bool { unit.x != 0.5 && unit.y != 0.5 }
+    }
+
+    static func handlePoint(_ handle: CropHandle, of rect: CGRect) -> CGPoint {
+        CGPoint(x: rect.minX + rect.width * handle.unit.x, y: rect.minY + rect.height * handle.unit.y)
+    }
+
+    /// 点 p 落在哪个手柄上（角优先）。tolerance 是原图像素。
+    static func cropHandle(at p: CGPoint, of rect: CGRect, tolerance: CGFloat) -> CropHandle? {
+        let ordered = CropHandle.allCases.filter(\.isCorner) + CropHandle.allCases.filter { !$0.isCorner }
+        for handle in ordered {
+            let c = handlePoint(handle, of: rect)
+            if abs(c.x - p.x) <= tolerance, abs(c.y - p.y) <= tolerance { return handle }
+        }
+        // 边：沿边的任意位置都能拖（不只是中点）。
+        let inside = rect.insetBy(dx: -tolerance, dy: -tolerance)
+        guard inside.contains(p) else { return nil }
+        if abs(p.x - rect.minX) <= tolerance { return .left }
+        if abs(p.x - rect.maxX) <= tolerance { return .right }
+        if abs(p.y - rect.minY) <= tolerance { return .top }
+        if abs(p.y - rect.maxY) <= tolerance { return .bottom }
+        return nil
+    }
+
+    /// 拖动手柄缩放裁剪框：对角 / 对边不动；有比例时保持比例；限制在图片里，至少 minSide。
+    static func resizeCrop(_ rect: CGRect, handle: CropHandle, to p: CGPoint, ratio: CGFloat?,
+                           in size: CGSize, minSide: CGFloat = 8) -> CGRect {
+        let px = min(max(p.x, 0), size.width), py = min(max(p.y, 0), size.height)
+        if handle.isCorner {
+            // 以对角为锚点重新拉框。
+            let anchor = CGPoint(x: handle.unit.x == 0 ? rect.maxX : rect.minX, y: handle.unit.y == 0 ? rect.maxY : rect.minY)
+            let r = cropRect(from: anchor, to: CGPoint(x: px, y: py), ratio: ratio, in: size)
+            return r.width >= minSide && r.height >= minSide ? r : rect
+        }
+        var minX = rect.minX, maxX = rect.maxX, minY = rect.minY, maxY = rect.maxY
+        switch handle {
+        case .left: minX = min(px, maxX - minSide)
+        case .right: maxX = max(px, minX + minSide)
+        case .top: minY = min(py, maxY - minSide)
+        case .bottom: maxY = max(py, minY + minSide)
+        default: break
+        }
+        var r = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        if let ratio, ratio > 0 {
+            // 拖的是左右边：高跟着变，上下居中；拖上下边：宽跟着变，左右居中。放不下就整体缩。
+            if handle == .left || handle == .right {
+                var w = r.width, h = w / ratio
+                if h > size.height { h = size.height; w = h * ratio }
+                let x = handle == .left ? maxX - w : minX
+                r = CGRect(x: x, y: rect.midY - h / 2, width: w, height: h)
+            } else {
+                var h = r.height, w = h * ratio
+                if w > size.width { w = size.width; h = w / ratio }
+                let y = handle == .top ? maxY - h : minY
+                r = CGRect(x: rect.midX - w / 2, y: y, width: w, height: h)
+            }
+        }
+        return clamp(r, in: size)
+    }
+
+    // MARK: 长图分段识别
+
+    /// 把长度 length 切成每段不超过 segment、相邻重叠 overlap 的区间（起点, 长度）。
+    static func strips(length: Int, segment: Int, overlap: Int) -> [(start: Int, length: Int)] {
+        guard length > 0, segment > 0 else { return [] }
+        guard length > segment else { return [(0, length)] }
+        let step = max(segment - max(overlap, 0), 1)
+        var out: [(start: Int, length: Int)] = []
+        var start = 0
+        while true {
+            if start + segment >= length {
+                out.append((max(length - segment, 0), min(segment, length)))
+                break
+            }
+            out.append((start, segment))
+            start += step
+        }
+        return out
+    }
+
+    /// 分段识别后去掉重复的框：重叠很多（交并比大于 0.5，或一个基本包含另一个）的合成一个。
+    static func dedupe(_ rects: [CGRect]) -> [CGRect] {
+        var out: [CGRect] = []
+        for r in rects {
+            if let index = out.firstIndex(where: { overlapsMostly($0, r) }) {
+                out[index] = out[index].union(r)
+            } else {
+                out.append(r)
+            }
+        }
+        return out
+    }
+
+    static func overlapsMostly(_ a: CGRect, _ b: CGRect) -> Bool {
+        let i = a.intersection(b)
+        guard !i.isNull, i.width > 0, i.height > 0 else { return false }
+        let inter = i.width * i.height
+        let areaA = a.width * a.height, areaB = b.width * b.height
+        let union = areaA + areaB - inter
+        if union > 0, inter / union > 0.5 { return true }
+        return inter >= 0.85 * min(areaA, areaB)
+    }
+
     static func nextStepNumber(_ marks: [Mark]) -> Int {
         (marks.filter { $0.kind == .step }.map(\.number).max() ?? 0) + 1
     }
@@ -273,6 +396,45 @@ enum AnnotateLogic {
     static func imageRect(fromVision r: CGRect, size: CGSize) -> CGRect {
         CGRect(x: r.minX * size.width, y: (1 - r.maxY) * size.height,
                width: r.width * size.width, height: r.height * size.height)
+    }
+}
+
+// MARK: - 撤销历史
+
+/// 一步撤销记下的内容：标注和裁剪框一起。
+struct AnnotateSnapshot: Equatable {
+    var marks: [Mark]
+    var crop: CGRect?
+}
+
+/// 撤销 / 重做栈（纯数据，界面里每张图一份）。
+struct UndoHistory<State: Equatable> {
+    private(set) var undoStack: [State] = []
+    private(set) var redoStack: [State] = []
+    var limit = 100
+
+    var canUndo: Bool { !undoStack.isEmpty }
+    var canRedo: Bool { !redoStack.isEmpty }
+
+    /// 记一步：old 是改动前的状态。和 new 一样就不记。
+    mutating func record(_ old: State, new: State) {
+        guard old != new else { return }
+        undoStack.append(old)
+        if undoStack.count > limit { undoStack.removeFirst(undoStack.count - limit) }
+        redoStack.removeAll()
+    }
+
+    /// 撤销：返回要恢复的状态，current 进重做栈。
+    mutating func undo(current: State) -> State? {
+        guard let last = undoStack.popLast() else { return nil }
+        redoStack.append(current)
+        return last
+    }
+
+    mutating func redo(current: State) -> State? {
+        guard let next = redoStack.popLast() else { return nil }
+        undoStack.append(current)
+        return next
     }
 }
 

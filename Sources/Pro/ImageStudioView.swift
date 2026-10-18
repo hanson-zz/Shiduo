@@ -121,6 +121,17 @@ extension StitchLayout {
 
 struct ImageStudioList: View {
     @EnvironmentObject private var studio: ImageStudio
+    /// 要移除、但这张图在标注页有改动：先确认。
+    @State private var pendingRemoval: ImageStudio.Item.ID?
+
+    /// 有标注或裁剪的图先确认，免得一个 ⌫ 把标注全丢了；没改动的直接移除。
+    private func requestRemove(_ id: ImageStudio.Item.ID) {
+        if studio.hasEdits(id) {
+            pendingRemoval = id
+        } else {
+            studio.remove(id)
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -129,7 +140,7 @@ struct ImageStudioList: View {
                     row(item, index: index)
                         .tag(item.id)
                         .contextMenu {
-                            Button("移除") { studio.remove(item.id) }
+                            Button("移除") { requestRemove(item.id) }
                             if item.cropStart > 0 || item.cropEnd > 0 {
                                 Button("取消裁剪") { studio.setCrop(item.id, start: 0, end: 0) }
                             }
@@ -139,7 +150,17 @@ struct ImageStudioList: View {
             }
             .listStyle(.sidebar)
             .onDeleteCommand {
-                if let id = studio.selection { studio.remove(id) }
+                if let id = studio.selection { requestRemove(id) }
+            }
+            .confirmationDialog("移除这张图？", isPresented: Binding(get: { pendingRemoval != nil },
+                                                                 set: { if !$0 { pendingRemoval = nil } })) {
+                Button("移除，丢掉标注", role: .destructive) {
+                    if let id = pendingRemoval { studio.remove(id) }
+                    pendingRemoval = nil
+                }
+                Button("取消", role: .cancel) { pendingRemoval = nil }
+            } message: {
+                Text("这张图上的标注和裁剪还没保存，移除后找不回来。原图不会动。")
             }
             .dropDestination(for: URL.self) { urls, _ in
                 studio.add(urls)
@@ -535,8 +556,11 @@ struct StitchInspector: View {
 struct CutoutPanel: View {
     @EnvironmentObject private var studio: ImageStudio
     @State private var running = false
-    @State private var results: [ImageStudio.Item.ID: URL] = [:]
     @State private var status = ""
+    /// 抠好的图按预览大小读（不整张解码）。
+    @State private var resultPreview: NSImage?
+
+    private var results: [ImageStudio.Item.ID: URL] { studio.cutoutResults }
 
     var body: some View {
         if studio.items.isEmpty {
@@ -545,9 +569,16 @@ struct CutoutPanel: View {
             VStack(spacing: 14) {
                 HStack(spacing: 18) {
                     pane(String(localized: "原图"), image: item.thumbnail)
-                    pane(String(localized: "抠好的"), image: results[item.id].flatMap { NSImage(contentsOf: $0) })
+                    pane(String(localized: "抠好的"), image: resultPreview)
                 }
                 .frame(maxHeight: .infinity)
+                .task(id: results[item.id]) {
+                    let url = results[item.id]
+                    resultPreview = await Task.detached(priority: .userInitiated) { () -> NSImage? in
+                        guard let url, let cg = MediaTools.loadCGImage(url, maxPixel: 1600) else { return nil }
+                        return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
+                    }.value
+                }
                 Text(status.isEmpty ? String(localized: "在本机识别主体，去掉背景，存成透明 PNG，放在原图旁边。") : status)
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -597,7 +628,8 @@ struct CutoutPanel: View {
                 let url = item.url
                 switch await Task.detached(priority: .userInitiated, operation: { MediaTools.cutout(url) }).value {
                 case .success(let result):
-                    results[item.id] = result
+                    // 抠图期间这张图被移除了：结果照样存在了原图旁边，但不再挂回列表。
+                    if studio.items.contains(where: { $0.id == item.id }) { studio.cutoutResults[item.id] = result }
                     done += 1
                 case .noSubject, .failed:
                     missed += 1
@@ -611,9 +643,12 @@ struct CutoutPanel: View {
     }
 
     private func useResults(then mode: ImageStudio.Mode) {
-        for (id, url) in results { studio.replace(id, with: url) }
-        results = [:]
+        let pairs = results
         status = ""
-        studio.mode = mode
+        Task {
+            // replace 会清掉旧图的状态（包括这里的抠图结果）。
+            for (id, url) in pairs { await studio.replace(id, with: url) }
+            studio.mode = mode
+        }
     }
 }

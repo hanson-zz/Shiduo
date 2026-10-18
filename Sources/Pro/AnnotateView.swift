@@ -34,24 +34,30 @@ struct AnnotateCanvas: View {
     }
 
     @State private var drag: DragState?
-    /// 裁剪：拖动开始时的框，以及是在移动旧框还是画新框。
-    @State private var cropDrag: (original: CGRect?, moving: Bool)?
+    /// 裁剪：拖动开始时的框，以及是在画新框、移动旧框还是拖手柄缩放。
+    private struct CropDrag {
+        enum Mode: Equatable { case new, move, resize(AnnotateLogic.CropHandle) }
+        var original: CGRect?
+        var mode: Mode
+    }
+    @State private var cropDrag: CropDrag?
+    /// 点过画布后焦点在画布上：⌫ 删的是选中的标注，不会被左边的图片列表接走。
+    @FocusState private var canvasFocused: Bool
 
     var body: some View {
         GeometryReader { geo in
             let fit = fitted(item.originalSize, in: CGSize(width: geo.size.width - 48, height: geo.size.height - 48))
             let scale = fit.width / max(item.originalSize.width, 1)
             let marks = editor.list(item.id)
-            let effects: (pixelated: CGImage?, blurred: CGImage?) = marks.contains { $0.kind == .mosaic && $0.mosaic != .solid } || drawingMosaic
-                ? editor.previewEffects(for: item) : (pixelated: nil, blurred: nil)
-            let renderer = MarkRenderer(base: item.preview, imageSize: item.originalSize,
-                                        pixelated: effects.pixelated, blurred: effects.blurred)
+            let strengths = Set(marks.filter { $0.kind == .mosaic && $0.mosaic != .solid }.map(\.strength))
+            let layers: [Double: MosaicLayer] = strengths.isEmpty ? [:] : editor.previewLayers(for: item, strengths: strengths)
+            let renderer = MarkRenderer(base: item.preview, imageSize: item.originalSize, layers: layers)
             ZStack(alignment: .topLeading) {
                 CheckerboardBackground()
                 Canvas { context, _ in
                     context.withCGContext { cg in renderer.draw(marks, in: cg, scale: scale) }
                 }
-                if let crop = editor.crops[item.id] {
+                if let crop = editor.crops[item.id], crop.width * scale >= 1, crop.height * scale >= 1 {
                     let r = CGRect(x: crop.minX * scale, y: crop.minY * scale, width: crop.width * scale, height: crop.height * scale)
                     Path { p in
                         p.addRect(CGRect(origin: .zero, size: fit))
@@ -73,6 +79,20 @@ struct AnnotateCanvas: View {
                         .frame(width: r.width, height: r.height)
                         .offset(x: r.minX, y: r.minY)
                         .allowsHitTesting(false)
+                    if editor.tool == .crop {
+                        // 四角、四边的缩放手柄。
+                        ForEach(AnnotateLogic.CropHandle.allCases, id: \.self) { handle in
+                            let c = AnnotateLogic.handlePoint(handle, of: r)
+                            let side: CGFloat = handle.isCorner ? 9 : 7
+                            RoundedRectangle(cornerRadius: 1.5)
+                                .fill(Color.white)
+                                .overlay(RoundedRectangle(cornerRadius: 1.5).strokeBorder(Color.black.opacity(0.35), lineWidth: 0.5))
+                                .frame(width: side, height: side)
+                                .shadow(color: .black.opacity(0.3), radius: 1.5)
+                                .offset(x: c.x - side / 2, y: c.y - side / 2)
+                                .allowsHitTesting(false)
+                        }
+                    }
                 }
                 if let selected = marks.first(where: { $0.id == editor.selected }) {
                     let b = selected.bounds
@@ -92,13 +112,9 @@ struct AnnotateCanvas: View {
         }
         .background(Color(nsColor: .underPageBackgroundColor))
         .focusable()
+        .focused($canvasFocused)
         .focusEffectDisabled()
         .onDeleteCommand { editor.deleteSelected(item.id) }
-    }
-
-    private var drawingMosaic: Bool {
-        if case .drawing(let mark, _) = drag { return mark.kind == .mosaic }
-        return editor.tool == .mosaic
     }
 
     private func fitted(_ size: CGSize, in box: CGSize) -> CGSize {
@@ -110,10 +126,11 @@ struct AnnotateCanvas: View {
     private func gesture(scale: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
+                if !canvasFocused { canvasFocused = true }
                 let start = point(value.startLocation, scale)
                 let p = point(value.location, scale)
                 if editor.tool == .crop {
-                    cropChanged(start: start, to: p)
+                    cropChanged(start: start, to: p, scale: scale)
                     return
                 }
                 if drag == nil { begin(at: start, scale: scale) }
@@ -129,17 +146,34 @@ struct AnnotateCanvas: View {
             }
     }
 
-    private func cropChanged(start: CGPoint, to p: CGPoint) {
+    private func cropChanged(start: CGPoint, to p: CGPoint, scale: CGFloat) {
         let size = item.originalSize
         if cropDrag == nil {
             let current = editor.crops[item.id]
-            cropDrag = (current, current?.contains(start) ?? false)
+            var mode = CropDrag.Mode.new
+            if let current {
+                if let handle = AnnotateLogic.cropHandle(at: start, of: current, tolerance: 7 / max(scale, 0.01)) {
+                    mode = .resize(handle)
+                } else if current.contains(start) {
+                    mode = .move
+                }
+            }
+            cropDrag = CropDrag(original: current, mode: mode)
         }
         guard let cropDrag else { return }
-        if cropDrag.moving, let original = cropDrag.original {
-            editor.crops[item.id] = AnnotateLogic.clamp(original.offsetBy(dx: p.x - start.x, dy: p.y - start.y), in: size)
-        } else {
-            editor.crops[item.id] = AnnotateLogic.cropRect(from: start, to: p, ratio: editor.cropRatio.value, in: size)
+        let tiny = 4 / max(scale, 0.01)
+        switch cropDrag.mode {
+        case .move:
+            guard let original = cropDrag.original else { return }
+            editor.setCropLive(item.id, AnnotateLogic.clamp(original.offsetBy(dx: p.x - start.x, dy: p.y - start.y), in: size))
+        case .resize(let handle):
+            guard let original = cropDrag.original else { return }
+            editor.setCropLive(item.id, AnnotateLogic.resizeCrop(original, handle: handle, to: p, ratio: editor.cropRatio.value,
+                                                                 in: size, minSide: tiny * 2))
+        case .new:
+            // 刚按下、还没拖出像样的框时先保留原来的框（不然遮罩会铺满整张图，闪一下黑）。
+            let r = AnnotateLogic.cropRect(from: start, to: p, ratio: editor.cropRatio.value, in: size)
+            editor.setCropLive(item.id, r.width >= tiny && r.height >= tiny ? r : cropDrag.original)
         }
     }
 
@@ -147,10 +181,12 @@ struct AnnotateCanvas: View {
         defer { cropDrag = nil }
         guard let cropDrag else { return }
         let tiny = 8 / max(scale, 0.01)
-        if !cropDrag.moving, let r = editor.crops[item.id], r.width < tiny || r.height < tiny {
+        var result = editor.crops[item.id]
+        if cropDrag.mode == .new, let r = result, r.width < tiny || r.height < tiny {
             // 单击（没拖出框）：保留原来的框。
-            editor.crops[item.id] = cropDrag.original
+            result = cropDrag.original
         }
+        editor.commitCrop(item.id, result, from: cropDrag.original)
     }
 
     private func point(_ p: CGPoint, _ scale: CGFloat) -> CGPoint {
@@ -196,6 +232,7 @@ struct AnnotateCanvas: View {
         mark.width = editor.width(for: kind, imageSize: item.originalSize)
         mark.filled = kind == .text || kind == .rect || kind == .ellipse ? editor.filled : false
         mark.mosaic = editor.mosaicStyle
+        mark.strength = MarkEditor.quantized(editor.mosaicStrength)
         if kind == .emoji { mark.text = editor.emoji }
         mark.start = start
         mark.end = start
@@ -315,6 +352,16 @@ struct AnnotateInspector: View {
             actions.padding(14)
         }
         .onChange(of: editor.focusTextTick) { textFocused = true }
+        // 打字合并成一步撤销：获得焦点时记下开始的状态，失去焦点时提交。
+        .onChange(of: textFocused) {
+            if textFocused { editor.beginEdit(item.id) } else { editor.endEdit(item.id) }
+        }
+        .onDisappear { editor.endEdit(item.id) }
+    }
+
+    /// 拖滑块合并成一步撤销。
+    private func editing(_ active: Bool) {
+        if active { editor.beginEdit(item.id) } else { editor.endEdit(item.id) }
     }
 
     private var tools: some View {
@@ -369,7 +416,7 @@ struct AnnotateInspector: View {
                 }
                 HStack {
                     Text(kind == .emoji || (kind == nil && editor.tool == .emoji) ? LocalizedStringKey("大小") : LocalizedStringKey("粗细 / 字号"))
-                    Slider(value: $editor.strokeScale, in: 0.4...3)
+                    Slider(value: $editor.strokeScale, in: 0.4...3, onEditingChanged: editing)
                         .onChange(of: editor.strokeScale) { applyWidth() }
                 }
                 if !(kind == .emoji || (kind == nil && editor.tool == .emoji)) {
@@ -392,7 +439,11 @@ struct AnnotateInspector: View {
                 if editor.mosaicStyle != .solid {
                     HStack {
                         Text("强度")
-                        Slider(value: $editor.mosaicStrength, in: 0.5...3)
+                        Slider(value: Binding(get: { editor.mosaicStrength }, set: { value in
+                            editor.mosaicStrength = value
+                            let strength = MarkEditor.quantized(value)
+                            editor.updateSelected(item.id) { if $0.kind == .mosaic { $0.strength = strength } }
+                        }), in: 0.5...3, onEditingChanged: editing)
                     }
                 }
             }
@@ -486,9 +537,10 @@ struct AnnotateInspector: View {
             }
             .onChange(of: editor.cropRatio) {
                 let size = item.originalSize
-                let base = editor.crops[item.id] ?? CGRect(origin: .zero, size: size).insetBy(dx: size.width * 0.1, dy: size.height * 0.1)
-                if editor.cropRatio != .free || editor.crops[item.id] != nil {
-                    editor.crops[item.id] = AnnotateLogic.fit(base, ratio: editor.cropRatio.value, in: size)
+                let current = editor.crops[item.id]
+                let base = current ?? CGRect(origin: .zero, size: size).insetBy(dx: size.width * 0.1, dy: size.height * 0.1)
+                if editor.cropRatio != .free || current != nil {
+                    editor.commitCrop(item.id, AnnotateLogic.fit(base, ratio: editor.cropRatio.value, in: size), from: current)
                 }
             }
             if let crop = AnnotateLogic.pixelCrop(editor.crops[item.id], in: item.originalSize) {
@@ -497,10 +549,10 @@ struct AnnotateInspector: View {
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button("取消裁剪") { editor.crops[item.id] = nil }
+                    Button("取消裁剪") { editor.commitCrop(item.id, nil, from: editor.crops[item.id]) }
                 }
             }
-            Text("在图上拖出要保留的范围，拖动框可以移动。存图和拷贝时只留框里的部分，标注照样保留。")
+            Text("在图上拖出要保留的范围，拖动框可以移动，拖四角和四边可以调大小。存图和拷贝时只留框里的部分，标注照样保留。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -550,7 +602,8 @@ struct AnnotateInspector: View {
                     Image(systemName: "arrow.uturn.backward")
                 }
                 .keyboardShortcut("z", modifiers: .command)
-                .disabled(!editor.canUndo(item.id))
+                // 输入框在打字时 ⌘Z 留给输入框自己撤销文字（被禁用的按钮不响应快捷键）。
+                .disabled(!editor.canUndo(item.id) || textFocused || emojiFocused)
                 .help("撤销")
                 Button {
                     editor.redo(item.id)
@@ -558,14 +611,13 @@ struct AnnotateInspector: View {
                     Image(systemName: "arrow.uturn.forward")
                 }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
-                .disabled(!editor.canRedo(item.id))
+                .disabled(!editor.canRedo(item.id) || textFocused || emojiFocused)
                 .help("重做")
                 Button("删除选中") { editor.deleteSelected(item.id) }
                     .disabled(editor.selected == nil)
                 Spacer()
                 Button("清空", role: .destructive) {
                     editor.clear(item.id)
-                    editor.crops[item.id] = nil
                 }
                 .disabled(editor.list(item.id).isEmpty && editor.crops[item.id] == nil)
             }
@@ -591,9 +643,8 @@ struct AnnotateInspector: View {
             Button {
                 Task {
                     if let url = await editor.save(item, studio: studio) {
-                        let old = item.id
-                        studio.replace(old, with: url)
-                        editor.forget(old)
+                        // replace 会一起清掉旧图的标注和撤销。
+                        await studio.replace(item.id, with: url)
                         studio.mode = .beautify
                     }
                 }

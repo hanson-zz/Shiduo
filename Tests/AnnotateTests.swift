@@ -126,4 +126,89 @@ final class AnnotateTests: XCTestCase {
         XCTAssertEqual(AnnotateLogic.pixelCrop(CGRect(x: 10.4, y: 10.6, width: 99.2, height: 50), in: size),
                        CGRect(x: 10, y: 10, width: 100, height: 51))
     }
+
+    // MARK: 裁剪手柄
+
+    func testCropHandleHitPrefersCorners() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        XCTAssertEqual(AnnotateLogic.cropHandle(at: CGPoint(x: 102, y: 98), of: r, tolerance: 6), .topLeft)
+        XCTAssertEqual(AnnotateLogic.cropHandle(at: CGPoint(x: 200, y: 201), of: r, tolerance: 6), .bottom)
+        XCTAssertEqual(AnnotateLogic.cropHandle(at: CGPoint(x: 297, y: 130), of: r, tolerance: 6), .right)
+        XCTAssertNil(AnnotateLogic.cropHandle(at: CGPoint(x: 200, y: 150), of: r, tolerance: 6))
+        XCTAssertNil(AnnotateLogic.cropHandle(at: CGPoint(x: 10, y: 10), of: r, tolerance: 6))
+    }
+
+    func testResizeCropFreeKeepsOppositeEdges() {
+        let size = CGSize(width: 1000, height: 1000)
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let right = AnnotateLogic.resizeCrop(r, handle: .right, to: CGPoint(x: 400, y: 0), ratio: nil, in: size)
+        XCTAssertEqual(right, CGRect(x: 100, y: 100, width: 300, height: 100))
+        let corner = AnnotateLogic.resizeCrop(r, handle: .topLeft, to: CGPoint(x: 50, y: 20), ratio: nil, in: size)
+        XCTAssertEqual(corner, CGRect(x: 50, y: 20, width: 250, height: 180))
+        // 拖过头不会翻转，至少保留 minSide。
+        let tiny = AnnotateLogic.resizeCrop(r, handle: .left, to: CGPoint(x: 900, y: 0), ratio: nil, in: size, minSide: 8)
+        XCTAssertEqual(tiny.width, 8)
+        XCTAssertEqual(tiny.maxX, 300)
+    }
+
+    func testResizeCropKeepsRatioAndStaysInside() {
+        let size = CGSize(width: 1000, height: 600)
+        let r = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let wider = AnnotateLogic.resizeCrop(r, handle: .right, to: CGPoint(x: 500, y: 0), ratio: 1, in: size)
+        XCTAssertEqual(wider.width, wider.height, accuracy: 0.001)
+        XCTAssertEqual(wider.width, 400, accuracy: 0.001)
+        XCTAssertGreaterThanOrEqual(wider.minY, 0)
+        let corner = AnnotateLogic.resizeCrop(r, handle: .bottomRight, to: CGPoint(x: 2000, y: 2000), ratio: 1, in: size)
+        XCTAssertEqual(corner.width, corner.height, accuracy: 0.001)
+        XCTAssertLessThanOrEqual(corner.maxX, 1000)
+        XCTAssertLessThanOrEqual(corner.maxY, 600)
+    }
+
+    // MARK: 长图分段识别
+
+    func testStripsCoverWithOverlap() {
+        XCTAssertEqual(AnnotateLogic.strips(length: 1000, segment: 2400, overlap: 160).map(\.start), [0])
+        let strips = AnnotateLogic.strips(length: 20000, segment: 2400, overlap: 160)
+        XCTAssertEqual(strips.first?.start, 0)
+        XCTAssertEqual(strips.last.map { $0.start + $0.length }, 20000)
+        for i in 1..<strips.count {
+            // 相邻两段至少重叠 overlap，中间没有缝。
+            XCTAssertLessThanOrEqual(strips[i].start, strips[i - 1].start + strips[i - 1].length - 160)
+            XCTAssertLessThanOrEqual(strips[i].length, 2400)
+        }
+    }
+
+    func testDedupeMergesDuplicatesFromOverlap() {
+        let a = CGRect(x: 10, y: 2390, width: 200, height: 30)
+        let b = CGRect(x: 11, y: 2391, width: 199, height: 29)
+        let c = CGRect(x: 10, y: 5000, width: 200, height: 30)
+        let out = AnnotateLogic.dedupe([a, b, c])
+        XCTAssertEqual(out.count, 2)
+        XCTAssertTrue(out[0].contains(a))
+    }
+
+    // MARK: 撤销
+
+    func testUndoHistoryRoundTripAndLimit() {
+        var history = UndoHistory<AnnotateSnapshot>()
+        let empty = AnnotateSnapshot(marks: [], crop: nil)
+        let cropped = AnnotateSnapshot(marks: [], crop: CGRect(x: 0, y: 0, width: 10, height: 10))
+        history.record(empty, new: empty)
+        XCTAssertFalse(history.canUndo)
+        history.record(empty, new: cropped)
+        XCTAssertTrue(history.canUndo)
+        XCTAssertEqual(history.undo(current: cropped), empty)
+        XCTAssertTrue(history.canRedo)
+        XCTAssertEqual(history.redo(current: empty), cropped)
+        XCTAssertFalse(history.canRedo)
+
+        var small = UndoHistory<Int>()
+        small.limit = 3
+        for i in 0..<10 { small.record(i, new: i + 1) }
+        XCTAssertEqual(small.undoStack, [7, 8, 9])
+    }
+
+    func testMarkStrengthDefaultsToOne() {
+        XCTAssertEqual(Mark(kind: .mosaic).strength, 1)
+    }
 }

@@ -21557,6 +21557,150 @@
           }
         }
       }
+    },
+    "长图分 %lld 段识别，没找到要打码的内容。自动识别可能有遗漏，请再检查一遍": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanned the long image in %lld segments and found nothing to redact. Auto-detection can miss things, so please check it yourself"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长图分 %lld 段识别，没找到要打码的内容。自动识别可能有遗漏，请再检查一遍"
+          }
+        }
+      }
+    },
+    "没找到要打码的内容。自动识别可能有遗漏，请再检查一遍": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to redact found. Auto-detection can miss things, so please check it yourself"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没找到要打码的内容。自动识别可能有遗漏，请再检查一遍"
+          }
+        }
+      }
+    },
+    "长图分 %lld 段识别，已打码 %lld 处。自动识别可能有遗漏，请再检查一遍": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanned the long image in %1$lld segments and redacted %2$lld areas. Auto-detection can miss things, so please check it yourself"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长图分 %1$lld 段识别，已打码 %2$lld 处。自动识别可能有遗漏，请再检查一遍"
+          }
+        }
+      }
+    },
+    "已打码 %lld 处，可以拖动、删掉或改样式。自动识别可能有遗漏，请再检查一遍": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redacted %lld areas. Drag, delete, or restyle them. Auto-detection can miss things, so please check it yourself"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已打码 %lld 处，可以拖动、删掉或改样式。自动识别可能有遗漏，请再检查一遍"
+          }
+        }
+      }
+    },
+    "在图上拖出要保留的范围，拖动框可以移动，拖四角和四边可以调大小。存图和拷贝时只留框里的部分，标注照样保留。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag on the image to choose the area to keep. Drag the box to move it, or drag its corners and edges to resize. Saving and copying keep only what's inside the box, with your marks."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在图上拖出要保留的范围，拖动框可以移动，拖四角和四边可以调大小。存图和拷贝时只留框里的部分，标注照样保留。"
+          }
+        }
+      }
+    },
+    "移除这张图？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this image?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除这张图？"
+          }
+        }
+      }
+    },
+    "移除，丢掉标注": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove and Discard Marks"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除，丢掉标注"
+          }
+        }
+      }
+    },
+    "这张图上的标注和裁剪还没保存，移除后找不回来。原图不会动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The marks and crop on this image haven't been saved and can't be recovered after removing it. The original file stays untouched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这张图上的标注和裁剪还没保存，移除后找不回来。原图不会动。"
+          }
+        }
+      }
+    },
+    "已取消，放大好了 %lld 张": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canceled. %lld upscaled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消，放大好了 %lld 张"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

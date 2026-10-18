@@ -40,11 +40,20 @@ enum UpscaleModel: String, CaseIterable, Identifiable {
 
 enum Upscaler {
     enum Failure: Error {
-        case noModel, unreadable, tooLarge, failed
+        case noModel, unreadable, tooLarge, failed, cancelled
+    }
+
+    /// 放大后最多多少像素。6400 万像素的输出画布约 256MB，加上透明通道和原图，峰值大约 400MB。
+    static let maxOutputPixels = 64_000_000
+
+    static func fits(width: Int, height: Int, scale: Int) -> Bool {
+        width > 0 && height > 0 && width * height * scale * scale <= maxOutputPixels
     }
 
     private static let lock = NSLock()
     nonisolated(unsafe) private static var cache: [UpscaleModel: MLModel] = [:]
+    /// 同一时间只让一个放大任务用模型（也避免两份大画布同时占内存）。
+    private static let runLock = NSLock()
 
     static func model(_ kind: UpscaleModel) throws -> MLModel {
         lock.lock()
@@ -58,20 +67,70 @@ enum Upscaler {
         return model
     }
 
-    /// 放大一张图。progress 在后台线程回调，0...1。
+    /// Float16 的位模式 → Float，查表（Intel Mac 上没有 Float16 类型，自己转）。
+    private static let halfTable: [Float] = (0..<65536).map { halfToFloat(UInt16($0)) }
+
+    static func halfToFloat(_ h: UInt16) -> Float {
+        let sign = UInt32(h >> 15) << 31
+        var exponent = Int((h >> 10) & 0x1F)
+        var mantissa = UInt32(h & 0x3FF)
+        if exponent == 0 {
+            if mantissa == 0 { return Float(bitPattern: sign) }
+            // 非规格化数：规格化后再拼。
+            while mantissa & 0x400 == 0 {
+                mantissa <<= 1
+                exponent -= 1
+            }
+            exponent += 1
+            mantissa &= 0x3FF
+        } else if exponent == 31 {
+            return Float(bitPattern: sign | 0x7F80_0000 | (mantissa << 13))
+        }
+        return Float(bitPattern: sign | (UInt32(exponent + 112) << 23) | (mantissa << 13))
+    }
+
+    /// 放大一张图。progress 在后台线程回调，0...1；isCancelled 每块之间检查一次。
+    /// 透明图：先反预乘再喂给模型（模型只认 RGB），透明通道单独按普通方式放大，最后合回去、重新预乘。
     static func upscale(_ image: CGImage, model kind: UpscaleModel, scale: Int,
+                        isCancelled: () -> Bool = { false },
                         progress: ((Double) -> Void)? = nil) throws -> CGImage {
         let W = image.width, H = image.height
-        guard UpscaleLogic.fits(width: W, height: H, scale: scale) else { throw Failure.tooLarge }
+        guard fits(width: W, height: H, scale: scale) else { throw Failure.tooLarge }
+        runLock.lock()
+        defer { runLock.unlock() }
+        if isCancelled() { throw Failure.cancelled }
         let model = try model(kind)
         let space = CGColorSpace(name: CGColorSpace.sRGB)!
 
-        // 原图读成 RGBA 字节（不透明的图 alpha 都是 255）。
+        // 原图读成 RGBA 字节（不透明的图 alpha 都是 255）。CG 的内存是从上到下一行一行存的。
         guard let src = CGContext(data: nil, width: W, height: H, bitsPerComponent: 8, bytesPerRow: W * 4, space: space,
                                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
               let srcData = src.data else { throw Failure.failed }
         src.draw(image, in: CGRect(x: 0, y: 0, width: W, height: H))
         let pixels = srcData.bindMemory(to: UInt8.self, capacity: W * H * 4)
+
+        // 有透明：单独留一张 alpha 平面，RGB 反预乘（不然半透明边缘会乘两次 alpha，出一圈黑边）。
+        var alphaPlane: [UInt8]?
+        for i in 0..<(W * H) where pixels[i * 4 + 3] != 255 {
+            alphaPlane = [UInt8](repeating: 255, count: W * H)
+            break
+        }
+        if alphaPlane != nil {
+            alphaPlane!.withUnsafeMutableBufferPointer { plane in
+                for i in 0..<(W * H) {
+                    let p = i * 4
+                    let a = pixels[p + 3]
+                    plane[i] = a
+                    guard a != 255 else { continue }
+                    if a == 0 {
+                        pixels[p] = 0; pixels[p + 1] = 0; pixels[p + 2] = 0
+                    } else {
+                        let a32 = UInt32(a)
+                        for c in 0..<3 { pixels[p + c] = UInt8(min(255, (UInt32(pixels[p + c]) * 255 + a32 / 2) / a32)) }
+                    }
+                }
+            }
+        }
 
         let outW = W * scale, outH = H * scale
         guard let out = CGContext(data: nil, width: outW, height: outH, bitsPerComponent: 8, bytesPerRow: 0, space: space,
@@ -79,73 +138,87 @@ enum Upscaler {
         out.interpolationQuality = .high
 
         let T = UpscaleLogic.tile, O = UpscaleLogic.overlap
+        // 2×/3×：每块多带 2 像素的重叠一起缩小，缩完只保留中间，块与块之间不会有接缝。
+        let extra = scale == 4 ? 0 : min(2, O)
         let input = try MLMultiArray(shape: [1, 3, NSNumber(value: T), NSNumber(value: T)], dataType: .float32)
         let inPtr = input.dataPointer.bindMemory(to: Float32.self, capacity: 3 * T * T)
         let tiles = UpscaleLogic.tiles(width: W, height: H)
 
         for (n, keep) in tiles.enumerated() {
-            let kx = Int(keep.minX), ky = Int(keep.minY), kw = Int(keep.width), kh = Int(keep.height)
-            // 读入 T×T，越界的像素取最近的边。CG 的内存是从上到下一行一行存的。
-            for y in 0..<T {
-                let sy = min(max(ky - O + y, 0), H - 1)
-                for x in 0..<T {
-                    let sx = min(max(kx - O + x, 0), W - 1)
-                    let p = (sy * W + sx) * 4
-                    let i = y * T + x
-                    inPtr[i] = Float32(pixels[p]) / 255
-                    inPtr[T * T + i] = Float32(pixels[p + 1]) / 255
-                    inPtr[2 * T * T + i] = Float32(pixels[p + 2]) / 255
-                }
-            }
-            let provider = try MLDictionaryFeatureProvider(dictionary: ["input": MLFeatureValue(multiArray: input)])
-            let result = try model.prediction(from: provider)
-            guard let array = result.featureValue(for: "output")?.multiArrayValue else { throw Failure.failed }
-
-            // 取出保留区放大 4 倍后的那块。
-            let bw = kw * 4, bh = kh * 4
-            var block = [UInt8](repeating: 255, count: bw * bh * 4)
-            let strides = array.strides.map(\.intValue)
-            let cs = strides[1], ys = strides[2], xs = strides[3]
-            if array.dataType == .float32 {
-                let ptr = array.dataPointer.bindMemory(to: Float32.self, capacity: array.count)
-                for y in 0..<bh {
-                    let oy = O * 4 + y
-                    for x in 0..<bw {
-                        let ox = O * 4 + x
-                        let base = oy * ys + ox * xs
-                        let q = (y * bw + x) * 4
-                        block[q] = byte(ptr[base])
-                        block[q + 1] = byte(ptr[base + cs])
-                        block[q + 2] = byte(ptr[base + 2 * cs])
+            if isCancelled() { throw Failure.cancelled }
+            // 每块的模型输入输出、临时缓冲在这一块结束就释放，不会攒到整张图做完。
+            try autoreleasepool {
+                let kx = Int(keep.minX), ky = Int(keep.minY), kw = Int(keep.width), kh = Int(keep.height)
+                // 读入 T×T，越界的像素取最近的边。
+                for y in 0..<T {
+                    let sy = min(max(ky - O + y, 0), H - 1)
+                    for x in 0..<T {
+                        let sx = min(max(kx - O + x, 0), W - 1)
+                        let p = (sy * W + sx) * 4
+                        let i = y * T + x
+                        inPtr[i] = Float32(pixels[p]) / 255
+                        inPtr[T * T + i] = Float32(pixels[p + 1]) / 255
+                        inPtr[2 * T * T + i] = Float32(pixels[p + 2]) / 255
                     }
                 }
-            } else {
-                for y in 0..<bh {
-                    for x in 0..<bw {
-                        let q = (y * bw + x) * 4
-                        for c in 0..<3 {
-                            let index = [0, c, O * 4 + y, O * 4 + x].map { NSNumber(value: $0) }
-                            block[q + c] = byte(array[index].floatValue)
+                let provider = try MLDictionaryFeatureProvider(dictionary: ["input": MLFeatureValue(multiArray: input)])
+                let result = try model.prediction(from: provider)
+                guard let array = result.featureValue(for: "output")?.multiArrayValue else { throw Failure.failed }
+
+                // 取出（保留区 + 两边 extra）放大 4 倍后的那块。
+                let x0 = (O - extra) * 4, y0 = (O - extra) * 4
+                let bw = (kw + extra * 2) * 4, bh = (kh + extra * 2) * 4
+                var block = [UInt8](repeating: 255, count: bw * bh * 4)
+                let strides = array.strides.map(\.intValue)
+                let cs = strides[1], ys = strides[2], xs = strides[3]
+                func fill(_ value: (Int) -> Float32) {
+                    for y in 0..<bh {
+                        let row = (y0 + y) * ys
+                        for x in 0..<bw {
+                            let base = row + (x0 + x) * xs
+                            let q = (y * bw + x) * 4
+                            block[q] = byte(value(base))
+                            block[q + 1] = byte(value(base + cs))
+                            block[q + 2] = byte(value(base + 2 * cs))
                         }
                     }
                 }
+                switch array.dataType {
+                case .float32:
+                    let ptr = array.dataPointer.bindMemory(to: Float32.self, capacity: array.count)
+                    fill { ptr[$0] }
+                case .float16:
+                    // 转 ANE 的模型常见 Float16 输出：直接读位模式查表，不走 NSNumber。
+                    let ptr = array.dataPointer.bindMemory(to: UInt16.self, capacity: array.count)
+                    halfTable.withUnsafeBufferPointer { table in fill { table[Int(ptr[$0])] } }
+                case .double:
+                    let ptr = array.dataPointer.bindMemory(to: Double.self, capacity: array.count)
+                    fill { Float32(ptr[$0]) }
+                default:
+                    fill { array[$0].floatValue }
+                }
+                guard let provider2 = CGDataProvider(data: Data(block) as CFData),
+                      let tileImage = CGImage(width: bw, height: bh, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bw * 4,
+                                              space: space, bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+                                              provider: provider2, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+                else { throw Failure.failed }
+                // 输出画布是 CG 坐标（左下角为原点）。只保留中间的保留区。
+                let keepRect = CGRect(x: kx * scale, y: outH - (ky + kh) * scale, width: kw * scale, height: kh * scale)
+                let drawRect = CGRect(x: (kx - extra) * scale, y: outH - (ky + kh + extra) * scale,
+                                      width: (kw + extra * 2) * scale, height: (kh + extra * 2) * scale)
+                out.saveGState()
+                out.clip(to: keepRect)
+                out.draw(tileImage, in: drawRect)
+                out.restoreGState()
             }
-            guard let provider2 = CGDataProvider(data: Data(block) as CFData),
-                  let tileImage = CGImage(width: bw, height: bh, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bw * 4,
-                                          space: space, bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
-                                          provider: provider2, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
-            else { throw Failure.failed }
-            // 输出画布是 CG 坐标（左下角为原点）。
-            let rect = CGRect(x: kx * scale, y: outH - (ky + kh) * scale, width: kw * scale, height: kh * scale)
-            out.draw(tileImage, in: rect)
             progress?(Double(n + 1) / Double(tiles.count))
         }
 
-        guard var output = out.makeImage() else { throw Failure.failed }
-        // 有透明的图（比如抠好的图）：透明度按普通方式放大后套上去。
-        if MediaTools.hasTransparency(image), let masked = applyAlpha(of: image, to: output) {
-            output = masked
+        if let alphaPlane {
+            if isCancelled() { throw Failure.cancelled }
+            try applyAlpha(alphaPlane, width: W, height: H, to: out)
         }
+        guard let output = out.makeImage() else { throw Failure.failed }
         return output
     }
 
@@ -153,28 +226,44 @@ enum Upscaler {
         UInt8(max(0, min(255, (value * 255).rounded())))
     }
 
-    private static func applyAlpha(of original: CGImage, to image: CGImage) -> CGImage? {
-        let W = image.width, H = image.height
-        guard let gray = CGColorSpace(name: CGColorSpace.linearGray),
-              let maskContext = CGContext(data: nil, width: W, height: H, bitsPerComponent: 8, bytesPerRow: 0, space: gray,
-                                          bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue) else { return nil }
-        maskContext.interpolationQuality = .high
-        maskContext.draw(original, in: CGRect(x: 0, y: 0, width: W, height: H))
-        guard let alpha = maskContext.makeImage(),
-              let context = CGContext(data: nil, width: W, height: H, bitsPerComponent: 8, bytesPerRow: 0,
-                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        let rect = CGRect(x: 0, y: 0, width: W, height: H)
-        context.clip(to: rect, mask: alpha)
-        context.draw(image, in: rect)
-        return context.makeImage()
+    /// alpha 平面用 DeviceGray（不带 alpha）的图按高质量插值放大，再逐像素写回 A 通道并重新预乘。
+    private static func applyAlpha(_ plane: [UInt8], width W: Int, height H: Int, to out: CGContext) throws {
+        let outW = out.width, outH = out.height
+        let gray = CGColorSpaceCreateDeviceGray()
+        guard let provider = CGDataProvider(data: Data(plane) as CFData),
+              let alphaImage = CGImage(width: W, height: H, bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: W, space: gray,
+                                       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+                                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent),
+              let scaled = CGContext(data: nil, width: outW, height: outH, bitsPerComponent: 8, bytesPerRow: 0, space: gray,
+                                     bitmapInfo: CGImageAlphaInfo.none.rawValue),
+              let alphaData = scaled.data, let outData = out.data else { throw Failure.failed }
+        scaled.interpolationQuality = .high
+        scaled.draw(alphaImage, in: CGRect(x: 0, y: 0, width: outW, height: outH))
+        let a = alphaData.bindMemory(to: UInt8.self, capacity: scaled.bytesPerRow * outH)
+        let o = outData.bindMemory(to: UInt8.self, capacity: out.bytesPerRow * outH)
+        let aRow = scaled.bytesPerRow, oRow = out.bytesPerRow
+        for y in 0..<outH {
+            for x in 0..<outW {
+                let av = a[y * aRow + x]
+                guard av != 255 else { continue }
+                let p = y * oRow + x * 4
+                let a32 = UInt32(av)
+                o[p] = UInt8((UInt32(o[p]) * a32 + 127) / 255)
+                o[p + 1] = UInt8((UInt32(o[p + 1]) * a32 + 127) / 255)
+                o[p + 2] = UInt8((UInt32(o[p + 2]) * a32 + 127) / 255)
+                o[p + 3] = av
+            }
+        }
     }
 
     /// 放大一个文件，存到原图旁边：「原名-放大4x」，JPEG/HEIC 存 JPG，其他存 PNG。
-    static func upscaleFile(_ url: URL, model: UpscaleModel, scale: Int, progress: ((Double) -> Void)? = nil) -> Result<URL, Failure> {
-        guard let image = MediaTools.loadCGImage(url, maxPixel: nil) else { return .failure(.unreadable) }
+    static func upscaleFile(_ url: URL, model: UpscaleModel, scale: Int, isCancelled: () -> Bool = { false },
+                            progress: ((Double) -> Void)? = nil) -> Result<URL, Failure> {
+        // 按原图最长边读缩略图：按 EXIF 方向转正，和界面上的 originalSize 一致。
+        guard let size = ImageStudio.pixelSize(url),
+              let image = MediaTools.loadCGImage(url, maxPixel: Int(max(size.width, size.height))) else { return .failure(.unreadable) }
         do {
-            let result = try upscale(image, model: model, scale: scale, progress: progress)
+            let result = try upscale(image, model: model, scale: scale, isCancelled: isCancelled, progress: progress)
             let ext = url.pathExtension.lowercased()
             let jpeg = ["jpg", "jpeg", "heic", "heif"].contains(ext) && !MediaTools.hasTransparency(image)
             let target = MediaTools.outputURL(for: url, suffix: String(localized: "放大\(scale)x"), ext: jpeg ? "jpg" : "png")
@@ -193,16 +282,102 @@ enum Upscaler {
     }
 }
 
+/// 线程安全的取消标记（后台的放大循环每块检查一次）。
+final class UpscaleCancelFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    var isCancelled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return value
+    }
+    func cancel() {
+        lock.lock()
+        value = true
+        lock.unlock()
+    }
+}
+
+/// AI 放大的任务状态：放在 ImageStudio 里，切到别的标签页再回来也不丢；可以取消；同一时间只跑一个。
+@MainActor
+final class UpscaleJob: ObservableObject {
+    @Published private(set) var running = false
+    @Published private(set) var progress: Double = 0
+    @Published private(set) var status = ""
+    @Published private(set) var results: [UUID: URL] = [:]
+    private var task: Task<Void, Never>?
+    private var flag = UpscaleCancelFlag()
+
+    func forget(_ id: UUID) { results[id] = nil }
+
+    func cancel() {
+        guard running else { return }
+        flag.cancel()
+        status = String(localized: "正在取消…")
+    }
+
+    func run(_ items: [ImageStudio.Item], model kind: UpscaleModel, scale factor: Int, studio: ImageStudio) {
+        guard !running, !items.isEmpty else { return }
+        running = true
+        progress = 0
+        let flag = UpscaleCancelFlag()
+        self.flag = flag
+        task = Task {
+            var done = 0, tooLarge = 0, failed = 0
+            for (index, item) in items.enumerated() {
+                if flag.isCancelled { break }
+                status = items.count > 1 ? String(localized: "正在放大第 \(index + 1) / \(items.count) 张…") : String(localized: "正在放大…")
+                let url = item.url
+                let total = Double(items.count)
+                let result = await Task.detached(priority: .userInitiated) {
+                    Upscaler.upscaleFile(url, model: kind, scale: factor, isCancelled: { flag.isCancelled }) { p in
+                        Task { @MainActor [weak self] in
+                            guard let self, self.running else { return }
+                            self.progress = (Double(index) + p) / total
+                        }
+                    }
+                }.value
+                switch result {
+                case .success(let output):
+                    // 放大期间这张图被移除了：文件照样存好，但不再挂回列表。
+                    if studio.items.contains(where: { $0.id == item.id }) { results[item.id] = output }
+                    done += 1
+                case .failure(.tooLarge):
+                    tooLarge += 1
+                case .failure(.cancelled):
+                    break
+                case .failure:
+                    failed += 1
+                }
+            }
+            let cancelled = flag.isCancelled
+            running = false
+            progress = 1
+            var text = cancelled ? String(localized: "已取消，放大好了 \(done) 张") : String(localized: "已放大 \(done) 张，存在原图旁边")
+            if tooLarge > 0 { text += String(localized: "；\(tooLarge) 张太大没处理") }
+            if failed > 0 { text += String(localized: "；\(failed) 张失败") }
+            status = text
+            if done > 0 { LibraryStore.shared?.filesChangedTick += 1 }
+            task = nil
+        }
+    }
+}
+
 // MARK: - 图片工具里的「放大」页
 
 struct UpscalePanel: View {
     @EnvironmentObject private var studio: ImageStudio
+
+    var body: some View {
+        UpscaleView(job: studio.upscaler)
+    }
+}
+
+private struct UpscaleView: View {
+    @ObservedObject var job: UpscaleJob
+    @EnvironmentObject private var studio: ImageStudio
     @AppStorage("upscaleModel") private var modelRaw = UpscaleModel.photo.rawValue
     @AppStorage("upscaleScale") private var scale = 4
-    @State private var running = false
-    @State private var progress: Double = 0
-    @State private var status = ""
-    @State private var results: [ImageStudio.Item.ID: URL] = [:]
     @State private var resultImage: NSImage?
     @State private var split: CGFloat = 0.5
 
@@ -226,15 +401,21 @@ struct UpscalePanel: View {
                 inspector(item)
                     .frame(width: 280)
             }
-            .task(id: results[item.id]) {
-                resultImage = results[item.id].flatMap { NSImage(contentsOf: $0) }
+            .task(id: job.results[item.id]) {
+                // 只按预览大小读放大结果（4× 大图整张解码太占内存），对比时够用。
+                let url = job.results[item.id]
+                resultImage = await Task.detached(priority: .userInitiated) { () -> NSImage? in
+                    guard let url, let cg = MediaTools.loadCGImage(url, maxPixel: 2400) else { return nil }
+                    return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
+                }.value
+                split = 0.5
             }
         }
     }
 
     private func statusText(_ item: ImageStudio.Item) -> String {
-        if !status.isEmpty { return status }
-        if results[item.id] != nil { return String(localized: "拖动中间的线对比放大前后") }
+        if !job.status.isEmpty { return job.status }
+        if job.results[item.id] != nil { return String(localized: "拖动中间的线对比放大前后") }
         let w = Int(item.originalSize.width), h = Int(item.originalSize.height)
         return String(localized: "\(w) × \(h) → \(w * scale) × \(h * scale)，在本机运行，图片不上传")
     }
@@ -273,8 +454,8 @@ struct UpscalePanel: View {
                     }
                     .frame(width: fitted.width - 16)
                     .frame(height: fitted.height - 16, alignment: .bottom)
-                } else if running {
-                    ProgressView(value: progress)
+                } else if job.running {
+                    ProgressView(value: job.progress)
                         .progressViewStyle(.circular)
                         .controlSize(.large)
                 }
@@ -342,7 +523,7 @@ struct UpscalePanel: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            if !UpscaleLogic.fits(width: Int(item.originalSize.width), height: Int(item.originalSize.height), scale: scale) {
+            if !Upscaler.fits(width: Int(item.originalSize.width), height: Int(item.originalSize.height), scale: scale) {
                 Text("这张图太大了，换小一点的倍数试试")
                     .font(.caption)
                     .foregroundStyle(.orange)
@@ -350,8 +531,12 @@ struct UpscalePanel: View {
 
             Spacer()
 
-            if running {
-                ProgressView(value: progress)
+            if job.running {
+                HStack {
+                    ProgressView(value: job.progress)
+                    Button("取消") { job.cancel() }
+                        .controlSize(.small)
+                }
             }
             VStack(spacing: 8) {
                 Button {
@@ -366,12 +551,12 @@ struct UpscalePanel: View {
                     Button(String(localized: "全部放大（\(studio.items.count) 张）")) { run(studio.items) }
                         .frame(maxWidth: .infinity)
                 }
-                if let url = results[item.id] {
+                if let url = job.results[item.id] {
                     Button("打开放大后的图") { LibraryStore.openFromOutside(url) }
                         .frame(maxWidth: .infinity)
                 }
             }
-            .disabled(running)
+            .disabled(job.running)
             Text("存在原图旁边，原图不动")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -381,38 +566,6 @@ struct UpscalePanel: View {
 
     private func run(_ items: [ImageStudio.Item]) {
         guard MediaTools.requirePro() else { return }
-        running = true
-        progress = 0
-        let kind = model, factor = scale
-        Task {
-            var done = 0, tooLarge = 0, failed = 0
-            for (index, item) in items.enumerated() {
-                status = items.count > 1 ? String(localized: "正在放大第 \(index + 1) / \(items.count) 张…") : String(localized: "正在放大…")
-                let url = item.url
-                let total = Double(items.count)
-                let result = await Task.detached(priority: .userInitiated) {
-                    Upscaler.upscaleFile(url, model: kind, scale: factor) { p in
-                        Task { @MainActor in progress = (Double(index) + p) / total }
-                    }
-                }.value
-                switch result {
-                case .success(let output):
-                    results[item.id] = output
-                    done += 1
-                case .failure(.tooLarge):
-                    tooLarge += 1
-                case .failure:
-                    failed += 1
-                }
-            }
-            running = false
-            progress = 1
-            var text = String(localized: "已放大 \(done) 张，存在原图旁边")
-            if tooLarge > 0 { text += String(localized: "；\(tooLarge) 张太大没处理") }
-            if failed > 0 { text += String(localized: "；\(failed) 张失败") }
-            status = text
-            split = 0.5
-            if done > 0 { LibraryStore.shared?.filesChangedTick += 1 }
-        }
+        job.run(items, model: model, scale: scale, studio: studio)
     }
 }

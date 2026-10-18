@@ -133,4 +133,50 @@ final class StitchTests: XCTestCase {
         XCTAssertTrue(points.contains { $0.x > 800 && $0.y > 800 })
         XCTAssertTrue(StitchLogic.tilePoints(canvas: .zero, mark: CGSize(width: 1, height: 1), density: 1).isEmpty)
     }
+
+    func testAutoStitchDetailedReportsOverlap() {
+        let full = page(300)
+        let crops = StitchLogic.autoStitchDetailed([Array(full[0..<200]), Array(full[150..<300])], removeBars: false)
+        XCTAssertEqual(crops[1].overlap, 50)
+        XCTAssertEqual(crops[1].start, 50)
+    }
+
+    func testOverlapStopsWhenCancelled() {
+        let full = page(400)
+        XCTAssertEqual(StitchLogic.overlap(Array(full[0..<300]), Array(full[100..<400]), isCancelled: { true }), 0)
+    }
+
+    func testRefineStartFindsExactSeam() {
+        let full = page(400)
+        // a 可见到第 200 行（不含），b 是从第 100 行开始的同一页：b 的起点应该是 100（b 自己的坐标）。
+        let aTail = Array(full[176..<200])
+        let bFirst = 60
+        let bRows = Array(full[(100 + bFirst)..<(100 + bFirst + 60)])
+        let refined = StitchLogic.refineStart(aTail: aTail, bRows: bRows, bFirst: bFirst, guess: 97, radius: 8)
+        XCTAssertEqual(refined, 100)
+    }
+
+    func testPreviewAndSamplingSizes() {
+        XCTAssertEqual(StitchLogic.previewMaxPixel(for: CGSize(width: 800, height: 600)), 800)
+        XCTAssertEqual(StitchLogic.previewMaxPixel(for: CGSize(width: 4000, height: 3000)), 1600)
+        // 长截图：比 1600 长，但总像素不超过 400 万。
+        let long = StitchLogic.previewMaxPixel(for: CGSize(width: 1179, height: 20000))
+        XCTAssertGreaterThan(long, 1600)
+        let width = 1179 * CGFloat(long) / 20000
+        XCTAssertLessThanOrEqual(width * CGFloat(long), 4_000_100)
+        XCTAssertEqual(StitchLogic.samplingMaxPixel(for: CGSize(width: 1400, height: 14000), vertical: true), 7000)
+        XCTAssertEqual(StitchLogic.samplingMaxPixel(for: CGSize(width: 500, height: 5000), vertical: true), 5000)
+    }
+
+    func testNeededMaxPixelFollowsCellSize() {
+        // 8000×6000 的原图画进 1600 宽的格子：只需要读到约 1/5。
+        let needed = StitchLogic.neededMaxPixel(original: CGSize(width: 8000, height: 6000),
+                                                source: CGRect(x: 0, y: 0, width: 8000, height: 6000),
+                                                frame: CGRect(x: 0, y: 0, width: 1600, height: 1200), scale: 1)
+        XCTAssertEqual(needed, 1602)
+        let half = StitchLogic.neededMaxPixel(original: CGSize(width: 1000, height: 500),
+                                              source: CGRect(x: 0, y: 0, width: 1000, height: 500),
+                                              frame: CGRect(x: 0, y: 0, width: 1000, height: 500), scale: 2)
+        XCTAssertEqual(half, 1002)
+    }
 }

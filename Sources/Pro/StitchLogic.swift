@@ -190,6 +190,28 @@ enum StitchLogic {
         return StitchResult(canvas: canvas, placements: shifted)
     }
 
+    // MARK: 预览、采样尺寸
+
+    /// 预览图的最长边：一般 1600；特别长的图（长截图）放宽，让短边不至于太糊，但总像素不超过 maxPixels。
+    static func previewMaxPixel(for size: CGSize, base: CGFloat = 1600, maxPixels: CGFloat = 4_000_000) -> Int {
+        let longest = max(size.width, size.height), shortest = min(size.width, size.height)
+        guard longest > 0, shortest > 0 else { return Int(base) }
+        if longest <= base { return Int(longest.rounded(.up)) }
+        // 普通比例的图照旧按 1600 读，只给细长的图放宽。
+        guard longest / shortest > 2.5 else { return Int(base) }
+        let byArea = longest * min(1, (maxPixels / (size.width * size.height)).squareRoot())
+        return Int(min(longest, max(base, byArea)).rounded())
+    }
+
+    /// 自动拼接采样用的图：按横截面（竖拼是宽、横拼是高）缩到 crossLength，返回要传给缩略图的最长边。
+    static func samplingMaxPixel(for size: CGSize, vertical: Bool, crossLength: CGFloat = 700) -> Int {
+        let cross = vertical ? size.width : size.height
+        let along = vertical ? size.height : size.width
+        guard cross > 0, along > 0 else { return Int(crossLength) }
+        let s = min(1, crossLength / cross)
+        return max(Int((max(cross, along) * s).rounded()), 1)
+    }
+
     // MARK: 导出尺寸
 
     /// 输出倍率：原始、0.75、0.5，或限制长边。
@@ -200,6 +222,14 @@ enum StitchLogic {
             return min(1, CGFloat(limit) / longest)
         }
         return CGFloat(min(max(scale, 0.05), 4))
+    }
+
+    /// 导出时一张图需要读到多大（缩略图最长边）：画到画布上的像素 ÷ 用到的原图像素，不超过原图。
+    static func neededMaxPixel(original: CGSize, source: CGRect, frame: CGRect, scale: CGFloat) -> Int {
+        let longest = max(original.width, original.height)
+        guard source.width > 0, source.height > 0, longest > 0 else { return max(Int(longest), 1) }
+        let ratio = max(frame.width * scale / source.width, frame.height * scale / source.height)
+        return max(Int((longest * min(ratio, 1)).rounded(.up)) + 2, 16)
     }
 
     // MARK: 自动拼接
@@ -233,27 +263,66 @@ enum StitchLogic {
 
     /// a 的最后 k 行和 b 的最前 k 行重叠：返回最大的这样的 k（找不到返回 0）。
     /// 一行颜色都一样（纯色背景）不算证据，至少要 minRows 行，而且要有足够的有内容的行。
-    static func overlap(_ a: [[UInt8]], _ b: [[UInt8]], minRows: Int = 8, tolerance: Double = 6) -> Int {
+    /// 先在均匀分布的约 32 行上粗筛，过了再逐行细查；「有内容的行」用前缀和，O(1) 得到。
+    static func overlap(_ a: [[UInt8]], _ b: [[UInt8]], minRows: Int = 8, tolerance: Double = 6,
+                        isCancelled: () -> Bool = { false }) -> Int {
         let maxK = min(a.count, b.count) - 1
         guard maxK >= minRows else { return 0 }
+        // detailedPrefix[n] = b 的前 n 行里有内容的行数。
+        var detailedPrefix = [Int](repeating: 0, count: b.count + 1)
+        for (i, row) in b.enumerated() { detailedPrefix[i + 1] = detailedPrefix[i] + (variance(row) > 20 ? 1 : 0) }
         var k = maxK
         while k >= minRows {
+            if k % 64 == 0, isCancelled() { return 0 }
+            defer { k -= 1 }
+            let detailed = detailedPrefix[k]
+            guard detailed >= max(minRows / 2, k / 10) else { continue }
             let offset = a.count - k
-            var total = 0.0
-            var detailed = 0
+            // 粗筛
+            let stride = max(1, k / 32)
+            var coarse = 0.0, count = 0
             var ok = true
+            var row = 0
+            while row < k {
+                let d = meanDiff(a[offset + row], b[row])
+                if d > tolerance * 3 { ok = false; break }
+                coarse += d
+                count += 1
+                row += stride
+            }
+            guard ok, count > 0, coarse / Double(count) <= tolerance * 1.5 else { continue }
+            // 细查
+            var total = 0.0
             for row in 0..<k {
                 let d = meanDiff(a[offset + row], b[row])
                 if d > tolerance * 3 { ok = false; break }
                 total += d
-                if variance(b[row]) > 20 { detailed += 1 }
             }
-            if ok, total / Double(k) <= tolerance, detailed >= max(minRows / 2, k / 10) {
-                return k
-            }
-            k -= 1
+            if ok, total / Double(k) <= tolerance { return k }
         }
         return 0
+    }
+
+    /// 在原图分辨率上微调接缝：a 的最后 window 行（aTail）应该紧挨在 b 的第 start 行之前。
+    /// bRows 是 b 从第 bFirst 行开始连续的采样行；在 guess ± radius 里找平均差最小的 start。
+    static func refineStart(aTail: [[UInt8]], bRows: [[UInt8]], bFirst: Int, guess: Int, radius: Int) -> Int {
+        let window = aTail.count
+        guard window > 0, !bRows.isEmpty else { return guess }
+        var best = guess
+        var bestScore = Double.infinity
+        for start in (guess - radius)...(guess + radius) {
+            let first = start - window - bFirst
+            guard first >= 0, first + window <= bRows.count else { continue }
+            var total = 0.0
+            for i in 0..<window { total += meanDiff(aTail[i], bRows[first + i]) }
+            let score = total / Double(window)
+            // 一样好时取离粗估更近的。
+            if score < bestScore - 0.01 || (abs(score - bestScore) <= 0.01 && abs(start - guess) < abs(best - guess)) {
+                bestScore = score
+                best = start
+            }
+        }
+        return best
     }
 
     static func variance(_ row: [UInt8]) -> Double {
@@ -265,10 +334,18 @@ enum StitchLogic {
     /// 自动拼接：每张图该从开头 / 结尾裁掉多少「采样行」。
     /// lines[i] 是第 i 张图沿拼接方向的采样（竖向是一行一行，横向是一列一列），采样密度要一致。
     /// removeBars：开头 / 结尾都一样的固定栏只保留一份（第一张留顶栏，最后一张留底栏）。
-    static func autoStitch(_ lines: [[[UInt8]]], removeBars: Bool) -> [(start: Int, end: Int)] {
-        var crops = [(start: Int, end: Int)](repeating: (0, 0), count: lines.count)
+    static func autoStitch(_ lines: [[[UInt8]]], removeBars: Bool,
+                           isCancelled: () -> Bool = { false }) -> [(start: Int, end: Int)] {
+        autoStitchDetailed(lines, removeBars: removeBars, isCancelled: isCancelled).map { ($0.start, $0.end) }
+    }
+
+    /// 同上，另外给出每张图和上一张重叠的行数（overlap，不含固定栏），用于在原图上微调接缝。
+    static func autoStitchDetailed(_ lines: [[[UInt8]]], removeBars: Bool,
+                                   isCancelled: () -> Bool = { false }) -> [(start: Int, end: Int, overlap: Int)] {
+        var crops = [(start: Int, end: Int, overlap: Int)](repeating: (0, 0, 0), count: lines.count)
         guard lines.count >= 2 else { return crops }
         for i in 1..<lines.count {
+            if isCancelled() { return crops }
             let a = lines[i - 1]
             let b = lines[i]
             var header = 0
@@ -281,7 +358,8 @@ enum StitchLogic {
             }
             let aBody = Array(a[header..<max(a.count - footer, header)])
             let bBody = Array(b[header..<max(b.count - footer, header)])
-            let k = overlap(aBody, bBody)
+            let k = overlap(aBody, bBody, isCancelled: isCancelled)
+            crops[i].overlap = k
             if removeBars {
                 crops[i - 1].end = max(crops[i - 1].end, footer)
                 crops[i].start = header + k

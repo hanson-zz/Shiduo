@@ -6,6 +6,8 @@ import CoreText
 /// 尺寸都来自 BeautifyStyle.layout（左上角为原点），这里换成 CG 的左下角坐标再画。
 enum BeautifyRenderer {
     private static let space = CGColorSpace(name: CGColorSpace.sRGB)!
+    /// 共用一个 CIContext：每次重画都新建一个很贵，调参数时预览会明显变慢。
+    private static let ciContext = CIContext(options: [.cacheIntermediates: false])
 
     static func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
         let c = BeautifyStyle.rgb(hex)
@@ -195,7 +197,7 @@ enum BeautifyRenderer {
             .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: radius])
             .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 1.3])
             .cropped(to: CGRect(x: scaled.extent.minX + dx, y: scaled.extent.minY + dy, width: size.width, height: size.height))
-        return CIContext().createCGImage(output, from: output.extent)
+        return ciContext.createCGImage(output, from: output.extent)
     }
 
     // MARK: 窗口外框
