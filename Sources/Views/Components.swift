@@ -6,6 +6,8 @@ struct ThumbnailView: View {
     /// 填满方框（裁掉多余部分），用于圆形小缩略图。
     var fill = false
     @State private var image: NSImage?
+    /// 缓存被清掉（比如文件夹刚上色）时加一，触发重新取图
+    @State private var version = 0
 
     var body: some View {
         Group {
@@ -21,7 +23,13 @@ struct ThumbnailView: View {
         }
         .frame(width: size, height: size)
         .clipped()
-        .task(id: "\(url.path)#\(Int(size))") {
+        .onReceive(NotificationCenter.default.publisher(for: ThumbnailService.invalidated)) { note in
+            guard let paths = note.userInfo?["paths"] as? Set<String>,
+                  paths.contains(url.standardizedFileURL.path) else { return }
+            image = nil
+            version += 1
+        }
+        .task(id: "\(url.path)#\(Int(size))#\(version)") {
             if let cached = ThumbnailService.shared.cached(for: url, size: size) {
                 image = cached
                 return

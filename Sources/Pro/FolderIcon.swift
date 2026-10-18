@@ -320,6 +320,7 @@ final class FolderIconService: ObservableObject {
             ledger.remember(style)
             save()
         }
+        ThumbnailService.shared.invalidate(outcome.succeeded)
         return outcome
     }
 
@@ -361,6 +362,7 @@ final class FolderIconService: ObservableObject {
             outcome.succeeded.append(url)
         }
         if changed { save() }
+        ThumbnailService.shared.invalidate(outcome.succeeded)
         return outcome
     }
 

@@ -18,6 +18,29 @@ final class ThumbnailService {
         return 512
     }
 
+    /// 图标或内容变了（比如文件夹上色、还原）时调用：清掉这些路径所有档位的缓存，
+    /// 并通知正在显示它们的 ThumbnailView 重新取图。
+    static let invalidated = Notification.Name("ThumbnailService.invalidated")
+
+    func invalidate(_ urls: [URL]) {
+        let paths = urls.map { $0.standardizedFileURL.path }
+        guard !paths.isEmpty else { return }
+        for path in paths {
+            for edge in [48, 128, 256, 512] {
+                cache.removeObject(forKey: "\(path)#\(edge)" as NSString)
+            }
+        }
+        let post = { NotificationCenter.default.post(name: Self.invalidated, object: nil, userInfo: ["paths": Set(paths)]) }
+        if Thread.isMainThread { post() } else { DispatchQueue.main.async(execute: post) }
+    }
+
+    /// 普通文件夹（不是 .app 这类包）直接用系统图标：自定义图标改了以后马上能看到，
+    /// 不会被 Quick Look 自己的缓存挡住。
+    private func isPlainFolder(_ url: URL) -> Bool {
+        let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isPackageKey])
+        return values?.isDirectory == true && values?.isPackage != true
+    }
+
     func cached(for url: URL, size: CGFloat) -> NSImage? {
         cache.object(forKey: "\(url.path)#\(Int(bucket(for: size)))" as NSString)
     }
@@ -26,6 +49,12 @@ final class ThumbnailService {
         let edge = bucket(for: size)
         let key = "\(url.path)#\(Int(edge))" as NSString
         if let image = cache.object(forKey: key) { return image }
+        if isPlainFolder(url) {
+            let image = NSWorkspace.shared.icon(forFile: url.path)
+            image.size = NSSize(width: edge, height: edge)
+            cache.setObject(image, forKey: key)
+            return image
+        }
         let request = QLThumbnailGenerator.Request(
             fileAt: url,
             size: CGSize(width: edge, height: edge),
