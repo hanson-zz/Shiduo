@@ -525,9 +525,10 @@ struct FileCollectionView: View {
             }
             .width(min: 110, ideal: 150)
             TableColumn("大小", value: \FileItem.size) { item in
-                Text(item.sizeText)
+                ItemSizeText(item: item)
+                    .lineLimit(1)
             }
-            .width(min: 60, ideal: 80)
+            .width(min: 60, ideal: 120)
             TableColumn("种类", value: \FileItem.kindText) { item in
                 Text(item.kindText)
             }
@@ -844,9 +845,10 @@ struct FileGridCell: View {
                 .truncationMode(.middle)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: size + 16)
-            Text(item.sizeText)
+            ItemSizeText(item: item)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
         }
         .padding(8)
         .background {

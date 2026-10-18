@@ -87,7 +87,11 @@ struct InspectorView: View {
                     .controlSize(.small)
                     Divider()
                     InfoRow(title: String(localized: "种类"), value: item.kindText)
-                    InfoRow(title: String(localized: "大小"), value: item.sizeText)
+                    if item.needsComputedSize {
+                        FolderStatsSection(item: item)
+                    } else {
+                        InfoRow(title: String(localized: "大小"), value: item.sizeText)
+                    }
                     if let dimensions = media.dimensions { InfoRow(title: String(localized: "尺寸"), value: dimensions) }
                     if let duration = media.duration { InfoRow(title: String(localized: "时长"), value: duration) }
                     if let camera = media.camera { InfoRow(title: String(localized: "相机"), value: camera) }
@@ -97,6 +101,9 @@ struct InspectorView: View {
                     if let added = item.added { InfoRow(title: String(localized: "添加时间"), value: added.shortText) }
                     InfoRow(title: String(localized: "上次打开"), value: item.lastUsed?.shortText ?? String(localized: "从未打开或无记录"))
                     InfoRow(title: String(localized: "inspector.where", defaultValue: "位置"), value: item.url.deletingLastPathComponent().path)
+                    if item.isDirectory {
+                        FolderBreakdownSection(item: item)
+                    }
                     if !item.whereFroms.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("下载来源")
