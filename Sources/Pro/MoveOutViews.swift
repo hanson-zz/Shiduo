@@ -278,6 +278,11 @@ struct MoveOutSheet: View {
                     .font(.callout)
                     .foregroundStyle(.red)
             }
+            if !result.partial.isEmpty {
+                Text(String(localized: "\(result.partial.count) 个已经完整拷到新位置，但原位置有文件删不掉（可能被锁定或没有权限），两边都保留了，请手动处理：\(result.partial.prefix(5).map(\.name).joined(separator: String(localized: "、")))"))
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            }
             if !result.aliasFailed.isEmpty {
                 Text(String(localized: "\(result.aliasFailed.count) 个已经搬走，但原位置没能留下替身，要去新位置打开：\(result.aliasFailed.prefix(5).joined(separator: String(localized: "、")))"))
                     .font(.callout)
@@ -294,9 +299,10 @@ struct MoveOutSheet: View {
                     }
                 }
                 Spacer()
-                if !result.moved.isEmpty {
+                if !result.moved.isEmpty || !result.partial.isEmpty {
                     Button("在访达中显示") {
-                        NSWorkspace.shared.activateFileViewerSelecting(result.moved.map { URL(fileURLWithPath: $0.to) })
+                        NSWorkspace.shared.activateFileViewerSelecting((result.moved + result.partial).map { URL(fileURLWithPath: $0.to) }
+                            + result.partial.map { URL(fileURLWithPath: $0.from) })
                     }
                 }
                 Button("完成") {

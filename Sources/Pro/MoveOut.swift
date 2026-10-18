@@ -171,6 +171,8 @@ struct MoveOutResult: Sendable {
     var failed: [String] = []
     /// 搬成了，但原位置的替身没建成（原位置现在是空的）。
     var aliasFailed: [String] = []
+    /// 新位置已经有完整副本，但原位置没能删干净（有锁定或没权限的文件）：两边都保留，要用户手动处理。
+    var partial: [MovedFile] = []
     var cancelled = false
     /// 源磁盘上腾出的空间（只算跨盘搬走的）。
     var freedBytes: Int64 { moved.filter(\.crossVolume).reduce(0) { $0 + $1.size } }
@@ -233,19 +235,7 @@ enum MoveOutEngine {
     }
 
     /// 文件（或文件夹里所有文件）的字节数，用来核对拷贝是否完整。
-    static func logicalSize(_ url: URL) -> Int64 {
-        let keys: Set<URLResourceKey> = [.isDirectoryKey, .fileSizeKey, .isSymbolicLinkKey]
-        let values = try? url.resourceValues(forKeys: keys)
-        if values?.isDirectory != true { return Int64(values?.fileSize ?? 0) }
-        var total: Int64 = 0
-        if let e = FileManager.default.enumerator(at: url, includingPropertiesForKeys: Array(keys)) {
-            for case let file as URL in e {
-                let v = try? file.resourceValues(forKeys: keys)
-                if v?.isDirectory != true, v?.isSymbolicLink != true { total += Int64(v?.fileSize ?? 0) }
-            }
-        }
-        return total
-    }
+    static func logicalSize(_ url: URL) -> Int64 { MoveOutLogic.logicalSize(url) }
 
     /// 目标文件夹：<目标>/拾掇搬家/<原来所在文件夹的名字>/，或直接放在目标根目录。
     static func folder(for source: URL, options: MoveOutOptions) -> URL {
@@ -298,9 +288,21 @@ enum MoveOutEngine {
             let base = done
             let ok: Bool
             if cross {
-                ok = copyThenRemove(url, to: target, cancel: cancel) { bytes in
+                let outcome = copyThenRemove(url, to: target, cancel: cancel) { bytes in
                     progress(MoveOutProgress(fileIndex: index, fileCount: sources.count, currentName: source.name,
                                              bytesDone: base + min(bytes, source.size), bytesTotal: total))
+                }
+                switch outcome {
+                case .moved:
+                    ok = true
+                case .failed:
+                    ok = false
+                case .leftover:
+                    // 新副本完整保留，原位置还有残留：不建替身（原位置不是空的），也不记成「搬走」。
+                    done += source.size
+                    result.partial.append(MovedFile(name: source.name, from: source.path, to: target.path,
+                                                    size: source.size, aliasPath: nil, crossVolume: true))
+                    continue
                 }
             } else {
                 do {
@@ -339,13 +341,34 @@ enum MoveOutEngine {
         return result
     }
 
+    enum CopyOutcome: Equatable {
+        /// 拷好、核对过，原文件也删干净了。
+        case moved
+        /// 没搬成：原文件完整还在，目标里的半成品已清掉。
+        case failed
+        /// 目标里有完整副本，但原位置删到一半失败，还有残留：两边都保留。
+        case leftover
+    }
+
     /// 跨盘：先完整拷贝到目标，核对大小一致后才删除原文件；任何一步失败都保留原文件。
-    static func copyThenRemove(_ source: URL, to target: URL, cancel: MoveOutCancelFlag, onBytes: @escaping (Int64) -> Void) -> Bool {
+    /// 删原文件时先在同一目录原子改名成临时名再删：改名失败说明一个文件都没动过，才可以安全撤回拷贝；
+    /// 删到一半失败时绝不删目标副本（那是唯一完整的一份），只把残留改回原名，交给用户处理。
+    static func copyThenRemove(_ source: URL, to target: URL, cancel: MoveOutCancelFlag, onBytes: @escaping (Int64) -> Void) -> CopyOutcome {
+        guard let expected = copyVerified(source, to: target, cancel: cancel, onBytes: onBytes) else { return .failed }
+        switch MoveOutLogic.removeSource(source, expectedSize: expected, target: target) {
+        case .removed: return .moved
+        case .untouched: return .failed
+        case .leftover: return .leftover
+        }
+    }
+
+    /// 完整拷贝到目标并核对大小。成功返回字节数；失败或取消时清掉目标里的半成品、返回 nil（原文件不动）。
+    static func copyVerified(_ source: URL, to target: URL, cancel: MoveOutCancelFlag, onBytes: @escaping (Int64) -> Void) -> Int64? {
         let fm = FileManager.default
         let context = CopyContext(cancel: cancel, onBytes: onBytes)
         let unmanaged = Unmanaged.passRetained(context)
         defer { unmanaged.release() }
-        guard let state = copyfile_state_alloc() else { return false }
+        guard let state = copyfile_state_alloc() else { return nil }
         defer { copyfile_state_free(state) }
         copyfile_state_set(state, UInt32(COPYFILE_STATE_STATUS_CB), unsafeBitCast(copyProgressCallback, to: UnsafeRawPointer.self))
         copyfile_state_set(state, UInt32(COPYFILE_STATE_STATUS_CTX), UnsafeRawPointer(unmanaged.toOpaque()))
@@ -359,7 +382,7 @@ enum MoveOutEngine {
         guard status == 0, !cancel.isCancelled else {
             // 没拷完（或被取消）：删掉目标里的半成品，原文件不动。
             try? fm.removeItem(at: target)
-            return false
+            return nil
         }
         // 核对大小。
         let expected = logicalSize(source)
@@ -367,17 +390,73 @@ enum MoveOutEngine {
         guard expected == copied else {
             AppLog.files.error("Move out: size mismatch \(expected) vs \(copied)")
             try? fm.removeItem(at: target)
-            return false
+            return nil
         }
-        do {
-            try fm.removeItem(at: source)
-            return true
-        } catch {
-            // 删不掉原文件（权限等）：撤回拷贝，免得出现两份。
-            AppLog.files.error("Move out: cannot remove source: \(AppLog.describe(error), privacy: .public)")
-            try? fm.removeItem(at: target)
-            return false
+        return expected
+    }
+
+    /// 暂存架页的「移动到… / 拷贝到…」：在后台一个个处理，有进度、能取消。
+    /// 移动时同一块盘直接改位置；跨盘走「拷贝、核对、删除」（和搬家一样，删原文件失败时两边都保留）。
+    /// 结果里 moved 是处理成功的（拷贝时就是拷好的副本）。会阻塞，在后台线程调用。
+    static func transfer(_ urls: [URL], to folder: URL, copyOnly: Bool, cancel: MoveOutCancelFlag,
+                         progress: @escaping (MoveOutProgress) -> Void) -> MoveOutResult {
+        let fm = FileManager.default
+        var result = MoveOutResult()
+        let sizes = urls.map { logicalSize($0) }
+        let total = sizes.reduce(0, +)
+        var done: Int64 = 0
+        for (index, url) in urls.enumerated() {
+            if cancel.isCancelled {
+                result.cancelled = true
+                break
+            }
+            let size = sizes[index]
+            let name = url.lastPathComponent
+            progress(MoveOutProgress(fileIndex: index, fileCount: urls.count, currentName: name, bytesDone: done, bytesTotal: total))
+            if !copyOnly, url.deletingLastPathComponent().standardizedFileURL == folder.standardizedFileURL {
+                result.skipped.append(name)
+                done += size
+                continue
+            }
+            let target = OrganizeEngine.uniqueURL(for: name, in: folder)
+            let cross = !sameVolume(url, folder)
+            let base = done
+            let onBytes: (Int64) -> Void = { bytes in
+                progress(MoveOutProgress(fileIndex: index, fileCount: urls.count, currentName: name,
+                                         bytesDone: base + min(bytes, size), bytesTotal: total))
+            }
+            var ok = false
+            if copyOnly {
+                ok = copyVerified(url, to: target, cancel: cancel, onBytes: onBytes) != nil
+            } else if cross {
+                switch copyThenRemove(url, to: target, cancel: cancel, onBytes: onBytes) {
+                case .moved: ok = true
+                case .failed: ok = false
+                case .leftover:
+                    done += size
+                    result.partial.append(MovedFile(name: name, from: url.path, to: target.path, size: size, aliasPath: nil, crossVolume: true))
+                    continue
+                }
+            } else {
+                do {
+                    try fm.moveItem(at: url, to: target)
+                    ok = true
+                } catch {
+                    AppLog.shelf.error("Shelf move failed: \(AppLog.describe(error), privacy: .public)")
+                }
+            }
+            done += size
+            if ok {
+                result.moved.append(MovedFile(name: name, from: url.path, to: target.path, size: size, aliasPath: nil, crossVolume: cross))
+            } else if cancel.isCancelled {
+                result.cancelled = true
+                break
+            } else {
+                result.failed.append(name)
+            }
         }
+        progress(MoveOutProgress(fileIndex: urls.count, fileCount: urls.count, currentName: "", bytesDone: done, bytesTotal: total))
+        return result
     }
 }
 

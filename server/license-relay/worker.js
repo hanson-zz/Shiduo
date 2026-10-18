@@ -12,6 +12,14 @@
 // 返回给 App 的格式（与 App 里 LicenseAPI.parse 对应）：
 //   { activated|valid|deactivated: Bool, error?: String,
 //     instance: { id }, license_key: { status }, meta: { product_id } }
+//
+// 只有「明确不可用」（找不到、过期、停用、激活数用完、不是本产品）才返回 valid:false。
+// Creem 5xx / 429 / 网络错误 / 看不懂的回答是暂时性的：返回 { error, transient: true }，不带 valid 字段，
+// 状态码 502 / 503 / 429。App 收到后保持现状、稍后重试，不会解绑本机。
+
+function transient(error, status = 503) {
+  return json({ error, transient: true }, status);
+}
 
 const ACTIONS = { activate: "activated", validate: "valid", deactivate: "deactivated" };
 
@@ -39,8 +47,9 @@ function isGift(key) {
 }
 
 async function handleGift(action, flag, key, input, env) {
-  if (!env.GIFTS) return json({ error: "gift codes not configured" }, 502);
-  const raw = await env.GIFTS.get("gift:" + key);
+  if (!env.GIFTS) return transient("gift codes not configured", 502);
+  let raw;
+  try { raw = await env.GIFTS.get("gift:" + key); } catch { return transient("upstream unavailable"); }
   if (!raw) return json({ [flag]: false, error: "license_key not found." }, 404);
   const rec = JSON.parse(raw);
   const meta = { product_id: env.PRODUCT_ID ? String(env.PRODUCT_ID).split(",")[0].trim() : "gift" };
@@ -168,21 +177,28 @@ export default {
       });
       data = await res.json();
     } catch {
-      return json({ error: "upstream unavailable" }, 502);
+      // 网络错误，或 Creem 出故障时返回的不是 JSON（比如 502 的 HTML 页面）。
+      return transient("upstream unavailable", 502);
     }
 
     if (!res.ok) {
       const msg = Array.isArray(data?.message) ? data.message.join(" ") : (data?.message || data?.error || "");
       const low = String(msg).toLowerCase();
-      let error = "license error";
+      // 暂时性的问题先判断：限流、Creem 自己出错、密钥配置错。都不能告诉 App「授权无效」。
+      if (res.status === 429) return transient("too many requests", 429);
+      if (res.status >= 500) return transient("upstream unavailable", 502);
+      if (res.status === 401 || res.status === 403) return transient("server misconfigured", 502);
+      let error;
       if (res.status === 404 || low.includes("not found")) error = action === "activate" ? "license_key not found." : "instance not found.";
       else if (low.includes("limit")) error = "activation limit reached";
       else if (low.includes("expired")) error = "license expired";
       else if (low.includes("disabled")) error = "license disabled";
-      else if (res.status === 429) error = "too many requests";
-      else if (res.status === 401 || res.status === 403) return json({ error: "server misconfigured" }, 502);
-      // 校验时授权已失效：告诉 App 明确不可用
-      return json({ [flag]: false, error }, res.status === 429 ? 429 : 400);
+      // 激活时的「授权码无效」不会让 App 解绑什么，可以直接告诉用户；校验时不这样猜。
+      else if (action === "activate" && low.includes("invalid")) error = "license_key not found.";
+      // 其他看不懂的 4xx：按暂时性处理，宁可稍后重试也不误解绑。
+      if (!error) return transient("upstream unavailable", 502);
+      // 授权明确不可用：告诉 App
+      return json({ [flag]: false, error }, 400);
     }
 
     const allowed = String(env.PRODUCT_ID || "").split(",").map(s => s.trim()).filter(Boolean);
@@ -198,6 +214,8 @@ export default {
       return json({ [flag]: false, error: "license_key not found." }, 404);
     }
 
+    // 回答里没有授权状态：看不懂，按暂时性处理。
+    if (typeof data?.status !== "string") return transient("upstream unavailable", 502);
     const instanceActive = !data.instance || data.instance.status !== "deactivated";
     const statusOK = data.status === "active" || data.status === "inactive";
     let ok = true;
