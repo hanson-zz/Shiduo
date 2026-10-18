@@ -164,6 +164,13 @@ struct FolderIconEditor: View {
                         .font(.callout)
                         .help(url.path)
                     }
+                    if let hint = service.syncHint(for: folders) {
+                        Label(hint, systemImage: "info.circle")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 4)
+                    }
                 }
             }
             .frame(width: 230)

@@ -44,60 +44,109 @@ struct FinderTag: Identifiable, Hashable {
         }
     }
 
+    /// 文件上现在的标签名字。优先读扩展属性（不走 URL 资源缓存），没有再退回系统的 tagNames（老的访达颜色标记）。
     static func tags(of url: URL) -> [String] {
-        (try? url.resourceValues(forKeys: [.tagNamesKey]))?.tagNames ?? []
+        switch readEntries(url) {
+        case .success(let entries?): return FinderTagEntries.names(entries)
+        default: return (try? url.resourceValues(forKeys: [.tagNamesKey]))?.tagNames ?? []
+        }
     }
 
-    /// 给文件加上或去掉一个标签。color > 0 时连颜色一起写进去（自定义标签在访达里也显示这个颜色）。
-    @discardableResult
-    static func set(_ name: String, on: Bool, for urls: [URL], color: Int = 0) -> Int {
+    /// 一批文件改标签的结果。
+    struct WriteResult {
         var changed = 0
+        /// 原来的标签读不懂、或者写不进去的文件（没动它们）。
+        var failed: [URL] = []
+
+        mutating func add(_ other: WriteResult) {
+            changed += other.changed
+            failed += other.failed
+        }
+    }
+
+    /// 给文件加上或去掉一个标签。color 是访达颜色编号（系统颜色标签也要传它自己的编号）。
+    @discardableResult
+    static func set(_ name: String, on: Bool, for urls: [URL], color: Int = 0) -> WriteResult {
+        update(urls) { entries in
+            on ? FinderTagEntries.adding(name, color: color, to: entries) : FinderTagEntries.removing(name, from: entries)
+        }
+    }
+
+    /// 对每个文件执行同一个改动。
+    static func update(_ urls: [URL], transform: ([String]) -> [String]) -> WriteResult {
+        var result = WriteResult()
         for url in urls {
-            var tags = tags(of: url)
-            if on, color > 0 {
-                if !tags.contains(name), addColored(name, color: color, to: url) { changed += 1 }
-                continue
-            }
-            if on {
-                guard !tags.contains(name) else { continue }
-                tags.append(name)
-            } else {
-                guard tags.contains(name) else { continue }
-                tags.removeAll { $0 == name }
-            }
-            do {
-                try (url as NSURL).setResourceValue(tags, forKey: .tagNamesKey)
-                changed += 1
-            } catch {
-                continue
+            switch writeTags(url, transform: transform) {
+            case .success(true): result.changed += 1
+            case .success(false): break
+            case .failure: result.failed.append(url)
             }
         }
-        return changed
+        return result
+    }
+
+    enum TagWriteError: Error {
+        /// 扩展属性存在但读不懂：不覆盖，免得把别的标签（和颜色）抹掉。
+        case unreadable
+        case writeFailed(Int32)
     }
 
     private static let tagsAttribute = "com.apple.metadata:_kMDItemUserTags"
 
-    /// 直接写扩展属性：每个标签是「名字\n颜色编号」，访达和聚焦都认。
-    private static func addColored(_ name: String, color: Int, to url: URL) -> Bool {
+    /// 读原始条目。没有这个扩展属性返回 .success(nil)；读到了但不是字符串数组返回失败。
+    static func readEntries(_ url: URL) -> Result<[String]?, TagWriteError> {
         let path = url.path
-        var entries: [String] = []
         let length = getxattr(path, tagsAttribute, nil, 0, 0, 0)
-        if length > 0 {
-            var data = Data(count: length)
-            let read = data.withUnsafeMutableBytes { getxattr(path, tagsAttribute, $0.baseAddress, length, 0, 0) }
-            if read == length,
-               let list = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String] {
-                entries = list
-            } else {
-                entries = tags(of: url)
+        if length < 0 {
+            return errno == ENOATTR ? .success(nil) : .failure(.unreadable)
+        }
+        if length == 0 { return .success([]) }
+        var data = Data(count: length)
+        let read = data.withUnsafeMutableBytes { getxattr(path, tagsAttribute, $0.baseAddress, length, 0, 0) }
+        guard read == length, let entries = FinderTagEntries.decode(data) else { return .failure(.unreadable) }
+        return .success(entries)
+    }
+
+    /// 所有标签写入都走这里：读出原始的「名字\n颜色」条目，交给 transform 只改目标那一条，其他原样写回。
+    /// 原来的扩展属性读不懂时放弃（返回失败），不用名字兜底覆盖。返回 true 表示真的改了。
+    static func writeTags(_ url: URL, transform: ([String]) -> [String]) -> Result<Bool, TagWriteError> {
+        let path = url.path
+        let current: [String]
+        /// 只有老式的访达颜色标记（FinderInfo），没有标签扩展属性。
+        var legacyOnly = false
+        switch readEntries(url) {
+        case .failure(let error): return .failure(error)
+        case .success(let entries?): current = entries
+        case .success(nil):
+            // 没有扩展属性，但可能有老式的访达颜色标记：把系统认出来的名字带上，免得写完反而少了
+            let legacy = (try? url.resourceValues(forKeys: [.tagNamesKey]))?.tagNames ?? []
+            legacyOnly = !legacy.isEmpty
+            current = legacy.map { name in
+                let index = colorTags.first(where: { $0.name == name })?.colorIndex ?? 0
+                return FinderTagEntries.entry(name, color: index)
             }
         }
-        guard !entries.contains(where: { $0.components(separatedBy: "\n").first == name }) else { return false }
-        entries.append("\(name)\n\(color)")
-        guard let data = try? PropertyListSerialization.data(fromPropertyList: entries, format: .binary, options: 0) else {
-            return false
+        let next = transform(current)
+        guard next != current else { return .success(false) }
+        // 清空、或者只有老式颜色标记时，先让系统按名字写一遍：它会顺带清掉 / 更新 FinderInfo 里的颜色，
+        // 不然只删扩展属性后访达又会从 FinderInfo 里把颜色读回来。这两种情况下都没有自定义颜色可丢。
+        if next.isEmpty || legacyOnly {
+            do {
+                try (url as NSURL).setResourceValue(FinderTagEntries.names(next), forKey: .tagNamesKey)
+            } catch {
+                return .failure(.writeFailed(0))
+            }
+            if next.isEmpty { return finish(path) }
         }
-        return data.withUnsafeBytes { setxattr(path, tagsAttribute, $0.baseAddress, data.count, 0, 0) } == 0
+        guard let data = FinderTagEntries.encode(next) else { return .failure(.writeFailed(0)) }
+        let status = data.withUnsafeBytes { setxattr(path, tagsAttribute, $0.baseAddress, data.count, 0, 0) }
+        guard status == 0 else { return .failure(.writeFailed(errno)) }
+        return finish(path)
+    }
+
+    private static func finish(_ path: String) -> Result<Bool, TagWriteError> {
+        NSWorkspace.shared.noteFileSystemChanged(path)
+        return .success(true)
     }
 }
 
@@ -123,6 +172,7 @@ final class CustomTagStore: ObservableObject {
     }
 
     /// 新建（同名的改颜色）。系统颜色标签的名字不能用。
+    /// 只改拾掇里的记录；已打标签的文件要同步颜色请用 TagSync.recolor。
     func add(_ name: String, color: Int) {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty, !FinderTag.colorTags.contains(where: { $0.name == name }) else { return }
@@ -137,7 +187,22 @@ final class CustomTagStore: ObservableObject {
     func remove(_ name: String) {
         tags.removeAll { $0.name == name }
         save()
+        // 正在看这个标签的页面：回到首页，不停在一个已经不存在的标签上
+        if let store = LibraryStore.shared, store.selection == .tag(name) { store.selection = .home }
     }
+
+    /// 改名（位置不变）。新名字已经有了就合并成一个。
+    func rename(_ old: String, to new: String) {
+        guard old != new, let index = tags.firstIndex(where: { $0.name == old }) else { return }
+        if tags.contains(where: { $0.name == new }) {
+            tags.remove(at: index)
+        } else {
+            tags[index].name = new
+        }
+        save()
+    }
+
+    func contains(_ name: String) -> Bool { tags.contains { $0.name == name } }
 
     func color(of name: String) -> Int { tags.first { $0.name == name }?.color ?? 0 }
 
@@ -147,65 +212,210 @@ final class CustomTagStore: ObservableObject {
 
     /// 弹窗：输入名字、选颜色。取消返回 nil。
     static func prompt() -> (name: String, color: Int)? {
+        prompt(title: String(localized: "新建标签"), name: "", color: 4)
+    }
+
+    /// 通用弹窗：标题、初始名字和颜色。showsName 为 false 时只选颜色。
+    static func prompt(title: String, name initial: String, color initialColor: Int, showsName: Bool = true) -> (name: String, color: Int)? {
         let alert = NSAlert()
-        alert.messageText = String(localized: "新建标签")
+        alert.messageText = title
         alert.informativeText = String(localized: "访达只支持这几种标签颜色，选好后在访达里也能看到。")
         alert.addButton(withTitle: String(localized: "好"))
         alert.addButton(withTitle: String(localized: "取消"))
 
         let field = NSTextField(frame: NSRect(x: 0, y: 30, width: 240, height: 24))
         field.placeholderString = String(localized: "标签名字")
+        field.stringValue = initial
         let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 240, height: 26), pullsDown: false)
         for index in FinderTag.colorOrder + [0] {
             popup.addItem(withTitle: FinderTag.colorName(index))
             popup.lastItem?.tag = index
             popup.lastItem?.image = TagDot.image(FinderTag.color(index))
         }
-        popup.selectItem(withTag: 4)
-        let box = NSView(frame: NSRect(x: 0, y: 0, width: 240, height: 56))
-        box.addSubview(field)
+        popup.selectItem(withTag: initialColor)
+        let box = NSView(frame: NSRect(x: 0, y: 0, width: 240, height: showsName ? 56 : 26))
+        if showsName { box.addSubview(field) }
         box.addSubview(popup)
         alert.accessoryView = box
-        alert.window.initialFirstResponder = field
+        alert.window.initialFirstResponder = showsName ? (field as NSView) : (popup as NSView)
 
         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
-        let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = showsName ? field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) : initial
         guard !name.isEmpty else { return nil }
         return (name, popup.selectedTag())
+    }
+
+    /// 只输入名字的弹窗（重命名）。取消或没改返回 nil。
+    static func promptName(title: String, initial: String) -> String? {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.addButton(withTitle: String(localized: "好"))
+        alert.addButton(withTitle: String(localized: "取消"))
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
+        field.stringValue = initial
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name != initial else { return nil }
+        return name
+    }
+}
+
+/// 自定义标签改名 / 改颜色 / 删除时，同步到已经打了这个标签的文件（用聚焦找文件，先确认数量）。
+@MainActor
+enum TagSync {
+    /// 找出打了这个标签的文件。
+    private static func files(_ name: String) async -> [FileItem] {
+        await Queries.tagged(name)
+    }
+
+    /// 确认：要改 count 个文件。没有文件时不问。
+    private static func confirm(_ title: String, count: Int, action: String) -> Bool {
+        guard count > 0 else { return true }
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = String(localized: "聚焦找到 \(count) 个文件打了这个标签，会一起改。还没被聚焦索引的文件不会被改到。")
+        alert.addButton(withTitle: action)
+        alert.addButton(withTitle: String(localized: "取消"))
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    private static func report(_ result: FinderTag.WriteResult, store: LibraryStore) {
+        guard !result.failed.isEmpty else { return }
+        let names = result.failed.prefix(5).map(\.lastPathComponent).joined(separator: String(localized: "、"))
+        store.alertMessage = String(localized: "\(result.failed.count) 个项目的标签读不出来或写不进去，没有改动：\(names)")
+    }
+
+    static func rename(_ old: String, store: LibraryStore) async {
+        guard let new = CustomTagStore.promptName(title: String(localized: "重命名标签"), initial: old) else { return }
+        guard !FinderTag.colorTags.contains(where: { $0.name == new }) else {
+            store.alertMessage = String(localized: "“\(new)”是访达的颜色标签，不能用作自定义标签的名字")
+            return
+        }
+        let custom = CustomTagStore.shared
+        let color = custom.contains(new) ? custom.color(of: new) : custom.color(of: old)
+        let list = await files(old)
+        guard confirm(String(localized: "把“\(old)”改名为“\(new)”？"), count: list.count, action: String(localized: "改名")) else { return }
+        let result = FinderTag.update(list.map(\.url)) { FinderTagEntries.renaming(old, to: new, color: color, in: $0) }
+        custom.rename(old, to: new)
+        if custom.color(of: new) != color { custom.add(new, color: color) }
+        report(result, store: store)
+        store.showToast(String(localized: "已改名，同步了 \(result.changed) 个文件"))
+        if store.selection == .tag(old) {
+            let failed = Set(result.failed.map(\.path))
+            store.switchTag(to: new, items: list.filter { !failed.contains($0.path) })
+        }
+    }
+
+    static func recolor(_ name: String, to color: Int, store: LibraryStore) async {
+        let list = await files(name)
+        guard confirm(String(localized: "把“\(name)”改成\(FinderTag.colorName(color))？"), count: list.count, action: String(localized: "改颜色")) else { return }
+        CustomTagStore.shared.add(name, color: color)
+        let result = FinderTag.update(list.map(\.url)) { FinderTagEntries.recoloring(name, to: color, in: $0) }
+        report(result, store: store)
+        store.showToast(String(localized: "已改颜色，同步了 \(result.changed) 个文件"))
+    }
+
+    static func recolor(_ name: String, store: LibraryStore) async {
+        let current = CustomTagStore.shared.color(of: name)
+        guard let picked = CustomTagStore.prompt(title: String(localized: "改“\(name)”的颜色"), name: name, color: current, showsName: false),
+              picked.color != current else { return }
+        await recolor(name, to: picked.color, store: store)
+    }
+
+    static func delete(_ name: String, store: LibraryStore) async {
+        let list = await files(name)
+        guard confirm(String(localized: "删除标签“\(name)”？"), count: list.count, action: String(localized: "删除")) else { return }
+        let result = FinderTag.update(list.map(\.url)) { FinderTagEntries.removing(name, from: $0) }
+        CustomTagStore.shared.remove(name)
+        report(result, store: store)
+        store.showToast(String(localized: "已删除标签，从 \(result.changed) 个文件上去掉"))
+    }
+
+    /// 新建标签时名字已经有了、颜色不一样：当作改颜色，连文件一起改。
+    static func addOrRecolor(_ name: String, color: Int, store: LibraryStore) async {
+        let custom = CustomTagStore.shared
+        if custom.contains(name), custom.color(of: name) != color {
+            await recolor(name, to: color, store: store)
+        } else {
+            custom.add(name, color: color)
+        }
     }
 }
 
 /// 右键菜单里的「标签」子菜单。
 struct TagMenu: View {
+    let items: [FileItem]
+
+    var body: some View {
+        // 读文件标签的活放在子视图里：只有菜单真的展开时才做。
+        Menu("标签") { TagMenuContent(items: items) }
+    }
+}
+
+private struct TagMenuContent: View {
     @EnvironmentObject private var store: LibraryStore
     @ObservedObject private var custom = CustomTagStore.shared
     let items: [FileItem]
 
     var body: some View {
-        Menu("标签") {
-            let current = Set(items.flatMap { FinderTag.tags(of: $0.url) })
-            ForEach(FinderTag.allTags) { tag in
-                let has = current.contains(tag.name)
-                Button {
-                    let n = FinderTag.set(tag.name, on: !has, for: items.map(\.url), color: tag.isCustom ? tag.colorIndex : 0)
-                    store.showToast(has ? String(localized: "已去掉“\(tag.name)”标签") : String(localized: "已给 \(n) 个项目加上“\(tag.name)”标签"))
-                    if case .tag = store.selection { store.reload() }
-                } label: {
-                    Label {
-                        Text(has ? "✓ \(tag.name)" : tag.name)
-                    } icon: {
-                        Image(nsImage: TagDot.image(tag.color))
+        let perItem = items.map { FinderTag.tags(of: $0.url) }
+        let known = FinderTag.allTags
+        let knownNames = Set(known.map(\.name))
+        // 不在拾掇列表里、但已经打在文件上的标签（访达里建的、或者从侧边栏移除了的），也能在这里去掉。
+        let extra = Set(perItem.flatMap { $0 }).subtracting(knownNames)
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            .map { FinderTag(name: $0, color: FinderTag.color(0), colorIndex: 0, isCustom: true) }
+        ForEach(known + extra) { tag in
+            let coverage = FinderTagEntries.coverage(of: tag.name, in: perItem)
+            Button {
+                toggle(tag, coverage: coverage)
+            } label: {
+                Label {
+                    switch coverage {
+                    case .all: Text(verbatim: "✓ \(tag.name)")
+                    case .some: Text(verbatim: "– \(tag.name)")
+                    case .none: Text(tag.name)
                     }
+                } icon: {
+                    Image(nsImage: TagDot.image(tag.color))
                 }
             }
-            Divider()
-            Button("新建标签…") {
-                guard let new = CustomTagStore.prompt() else { return }
-                custom.add(new.name, color: new.color)
-                let n = FinderTag.set(new.name, on: true, for: items.map(\.url), color: new.color)
-                store.showToast(String(localized: "已给 \(n) 个项目加上“\(new.name)”标签"))
-                if case .tag = store.selection { store.reload() }
+        }
+        Divider()
+        Button("新建标签…") {
+            guard let new = CustomTagStore.prompt() else { return }
+            let urls = items.map(\.url)
+            Task {
+                await TagSync.addOrRecolor(new.name, color: new.color, store: store)
+                let result = FinderTag.set(new.name, on: true, for: urls, color: CustomTagStore.shared.color(of: new.name))
+                finish(result, name: new.name, added: true)
             }
+        }
+    }
+
+    /// 全部都有：从全部去掉；部分有或都没有：给全部补上（和访达一样）。
+    private func toggle(_ tag: FinderTag, coverage: FinderTagEntries.Coverage) {
+        let remove = coverage == .all
+        // 已经在文件上的标签保留它原来的颜色；新加的用它在访达 / 拾掇里的颜色
+        let color = tag.isCustom ? CustomTagStore.shared.color(of: tag.name) : tag.colorIndex
+        let result = FinderTag.set(tag.name, on: !remove, for: items.map(\.url), color: color)
+        finish(result, name: tag.name, added: !remove)
+    }
+
+    private func finish(_ result: FinderTag.WriteResult, name: String, added: Bool) {
+        if added {
+            store.showToast(String(localized: "已给 \(result.changed) 个项目加上“\(name)”标签"))
+        } else {
+            store.showToast(String(localized: "已从 \(result.changed) 个项目去掉“\(name)”标签"))
+            // 标签页里去掉了这个标签：直接从列表里拿掉，不重新查（聚焦还没更新，重新查结果不准，还会清掉选中）
+            let failed = Set(result.failed.map(\.path))
+            store.tagRemoved(name, from: Set(items.map(\.path)).subtracting(failed))
+        }
+        if !result.failed.isEmpty {
+            let names = result.failed.prefix(5).map(\.lastPathComponent).joined(separator: String(localized: "、"))
+            store.alertMessage = String(localized: "\(result.failed.count) 个项目的标签读不出来或写不进去，没有改动：\(names)")
         }
     }
 }

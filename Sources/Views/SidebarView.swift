@@ -202,11 +202,19 @@ struct SidebarView: View {
                     }
                     .tag(SidebarItem.tag(tag.name))
                     .contextMenu {
+                        Button("重命名…") { Task { await TagSync.rename(tag.name, store: store) } }
+                        Button("改颜色…") { Task { await TagSync.recolor(tag.name, store: store) } }
+                        Divider()
                         Button("从侧边栏移除（文件上的标签保留）") { customTags.remove(tag.name) }
+                        Button("删除标签（同时从文件上去掉）…", role: .destructive) {
+                            Task { await TagSync.delete(tag.name, store: store) }
+                        }
                     }
                 }
                 Button {
-                    if let new = CustomTagStore.prompt() { customTags.add(new.name, color: new.color) }
+                    if let new = CustomTagStore.prompt() {
+                        Task { await TagSync.addOrRecolor(new.name, color: new.color, store: store) }
+                    }
                 } label: {
                     Label("新建标签…", systemImage: "plus.circle")
                         .foregroundStyle(.secondary)

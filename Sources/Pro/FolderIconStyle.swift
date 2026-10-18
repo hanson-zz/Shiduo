@@ -133,18 +133,55 @@ struct FolderIconLedger: Codable, Equatable {
         }
     }
 
-    /// 某个路径上没有记录时，找一条「旧路径已经不在了、inode 相同、在同一个磁盘上」的记录——
+    /// 这个路径上的文件夹（inode 是 fileNumber）对应哪条记录，没有返回 nil。
+    /// - 路径上有记录、inode 对得上（旧记录没存 inode、或者读不到 inode 时没法比，也算）：就是它；
+    /// - 路径上的记录 inode 对不上：这条路径已经换成了别的文件夹（原来的被改名 / 移走后又新建了同名的），
+    ///   那条记录不属于它，再按 inode 找它自己的；
+    /// - 路径上没有记录：按 inode 找在拾掇外面被移走的那条。
+    func ownerKey(for path: String, fileNumber: UInt64?, inodeAt: (String) -> UInt64?) -> String? {
+        if let record = folders[path], Self.sameFolder(record, fileNumber) { return path }
+        return staleKey(for: path, fileNumber: fileNumber, inodeAt: inodeAt)
+    }
+
+    /// 记录和当前文件夹是不是同一个（有一边没有 inode 时没法比，当作是）。
+    static func sameFolder(_ record: FolderIconRecord, _ fileNumber: UInt64?) -> Bool {
+        guard let recorded = record.fileNumber, let fileNumber else { return true }
+        return recorded == fileNumber
+    }
+
+    /// 找一条「同一个磁盘上、inode 相同、原路径已经不在或者已经换成别的文件夹」的记录——
     /// 说明这个文件夹是在拾掇外面（访达、其他 App）被移动或改名的。找不到返回 nil。
-    func staleKey(for path: String, fileNumber: UInt64?, exists: (String) -> Bool) -> String? {
-        guard folders[path] == nil, let fileNumber else { return nil }
+    func staleKey(for path: String, fileNumber: UInt64?, inodeAt: (String) -> UInt64?) -> String? {
+        guard let fileNumber else { return nil }
         let volume = Self.volumeRoot(path)
         return folders.first { key, record in
-            key != path && record.fileNumber == fileNumber && Self.volumeRoot(key) == volume && !exists(key)
+            key != path && record.fileNumber == fileNumber && Self.volumeRoot(key) == volume && inodeAt(key) != fileNumber
         }?.key
     }
 
+    /// 上色 / 还原前调用：把记录对到这个文件夹上，返回它的路径键。
+    /// 路径上占着的是别的文件夹的记录时，把那条挪到「孤儿」键下（不丢，等那个文件夹在新位置被操作时按 inode 认领）。
+    @discardableResult
+    mutating func claim(_ path: String, fileNumber: UInt64?, inodeAt: (String) -> UInt64?,
+                        orphanID: String = UUID().uuidString) -> String {
+        if let record = folders[path], !Self.sameFolder(record, fileNumber) {
+            folders[path] = nil
+            folders[Self.orphanKey(path, id: orphanID)] = record
+        }
+        if folders[path] == nil, let old = staleKey(for: path, fileNumber: fileNumber, inodeAt: inodeAt) {
+            movePath(old, to: path)
+        }
+        return path
+    }
+
+    /// 孤儿记录的键：原路径 + 一个控制字符 + 随机 ID。磁盘上不会有这个路径，也不会被当成谁的子文件夹。
+    static func orphanKey(_ path: String, id: String) -> String { path + "\u{1}" + id }
+
+    static func isOrphanKey(_ key: String) -> Bool { key.contains("\u{1}") }
+
     /// 「/Volumes/盘名」或「/」。inode 只在同一个磁盘里才唯一。
     static func volumeRoot(_ path: String) -> String {
+        let path = path.components(separatedBy: "\u{1}")[0]
         let parts = path.split(separator: "/", omittingEmptySubsequences: true)
         if parts.count >= 2, parts[0] == "Volumes" { return "/Volumes/" + parts[1] }
         return "/"
@@ -166,5 +203,21 @@ struct FolderIconLedger: Codable, Equatable {
             folders[path] = nil
         }
         folders.merge(moved) { _, incoming in incoming }
+    }
+}
+
+/// 上色会在文件夹里放一个隐藏的「Icon\r」文件。在 git 仓库、同步盘里给一行提示（不拦着）。
+enum FolderIconSyncHint: Equatable {
+    case git
+    case cloud
+
+    /// path：文件夹路径；isGitRepo：文件夹里或上层有没有 .git。纯逻辑，方便测试。
+    static func detect(path: String, home: String, isGitRepo: Bool) -> FolderIconSyncHint? {
+        if isGitRepo { return .git }
+        let cloudRoots = [home + "/Library/Mobile Documents", home + "/Library/CloudStorage", home + "/Dropbox",
+                          home + "/OneDrive", home + "/Google Drive", home + "/坚果云", home + "/Nutstore"]
+        if cloudRoots.contains(where: { path == $0 || path.hasPrefix($0 + "/") }) { return .cloud }
+        // iCloud「桌面与文稿」：桌面、文稿在 iCloud 里时，访达给的仍是 ~/Desktop、~/Documents，这里不猜。
+        return nil
     }
 }

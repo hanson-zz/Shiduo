@@ -175,35 +175,58 @@ final class FolderIconService: ObservableObject {
     var history: [FolderIconStyle] { ledger.history }
 
     func style(for url: URL) -> FolderIconStyle? {
-        ledger.folders[lookupKey(url)]?.style
+        lookupKey(url).flatMap { ledger.folders[$0]?.style }
     }
 
     /// 这个文件夹是不是拾掇上的色（只有这样的才给「还原」）。
     func hasRecord(_ url: URL) -> Bool {
-        ledger.folders[lookupKey(url)] != nil
+        guard !ledger.folders.isEmpty else { return false }
+        return lookupKey(url) != nil
     }
 
-    /// 只查不改：路径上有记录就用路径，没有就按 inode 找在拾掇外面被移走的那条。
-    private func lookupKey(_ url: URL) -> String {
+    /// 只查不改：路径上的记录 inode 对得上就用它；对不上（同一路径换了个文件夹）或没有，就按 inode 找这个文件夹自己的。
+    private func lookupKey(_ url: URL) -> String? {
         let path = url.standardizedFileURL.path
-        return ledger.staleKey(for: path, fileNumber: Self.fileNumber(path), exists: Self.exists) ?? path
+        return ledger.ownerKey(for: path, fileNumber: Self.fileNumber(path), inodeAt: Self.fileNumber)
     }
 
-    /// 查到被移走的记录就把它挪到新路径（连同子文件夹的记录），返回新路径。
+    /// 把记录对到这个文件夹上（被移走的挪过来，占着路径的别人的记录挪去孤儿位），返回路径。
     private func resolveKey(_ url: URL) -> String {
         let path = url.standardizedFileURL.path
-        if let old = ledger.staleKey(for: path, fileNumber: Self.fileNumber(path), exists: Self.exists) {
-            ledger.movePath(old, to: path)
-        }
-        return path
+        return ledger.claim(path, fileNumber: Self.fileNumber(path), inodeAt: Self.fileNumber)
     }
 
     nonisolated static func fileNumber(_ path: String) -> UInt64? {
         ((try? FileManager.default.attributesOfItem(atPath: path))?[.systemFileNumber] as? NSNumber)?.uint64Value
     }
 
-    nonisolated static func exists(_ path: String) -> Bool {
-        FileManager.default.fileExists(atPath: path)
+    /// 编辑器里的一行提示：上色会在文件夹里放一个隐藏的 Icon 文件。不能改的文件夹不提示（会直接报原因）。
+    func syncHint(for urls: [URL]) -> String? {
+        var git = false, cloud = false
+        for url in urls {
+            let path = url.standardizedFileURL.path
+            switch FolderIconSyncHint.detect(path: path, home: NSHomeDirectory(), isGitRepo: Self.isInGitRepo(path)) {
+            case .git: git = true
+            case .cloud: cloud = true
+            case nil: break
+            }
+        }
+        if git { return String(localized: "上色会在文件夹里放一个隐藏的 Icon 文件，git 里会多出一个未跟踪的 Icon?，建议在 .gitignore 里加上 Icon?") }
+        if cloud { return String(localized: "上色会在文件夹里放一个隐藏的 Icon 文件，同步盘可能把它同步到别的设备，在那边显示成一个空文件或颜色不见") }
+        return nil
+    }
+
+    /// 文件夹本身或上层（到个人文件夹 / 磁盘根为止）有 .git。
+    nonisolated static func isInGitRepo(_ path: String) -> Bool {
+        var current = path
+        let home = NSHomeDirectory()
+        for _ in 0..<12 {
+            if FileManager.default.fileExists(atPath: current + "/.git") { return true }
+            let parent = (current as NSString).deletingLastPathComponent
+            if parent == current || current == home || parent.isEmpty { return false }
+            current = parent
+        }
+        return false
     }
 
     // MARK: 入口
@@ -275,7 +298,14 @@ final class FolderIconService: ObservableObject {
             var backup: String?
             if ledger.folders[path] == nil {
                 hadCustom = Self.hasCustomIcon(url)
-                if hadCustom { backup = backupOriginal(url) }
+                if hadCustom {
+                    backup = backupOriginal(url)
+                    // 原来的图标存不下来就不改：不然以后「还原」只能变回系统默认，用户原来的图标就找不回来了
+                    guard backup != nil else {
+                        outcome.failed.append((url, String(localized: "原来的自定义图标备份不了，为了安全没改")))
+                        continue
+                    }
+                }
             }
             guard NSWorkspace.shared.setIcon(image, forFile: path, options: []) else {
                 if let backup { try? FileManager.default.removeItem(at: directory.appendingPathComponent(backup)) }
@@ -370,16 +400,18 @@ final class FolderIconService: ObservableObject {
         FileManager.default.fileExists(atPath: url.appendingPathComponent("Icon\r").path)
     }
 
-    /// 把原来的自定义图标存成 icns（按路径哈希命名）。失败返回 nil，还原时就清成系统默认。
+    /// 把原来的自定义图标存成 icns。文件名每次随机（UUID），不同文件夹的备份不会互相覆盖——
+    /// 记录里存着文件名，不靠路径找。失败返回 nil（调用方不会去改这个文件夹）。
     private func backupOriginal(_ url: URL) -> String? {
         guard let icon = (try? url.resourceValues(forKeys: [.customIconKey]))?.customIcon else { return nil }
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let hash = SHA256.hash(data: Data(url.standardizedFileURL.path.utf8)).map { String(format: "%02x", $0) }.joined()
-        let name = String(hash.prefix(32)) + ".icns"
+        let base = UUID().uuidString
+        let name = base + ".icns"
         let target = directory.appendingPathComponent(name)
         if Self.writeICNS(icon, to: target) { return name }
+        try? FileManager.default.removeItem(at: target)
         // icns 写不出来就退回 TIFF（同样能还原）
-        let tiffName = String(hash.prefix(32)) + ".tiff"
+        let tiffName = base + ".tiff"
         if let tiff = icon.tiffRepresentation, (try? tiff.write(to: directory.appendingPathComponent(tiffName))) != nil {
             return tiffName
         }

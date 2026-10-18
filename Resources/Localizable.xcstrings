@@ -21253,6 +21253,310 @@
           }
         }
       }
+    },
+    "上色会在文件夹里放一个隐藏的 Icon 文件，git 里会多出一个未跟踪的 Icon?，建议在 .gitignore 里加上 Icon?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coloring puts a hidden Icon file in the folder, so git will show an untracked “Icon?”. Consider adding Icon? to .gitignore."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上色会在文件夹里放一个隐藏的 Icon 文件，git 里会多出一个未跟踪的 Icon?，建议在 .gitignore 里加上 Icon?"
+          }
+        }
+      }
+    },
+    "上色会在文件夹里放一个隐藏的 Icon 文件，同步盘可能把它同步到别的设备，在那边显示成一个空文件或颜色不见": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coloring puts a hidden Icon file in the folder. Cloud sync may copy it to other devices, where it can show up as an empty file or the color may be lost."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上色会在文件夹里放一个隐藏的 Icon 文件，同步盘可能把它同步到别的设备，在那边显示成一个空文件或颜色不见"
+          }
+        }
+      }
+    },
+    "原来的自定义图标备份不了，为了安全没改": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t back up the existing custom icon, so it was left unchanged to be safe"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原来的自定义图标备份不了，为了安全没改"
+          }
+        }
+      }
+    },
+    "改颜色…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Color…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改颜色…"
+          }
+        }
+      }
+    },
+    "删除标签（同时从文件上去掉）…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Tag (also remove from files)…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除标签（同时从文件上去掉）…"
+          }
+        }
+      }
+    },
+    "聚焦找到 %lld 个文件打了这个标签，会一起改。还没被聚焦索引的文件不会被改到。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight found %lld files with this tag; they will be updated too. Files Spotlight hasn’t indexed yet won’t be changed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "聚焦找到 %lld 个文件打了这个标签，会一起改。还没被聚焦索引的文件不会被改到。"
+          }
+        }
+      }
+    },
+    "%lld 个项目的标签读不出来或写不进去，没有改动：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t read or write the tags of %1$lld items, left unchanged: %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个项目的标签读不出来或写不进去，没有改动：%2$@"
+          }
+        }
+      }
+    },
+    "重命名标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Tag"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名标签"
+          }
+        }
+      }
+    },
+    "“%@”是访达的颜色标签，不能用作自定义标签的名字": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is a Finder color tag and can’t be used as a custom tag name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”是访达的颜色标签，不能用作自定义标签的名字"
+          }
+        }
+      }
+    },
+    "把“%@”改名为“%@”？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename “%1$@” to “%2$@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把“%1$@”改名为“%2$@”？"
+          }
+        }
+      }
+    },
+    "改名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改名"
+          }
+        }
+      }
+    },
+    "已改名，同步了 %lld 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renamed; updated %lld files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已改名，同步了 %lld 个文件"
+          }
+        }
+      }
+    },
+    "把“%@”改成%@？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change “%1$@” to %2$@?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把“%1$@”改成%2$@？"
+          }
+        }
+      }
+    },
+    "改颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改颜色"
+          }
+        }
+      }
+    },
+    "已改颜色，同步了 %lld 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color changed; updated %lld files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已改颜色，同步了 %lld 个文件"
+          }
+        }
+      }
+    },
+    "改“%@”的颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Color of “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改“%@”的颜色"
+          }
+        }
+      }
+    },
+    "删除标签“%@”？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete tag “%@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除标签“%@”？"
+          }
+        }
+      }
+    },
+    "已删除标签，从 %lld 个文件上去掉": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag deleted; removed from %lld files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除标签，从 %lld 个文件上去掉"
+          }
+        }
+      }
+    },
+    "已从 %lld 个项目去掉“%@”标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed tag “%2$@” from %1$lld items"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已从 %1$lld 个项目去掉“%2$@”标签"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -196,13 +196,20 @@ enum Queries {
         return await SpotlightSearch.run(predicate: q.predicate, scopes: q.scopes, maxItems: 0).totalCount
     }
 
-    /// 固定文件夹：直接读磁盘，不依赖 Spotlight 索引。
+    /// 打了某个标签的文件：个人文件夹 + 已挂载的外接磁盘（访达里外接盘上的文件也能打标签）。
     static func tagged(_ name: String) async -> [FileItem] {
         await SpotlightSearch.run(
-            predicate: NSPredicate(format: "kMDItemUserTags == %@", name), scopes: Scopes.home, maxItems: 5000
+            predicate: NSPredicate(format: "kMDItemUserTags == %@", name), scopes: Scopes.home + mountedVolumes, maxItems: 5000
         ).items
     }
 
+    /// /Volumes 下已挂载的磁盘（不含隐藏的系统卷）。
+    static var mountedVolumes: [Any] {
+        let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: nil, options: [.skipHiddenVolumes]) ?? []
+        return urls.map(\.path).filter { $0.hasPrefix("/Volumes/") }.map { $0 as Any }
+    }
+
+    /// 固定文件夹：直接读磁盘，不依赖 Spotlight 索引。
     static func folder(_ path: String) async -> [FileItem] {
         await Task.detached(priority: .userInitiated) { () -> [FileItem] in
             let url = URL(fileURLWithPath: path)

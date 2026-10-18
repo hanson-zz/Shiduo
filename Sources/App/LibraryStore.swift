@@ -358,9 +358,13 @@ final class LibraryStore: ObservableObject {
 
     // MARK: - 加载
 
+    /// 切换页面时不要重新查（switchTag 用：手上已经有正确的列表）。
+    private var skipNextReload = false
+
     func reload() {
         loadTask?.cancel()
         selectedIDs = []
+        if skipNextReload { return }
         let target = selection ?? .home
         if Demo.isOn {
             if target != .home { applyDemo(target) }
@@ -825,6 +829,25 @@ final class LibraryStore: ObservableObject {
             if !cleanup.isRunning { await cleanup.scan() }
         }
         reload()
+    }
+
+    // MARK: - 标签页
+
+    /// 正在看这个标签的页面时，把刚去掉标签的文件从列表里拿掉（不重新查：聚焦还没更新，而且会清掉选中）。
+    func tagRemoved(_ name: String, from paths: Set<String>) {
+        guard selection == .tag(name), !paths.isEmpty else { return }
+        items.removeAll { paths.contains($0.path) }
+        selectedIDs.subtract(paths)
+    }
+
+    /// 标签改名后切到新名字的标签页，直接用手上的文件列表（聚焦这时还没重新索引，重新查会少文件）。
+    func switchTag(to name: String, items list: [FileItem]) {
+        skipNextReload = true
+        selection = .tag(name)
+        skipNextReload = false
+        remember(list)
+        items = list
+        isLoading = false
     }
 
     /// 文件被移走后，从各个列表和扫描结果里拿掉。

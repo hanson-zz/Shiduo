@@ -82,18 +82,79 @@ final class FolderIconLedgerTests: XCTestCase {
         var ledger = FolderIconLedger()
         ledger.recordApplied(FolderIconStyle(color: "111111"), path: "/Users/me/Old", hadCustomIcon: false, backupFile: nil, fileNumber: 42)
         ledger.recordApplied(FolderIconStyle(color: "222222"), path: "/Volumes/Disk/X", hadCustomIcon: false, backupFile: nil, fileNumber: 7)
-        let gone: Set<String> = ["/Users/me/Old", "/Volumes/Disk/X"]
-        let exists: (String) -> Bool = { !gone.contains($0) }
+        let gone: (String) -> UInt64? = { _ in nil }
 
-        XCTAssertEqual(ledger.staleKey(for: "/Users/me/New", fileNumber: 42, exists: exists), "/Users/me/Old")
+        XCTAssertEqual(ledger.staleKey(for: "/Users/me/New", fileNumber: 42, inodeAt: gone), "/Users/me/Old")
         // inode 只在同一个磁盘里算数
-        XCTAssertNil(ledger.staleKey(for: "/Users/me/Y", fileNumber: 7, exists: exists))
-        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: 99, exists: exists))
-        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: nil, exists: exists))
-        // 旧路径还在，就不是同一个文件夹被移走
-        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: 42, exists: { _ in true }))
-        // 路径上本来就有记录，不用找
-        XCTAssertNil(ledger.staleKey(for: "/Users/me/Old", fileNumber: 42, exists: exists))
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/Y", fileNumber: 7, inodeAt: gone))
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: 99, inodeAt: gone))
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: nil, inodeAt: gone))
+        // 旧路径上还是同一个文件夹（inode 一样），就不是被移走
+        XCTAssertNil(ledger.staleKey(for: "/Users/me/New", fileNumber: 42, inodeAt: { _ in 42 }))
+        // 旧路径上已经是别的文件夹了（inode 不一样），记录照样能找回
+        XCTAssertEqual(ledger.staleKey(for: "/Users/me/New", fileNumber: 42, inodeAt: { _ in 500 }), "/Users/me/Old")
+        // 路径上本来就有、而且是它自己的记录
+        XCTAssertEqual(ledger.ownerKey(for: "/Users/me/Old", fileNumber: 42, inodeAt: gone), "/Users/me/Old")
+    }
+
+    /// 给 /x 上色 → 在访达里改名成 /y → 新建一个文件夹 /x。
+    func testPathReusedByAnotherFolder() {
+        var ledger = FolderIconLedger()
+        ledger.recordApplied(FolderIconStyle(color: "111111"), path: "/Users/me/x", hadCustomIcon: true,
+                             backupFile: "A.icns", fileNumber: 42)
+        // 现在磁盘上：/Users/me/x 是新文件夹（inode 99），/Users/me/y 是原来那个（inode 42）
+        let disk: [String: UInt64] = ["/Users/me/x": 99, "/Users/me/y": 42]
+        let inodeAt: (String) -> UInt64? = { disk[$0] }
+
+        // 新的 /x 不算上过色：不给「还原」，不会把旧文件夹的原图标贴上去
+        XCTAssertNil(ledger.ownerKey(for: "/Users/me/x", fileNumber: 99, inodeAt: inodeAt))
+        // /y 能按 inode 找回自己的记录
+        XCTAssertEqual(ledger.ownerKey(for: "/Users/me/y", fileNumber: 42, inodeAt: inodeAt), "/Users/me/x")
+
+        // 给新的 /x 上色：占着路径的旧记录挪去孤儿位，路径空出来，新文件夹会备份它自己的原图标
+        ledger.claim("/Users/me/x", fileNumber: 99, inodeAt: inodeAt, orphanID: "o1")
+        XCTAssertNil(ledger.folders["/Users/me/x"])
+        let orphan = FolderIconLedger.orphanKey("/Users/me/x", id: "o1")
+        XCTAssertTrue(FolderIconLedger.isOrphanKey(orphan))
+        XCTAssertEqual(ledger.folders[orphan]?.backupFile, "A.icns")
+        ledger.recordApplied(FolderIconStyle(color: "222222"), path: "/Users/me/x", hadCustomIcon: true,
+                             backupFile: "B.icns", fileNumber: 99)
+
+        // 之后在 /y 上操作：认领孤儿记录，拿回的是自己的备份
+        XCTAssertEqual(ledger.ownerKey(for: "/Users/me/y", fileNumber: 42, inodeAt: inodeAt), orphan)
+        ledger.claim("/Users/me/y", fileNumber: 42, inodeAt: inodeAt)
+        XCTAssertEqual(ledger.folders["/Users/me/y"]?.backupFile, "A.icns")
+        XCTAssertEqual(ledger.folders["/Users/me/x"]?.backupFile, "B.icns")
+        XCTAssertNil(ledger.folders[orphan])
+        XCTAssertEqual(ledger.folders.count, 2)
+    }
+
+    func testOrphanKeyKeepsVolumeAndIsNotAChild() {
+        let orphan = FolderIconLedger.orphanKey("/Volumes/Disk/x", id: "o")
+        XCTAssertEqual(FolderIconLedger.volumeRoot(orphan), "/Volumes/Disk")
+        var ledger = FolderIconLedger()
+        ledger.folders[orphan] = FolderIconRecord(style: FolderIconStyle(color: "111111"), hadCustomIcon: false,
+                                                  backupFile: nil, date: Date(), fileNumber: 1)
+        ledger.movePath("/Volumes/Disk/x", to: "/Volumes/Disk/z")
+        XCTAssertNotNil(ledger.folders[orphan])
+    }
+
+    func testOldRecordWithoutInodeStillMatchesPath() {
+        var ledger = FolderIconLedger()
+        ledger.recordApplied(FolderIconStyle(color: "111111"), path: "/a", hadCustomIcon: false, backupFile: nil)
+        XCTAssertEqual(ledger.ownerKey(for: "/a", fileNumber: 5, inodeAt: { _ in 5 }), "/a")
+        ledger.claim("/a", fileNumber: 5, inodeAt: { _ in 5 })
+        XCTAssertNotNil(ledger.folders["/a"])
+    }
+
+    func testSyncHint() {
+        let home = "/Users/me"
+        XCTAssertEqual(FolderIconSyncHint.detect(path: "/Users/me/code/app", home: home, isGitRepo: true), .git)
+        XCTAssertEqual(FolderIconSyncHint.detect(path: "/Users/me/Library/Mobile Documents/com~apple~CloudDocs/A", home: home, isGitRepo: false), .cloud)
+        XCTAssertEqual(FolderIconSyncHint.detect(path: "/Users/me/Library/CloudStorage/Dropbox/A", home: home, isGitRepo: false), .cloud)
+        XCTAssertEqual(FolderIconSyncHint.detect(path: "/Users/me/Dropbox", home: home, isGitRepo: false), .cloud)
+        XCTAssertNil(FolderIconSyncHint.detect(path: "/Users/me/Dropboxes", home: home, isGitRepo: false))
+        XCTAssertNil(FolderIconSyncHint.detect(path: "/Users/me/Projects", home: home, isGitRepo: false))
     }
 
     func testVolumeRoot() {

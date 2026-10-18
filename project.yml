@@ -58,6 +58,7 @@ targets:
       - path: Sources/Pro/ShakeDetector.swift
       - path: Sources/Services/CleanupHistory.swift
       - path: Sources/Pro/FolderIconStyle.swift
+      - path: Sources/Services/FinderTagEntries.swift
       - path: Sources/Pro/MediaToolsLogic.swift
       - path: Sources/Pro/UninstallLogic.swift
       - path: Sources/Pro/StitchLogic.swift
