@@ -188,44 +188,7 @@ enum ShelfActions {
         return panel.runModal() == .OK ? panel.url : nil
     }
 
-    /// 移到文件夹里（同名时加编号，不覆盖）。返回 (旧路径, 新位置) 和失败的文件名。
-    static func move(_ urls: [URL], to folder: URL) -> (moved: [(String, URL)], failed: [String]) {
-        let fm = FileManager.default
-        var moved: [(String, URL)] = []
-        var failed: [String] = []
-        for url in urls {
-            if url.deletingLastPathComponent().standardizedFileURL == folder.standardizedFileURL {
-                continue
-            }
-            let target = OrganizeEngine.uniqueURL(for: url.lastPathComponent, in: folder)
-            do {
-                try fm.moveItem(at: url, to: target)
-                moved.append((url.path, target))
-            } catch {
-                AppLog.shelf.error("Shelf move failed: \(AppLog.describe(error), privacy: .public)")
-                failed.append(url.lastPathComponent)
-            }
-        }
-        return (moved, failed)
-    }
-
-    /// 拷贝到文件夹里（同名时加编号）。暂存架仍然指向原文件。
-    static func copy(_ urls: [URL], to folder: URL) -> (copied: [URL], failed: [String]) {
-        let fm = FileManager.default
-        var copied: [URL] = []
-        var failed: [String] = []
-        for url in urls {
-            let target = OrganizeEngine.uniqueURL(for: url.lastPathComponent, in: folder)
-            do {
-                try fm.copyItem(at: url, to: target)
-                copied.append(target)
-            } catch {
-                AppLog.shelf.error("Shelf copy failed: \(AppLog.describe(error), privacy: .public)")
-                failed.append(url.lastPathComponent)
-            }
-        }
-        return (copied, failed)
-    }
+    // 移动 / 拷贝在 ShelfTransfer（Views/ShelfPageView.swift）里：后台进行、有进度、能取消。
 
     /// 压缩成 ZIP（用系统自带的 ditto，和访达的「压缩」一样）。
     /// 放在第一个文件旁边；那里不能写时放进「下载」。返回 ZIP 的位置。
@@ -290,15 +253,5 @@ enum ShelfActions {
         let picker = NSSharingServicePicker(items: urls)
         picker.show(relativeTo: rect, of: view, preferredEdge: .minY)
     }
-
-    /// 直接用隔空投送发送。返回 false 表示这台 Mac 上不能用隔空投送。
-    @MainActor
-    @discardableResult
-    static func airDrop(_ urls: [URL]) -> Bool {
-        guard let service = NSSharingService(named: .sendViaAirDrop), service.canPerform(withItems: urls) else {
-            return false
-        }
-        service.perform(withItems: urls)
-        return true
-    }
+    // 隔空投送用 AirDropShare（Pro/FocusTimer.swift）：要一直持有系统分享服务，否则窗口一闪就没了。
 }

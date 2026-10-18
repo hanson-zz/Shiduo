@@ -161,6 +161,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         MainActor.assumeIsolated {
             // 拾掇 Pro 介绍页用独立窗口：主窗口关着也能弹出（见 PaywallWindow）。
             PaywallWindow.shared.start()
+            // 通知代理、授权状态联动、定时刷新授权：不依赖主窗口。
+            AppLifecycle.shared.start()
         }
     }
 

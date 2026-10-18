@@ -8,6 +8,7 @@ struct ShelfPageView: View {
     @EnvironmentObject private var license: LicenseManager
     @ObservedObject private var shelf = ShelfStore.shared
     @ObservedObject private var tools = ShelfTools.shared
+    @ObservedObject private var transfer = ShelfTransfer.shared
     @AppStorage(FloatingShelfController.enabledKey) private var floatingEnabled = false
 
     @State private var selection: Set<String> = []
@@ -30,6 +31,10 @@ struct ShelfPageView: View {
             Divider()
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if let progress = transfer.progress {
+                Divider()
+                transferBar(progress)
+            }
             Divider()
             floatingToggle
         }
@@ -120,10 +125,28 @@ struct ShelfPageView: View {
             .menuStyle(.borderlessButton)
             .fixedSize()
         }
-        .disabled(working || tools.busy)
+        .disabled(working || tools.busy || transfer.isRunning)
         .controlSize(.regular)
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
+    }
+
+    /// 移动 / 拷贝的进度和取消。
+    private func transferBar(_ progress: MoveOutProgress) -> some View {
+        HStack(spacing: 10) {
+            ProgressView(value: progress.bytesTotal > 0 ? Double(progress.bytesDone) / Double(progress.bytesTotal) : 0)
+                .frame(maxWidth: 220)
+            Text(transfer.isCopy
+                 ? String(localized: "正在拷贝 \(min(progress.fileIndex + 1, progress.fileCount))/\(progress.fileCount)：\(progress.currentName)")
+                 : String(localized: "正在移动 \(min(progress.fileIndex + 1, progress.fileCount))/\(progress.fileCount)：\(progress.currentName)"))
+                .font(.callout)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer()
+            Button("取消") { transfer.cancel() }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
     }
 
     private var floatingToggle: some View {
@@ -280,17 +303,12 @@ struct ShelfPageView: View {
 
     private func move(_ list: [FileItem]) {
         guard !list.isEmpty, let folder = ShelfActions.chooseFolder(prompt: String(localized: "移动到这里")) else { return }
-        let result = ShelfActions.move(list.map(\.url), to: folder)
-        for (old, new) in result.moved { shelf.relocate(from: old, to: new) }
-        report(done: result.moved.count, failed: result.failed,
-               message: String(localized: "已移动 \(result.moved.count) 个项目"))
+        transfer.start(list.map(\.url), to: folder, copy: false, store: store)
     }
 
     private func copy(_ list: [FileItem]) {
         guard !list.isEmpty, let folder = ShelfActions.chooseFolder(prompt: String(localized: "拷贝到这里")) else { return }
-        let result = ShelfActions.copy(list.map(\.url), to: folder)
-        report(done: result.copied.count, failed: result.failed,
-               message: String(localized: "已拷贝 \(result.copied.count) 个项目"))
+        transfer.start(list.map(\.url), to: folder, copy: true, store: store)
     }
 
     /// 压缩好的 ZIP 放在第一个文件旁边，并放上暂存架（结果用提示条显示）。
@@ -305,18 +323,100 @@ struct ShelfPageView: View {
         tools.startConvert(list.map(\.url), to: format)
     }
 
+    /// 用 AirDropShare 发送：它会一直持有系统分享服务，投送窗口不会一闪就没。
     private func airDrop(_ list: [FileItem]) {
-        if !ShelfActions.airDrop(list.map(\.url)) {
+        let urls = list.map(\.url)
+        guard let service = NSSharingService(named: .sendViaAirDrop), service.canPerform(withItems: urls) else {
             store.alertMessage = String(localized: "这台 Mac 现在不能使用隔空投送。")
+            return
+        }
+        AirDropShare.send(urls)
+    }
+}
+
+// MARK: - 移动 / 拷贝（后台进行）
+
+/// 暂存架页的「移动到… / 拷贝到…」：在后台跑，不卡界面，有进度、能取消。
+/// 移动完成后：暂存架、文件提醒、文件夹颜色记录跟到新位置，记进「清理记录」（可撤销），主窗口列表忘掉旧路径。
+@MainActor
+final class ShelfTransfer: ObservableObject {
+    static let shared = ShelfTransfer()
+
+    @Published private(set) var progress: MoveOutProgress?
+    @Published private(set) var isCopy = false
+    private var flag: MoveOutCancelFlag?
+
+    var isRunning: Bool { progress != nil }
+
+    private init() {}
+
+    func cancel() {
+        flag?.cancel()
+    }
+
+    func start(_ urls: [URL], to folder: URL, copy: Bool, store: LibraryStore) {
+        guard !isRunning, !urls.isEmpty else { return }
+        let cancel = MoveOutCancelFlag()
+        flag = cancel
+        isCopy = copy
+        progress = MoveOutProgress(fileIndex: 0, fileCount: urls.count, currentName: urls[0].lastPathComponent,
+                                   bytesDone: 0, bytesTotal: 0)
+        Task { @MainActor in
+            let result = await Task.detached(priority: .userInitiated) {
+                MoveOutEngine.transfer(urls, to: folder, copyOnly: copy, cancel: cancel) { snapshot in
+                    Task { @MainActor in
+                        let transfer = ShelfTransfer.shared
+                        guard transfer.flag === cancel else { return }
+                        transfer.progress = snapshot
+                    }
+                }
+            }.value
+            let transfer = ShelfTransfer.shared
+            transfer.flag = nil
+            transfer.progress = nil
+            transfer.finish(result, folder: folder, copy: copy, store: store)
         }
     }
 
-    private func report(done: Int, failed: [String], message: String) {
-        if done > 0 { store.showToast(message) }
-        if !failed.isEmpty {
-            let names = failed.prefix(5).joined(separator: String(localized: "、"))
-            store.alertMessage = String(localized: "\(failed.count) 个项目没有处理成功：\(names)")
+    private func finish(_ result: MoveOutResult, folder: URL, copy: Bool, store: LibraryStore) {
+        if copy {
+            if !result.moved.isEmpty {
+                store.showToast(String(localized: "已拷贝 \(result.moved.count) 个项目"))
+            }
+        } else if !result.moved.isEmpty {
+            for file in result.moved {
+                ShelfStore.shared.relocate(from: file.from, to: URL(fileURLWithPath: file.to))
+                ReminderStore.shared.relocate(from: file.from, to: file.to)
+                FolderIconService.shared.movePath(file.from, to: file.to)
+            }
+            let batch = UUID()
+            let now = Date()
+            CleanupHistory.shared.add(result.moved.map {
+                var record = CleanupRecord(batchID: batch, date: now, action: .moveOut, name: $0.name, originalPath: $0.from,
+                                           currentPath: $0.to, size: $0.size,
+                                           destinationName: FileManager.default.displayName(atPath: folder.path),
+                                           destinationRoot: folder.path, aliasPath: nil)
+                let identity = CleanupHistoryLogic.identity(atPath: $0.to)
+                record.fileNumber = identity.number
+                record.fileBytes = identity.bytes
+                return record
+            })
+            store.forget(paths: Set(result.moved.map(\.from)))
+            store.showUndoToast(String(localized: "已移动 \(result.moved.count) 个项目"), batch: batch)
         }
+        var problems: [String] = []
+        if !result.failed.isEmpty {
+            let names = result.failed.prefix(5).joined(separator: String(localized: "、"))
+            problems.append(String(localized: "\(result.failed.count) 个项目没有处理成功：\(names)"))
+        }
+        if !result.partial.isEmpty {
+            let names = result.partial.prefix(5).map(\.name).joined(separator: String(localized: "、"))
+            problems.append(String(localized: "\(result.partial.count) 个已经完整拷到新位置，但原位置有文件删不掉（可能被锁定或没有权限），两边都保留了，请手动处理：\(names)"))
+        }
+        if result.cancelled {
+            problems.append(copy ? String(localized: "拷贝已取消，没拷完的文件已清理。") : String(localized: "移动已取消，还没移动的文件留在原处。"))
+        }
+        if !problems.isEmpty { store.alertMessage = problems.joined(separator: "\n") }
     }
 }
 

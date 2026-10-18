@@ -20,6 +20,7 @@ struct SettingsView: View {
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
     @AppStorage(FloatingShelfController.enabledKey) private var floatingShelfEnabled = false
     @AppStorage(FloatingShelfHotKey.enabledKey) private var floatingShelfHotKey = true
+    @AppStorage(FloatingShelfHotKey.choiceKey) private var floatingShelfHotKeyChoice: FloatingShelfHotKey = .controlOptionS
     @AppStorage(MenuBarLabel.showReclaimableKey) private var menuBarShowsReclaimable = true
     @State private var floatingHotKeyAvailable = true
     @AppStorage(CleanupReminder.enabledKey) private var reminderEnabled = false
@@ -165,7 +166,16 @@ struct SettingsView: View {
                 if let last = license.lastValidated {
                     LabeledContent("上次校验", value: last.shortText)
                 }
+                if license.needsOnlineCheck {
+                    Text("离线太久或系统时间不对，需要联网校验一次授权才能继续使用 Pro。")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
                 HStack {
+                    Button("立即校验") {
+                        Task { await license.verifyNow() }
+                    }
+                    .disabled(license.isWorking)
                     Button("解绑此 Mac") {
                         Task { await license.deactivate() }
                     }
@@ -212,7 +222,7 @@ struct SettingsView: View {
                 HStack {
                     Text("在任何 App 里按快捷键显示 / 隐藏悬浮暂存架")
                     Spacer()
-                    Text(FloatingShelfHotKey.title)
+                    Text(floatingShelfHotKeyChoice.title)
                         .font(.callout.monospaced())
                         .padding(.horizontal, 6)
                         .padding(.vertical, 1)
@@ -221,8 +231,19 @@ struct SettingsView: View {
             }
             .disabled(!license.isPro || !floatingShelfEnabled)
             .onChange(of: floatingShelfHotKey) { applyFloatingShelf() }
+            Picker("悬浮暂存架快捷键", selection: $floatingShelfHotKeyChoice) {
+                ForEach(FloatingShelfHotKey.allCases) { key in
+                    if let conflict = key.conflict {
+                        Text("\(key.title)（可能和「\(conflict)」冲突）").tag(key)
+                    } else {
+                        Text(key.title).tag(key)
+                    }
+                }
+            }
+            .disabled(!license.isPro || !floatingShelfEnabled || !floatingShelfHotKey)
+            .onChange(of: floatingShelfHotKeyChoice) { applyFloatingShelf() }
             if !floatingHotKeyAvailable {
-                Text("\(FloatingShelfHotKey.title) 已被其他 App 占用，仍可在拾掇的「前往」菜单里使用。")
+                Text("\(floatingShelfHotKeyChoice.title) 已被其他 App 占用，仍可在拾掇的「前往」菜单里使用。")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }

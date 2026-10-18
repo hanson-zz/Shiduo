@@ -57,8 +57,8 @@ struct ShiduoApp: App {
                 Button("首页") { store.selection = .home }
                     .keyboardShortcut("h", modifiers: [.command, .shift])
                 Button("暂存架") { store.selection = .shelf }
-                Button("显示 / 隐藏悬浮暂存架") { FloatingShelfController.shared.toggle() }
-                    .keyboardShortcut("s", modifiers: [.command, .option])
+                // 全局快捷键可在设置里换（默认 ⌃⌥S），这里不再固定占用 ⌥⌘S。
+                Button("显示 / 隐藏悬浮暂存架（\(FloatingShelfHotKey.current.title)）") { FloatingShelfController.shared.toggle() }
                 Button("下载来源") { store.selection = .downloads }
                     .keyboardShortcut("j", modifiers: [.command, .shift])
                 Button("重复文件") { store.selection = .duplicates }

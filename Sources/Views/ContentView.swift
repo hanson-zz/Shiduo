@@ -6,6 +6,12 @@ struct ContentView: View {
     @ObservedObject private var reminders = ReminderStore.shared
     @ObservedObject private var folderIcons = FolderIconService.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
+    /// 这个主窗口（开了多个窗口时，全局面板只在一个窗口里弹）。
+    @State private var hostWindow: NSWindow?
+
+    private func ownsSheet(_ kind: String, _ active: Bool) -> Bool {
+        SheetOwnership.shared.present(kind, active: active, in: hostWindow)
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -16,7 +22,10 @@ struct ContentView: View {
         }
         .background(GlassWindowConfigurator())
         .background(MainWindowTagger())
+        .background(HostWindowReader(window: $hostWindow))
         .task {
+            // 启动逻辑只跑一次：开第二个主窗口（⌘N）不会再联网校验授权、再检查更新。
+            guard AppLifecycle.shared.claimLaunchTasks() else { return }
             if Demo.isOn {
                 store.startDemo()
                 return
@@ -39,10 +48,6 @@ struct ContentView: View {
             await store.refreshDashboard()
             await store.checkForUpdatesOnLaunch()
         }
-        .onChange(of: license.state) {
-            FloatingShelfController.shared.apply()
-            QuickPickController.shared.apply()
-        }
         .sheet(isPresented: $store.showOnboarding) {
             OnboardingView(onSearch: { text in
                 store.searchText = text
@@ -55,22 +60,27 @@ struct ContentView: View {
         )) {
             FullDiskAccessLostSheet(monitor: fullDiskAccess)
         }
-        .sheet(isPresented: Binding(get: { !reminders.composing.isEmpty }, set: { if !$0 { reminders.composing = [] } })) {
+        .sheet(isPresented: Binding(get: { ownsSheet("reminder", !reminders.composing.isEmpty) },
+                                    set: { if !$0 { reminders.composing = []; SheetOwnership.shared.release("reminder") } })) {
             ReminderSheet(items: reminders.composing)
         }
-        .sheet(isPresented: Binding(get: { !folderIcons.editing.isEmpty }, set: { if !$0 { folderIcons.editing = [] } })) {
+        .sheet(isPresented: Binding(get: { ownsSheet("folderIcon", !folderIcons.editing.isEmpty) },
+                                    set: { if !$0 { folderIcons.editing = []; SheetOwnership.shared.release("folderIcon") } })) {
             FolderIconEditor(urls: folderIcons.editing, seedColor: folderIcons.seedColor) { store.showToast($0) }
         }
         .sheet(item: $store.ocrItem) { item in
             OCRSheet(item: item)
         }
-        .sheet(isPresented: Binding(get: { !store.renameItems.isEmpty }, set: { if !$0 { store.renameItems = [] } })) {
+        .sheet(isPresented: Binding(get: { ownsSheet("rename", !store.renameItems.isEmpty) },
+                                    set: { if !$0 { store.renameItems = []; SheetOwnership.shared.release("rename") } })) {
             RenameSheet(items: store.renameItems)
         }
-        .sheet(isPresented: Binding(get: { !store.convertItems.isEmpty }, set: { if !$0 { store.convertItems = [] } })) {
+        .sheet(isPresented: Binding(get: { ownsSheet("convert", !store.convertItems.isEmpty) },
+                                    set: { if !$0 { store.convertItems = []; SheetOwnership.shared.release("convert") } })) {
             ConvertSheet(items: store.convertItems)
         }
-        .sheet(isPresented: Binding(get: { !store.moveOutItems.isEmpty }, set: { if !$0 { store.moveOutItems = [] } })) {
+        .sheet(isPresented: Binding(get: { ownsSheet("moveOut", !store.moveOutItems.isEmpty) },
+                                    set: { if !$0 { store.moveOutItems = []; SheetOwnership.shared.release("moveOut") } })) {
             MoveOutSheet(items: store.moveOutItems)
         }
         .confirmationDialog(

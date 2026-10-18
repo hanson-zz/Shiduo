@@ -21893,6 +21893,422 @@
           }
         }
       }
+    },
+    "显示 / 隐藏悬浮暂存架（%@）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show / Hide Floating Shelf (%@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示 / 隐藏悬浮暂存架（%@）"
+          }
+        }
+      }
+    },
+    "%lld 个提醒的文件找不到了（被删除或移到了没接上的磁盘），已经去掉：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed %1$lld reminders whose files can’t be found (deleted or on a disconnected disk): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个提醒的文件找不到了（被删除或移到了没接上的磁盘），已经去掉：%2$@"
+          }
+        }
+      }
+    },
+    "知道了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got It"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "知道了"
+          }
+        }
+      }
+    },
+    "需要联网校验授权": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "License needs online verification"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要联网校验授权"
+          }
+        }
+      }
+    },
+    "暂时连不上授权服务器，稍后会自动重试。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can’t reach the license server right now. Shiduo will retry automatically."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂时连不上授权服务器，稍后会自动重试。"
+          }
+        }
+      }
+    },
+    "授权服务器暂时不可用，请稍后再试。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The license server is temporarily unavailable. Please try again later."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权服务器暂时不可用，请稍后再试。"
+          }
+        }
+      }
+    },
+    "%lld 个已经完整拷到新位置，但原位置有文件删不掉（可能被锁定或没有权限），两边都保留了，请手动处理：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld were fully copied to the new location, but some files at the original location couldn’t be deleted (locked or no permission). Both copies were kept — please tidy up manually: %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个已经完整拷到新位置，但原位置有文件删不掉（可能被锁定或没有权限），两边都保留了，请手动处理：%2$@"
+          }
+        }
+      }
+    },
+    "这台 Mac 已经激活，但离线太久或系统时间不对，需要联网校验一次授权。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac is activated, but it’s been offline too long or the system clock looks wrong. Connect to the internet to verify the license."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 已经激活，但离线太久或系统时间不对，需要联网校验一次授权。"
+          }
+        }
+      }
+    },
+    "立即校验": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify Now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即校验"
+          }
+        }
+      }
+    },
+    "切到任何 App 按 ⌘V 粘贴；⌃⌥⌘ 加数字只拷贝路径。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste with ⌘V in any app; ⌃⌥⌘ plus a number copies just the path."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切到任何 App 按 ⌘V 粘贴；⌃⌥⌘ 加数字只拷贝路径。"
+          }
+        }
+      }
+    },
+    "截屏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截屏"
+          }
+        }
+      }
+    },
+    "截屏到剪贴板": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot to Clipboard"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截屏到剪贴板"
+          }
+        }
+      }
+    },
+    "全部存储（Xcode、VS Code）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save All (Xcode, VS Code)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部存储（Xcode、VS Code）"
+          }
+        }
+      }
+    },
+    "锁定屏幕": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock Screen"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "锁定屏幕"
+          }
+        }
+      }
+    },
+    "全屏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Screen"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全屏"
+          }
+        }
+      }
+    },
+    "表情与符号": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emoji & Symbols"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表情与符号"
+          }
+        }
+      }
+    },
+    "聚焦": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "聚焦"
+          }
+        }
+      }
+    },
+    "访达搜索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder Search"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "访达搜索"
+          }
+        }
+      }
+    },
+    "显示 / 隐藏程序坞": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show / Hide Dock"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示 / 隐藏程序坞"
+          }
+        }
+      }
+    },
+    "离线太久或系统时间不对，需要联网校验一次授权才能继续使用 Pro。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline too long or the system clock looks wrong. Verify the license online once to keep using Pro."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "离线太久或系统时间不对，需要联网校验一次授权才能继续使用 Pro。"
+          }
+        }
+      }
+    },
+    "悬浮暂存架快捷键": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Floating Shelf Shortcut"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬浮暂存架快捷键"
+          }
+        }
+      }
+    },
+    "%@（可能和「%@」冲突）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (may conflict with “%2$@”)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@（可能和「%2$@」冲突）"
+          }
+        }
+      }
+    },
+    "正在拷贝 %lld/%lld：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copying %1$lld/%2$lld: %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在拷贝 %1$lld/%2$lld：%3$@"
+          }
+        }
+      }
+    },
+    "正在移动 %lld/%lld：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving %1$lld/%2$lld: %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在移动 %1$lld/%2$lld：%3$@"
+          }
+        }
+      }
+    },
+    "拷贝已取消，没拷完的文件已清理。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy cancelled. Partially copied files were cleaned up."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝已取消，没拷完的文件已清理。"
+          }
+        }
+      }
+    },
+    "移动已取消，还没移动的文件留在原处。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move cancelled. Files not yet moved stayed where they were."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动已取消，还没移动的文件留在原处。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

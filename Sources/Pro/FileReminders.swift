@@ -77,6 +77,8 @@ final class ReminderStore: ObservableObject {
     /// 正在为这些文件新建提醒（弹出设置面板）。
     @Published var composing: [FileItem] = []
     @Published private(set) var denied = false
+    /// 上次刷新时因为文件找不到而去掉的提醒（文件名）。在提醒页提示一次。
+    @Published var lostNames: [String] = []
 
     private var appObserver: NSObjectProtocol?
 
@@ -97,18 +99,7 @@ final class ReminderStore: ObservableObject {
     /// 启动时调用：注册通知按钮、开始留意 App 切换。
     func start() {
         guard !Demo.isOn else { return }
-        let center = UNUserNotificationCenter.current()
-        let open = UNNotificationAction(identifier: Self.actionOpen, title: String(localized: "打开"), options: [.foreground])
-        let shelf = UNNotificationAction(identifier: Self.actionShelf, title: String(localized: "放上暂存架"), options: [])
-        let snooze = UNNotificationAction(identifier: Self.actionSnooze, title: String(localized: "1 小时后再提醒"), options: [])
-        let done = UNNotificationAction(identifier: Self.actionDone, title: String(localized: "完成"), options: [])
-        let category = UNNotificationCategory(identifier: Self.category, actions: [open, shelf, snooze, done],
-                                              intentIdentifiers: [], options: [])
-        center.getNotificationCategories { existing in
-            var all = existing.filter { $0.identifier != Self.category }
-            all.insert(category)
-            center.setNotificationCategories(all)
-        }
+        Self.registerCategories()
         if appObserver == nil {
             appObserver = NSWorkspace.shared.notificationCenter.addObserver(
                 forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
@@ -122,20 +113,60 @@ final class ReminderStore: ObservableObject {
         refresh()
     }
 
+    /// 注册通知上的按钮。要在 applicationDidFinishLaunching 里就调用，冷启动时点的按钮才不会丢。
+    nonisolated static func registerCategories() {
+        let center = UNUserNotificationCenter.current()
+        let open = UNNotificationAction(identifier: Self.actionOpen, title: String(localized: "打开"), options: [.foreground])
+        let shelf = UNNotificationAction(identifier: Self.actionShelf, title: String(localized: "放上暂存架"), options: [])
+        let snooze = UNNotificationAction(identifier: Self.actionSnooze, title: String(localized: "1 小时后再提醒"), options: [])
+        let done = UNNotificationAction(identifier: Self.actionDone, title: String(localized: "完成"), options: [])
+        let category = UNNotificationCategory(identifier: Self.category, actions: [open, shelf, snooze, done],
+                                              intentIdentifiers: [], options: [])
+        center.getNotificationCategories { existing in
+            var all = existing.filter { $0.identifier != Self.category }
+            all.insert(category)
+            center.setNotificationCategories(all)
+        }
+    }
+
+    /// 不再是 Pro（试用结束、解绑）：撤掉已经排好的按时间提醒，免得照样弹出来。
+    func suspendScheduled() {
+        let ids = reminders.map { Self.idPrefix + $0.id.uuidString }
+        guard !ids.isEmpty else { return }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+    }
+
+    /// 重新成为 Pro：把还没到点的按时间提醒重新排上（同一个 id 会覆盖，不会重复）。
+    func resumeScheduled() {
+        let pending = reminders.filter { !$0.fired && ($0.date ?? .distantPast) > Date() }
+        guard !pending.isEmpty else { return }
+        Task {
+            guard await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .authorized else { return }
+            for reminder in pending { await schedule(reminder) }
+        }
+    }
+
     // MARK: 增删改
 
     func add(items: [FileItem], note: String, date: Date?, app: ReminderApp?) async {
         guard !items.isEmpty, date != nil || app != nil else { return }
         let granted = await requestAuthorization()
         var created: [FileReminder] = []
+        var replaced: [String] = []
         for item in items {
             let url = item.url
             var reminder = FileReminder(bookmark: try? url.bookmarkData(), path: url.path,
                                         note: note.trimmingCharacters(in: .whitespacesAndNewlines),
                                         date: date, app: app)
+            // 同一个文件重新设提醒：旧的通知也要撤掉，不然会提醒两次。
+            replaced += reminders.filter { $0.path == reminder.path }.map { Self.idPrefix + $0.id.uuidString }
             reminders.removeAll { $0.path == reminder.path }
             reminder.fired = false
             created.append(reminder)
+        }
+        if !replaced.isEmpty {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: replaced)
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: replaced)
         }
         reminders.insert(contentsOf: created, at: 0)
         save()
@@ -162,6 +193,21 @@ final class ReminderStore: ObservableObject {
         Task { await schedule(reminder) }
     }
 
+    /// 文件被拾掇搬到别处（比如「搬到…」移动硬盘）后，提醒跟过去。
+    func relocate(from oldPath: String, to newPath: String) {
+        var changed = false
+        for index in reminders.indices {
+            let path = reminders[index].path
+            if path == oldPath || path.hasPrefix(oldPath + "/") {
+                let moved = newPath + path.dropFirst(oldPath.count)
+                reminders[index].path = moved
+                reminders[index].bookmark = try? URL(fileURLWithPath: moved).bookmarkData()
+                changed = true
+            }
+        }
+        if changed { save() }
+    }
+
     func reminder(for path: String) -> FileReminder? {
         reminders.first { $0.path == path }
     }
@@ -172,6 +218,7 @@ final class ReminderStore: ObservableObject {
         let fm = FileManager.default
         var changed = false
         var result: [FileReminder] = []
+        var lost: [FileReminder] = []
         for var reminder in reminders {
             if let data = reminder.bookmark {
                 var stale = false
@@ -191,7 +238,13 @@ final class ReminderStore: ObservableObject {
                 result.append(reminder)
             } else {
                 changed = true
+                lost.append(reminder)
             }
+        }
+        if !lost.isEmpty {
+            let ids = lost.map { Self.idPrefix + $0.id.uuidString }
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+            lostNames += lost.map(\.name)
         }
         reminders = result
         if changed { save() }
@@ -220,7 +273,7 @@ final class ReminderStore: ObservableObject {
     }
 
     private func schedule(_ reminder: FileReminder) async {
-        guard let date = reminder.date else { return }
+        guard let date = reminder.date, LicenseManager.shared.isPro else { return }
         let interval = max(date.timeIntervalSinceNow, 1)
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
         let request = UNNotificationRequest(identifier: Self.idPrefix + reminder.id.uuidString,
@@ -244,7 +297,11 @@ final class ReminderStore: ObservableObject {
 
     /// 通知上的按钮。
     func handle(action: String, id: UUID) {
-        guard let reminder = reminders.first(where: { $0.id == id }) else { return }
+        guard let reminder = reminders.first(where: { $0.id == id }) else {
+            // 已经被替换或删除的提醒：把通知中心里残留的那条也清掉。
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.idPrefix + id.uuidString])
+            return
+        }
         switch action {
         case Self.actionShelf:
             ShelfStore.shared.add([reminder.url])
@@ -447,6 +504,19 @@ struct RemindersPageView: View {
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
+
+            if !store.lostNames.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    Text(String(localized: "\(store.lostNames.count) 个提醒的文件找不到了（被删除或移到了没接上的磁盘），已经去掉：\(store.lostNames.prefix(3).joined(separator: String(localized: "、")))"))
+                        .font(.callout)
+                        .lineLimit(2)
+                    Spacer()
+                    Button("知道了") { store.lostNames = [] }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
+            }
 
             if store.reminders.isEmpty {
                 VStack(spacing: 10) {

@@ -65,6 +65,8 @@ targets:
       - path: Sources/Pro/StitchLogic.swift
       - path: Sources/Pro/AnnotateLogic.swift
       - path: Sources/Pro/ImageExportLogic.swift
+      - path: Sources/Pro/ShortcutLogic.swift
+      - path: Sources/Pro/MoveOutLogic.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests

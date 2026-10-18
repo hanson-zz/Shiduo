@@ -3,7 +3,7 @@ import Carbon
 import SwiftUI
 
 /// 数字键直达（Pro，默认关闭）：⌃⌘1…9、0 把最近第 1…10 个文件拷贝到剪贴板，切到任何 App 按 ⌘V 就能粘贴；
-/// 加 ⇧ 只拷贝路径。来源可选暂存架或最近下载。不模拟按键，所以不需要「辅助功能」权限。
+/// ⌃⌥⌘ 数字只拷贝路径（以前是 ⌃⇧⌘，会和系统「截屏到剪贴板」⌃⇧⌘3/4/5 冲突）。来源可选暂存架或最近下载。不模拟按键，所以不需要「辅助功能」权限。
 @MainActor
 final class QuickPickController {
     static let shared = QuickPickController()
@@ -28,10 +28,7 @@ final class QuickPickController {
     }
 
     /// 数字 1…9、0 对应的键码。
-    private static let digitKeys: [UInt32] = [
-        UInt32(kVK_ANSI_1), UInt32(kVK_ANSI_2), UInt32(kVK_ANSI_3), UInt32(kVK_ANSI_4), UInt32(kVK_ANSI_5),
-        UInt32(kVK_ANSI_6), UInt32(kVK_ANSI_7), UInt32(kVK_ANSI_8), UInt32(kVK_ANSI_9), UInt32(kVK_ANSI_0),
-    ]
+    private static let digitKeys = ShortcutLogic.digitKeys
 
     /// 有多少个组合注册失败（被别的 App 占用）。
     private(set) var unavailable = 0
@@ -172,7 +169,7 @@ struct QuickPickSettings: View {
         Toggle(isOn: $enabled) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("数字键直达：⌃⌘1…9、0 拷贝最近第 1…10 个文件")
-                Text("切到任何 App 按 ⌘V 粘贴；加 ⇧ 只拷贝路径。")
+                Text("切到任何 App 按 ⌘V 粘贴；⌃⌥⌘ 加数字只拷贝路径。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

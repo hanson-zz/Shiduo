@@ -45,17 +45,7 @@ enum QuickSearchHotKey: String, CaseIterable, Identifiable {
     }
 }
 
-/// 悬浮暂存架的全局快捷键 ⌥⌘S（固定，不可改）。只在 Pro 且打开了悬浮暂存架时注册。
-enum FloatingShelfHotKey {
-    static let enabledKey = "floatingShelfHotKeyEnabled"
-    static let title = "⌥⌘ S"
-    static let keyCode = UInt32(kVK_ANSI_S)
-    static let modifiers = UInt32(optionKey | cmdKey)
-
-    static var isEnabled: Bool {
-        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
-    }
-}
+// 悬浮暂存架的快捷键 FloatingShelfHotKey 在 Pro/ShortcutLogic.swift（单元测试也编译那个文件）。
 
 @MainActor
 final class HotKeyCenter {
@@ -88,7 +78,7 @@ final class HotKeyCenter {
         return register(.quickSearch, keyCode: key.keyCode, modifiers: key.modifiers)
     }
 
-    /// 悬浮暂存架的 ⌥⌘S：active 为 true 时注册，否则取消。返回 false 表示被别的 App 占用了。
+    /// 悬浮暂存架的快捷键（FloatingShelfHotKey.current）：active 为 true 时注册，否则取消。返回 false 表示被别的 App 占用了。
     @discardableResult
     func applyFloatingShelf(active: Bool, action: @escaping () -> Void) -> Bool {
         unregister(.floatingShelf)
@@ -97,7 +87,7 @@ final class HotKeyCenter {
         return register(.floatingShelf, keyCode: FloatingShelfHotKey.keyCode, modifiers: FloatingShelfHotKey.modifiers)
     }
 
-    // MARK: 数字键直达（⌃⌘ 数字 / ⌃⌘⇧ 数字）
+    // MARK: 数字键直达（⌃⌘ 数字 / ⌃⌥⌘ 数字）
 
     private var extraRefs: [UInt32: EventHotKeyRef] = [:]
     private var extraActions: [UInt32: () -> Void] = [:]
@@ -112,7 +102,7 @@ final class HotKeyCenter {
         guard active else { return true }
         installHandlerIfNeeded()
         var ref: EventHotKeyRef?
-        let modifiers = UInt32(controlKey | cmdKey) | (shift ? UInt32(shiftKey) : 0)
+        let modifiers = ShortcutLogic.quickPickModifiers(pathOnly: shift)
         let status = RegisterEventHotKey(keyCode, modifiers, EventHotKeyID(signature: Self.signature, id: id),
                                          GetEventDispatcherTarget(), 0, &ref)
         guard status == noErr, let ref else { return false }

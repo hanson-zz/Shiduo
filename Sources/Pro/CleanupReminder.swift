@@ -32,14 +32,28 @@ final class CleanupReminder: ObservableObject {
     nonisolated static let weekdayOrder = [2, 3, 4, 5, 6, 7, 1]
 
     weak var store: LibraryStore?
-    private let delegate = CleanupReminderDelegate()
+    /// 通知中心的代理。AppDelegate 在 applicationDidFinishLaunching 里就设置好（见 installNotificationDelegate），
+    /// 冷启动时点的通知按钮才不会丢。
+    let delegate = CleanupReminderDelegate()
+    /// 冷启动时点了「每周清理」通知、主窗口还没准备好：等 configure 时再打开清理页。
+    private var pendingOpenCleanup = false
     @Published private(set) var denied = false
 
     private init() {}
 
     func configure(store: LibraryStore) {
         self.store = store
-        UNUserNotificationCenter.current().delegate = delegate
+        installNotificationDelegate()
+        if pendingOpenCleanup {
+            pendingOpenCleanup = false
+            openCleanup()
+        }
+    }
+
+    /// 设置通知中心代理（重复调用没关系）。
+    func installNotificationDelegate() {
+        let center = UNUserNotificationCenter.current()
+        if center.delegate !== delegate { center.delegate = delegate }
     }
 
     /// 按当前设置重新安排通知；关掉或不是 Pro 时取消。
@@ -70,6 +84,12 @@ final class CleanupReminder: ObservableObject {
     }
 
     func openCleanup() {
+        guard store != nil else {
+            // 冷启动：主窗口还没配置好 store，等 configure 时再打开清理页。
+            pendingOpenCleanup = true
+            MainWindow.show()
+            return
+        }
         let store = self.store
         MainWindow.show { store?.openCleanup(nil) }
     }
