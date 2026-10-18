@@ -70,11 +70,8 @@ final class CleanupReminder: ObservableObject {
     }
 
     func openCleanup() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
-            window.makeKeyAndOrderFront(nil)
-        }
-        store?.openCleanup(nil)
+        let store = self.store
+        MainWindow.show { store?.openCleanup(nil) }
     }
 }
 

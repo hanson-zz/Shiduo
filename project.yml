@@ -53,6 +53,7 @@ targets:
       - path: Sources/Search/Pinyin.swift
       - path: Sources/Model/FileCategory.swift
       - path: Sources/Model/SourceCatalog.swift
+      - path: Sources/Model/FileStamp.swift
       - path: Sources/Pro/PhotoConcepts.swift
       - path: Sources/Pro/License.swift
       - path: Sources/Pro/ShakeDetector.swift

@@ -21,57 +21,126 @@ enum SpotlightSearch {
     /// - Parameters:
     ///   - maxItems: 最多返回多少个条目；为 0 时只统计数量和总大小。
     ///   - accept: 额外的过滤条件（不影响统计）。
+    ///   - scanLimit: 最多看多少条原始结果（拼音补充搜索这类「匹配所有文件再逐个过滤」的查询用小一点的上限）。
+    ///
+    /// 结果在后台队列上逐条处理（取路径、过滤、构造 FileItem），只把最后的结果送回调用方，
+    /// 十几万条结果时也不会卡住主线程。
     static func run(
         predicate: NSPredicate,
         scopes: [Any],
         maxItems: Int = 3000,
         sortKey: String = "kMDItemFSContentChangeDate",
         ascending: Bool = false,
-        accept: ((FileItem) -> Bool)? = nil,
-        nameFilter: ((String) -> Bool)? = nil
+        accept: (@Sendable (FileItem) -> Bool)? = nil,
+        nameFilter: (@Sendable (String) -> Bool)? = nil,
+        scanLimit: Int = 300_000
     ) async -> SpotlightResult {
+        let box = QueryBox(predicate: predicate, scopes: scopes, sortKey: sortKey, ascending: ascending)
+        return await withTaskCancellationHandler {
+            await box.run(maxItems: maxItems, scanLimit: scanLimit, accept: accept, nameFilter: nameFilter)
+        } onCancel: {
+            box.cancel()
+        }
+    }
+}
+
+/// 一次 NSMetadataQuery：在自己的后台 OperationQueue 上启动、收集和处理结果。
+private final class QueryBox: @unchecked Sendable {
+    private let query = NSMetadataQuery()
+    private let queue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        queue.qualityOfService = .userInitiated
+        queue.name = "Shiduo.Spotlight"
+        return queue
+    }()
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<SpotlightResult, Never>?
+    private var observer: NSObjectProtocol?
+    private var cancelled = false
+
+    init(predicate: NSPredicate, scopes: [Any], sortKey: String, ascending: Bool) {
+        query.predicate = predicate
+        query.searchScopes = scopes
+        query.sortDescriptors = [NSSortDescriptor(key: sortKey, ascending: ascending)]
+        query.operationQueue = queue
+    }
+
+    func run(maxItems: Int, scanLimit: Int,
+             accept: (@Sendable (FileItem) -> Bool)?,
+             nameFilter: (@Sendable (String) -> Bool)?) async -> SpotlightResult {
         await withCheckedContinuation { (continuation: CheckedContinuation<SpotlightResult, Never>) in
-            let query = NSMetadataQuery()
-            query.predicate = predicate
-            query.searchScopes = scopes
-            query.sortDescriptors = [NSSortDescriptor(key: sortKey, ascending: ascending)]
-
-            var observer: NSObjectProtocol?
-            observer = NotificationCenter.default.addObserver(
-                forName: .NSMetadataQueryDidFinishGathering,
-                object: query,
-                queue: .main
-            ) { _ in
-                query.disableUpdates()
-                var result = SpotlightResult()
-                let count = min(query.resultCount, 300_000)
-                for index in 0..<count {
-                    guard let item = query.result(at: index) as? NSMetadataItem,
-                          let path = item.value(forAttribute: "kMDItemPath") as? String,
-                          !isNoise(path)
-                    else { continue }
-                    if let nameFilter {
-                        let name = item.value(forAttribute: "kMDItemFSName") as? String ?? (path as NSString).lastPathComponent
-                        if !nameFilter(name) { continue }
-                    }
-                    result.totalCount += 1
-                    result.totalBytes += (item.value(forAttribute: "kMDItemFSSize") as? NSNumber)?.int64Value ?? 0
-                    if result.items.count < maxItems, let file = FileItem(metadata: item) {
-                        if accept == nil || accept?(file) == true {
-                            result.items.append(file)
-                        }
-                    }
-                }
-                query.stop()
-                if let observer { NotificationCenter.default.removeObserver(observer) }
-                continuation.resume(returning: result)
-            }
-
-            if !query.start() {
-                if let observer { NotificationCenter.default.removeObserver(observer) }
+            lock.lock()
+            if cancelled {
+                lock.unlock()
                 continuation.resume(returning: SpotlightResult())
+                return
+            }
+            self.continuation = continuation
+            lock.unlock()
+            observer = NotificationCenter.default.addObserver(
+                forName: .NSMetadataQueryDidFinishGathering, object: query, queue: queue
+            ) { [self] _ in
+                self.collect(maxItems: maxItems, scanLimit: scanLimit, accept: accept, nameFilter: nameFilter)
+            }
+            // 设置了 operationQueue 时，查询要在这个队列上启动。
+            queue.addOperation { [self] in
+                if self.isCancelled || !self.query.start() { self.finish(SpotlightResult()) }
             }
         }
+    }
+
+    private func collect(maxItems: Int, scanLimit: Int,
+                         accept: (@Sendable (FileItem) -> Bool)?,
+                         nameFilter: (@Sendable (String) -> Bool)?) {
+        query.disableUpdates()
+        var result = SpotlightResult()
+        let count = min(query.resultCount, scanLimit)
+        for index in 0..<count {
+            if index % 2000 == 0, isCancelled { break }
+            guard let item = query.result(at: index) as? NSMetadataItem,
+                  let path = item.value(forAttribute: "kMDItemPath") as? String,
+                  !SpotlightSearch.isNoise(path)
+            else { continue }
+            if let nameFilter {
+                let name = item.value(forAttribute: "kMDItemFSName") as? String ?? (path as NSString).lastPathComponent
+                if !nameFilter(name) { continue }
+            }
+            result.totalCount += 1
+            result.totalBytes += (item.value(forAttribute: "kMDItemFSSize") as? NSNumber)?.int64Value ?? 0
+            if result.items.count < maxItems, let file = FileItem(metadata: item) {
+                if accept == nil || accept?(file) == true {
+                    result.items.append(file)
+                }
+            }
+        }
+        finish(result)
+    }
+
+    private var isCancelled: Bool {
+        lock.lock(); defer { lock.unlock() }
+        return cancelled
+    }
+
+    /// 只会真正执行一次：结束查询、移除通知、把结果交回去。
+    private func finish(_ result: SpotlightResult) {
+        lock.lock()
+        let continuation = self.continuation
+        self.continuation = nil
+        let observer = self.observer
+        self.observer = nil
+        lock.unlock()
+        query.stop()
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+        continuation?.resume(returning: result)
+    }
+
+    /// 调用方被取消（切走了页面）：停掉查询，马上返回空结果。
+    func cancel() {
+        lock.lock()
+        cancelled = true
+        lock.unlock()
+        queue.addOperation { [self] in self.finish(SpotlightResult()) }
     }
 }
 

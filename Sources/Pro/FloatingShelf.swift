@@ -295,11 +295,8 @@ final class FloatingShelfController: NSObject {
     /// 在拾掇主窗口里打开「暂存架」页面。
     func openInApp() {
         hide()
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.canBecomeMain && !($0 is NSPanel) }) {
-            window.makeKeyAndOrderFront(nil)
-        }
-        store?.selection = .shelf
+        let store = self.store
+        MainWindow.show { store?.selection = .shelf }
     }
 
     private func makePanel() -> FloatingShelfPanel {

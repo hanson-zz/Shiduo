@@ -72,7 +72,7 @@ struct InspectorView: View {
         if let item {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    ThumbnailView(url: item.url, size: 220)
+                    ThumbnailView(url: item.url, size: 220, modified: item.modified)
                         .frame(maxWidth: .infinity)
                     Text(item.name)
                         .font(.headline)
@@ -159,7 +159,7 @@ struct OCRSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 16) {
-                ThumbnailView(url: item.url, size: 200)
+                ThumbnailView(url: item.url, size: 200, modified: item.modified)
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.name)
                         .font(.headline)

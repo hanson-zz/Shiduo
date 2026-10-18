@@ -40,10 +40,7 @@ final class MediaTools: ObservableObject {
 
     /// 把拾掇主窗口拿到前面。
     static func bringMainWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.canBecomeMain && $0.isVisible && !ToolWindow.isToolWindow($0) }) {
-            window.makeKeyAndOrderFront(nil)
-        }
+        MainWindow.show()
     }
 
     /// 剪贴板粘贴进来的图片临时放在这里（见 ImageStudio.paste）。

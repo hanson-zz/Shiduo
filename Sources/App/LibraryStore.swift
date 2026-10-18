@@ -329,11 +329,7 @@ final class LibraryStore: ObservableObject {
     /// 从主窗口外面打开：文件夹在拾掇主窗口里打开（拿到前面来），其他文件用默认 App 打开。
     static func openFromOutside(_ url: URL) {
         if isBrowsableFolder(url), let store = shared {
-            NSApp.activate(ignoringOtherApps: true)
-            if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
-                window.makeKeyAndOrderFront(nil)
-            }
-            store.openFolder(url)
+            MainWindow.show { store.openFolder(url) }
         } else {
             NSWorkspace.shared.open(url)
         }
@@ -361,10 +357,16 @@ final class LibraryStore: ObservableObject {
     /// 切换页面时不要重新查（switchTag 用：手上已经有正确的列表）。
     private var skipNextReload = false
 
+    /// 重新读当前页面。正在看搜索结果时重新搜索（⌘R、重命名、转换、撤销之后都走这里），
+    /// 不会把结果换成侧边栏当前页面的内容。
     func reload() {
         loadTask?.cancel()
         selectedIDs = []
         if skipNextReload { return }
+        if activeQuery != nil {
+            runSearch()
+            return
+        }
         let target = selection ?? .home
         if Demo.isOn {
             if target != .home { applyDemo(target) }

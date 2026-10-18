@@ -512,7 +512,7 @@ struct FileCollectionView: View {
         Table(of: FileItem.self, selection: $store.selectedIDs, sortOrder: $sortOrder) {
             TableColumn("名称", value: \FileItem.name) { item in
                 HStack(spacing: 6) {
-                    ThumbnailView(url: item.url, size: 20)
+                    ThumbnailView(url: item.url, size: 20, modified: item.modified)
                     Text(item.name)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -837,7 +837,7 @@ struct FileGridCell: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            ThumbnailView(url: item.url, size: size)
+            ThumbnailView(url: item.url, size: size, modified: item.modified)
             Text(item.name)
                 .font(.callout)
                 .lineLimit(2)

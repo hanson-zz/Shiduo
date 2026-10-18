@@ -15,6 +15,7 @@ struct ContentView: View {
             DetailView()
         }
         .background(GlassWindowConfigurator())
+        .background(MainWindowTagger())
         .task {
             if Demo.isOn {
                 store.startDemo()

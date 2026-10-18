@@ -9,7 +9,7 @@ struct ShiduoApp: App {
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
 
     var body: some Scene {
-        WindowGroup("拾掇") {
+        WindowGroup("拾掇", id: MainWindow.sceneID) {
             ContentView()
                 .environmentObject(store)
                 .environmentObject(store.ocr)

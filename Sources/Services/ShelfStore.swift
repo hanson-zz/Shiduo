@@ -125,7 +125,8 @@ final class ShelfStore: ObservableObject {
             result.append(entry)
         }
         entries = result
-        rebuildItems()
+        // 重新读每个文件的大小和修改时间：文件在别处被编辑、替换后，缩略图和总大小跟着更新。
+        rebuildItems(fresh: true)
         if changed { save() }
     }
 
@@ -137,11 +138,14 @@ final class ShelfStore: ObservableObject {
 
     // MARK: - 存取
 
-    private func rebuildItems() {
-        let current = Dictionary(items.map { ($0.path, $0) }, uniquingKeysWith: { a, _ in a })
-        items = entries.compactMap { entry in
+    /// fresh = true 时每个文件都重新读一遍（refresh 用）；否则沿用已有的 FileItem，只给新加的读。
+    private func rebuildItems(fresh: Bool = false) {
+        let current = fresh ? [:] : Dictionary(items.map { ($0.path, $0) }, uniquingKeysWith: { a, _ in a })
+        let rebuilt = entries.compactMap { entry in
             current[entry.path] ?? FileItem(url: URL(fileURLWithPath: entry.path))
         }
+        // 没变就不发布，免得暂存架、刘海的界面白白重绘。
+        if rebuilt != items { items = rebuilt }
     }
 
     private func load() {

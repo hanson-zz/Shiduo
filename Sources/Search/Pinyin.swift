@@ -9,6 +9,70 @@ enum Pinyin {
         return t.allSatisfy { $0 >= "a" && $0 <= "z" }
     }
 
+    /// 跟在声母后面的韵母。
+    private static let finals: Set<String> = [
+        "a", "o", "e", "ai", "ei", "ao", "ou", "an", "en", "ang", "eng", "ong",
+        "i", "ia", "ie", "iao", "iu", "ian", "in", "iang", "ing", "iong",
+        "u", "ua", "uo", "uai", "ui", "uan", "un", "uang", "ue", "v", "ve",
+    ]
+
+    /// 可以单独成音节的韵母（「爱 ai」「恩 en」），i、u 开头的要写成 yi、wu。
+    private static let standalone: Set<String> = [
+        "a", "o", "e", "ai", "ei", "ao", "ou", "an", "en", "ang", "eng", "er",
+    ]
+
+    private static let initials: [String] = [
+        "zh", "ch", "sh", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h",
+        "j", "q", "x", "r", "z", "c", "s", "y", "w",
+    ]
+
+    /// 关键词能不能整个拆成普通话音节（「nianbao」「nianb」可以，「invoice」「report」不行），
+    /// 最后一段可以只打了声母。纯首字母缩写（「nb」「ndbg」这种没有元音的）也算。
+    static func isPlausiblePinyin(_ text: String) -> Bool {
+        let t = text.lowercased()
+        guard looksLikePinyin(t) else { return false }
+        if !t.contains(where: { "aeiouv".contains($0) }) { return true }
+        var memo: [Int: Bool] = [:]
+        return splitsIntoSyllables(Array(t), from: 0, memo: &memo)
+    }
+
+    private static func splitsIntoSyllables(_ chars: [Character], from index: Int, memo: inout [Int: Bool]) -> Bool {
+        if index == chars.count { return true }
+        if let hit = memo[index] { return hit }
+        var ok = false
+        // 一个音节最长 6 个字母（zhuang）。
+        var length = min(6, chars.count - index)
+        while length >= 1 {
+            let piece = String(chars[index..<(index + length)])
+            let isLast = index + length == chars.count
+            if isSyllable(piece) || (isLast && initials.contains(piece)),
+               splitsIntoSyllables(chars, from: index + length, memo: &memo) {
+                ok = true
+                break
+            }
+            length -= 1
+        }
+        memo[index] = ok
+        return ok
+    }
+
+    private static func isSyllable(_ piece: String) -> Bool {
+        if standalone.contains(piece) { return true }
+        for initial in initials where piece.hasPrefix(initial) {
+            let rest = String(piece.dropFirst(initial.count))
+            if !rest.isEmpty, finals.contains(rest) { return true }
+        }
+        return false
+    }
+
+    /// 拼音补充搜索要不要跑：它要把个人文件夹里所有文件的名字过一遍，代价大，
+    /// 所以英文单词（invoice、report）只有在第一次搜索几乎没结果时才补。
+    static func shouldSupplement(_ word: String, firstResultCount: Int) -> Bool {
+        guard looksLikePinyin(word) else { return false }
+        if firstResultCount < 20 { return true }
+        return isPlausiblePinyin(word) && firstResultCount < 200
+    }
+
     static func containsHan(_ text: String) -> Bool {
         text.unicodeScalars.contains(where: isHan)
     }

@@ -182,11 +182,7 @@ final class QuickSearchController: NSObject, NSWindowDelegate {
         hide()
         // 文件夹在拾掇主窗口里打开，不跳到访达
         if item.isDirectory, let store = model.store {
-            NSApp.activate(ignoringOtherApps: true)
-            if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
-                window.makeKeyAndOrderFront(nil)
-            }
-            store.openFolder(item.url)
+            MainWindow.show { store.openFolder(item.url) }
             return
         }
         NSWorkspace.shared.open(item.url)
@@ -200,13 +196,12 @@ final class QuickSearchController: NSObject, NSWindowDelegate {
     private func showAllInApp() {
         let text = model.text
         hide()
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
-            window.makeKeyAndOrderFront(nil)
+        let store = model.store
+        MainWindow.show {
+            guard let store, !text.isEmpty else { return }
+            store.searchText = text
+            store.submitSearch()
         }
-        guard let store = model.store, !text.isEmpty else { return }
-        store.searchText = text
-        store.submitSearch()
     }
 }
 

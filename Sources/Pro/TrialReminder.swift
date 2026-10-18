@@ -87,11 +87,7 @@ final class TrialReminder: ObservableObject {
 
     /// 打开主窗口里的 Pro 介绍页（那里可以输入许可证）。
     func enterLicense() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.canBecomeMain && !($0 is NSPanel) }) {
-            window.makeKeyAndOrderFront(nil)
-        }
-        LicenseManager.shared.showPaywall = true
+        MainWindow.show { LicenseManager.shared.showPaywall = true }
     }
 }
 

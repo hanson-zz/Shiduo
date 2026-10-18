@@ -136,6 +136,8 @@ enum Renamer {
                 failed.append(plan.item.name)
             }
         }
+        // 名字互换（a↔b、按拍摄时间重新编号）后同一路径换成了别的文件：缩略图要重新取。
+        ThumbnailService.shared.invalidate(done.flatMap { [$0.0, $0.1] })
         return (done, failed)
     }
 }

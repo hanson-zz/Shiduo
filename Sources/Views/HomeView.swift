@@ -310,7 +310,7 @@ struct ShelfView: View {
                 LazyHStack(alignment: .top, spacing: 14) {
                     ForEach(shelf.items) { item in
                         VStack(spacing: 8) {
-                            ThumbnailView(url: item.url, size: 104)
+                            ThumbnailView(url: item.url, size: 104, modified: item.modified)
                                 .frame(width: 120, height: 112)
                             Text(item.name)
                                 .font(.caption)

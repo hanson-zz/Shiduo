@@ -162,23 +162,27 @@ enum Queries {
     }
 
     static func search(_ q: SearchQuery) async -> [FileItem] {
-        var filter: ((FileItem) -> Bool)? = nil
+        var filter: (@Sendable (FileItem) -> Bool)? = nil
         if q.downloadedOnly {
             filter = { (file: FileItem) -> Bool in !file.whereFroms.isEmpty }
         }
         var items = await SpotlightSearch.run(
             predicate: q.predicate, scopes: q.scopes, maxItems: 3000, accept: filter
         ).items
+        if Task.isCancelled { return items }
         // 拼音 / 首字母：“nianbao”、“nb” 找到「年报.pdf」。
+        // 这一步要把个人文件夹里的文件名都过一遍：英文单词（invoice、report）只在第一次几乎没搜到时才补，
+        // 而且最多看 5 万条，在后台队列里过滤。
         let word = q.text.trimmingCharacters(in: .whitespaces)
-        if Pinyin.looksLikePinyin(word) {
+        if Pinyin.shouldSupplement(word, firstResultCount: items.count) {
             var rest = q
             rest.text = ""
             let needle = word.lowercased()
             let seen = Set(items.map(\.path))
             let extra = await SpotlightSearch.run(
                 predicate: rest.predicate, scopes: q.scopes, maxItems: 1000, accept: filter,
-                nameFilter: { Pinyin.matches(($0 as NSString).deletingPathExtension, query: needle) }
+                nameFilter: { Pinyin.matches(($0 as NSString).deletingPathExtension, query: needle) },
+                scanLimit: 50_000
             ).items.filter { !seen.contains($0.path) }
             // 拼音命中的排在前面：通常就是想找的那个。
             items = extra + items
@@ -187,13 +191,16 @@ enum Queries {
     }
 
     /// 只要数量（侧边栏「保存的搜索」用）：不构造文件列表，省内存、省电。
-    /// 需要逐个检查文件的情况（只看下载来的、拼音）退回到完整搜索再数。
+    /// 只看下载来的要逐个检查文件，退回到完整搜索再数。拼音补充搜索和 search 用同一个判断：
+    /// 普通英文单词第一次就搜到不少结果时只数第一次，不再把整个个人文件夹过一遍。
     static func count(_ q: SearchQuery) async -> Int {
-        let word = q.text.trimmingCharacters(in: .whitespaces)
-        if q.downloadedOnly || Pinyin.looksLikePinyin(word) {
+        if q.downloadedOnly {
             return await search(q).count
         }
-        return await SpotlightSearch.run(predicate: q.predicate, scopes: q.scopes, maxItems: 0).totalCount
+        let first = await SpotlightSearch.run(predicate: q.predicate, scopes: q.scopes, maxItems: 0).totalCount
+        let word = q.text.trimmingCharacters(in: .whitespaces)
+        guard Pinyin.shouldSupplement(word, firstResultCount: first), !Task.isCancelled else { return first }
+        return await search(q).count
     }
 
     /// 打了某个标签的文件：个人文件夹 + 已挂载的外接磁盘（访达里外接盘上的文件也能打标签）。
