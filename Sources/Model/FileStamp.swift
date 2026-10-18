@@ -13,13 +13,16 @@ struct FileStamp: Hashable, Sendable {
     }
 
     /// 读一次 stat。文件不存在时两个字段都是 nil。
+    /// 不用 URL.resourceValues：同一个 URL 实例会缓存读过的值，文件改了也读不到新的。
     init(url: URL) {
-        let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
-        self.init(modified: values?.contentModificationDate, size: values?.fileSize.map(Int64.init))
+        self.init(path: url.path)
     }
 
     init(path: String) {
-        self.init(url: URL(fileURLWithPath: path))
+        let attrs = try? FileManager.default.attributesOfItem(atPath: path)
+        let isDirectory = (attrs?[.type] as? FileAttributeType) == .typeDirectory
+        self.init(modified: attrs?[.modificationDate] as? Date,
+                  size: isDirectory ? nil : (attrs?[.size] as? NSNumber)?.int64Value)
     }
 
     var exists: Bool { modified != nil || size != nil }

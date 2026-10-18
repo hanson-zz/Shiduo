@@ -13,11 +13,15 @@ enum OCRService {
             guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
                   let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
             else { throw OCRError.unreadable }
+            // 拿到的是没转正的像素：把 EXIF 方向告诉 Vision（iPhone 竖拍的文档照片是方向 6），不然几乎认不出字。
+            let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+            let raw = (props?[kCGImagePropertyOrientation] as? NSNumber)?.uint32Value ?? 1
+            let orientation = CGImagePropertyOrientation(rawValue: raw) ?? .up
             let request = VNRecognizeTextRequest()
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
             request.recognitionLanguages = ["zh-Hans", "zh-Hant", "en-US"]
-            let handler = VNImageRequestHandler(cgImage: image, options: [:])
+            let handler = VNImageRequestHandler(cgImage: image, orientation: orientation, options: [:])
             try handler.perform([request])
             let lines = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
             return lines.joined(separator: "\n")
