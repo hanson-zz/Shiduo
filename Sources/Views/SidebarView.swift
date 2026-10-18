@@ -9,6 +9,7 @@ struct SidebarView: View {
     @EnvironmentObject private var license: LicenseManager
     @ObservedObject private var shelf = ShelfStore.shared
     @ObservedObject private var reminders = ReminderStore.shared
+    @ObservedObject private var customTags = CustomTagStore.shared
     @State private var shelfTargeted = false
 
     /// 常用位置，和访达侧边栏一样。
@@ -189,6 +190,28 @@ struct SidebarView: View {
                     }
                     .tag(SidebarItem.tag(tag.name))
                 }
+                ForEach(customTags.tags) { tag in
+                    Label {
+                        Text(tag.name)
+                    } icon: {
+                        Circle()
+                            .fill(FinderTag.color(tag.color))
+                            .frame(width: 11, height: 11)
+                            .overlay(Circle().strokeBorder(Color.white.opacity(0.7), lineWidth: 1))
+                            .frame(width: 20)
+                    }
+                    .tag(SidebarItem.tag(tag.name))
+                    .contextMenu {
+                        Button("从侧边栏移除（文件上的标签保留）") { customTags.remove(tag.name) }
+                    }
+                }
+                Button {
+                    if let new = CustomTagStore.prompt() { customTags.add(new.name, color: new.color) }
+                } label: {
+                    Label("新建标签…", systemImage: "plus.circle")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
             }
 
             Section {

@@ -19797,6 +19797,102 @@
           }
         }
       }
+    },
+    "从侧边栏移除（文件上的标签保留）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Sidebar (files keep the tag)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从侧边栏移除（文件上的标签保留）"
+          }
+        }
+      }
+    },
+    "新建标签…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Tag…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建标签…"
+          }
+        }
+      }
+    },
+    "无颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无颜色"
+          }
+        }
+      }
+    },
+    "新建标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Tag"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建标签"
+          }
+        }
+      }
+    },
+    "访达只支持这几种标签颜色，选好后在访达里也能看到。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder supports only these tag colors. The one you pick shows in Finder too."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "访达只支持这几种标签颜色，选好后在访达里也能看到。"
+          }
+        }
+      }
+    },
+    "标签名字": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标签名字"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -216,6 +216,14 @@ struct FileCollectionView: View {
     @FocusState private var gridFocused: Bool
     /// ⇧ 连选的起点：上一次普通点按 / ⌘ 点按 / 方向键选中的那个（和访达一样）。
     @State private var selectionAnchor: FileItem.ID?
+    /// 框选：拖出来的矩形（网格坐标），和开始框选前已经选中的。
+    @State private var marquee: CGRect?
+    @State private var marqueeBase: Set<FileItem.ID> = []
+    @State private var marqueeFlags: NSEvent.ModifierFlags = []
+    /// 网格可见区域的高度：空白处也能开始框选。
+    @State private var viewportHeight: CGFloat = 0
+    /// 每个格子在网格里的位置（引用类型，更新它不会重画网格）。
+    @State private var cellFrames = GridCellFrames()
 
     private var sorted: [FileItem] { items.sorted(using: sortOrder) }
 
@@ -317,6 +325,10 @@ struct FileCollectionView: View {
                             FileContextMenu(items: targets(for: item), preview: { preview($0) })
                         }
                         .help(item.path)
+                        .background(GeometryReader { proxy in
+                            Color.clear.preference(key: GridCellFramesKey.self,
+                                                   value: [item.id: proxy.frame(in: .named(Self.gridSpace))])
+                        })
                 }
             }
             // 量网格本身的宽度（不含边距和滚动条），↑ ↓ 的每行个数才和实际排版一致。
@@ -326,7 +338,31 @@ struct FileCollectionView: View {
                     .onChange(of: proxy.size.width) { gridWidth = proxy.size.width }
             })
             .padding(16)
+            .frame(maxWidth: .infinity, minHeight: viewportHeight, alignment: .top)
+            // 在空白处拖动：框选（格子上拖动仍然是把文件拖出去）。
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(marqueeGesture)
+            )
+            .overlay(alignment: .topLeading) {
+                if let marquee {
+                    Rectangle()
+                        .fill(Color.accentColor.opacity(0.15))
+                        .overlay(Rectangle().strokeBorder(Color.accentColor.opacity(0.8), lineWidth: 1))
+                        .frame(width: marquee.width, height: marquee.height)
+                        .offset(x: marquee.minX, y: marquee.minY)
+                        .allowsHitTesting(false)
+                }
+            }
+            .coordinateSpace(name: Self.gridSpace)
+            .onPreferenceChange(GridCellFramesKey.self) { frames in cellFrames.frames = frames }
         }
+        .background(GeometryReader { proxy in
+            Color.clear
+                .onAppear { viewportHeight = proxy.size.height }
+                .onChange(of: proxy.size.height) { viewportHeight = proxy.size.height }
+        })
         .focusable()
         .focused($gridFocused)
         .focusEffectDisabled()
@@ -350,6 +386,38 @@ struct FileCollectionView: View {
             liveItem = nil
             return .handled
         }
+    }
+
+    private static let gridSpace = "fileGrid"
+
+    /// 在网格空白处拖出矩形选中文件（和访达一样）：⇧ 加选，⌘ 反选；只点一下空白处取消选中。
+    private var marqueeGesture: some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.gridSpace))
+            .onChanged { value in
+                if marquee == nil {
+                    gridFocused = true
+                    marqueeFlags = NSEvent.modifierFlags
+                    marqueeBase = marqueeFlags.contains(.shift) || marqueeFlags.contains(.command) ? store.selectedIDs : []
+                }
+                let rect = CGRect(x: min(value.startLocation.x, value.location.x),
+                                  y: min(value.startLocation.y, value.location.y),
+                                  width: abs(value.location.x - value.startLocation.x),
+                                  height: abs(value.location.y - value.startLocation.y))
+                marquee = rect
+                guard rect.width >= 3 || rect.height >= 3 else { return }
+                let hit = Set(cellFrames.frames.filter { $0.value.intersects(rect) }.map(\.key))
+                let next = marqueeFlags.contains(.command) ? marqueeBase.symmetricDifference(hit) : marqueeBase.union(hit)
+                if next != store.selectedIDs { store.selectedIDs = next }
+            }
+            .onEnded { value in
+                let moved = hypot(value.location.x - value.startLocation.x, value.location.y - value.startLocation.y)
+                if moved < 3, !marqueeFlags.contains(.shift), !marqueeFlags.contains(.command) {
+                    store.selectedIDs = []
+                }
+                // 下次 ⇧ 连选从框选到的第一个开始。
+                if let first = sorted.first(where: { store.selectedIDs.contains($0.id) }) { selectionAnchor = first.id }
+                marquee = nil
+            }
     }
 
     /// 网格每行几个（和 LazyVGrid 的 adaptive 列数算法一致：间距 8）。gridWidth 已是网格本身的宽度。
@@ -479,6 +547,18 @@ struct FileCollectionView: View {
         } else {
             previewURL = item.url
         }
+    }
+}
+
+/// 网格里每个格子的位置（框选用）。
+final class GridCellFrames {
+    var frames: [FileItem.ID: CGRect] = [:]
+}
+
+struct GridCellFramesKey: PreferenceKey {
+    static let defaultValue: [FileItem.ID: CGRect] = [:]
+    static func reduce(value: inout [FileItem.ID: CGRect], nextValue: () -> [FileItem.ID: CGRect]) {
+        value.merge(nextValue()) { $1 }
     }
 }
 
