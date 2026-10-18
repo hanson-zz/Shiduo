@@ -105,6 +105,16 @@ struct FileContextMenu: View {
         if items.count == 1, let app = items.first, app.ext == "app" {
             Button("卸载（连残留一起）…") { AppUninstaller.shared.open(app.url) }
         }
+        Button("移动到…") {
+            // 在后台移动（同名自动加编号、不覆盖），记进「清理记录」；⌘Z 可以撤销，⌘⇧Z 重做。
+            guard !ShelfTransfer.shared.isRunning else {
+                store.showToast(String(localized: "还有文件在移动，请稍等"))
+                return
+            }
+            if let folder = ShelfActions.chooseFolder(prompt: String(localized: "移动到这里")) {
+                ShelfTransfer.shared.start(items.map(\.url), to: folder, copy: false, store: store)
+            }
+        }
         Button("搬到…") { store.requestMoveOut(items) }
         Button("移到废纸篓", role: .destructive) { store.requestTrash(items) }
     }

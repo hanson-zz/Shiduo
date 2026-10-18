@@ -72,6 +72,8 @@ final class MoveOutJob: ObservableObject {
                 return record
             })
             self.batch = batch
+            // 主窗口里 ⌘Z 可以撤销这次搬家（放回原处、去掉替身）。跨盘、替身不好重做，所以只能撤销。
+            FileUndoCenter.shared.registerHistory(batch: batch, name: String(localized: "搬家"), redoable: false, toast: nil)
             // 暂存架和文件提醒跟到新位置（store.forget 只会把还指着旧路径的记录拿掉）。
             for file in result.moved {
                 ShelfStore.shared.relocate(from: file.from, to: URL(fileURLWithPath: file.to))

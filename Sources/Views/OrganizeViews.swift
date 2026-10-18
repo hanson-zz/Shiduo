@@ -18,7 +18,17 @@ struct DownloadSourcesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !groups.isEmpty { overview; Divider() }
+            if !groups.isEmpty {
+                overview
+                Divider()
+            } else {
+                HStack {
+                    Spacer()
+                    OrganizeDownloadsButton()
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 10)
+            }
             split
         }
         .navigationTitle("下载来源")
@@ -71,6 +81,9 @@ struct DownloadSourcesView: View {
                     .buttonStyle(.plain)
                 }
             }
+            Spacer(minLength: 0)
+            // 整理下载：先预览每个文件去哪儿，确认后才移动；也可以只分组显示。
+            OrganizeDownloadsButton()
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 16)

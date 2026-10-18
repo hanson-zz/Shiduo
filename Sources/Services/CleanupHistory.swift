@@ -132,10 +132,14 @@ enum CleanupHistoryLogic {
         case alreadyRestored
         case sourceMissing
         case moveFailed(String)
+        /// 原位置已经有别的文件（只在 skipIfTaken 时）：跳过，不覆盖也不改名。
+        case originalTaken
     }
 
     /// 把一条记录的文件放回原处，返回放回后的路径。会阻塞（跨盘时要拷贝），不要在主线程调用。
-    static func restore(_ record: CleanupRecord, suffix: String = "恢复", fileManager fm: FileManager = .default) throws -> String {
+    /// skipIfTaken：原位置已有别的文件时不加「(恢复)」改名放回，而是跳过（⌘Z 撤销用：只放回原路径）。
+    static func restore(_ record: CleanupRecord, suffix: String = "恢复", skipIfTaken: Bool = false,
+                        fileManager fm: FileManager = .default) throws -> String {
         guard record.restoredAt == nil else { throw RestoreError.alreadyRestored }
         guard let current = record.currentPath, fm.fileExists(atPath: current) else { throw RestoreError.sourceMissing }
         // 路径上已经换成了别的文件（废纸篓清空后又有同名文件进来）：不能把它当成这条记录搬走。
@@ -152,6 +156,12 @@ enum CleanupHistoryLogic {
             } catch {
                 throw RestoreError.moveFailed((error as NSError).localizedDescription)
             }
+        }
+        if skipIfTaken, fm.fileExists(atPath: record.originalPath) {
+            if let parkedAlias, !fm.fileExists(atPath: parkedAlias.alias) {
+                try? fm.moveItem(atPath: parkedAlias.parked, toPath: parkedAlias.alias)
+            }
+            throw RestoreError.originalTaken
         }
         let target = restoreTarget(for: record.originalPath, suffix: suffix) { fm.fileExists(atPath: $0) }
         let folder = (target as NSString).deletingLastPathComponent
@@ -275,24 +285,35 @@ final class CleanupHistory: ObservableObject {
         save()
     }
 
-    /// 放回原处（在后台线程搬文件）。返回 (恢复成功后的新路径, 失败的文件名, 每个成功的 原路径 → 新路径)。
-    func restore(_ list: [CleanupRecord]) async -> (restored: [String], failed: [String], pairs: [(original: String, restored: String)]) {
+    /// 放回原处（在后台线程搬文件）。返回 (恢复成功后的新路径, 失败的文件名, 每个成功的 原路径 → 新路径,
+    /// 原位置被占用而跳过的文件名)。skipIfTaken 为 true 时原位置有别的文件就跳过（不覆盖、不改名）。
+    func restore(_ list: [CleanupRecord], skipIfTaken: Bool = false) async
+        -> (restored: [String], failed: [String], pairs: [(original: String, restored: String)], taken: [String]) {
         // 状态要 stat 文件，在后台算一次（目标是断开的 NAS 时 fileExists 可能卡住）。
         let statuses = await Self.statuses(of: list)
         let targets = list.filter { statuses[$0.id] == .restorable }
         let unavailable = list.filter { statuses[$0.id] != .restorable && statuses[$0.id] != .restored }.map(\.name)
         let suffix = String(localized: "restore.suffix", defaultValue: "恢复")
-        let results: [(UUID, String?, String)] = await Task.detached(priority: .userInitiated) {
-            targets.map { (record: CleanupRecord) -> (UUID, String?, String) in
-                let path = try? CleanupHistoryLogic.restore(record, suffix: suffix)
-                return (record.id, path, record.name)
+        let results: [(UUID, String?, String, Bool)] = await Task.detached(priority: .userInitiated) {
+            targets.map { (record: CleanupRecord) -> (UUID, String?, String, Bool) in
+                do {
+                    let path = try CleanupHistoryLogic.restore(record, suffix: suffix, skipIfTaken: skipIfTaken)
+                    return (record.id, path, record.name, false)
+                } catch CleanupHistoryLogic.RestoreError.originalTaken {
+                    return (record.id, nil, record.name, true)
+                } catch {
+                    return (record.id, nil, record.name, false)
+                }
             }
         }.value
         var restored: [String] = []
         var failed: [String] = []
+        var taken: [String] = []
         var pairs: [(original: String, restored: String)] = []
-        for (id, path, name) in results {
-            if let path, let record = targets.first(where: { $0.id == id }) {
+        for (id, path, name, isTaken) in results {
+            if isTaken {
+                taken.append(name)
+            } else if let path, let record = targets.first(where: { $0.id == id }) {
                 if let from = record.currentPath { onMovedBack?(from, path) }
                 markRestored(id, at: path)
                 restored.append(path)
@@ -302,7 +323,7 @@ final class CleanupHistory: ObservableObject {
             }
         }
         failed += unavailable
-        return (restored, failed, pairs)
+        return (restored, failed, pairs, taken)
     }
 
     /// 在后台线程算每条记录的状态。

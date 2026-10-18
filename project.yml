@@ -71,6 +71,8 @@ targets:
       - path: Sources/Pro/ImageExportLogic.swift
       - path: Sources/Pro/ShortcutLogic.swift
       - path: Sources/Pro/MoveOutLogic.swift
+      - path: Sources/Pro/DownloadsPlanLogic.swift
+      - path: Sources/Services/FileUndoLogic.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests

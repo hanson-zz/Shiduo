@@ -402,7 +402,9 @@ final class ShelfTransfer: ObservableObject {
                 return record
             })
             store.forget(paths: Set(result.moved.map(\.from)))
-            store.showUndoToast(String(localized: "已移动 \(result.moved.count) 个项目"), batch: batch)
+            // ⌘Z / 小提示上的「撤销」走主窗口同一个撤销栈；⌘⇧Z 可以重做。
+            FileUndoCenter.shared.registerHistory(batch: batch, name: String(localized: "移动"),
+                                                  toast: String(localized: "已移动 \(result.moved.count) 个项目"))
         }
         var problems: [String] = []
         if !result.failed.isEmpty {

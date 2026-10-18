@@ -45,25 +45,18 @@ struct OrganizeRule: Codable, Identifiable, Hashable {
         return true
     }
 
+    /// 条件部分（「整理下载」预览也用它）。
+    var conditions: OrganizeConditions {
+        OrganizeConditions(category: category, extensions: extensions, nameContains: nameContains,
+                           sourceID: sourceID, olderThanDays: olderThanDays)
+    }
+
     func matches(_ item: FileItem, now: Date) -> Bool {
         if item.isDirectory { return false }
         if OrganizeEngine.partialExtensions.contains(item.ext) { return false }
-        // 刚下载完或还在写入的文件先放一放。
+        // 刚下载完或还在写入的文件先放一放（后台自动整理等 2 分钟；用户在预览里确认的只等几秒）。
         if let modified = item.modified, now.timeIntervalSince(modified) < 120 { return false }
-        if let raw = category {
-            guard let wanted = FileCategory(rawValue: raw), item.category == wanted else { return false }
-        }
-        if !extensions.isEmpty, !extensions.contains(item.ext) { return false }
-        let needle = nameContains.trimmingCharacters(in: .whitespaces)
-        if !needle.isEmpty, !item.name.localizedCaseInsensitiveContains(needle) { return false }
-        if let sourceID {
-            guard item.downloadSource?.id == sourceID else { return false }
-        }
-        if let days = olderThanDays, days > 0 {
-            let date = item.added ?? item.created ?? item.modified ?? now
-            if now.timeIntervalSince(date) < TimeInterval(days) * 86_400 { return false }
-        }
-        return true
+        return conditions.matches(OrganizeCandidate(item: item), now: now)
     }
 
     static func folderName(_ path: String?) -> String {
@@ -117,7 +110,7 @@ struct OrganizeLogEntry: Codable, Identifiable, Hashable {
 
 enum OrganizeEngine {
     /// 还没下载完的文件。
-    static let partialExtensions: Set<String> = ["crdownload", "download", "part", "partial", "tmp", "opdownload"]
+    static let partialExtensions: Set<String> = DownloadsPlanLogic.partialExtensions
 
     /// 规则跑不了的原因（显示在规则下面）。
     enum Problem: String, Codable, Hashable {
@@ -252,7 +245,7 @@ final class AutoOrganizer: ObservableObject {
     @Published private(set) var lastRun: Date?
 
     /// 撤销过的文件不再被规则自动处理。按加入的先后排，超过上限时去掉最旧的。
-    private var ignored: [String] = []
+    private(set) var ignored: [String] = []
     private static let ignoredLimit = 500
     private var loaded = false
     private var timer: Task<Void, Never>?
@@ -538,6 +531,8 @@ struct AutoOrganizeView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            // 先预览、确认后才移动的手动整理（可以一键撤销）。
+            OrganizeDownloadsButton()
             Button {
                 Task { await organizer.runNow() }
             } label: {

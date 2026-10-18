@@ -174,7 +174,6 @@ enum Renamer {
 struct RenameSheet: View {
     @EnvironmentObject private var store: LibraryStore
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.undoManager) private var undoManager
     let items: [FileItem]
 
     @AppStorage("renameMode") private var mode: RenameMode = .sequence
@@ -316,6 +315,6 @@ struct RenameSheet: View {
         if !outcome.failed.isEmpty {
             store.alertMessage = String(localized: "\(outcome.failed.count) 个文件没能改名（可能被占用或没有权限）：") + outcome.failed.prefix(5).joined(separator: String(localized: "、"))
         }
-        store.renamed(outcome.done, undoManager: undoManager)
+        store.renamed(outcome.done)
     }
 }

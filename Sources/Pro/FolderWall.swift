@@ -733,7 +733,9 @@ struct FolderCard: View {
         do {
             try FileManager.default.moveItem(at: src, to: dst)
             replacePin(summary.path, with: dst.path)
-            store.showToast(String(localized: "已重命名为「\(trimmed)」"))
+            FileUndoCenter.shared.registerPaths([FileUndoLogic.PathPair(from: src.path, to: dst.path)],
+                                                name: String(localized: "重命名"),
+                                                toast: String(localized: "已重命名为「\(trimmed)」"))
         } catch {
             store.alertMessage = error.localizedDescription
         }
@@ -752,7 +754,9 @@ struct FolderCard: View {
         do {
             try FileManager.default.moveItem(at: src, to: dst)
             replacePin(summary.path, with: dst.path)
-            store.showToast(String(localized: "已移到「\(target.lastPathComponent)」"))
+            FileUndoCenter.shared.registerPaths([FileUndoLogic.PathPair(from: src.path, to: dst.path)],
+                                                name: String(localized: "移动"),
+                                                toast: String(localized: "已移到「\(target.lastPathComponent)」"))
         } catch {
             store.alertMessage = error.localizedDescription
         }
@@ -761,7 +765,7 @@ struct FolderCard: View {
     /// 把文件拖到卡片上：移进这个文件夹（重名时自动加编号）。
     private func moveIn(_ urls: [URL]) {
         let folder = URL(fileURLWithPath: summary.path)
-        var moved = 0
+        var moved: [FileUndoLogic.PathPair] = []
         for url in urls where url.deletingLastPathComponent().standardizedFileURL.path != folder.standardizedFileURL.path {
             guard url.standardizedFileURL.path != folder.standardizedFileURL.path,
                   !folder.standardizedFileURL.path.hasPrefix(url.standardizedFileURL.path + "/") else { continue }
@@ -772,10 +776,15 @@ struct FolderCard: View {
                 dst = folder.appendingPathComponent(ext.isEmpty ? "\(base) \(n)" : "\(base) \(n).\(ext)")
                 n += 1
             }
-            if (try? FileManager.default.moveItem(at: url, to: dst)) != nil { moved += 1 }
+            if (try? FileManager.default.moveItem(at: url, to: dst)) != nil {
+                moved.append(FileUndoLogic.PathPair(from: url.path, to: dst.path))
+            }
         }
-        if moved > 0 {
-            store.showToast(String(localized: "已移到「\(summary.name)」：\(moved) 个"))
+        if !moved.isEmpty {
+            FileUndoCenter.shared.relocate(moved)
+            store.forget(paths: Set(moved.map(\.from)))
+            FileUndoCenter.shared.registerPaths(moved, name: String(localized: "移动"),
+                                                toast: String(localized: "已移到「\(summary.name)」：\(moved.count) 个"))
             model.reload(store.pinnedFolders)
         }
     }

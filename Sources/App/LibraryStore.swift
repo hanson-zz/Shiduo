@@ -828,8 +828,11 @@ final class LibraryStore: ObservableObject {
     }
 
     /// 把清理记录里的文件放回原处，结果用小提示 / 提示框告诉用户。
-    func restore(_ records: [CleanupRecord]) async {
-        let outcome = await CleanupHistory.shared.restore(records)
+    /// skipIfTaken（⌘Z 撤销用）：原位置已经有别的文件就跳过，不覆盖也不改名，并告诉用户。
+    @discardableResult
+    func restore(_ records: [CleanupRecord], skipIfTaken: Bool = false) async
+        -> (restored: [String], failed: [String], pairs: [(original: String, restored: String)], taken: [String]) {
+        let outcome = await CleanupHistory.shared.restore(records, skipIfTaken: skipIfTaken)
         if !outcome.restored.isEmpty {
             // 自动整理规则移走的文件被放回后，不要在下一轮又被同一条规则移走。
             organizer.ignore(outcome.restored)
@@ -849,10 +852,17 @@ final class LibraryStore: ObservableObject {
             showToast(String(localized: "已放回原处：\(outcome.restored.count) 个"))
             filesChanged()
         }
+        var notes: [String] = []
+        if !outcome.taken.isEmpty {
+            let names = outcome.taken.prefix(5).joined(separator: String(localized: "、"))
+            notes.append(String(localized: "\(outcome.taken.count) 个没有放回：原位置已经有同名的文件（没有覆盖）：\(names)"))
+        }
         if !outcome.failed.isEmpty {
             let names = outcome.failed.prefix(5).joined(separator: String(localized: "、"))
-            alertMessage = String(localized: "\(outcome.failed.count) 个项目无法恢复（废纸篓已清空、目标盘未连接或文件已不在）：\(names)")
+            notes.append(String(localized: "\(outcome.failed.count) 个项目无法恢复（废纸篓已清空、目标盘未连接或文件已不在）：\(names)"))
         }
+        if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
+        return outcome
     }
 
     /// 双击：歌曲在工具栏里播放，其他文件用默认应用打开。
@@ -996,7 +1006,9 @@ final class LibraryStore: ObservableObject {
             let batch = CleanupHistory.shared.recordTrash(entries)
             let shelfPaths = onShelf.intersection(moved)
             if !shelfPaths.isEmpty { trashedFromShelf[batch] = shelfPaths }
-            showUndoToast(String(localized: "已移到废纸篓 · 30 天内可在「清理记录」里恢复"), batch: batch)
+            // 小提示上的「撤销」和 ⌘Z 走同一个撤销栈（原位置被占用时跳过，不覆盖）。
+            FileUndoCenter.shared.registerHistory(batch: batch, name: String(localized: "移到废纸篓"),
+                                                  toast: String(localized: "已移到废纸篓 · 30 天内可在「清理记录」里恢复"))
             filesChangedTick += 1
             // 首页、侧边栏的数量先按刚移走的减掉，过几秒再按 Spotlight 重新数一次。
             for item in movedItems where !item.isDirectory {
@@ -1035,43 +1047,12 @@ final class LibraryStore: ObservableObject {
 
     // MARK: - 重命名的撤销
 
-    /// 重命名完成后：小提示上带「撤销」，也注册到窗口的撤销（⌘Z）。
-    func renamed(_ done: [(old: URL, new: URL)], undoManager: UndoManager?) {
+    /// 重命名完成后：小提示上带「撤销」，也注册到主窗口的撤销栈（⌘Z / ⌘⇧Z，和移动、移到废纸篓共用一个栈）。
+    func renamed(_ done: [(old: URL, new: URL)]) {
         reload()
         guard !done.isEmpty else { return }
-        showUndoToast(String(localized: "已重命名 \(done.count) 个文件")) { [weak self] in
-            guard let self else { return }
-            // 点了小提示上的「撤销」：窗口撤销栈里这一条已经不能再撤一次了。
-            undoManager?.removeAllActions(withTarget: self)
-            self.undoRename(done, undoManager: undoManager)
-        }
-        undoManager?.registerUndo(withTarget: self) { store in
-            MainActor.assumeIsolated { store.undoRename(done, undoManager: undoManager) }
-        }
-        undoManager?.setActionName(String(localized: "重命名"))
-    }
-
-    /// 把一批重命名改回去。改回去之后也能再「重做」。
-    func undoRename(_ done: [(old: URL, new: URL)], undoManager: UndoManager?) {
-        toast = nil
-        toastUndoBatch = nil
-        let outcome = Renamer.undo(done)
-        if !outcome.failed.isEmpty {
-            alertMessage = String(localized: "\(outcome.failed.count) 个文件没能改回原名（已经被移走，或原名被别的文件占用了）：")
-                + outcome.failed.prefix(5).joined(separator: String(localized: "、"))
-        }
-        reload()
-        guard !outcome.done.isEmpty else { return }
-        showToast(String(localized: "已改回原名：\(outcome.done.count) 个"))
-        // 再做一次（⌘⇧Z）：把改回去的再改成新名字。
-        undoManager?.registerUndo(withTarget: self) { store in
-            MainActor.assumeIsolated {
-                let redo = Renamer.undo(outcome.done)
-                store.reload()
-                if !redo.done.isEmpty { store.renamed(redo.done, undoManager: undoManager) }
-            }
-        }
-        undoManager?.setActionName(String(localized: "重命名"))
+        FileUndoCenter.shared.relocate(done.map { FileUndoLogic.PathPair(from: $0.old.path, to: $0.new.path) })
+        FileUndoCenter.shared.registerRename(done, toast: String(localized: "已重命名 \(done.count) 个文件"))
     }
 
     // MARK: - 标签页
