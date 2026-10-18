@@ -86,45 +86,166 @@ enum MediaToolsLogic {
 
 // MARK: - 截图美化：样式和尺寸计算
 
-struct BeautifyStyle: Equatable {
-    /// 背景渐变的序号，见 BeautifyStyle.backgrounds。
-    var background: Int = 0
+struct BeautifyStyle: Codable, Equatable {
+    enum Background: String, Codable, CaseIterable {
+        /// 智能：把截图自己放大、模糊后当背景。
+        case smart
+        case transparent
+        case gradient, solid, wallpaper
+    }
+    enum Ratio: String, Codable, CaseIterable {
+        case auto, square, r4x3, r16x9, r3x4, r9x16
+        var value: CGFloat? {
+            switch self {
+            case .auto: return nil
+            case .square: return 1
+            case .r4x3: return 4.0 / 3
+            case .r16x9: return 16.0 / 9
+            case .r3x4: return 3.0 / 4
+            case .r9x16: return 9.0 / 16
+            }
+        }
+        var title: String {
+            switch self {
+            case .auto: return "auto"
+            case .square: return "1:1"
+            case .r4x3: return "4:3"
+            case .r16x9: return "16:9"
+            case .r3x4: return "3:4"
+            case .r9x16: return "9:16"
+            }
+        }
+    }
+    enum Frame: String, Codable, CaseIterable {
+        case none, classic, glass, dark, light, browser
+        var hasTitleBar: Bool { self == .classic || self == .dark || self == .light || self == .browser }
+    }
+    enum SignaturePlace: String, Codable { case background, inside }
+    enum SignatureFont: String, Codable, CaseIterable { case standard, serif, rounded, mono, script }
+    enum SignatureWeight: String, Codable, CaseIterable { case light, regular, bold }
+
+    var background: Background = .gradient
+    /// 当前背景种类里的第几个。
+    var index: Int = 0
     /// 留白占图片长边的比例。
     var padding: Double = 0.08
     /// 圆角占图片短边的比例。
     var corner: Double = 0.025
-    var shadow: Bool = true
+    /// 阴影浓度 0...1。
+    var shadow: Double = 0.6
+    var ratio: Ratio = .auto
+    var frame: Frame = .none
+
+    var signatureOn = false
+    var signature = ""
+    var signaturePlace: SignaturePlace = .background
+    var signatureFont: SignatureFont = .standard
+    var signatureWeight: SignatureWeight = .regular
+    /// 字号倍数，1 = 100%。
+    var signatureSize: Double = 1
+    /// -1 自动，其余是 signatureColors 的序号。
+    var signatureColor = -1
+    var signatureOpacity: Double = 0.8
 
     static let paddingRange: ClosedRange<Double> = 0...0.25
     static let cornerRange: ClosedRange<Double> = 0...0.08
+    static let signatureSizeRange: ClosedRange<Double> = 0.5...2.5
 
-    /// 背景渐变（左上 → 右下），颜色用 0xRRGGBB。
-    static let backgrounds: [(UInt32, UInt32)] = [
-        (0x6A8DFF, 0xC86DD7),  // 蓝紫
-        (0xFF9A8B, 0xFF6A88),  // 珊瑚
-        (0x43E97B, 0x38F9D7),  // 薄荷
-        (0xFAD961, 0xF76B1C),  // 日落
-        (0x2B3240, 0x0F1218),  // 深色
-        (0xF5F5F7, 0xDADDE3),  // 浅灰
+    /// 渐变（左上 → 右下），颜色用 0xRRGGBB。
+    static let gradients: [(UInt32, UInt32)] = [
+        (0xFFB36B, 0xFF6F61), (0x1F4E5F, 0x0B1F2A), (0x4FC3F7, 0x26C6DA), (0x5C6BC0, 0x8E5BD6),
+        (0xFCE1CF, 0xF3A683), (0x7BE495, 0x2ECC71), (0xC79BF2, 0xF5B8E1), (0x2BC0E4, 0x3A1C71),
+        (0xFF6FD8, 0xF06292), (0xFF7A7A, 0xF5576C), (0x2C3340, 0x14171C), (0xF2F3F5, 0xD9DCE1),
     ]
+    /// 纯色；最后一个是彩虹（角度渐变）。
+    static let solids: [UInt32] = [0x0F1724, 0x15171C, 0x1C2733, 0x2E2F7A, 0xF4F4F4, 0xFFFFFF, 0xF7D774, 0xCFF2D2, 0]
+    static let rainbowIndex = 8
+    /// 壁纸：每张由底色和三层起伏的色带组成（自己画的，不用系统壁纸）。
+    static let wallpapers: [[UInt32]] = [
+        [0x2A0E05, 0xB33A0E, 0xF26B1D, 0xFFB15C],
+        [0x0E1E4F, 0x2F5BD3, 0xF4A259, 0xFFE3B3],
+        [0x5A0F2E, 0xE0453A, 0xF59E42, 0x5B8DEF],
+        [0x120A1E, 0x5E1A3A, 0xB2324B, 0xE86A5C],
+        [0x1A1240, 0xD9483B, 0xF08A4B, 0xFFFFFF],
+        [0x15151A, 0x8E2C23, 0xEE6A3C, 0xC9C9D1],
+        [0x101A4A, 0x5A3FC0, 0xE5484D, 0xF7A541],
+        [0x3B0D2E, 0xA0306A, 0xE36B8E, 0xF4C6CF],
+        [0x0F3A1E, 0x3E8E41, 0xA6D04E, 0x7B5CD6],
+        [0x1C0F3F, 0x6A2FB8, 0xD04E9A, 0xF7A1C4],
+        [0x14213D, 0x3F7CAC, 0xF29E4C, 0xFFE0A3],
+        [0x0C2B3A, 0x1B7F8E, 0x5CC8A8, 0x3557C8],
+    ]
+    static let signatureColors: [UInt32] = [0xFFFFFF, 0xC7C7CC, 0x6E6E73, 0x2C2C2E, 0x000000]
+
+    var count: Int {
+        switch background {
+        case .smart, .transparent: return 1
+        case .gradient: return Self.gradients.count
+        case .solid: return Self.solids.count
+        case .wallpaper: return Self.wallpapers.count
+        }
+    }
 
     func clamped() -> BeautifyStyle {
         var s = self
-        s.background = min(max(background, 0), Self.backgrounds.count - 1)
+        s.index = min(max(index, 0), count - 1)
         s.padding = min(max(padding, Self.paddingRange.lowerBound), Self.paddingRange.upperBound)
         s.corner = min(max(corner, Self.cornerRange.lowerBound), Self.cornerRange.upperBound)
+        s.shadow = min(max(shadow, 0), 1)
+        s.signatureSize = min(max(signatureSize, Self.signatureSizeRange.lowerBound), Self.signatureSizeRange.upperBound)
+        s.signatureOpacity = min(max(signatureOpacity, 0), 1)
+        if s.signatureColor >= Self.signatureColors.count { s.signatureColor = -1 }
         return s
     }
 
-    /// 画布大小、图片放的位置、圆角半径（像素）。
-    func layout(for image: CGSize) -> (canvas: CGSize, imageRect: CGRect, radius: CGFloat) {
+    struct Layout: Equatable {
+        var canvas: CGSize
+        /// 整个窗口（含标题栏）的位置。
+        var windowRect: CGRect
+        /// 截图本身的位置。
+        var imageRect: CGRect
+        var titleBar: CGFloat
+        var radius: CGFloat
+    }
+
+    /// 画布大小、窗口和图片的位置（像素，左上角为原点）。
+    func layout(for image: CGSize) -> Layout {
         let s = clamped()
-        guard image.width > 0, image.height > 0 else { return (.zero, .zero, 0) }
+        guard image.width > 0, image.height > 0 else {
+            return Layout(canvas: .zero, windowRect: .zero, imageRect: .zero, titleBar: 0, radius: 0)
+        }
+        let titleBar = s.frame.hasTitleBar ? max(24, (image.width * 0.032).rounded()) : 0
+        let border = s.frame == .glass ? max(8, (min(image.width, image.height) * 0.02).rounded()) : 0
+        let window = CGSize(width: image.width + border * 2, height: image.height + titleBar + border * 2)
         let pad = (CGFloat(s.padding) * max(image.width, image.height)).rounded()
-        let canvas = CGSize(width: image.width + pad * 2, height: image.height + pad * 2)
-        let rect = CGRect(x: pad, y: pad, width: image.width, height: image.height)
+        var canvas = CGSize(width: window.width + pad * 2, height: window.height + pad * 2)
+        if let ratio = s.ratio.value {
+            if canvas.width / canvas.height < ratio {
+                canvas.width = (canvas.height * ratio).rounded()
+            } else {
+                canvas.height = (canvas.width / ratio).rounded()
+            }
+        }
+        let origin = CGPoint(x: ((canvas.width - window.width) / 2).rounded(), y: ((canvas.height - window.height) / 2).rounded())
+        let windowRect = CGRect(origin: origin, size: window)
+        let imageRect = CGRect(x: origin.x + border, y: origin.y + border + titleBar, width: image.width, height: image.height)
         let radius = (CGFloat(s.corner) * min(image.width, image.height)).rounded()
-        return (canvas, rect, radius)
+        return Layout(canvas: canvas, windowRect: windowRect, imageRect: imageRect, titleBar: titleBar, radius: radius)
+    }
+
+    /// 背景大概是不是深色（签名「自动」颜色用）。
+    var backgroundIsDark: Bool {
+        let s = clamped()
+        func dark(_ hex: UInt32) -> Bool {
+            let c = Self.rgb(hex)
+            return 0.299 * c.0 + 0.587 * c.1 + 0.114 * c.2 < 0.6
+        }
+        switch s.background {
+        case .gradient: return dark(Self.gradients[s.index].0) || dark(Self.gradients[s.index].1)
+        case .solid: return s.index == Self.rainbowIndex || dark(Self.solids[s.index])
+        case .wallpaper, .smart: return true
+        case .transparent: return false
+        }
     }
 
     static func rgb(_ hex: UInt32) -> (CGFloat, CGFloat, CGFloat) {

@@ -378,52 +378,9 @@ final class MediaTools: ObservableObject {
         return false
     }
 
-    /// 渐变背景 + 留白 + 圆角 + 阴影。
+    /// 背景 + 窗口外框 + 圆角阴影 + 签名，见 BeautifyRenderer。
     nonisolated static func render(_ image: CGImage, style: BeautifyStyle) -> CGImage? {
-        let size = CGSize(width: image.width, height: image.height)
-        let layout = style.clamped().layout(for: size)
-        guard layout.canvas.width > 0,
-              let context = CGContext(data: nil, width: Int(layout.canvas.width), height: Int(layout.canvas.height),
-                                      bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        let pair = BeautifyStyle.backgrounds[style.clamped().background]
-        let a = BeautifyStyle.rgb(pair.0)
-        let b = BeautifyStyle.rgb(pair.1)
-        let colors = [CGColor(srgbRed: a.0, green: a.1, blue: a.2, alpha: 1),
-                      CGColor(srgbRed: b.0, green: b.1, blue: b.2, alpha: 1)] as CFArray
-        if let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB), colors: colors, locations: [0, 1]) {
-            context.drawLinearGradient(gradient, start: CGPoint(x: 0, y: layout.canvas.height),
-                                       end: CGPoint(x: layout.canvas.width, y: 0), options: [])
-        }
-        let path = CGPath(roundedRect: layout.imageRect, cornerWidth: layout.radius, cornerHeight: layout.radius, transform: nil)
-        // 透明图（比如抠好的图）：不垫白底卡片，阴影跟着主体的轮廓走。
-        if hasTransparency(image) {
-            context.saveGState()
-            if style.shadow, layout.imageRect.minX > 0 {
-                let blur = max(layout.imageRect.minX * 0.3, 6)
-                context.setShadow(offset: CGSize(width: 0, height: -blur * 0.35), blur: blur,
-                                  color: CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.35))
-            }
-            context.draw(image, in: layout.imageRect)
-            context.restoreGState()
-            return context.makeImage()
-        }
-        if style.shadow, layout.imageRect.minX > 0 {
-            context.saveGState()
-            let blur = max(layout.imageRect.minX * 0.45, 6)
-            context.setShadow(offset: CGSize(width: 0, height: -blur * 0.35), blur: blur,
-                              color: CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.35))
-            context.addPath(path)
-            context.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1))
-            context.fillPath()
-            context.restoreGState()
-        }
-        context.saveGState()
-        context.addPath(path)
-        context.clip()
-        context.draw(image, in: layout.imageRect)
-        context.restoreGState()
-        return context.makeImage()
+        BeautifyRenderer.render(image, style: style)
     }
 }
 
@@ -595,110 +552,441 @@ private struct PlayerPreview: NSViewRepresentable {
 
 // MARK: - 截图美化面板
 
+/// 美化的样式：当前在调的存在 beautifyStyle，「设为默认」存在 beautifyDefault。
+enum BeautifyDefaults {
+    static func load(_ key: String) -> BeautifyStyle? {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(BeautifyStyle.self, from: data)
+    }
+    static func save(_ style: BeautifyStyle, _ key: String) {
+        if let data = try? JSONEncoder().encode(style) { UserDefaults.standard.set(data, forKey: key) }
+    }
+    static var userDefault: BeautifyStyle { load("beautifyDefault") ?? BeautifyStyle() }
+}
+
+/// 「图片工具」窗口的美化页：左边预览，右边样式面板。
 struct BeautifySheet: View {
     let urls: [URL]
     let toShelf: Bool
-    /// 放在「图片工具」窗口里：没有取消按钮，保存后不关闭，预览跟着窗口变大。
-    var embedded = false
-    @Environment(\.dismiss) private var dismiss
-    @AppStorage("beautifyBackground") private var background = 0
-    @AppStorage("beautifyPadding") private var padding = 0.08
-    @AppStorage("beautifyCorner") private var corner = 0.025
-    @AppStorage("beautifyShadow") private var shadow = true
+    var embedded = true
+    @State private var style: BeautifyStyle = BeautifyDefaults.load("beautifyStyle") ?? BeautifyDefaults.userDefault
     @State private var source: CGImage?
     @State private var preview: NSImage?
-
-    private var style: BeautifyStyle {
-        BeautifyStyle(background: background, padding: padding, corner: corner, shadow: shadow)
-    }
+    @State private var outputSize: CGSize = .zero
+    @State private var fullSize: CGSize = .zero
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 6) {
-                Text("截图美化").font(.title2.weight(.semibold))
-                ProBadge()
-                Spacer()
-                Text(urls.count > 1 ? String(localized: "\(urls.count) 张图片") : (urls.first?.lastPathComponent ?? ""))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.primary.opacity(0.05))
-                if let preview {
-                    Image(nsImage: preview)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .padding(10)
-                } else {
-                    ProgressView()
-                }
-            }
-            .frame(height: embedded ? nil : 320)
-            .frame(maxHeight: embedded ? .infinity : nil)
-
-            HStack(spacing: 10) {
-                Text("背景")
-                ForEach(BeautifyStyle.backgrounds.indices, id: \.self) { index in
-                    let pair = BeautifyStyle.backgrounds[index]
-                    Button {
-                        background = index
-                    } label: {
-                        Circle()
-                            .fill(LinearGradient(colors: [color(pair.0), color(pair.1)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 24, height: 24)
-                            .overlay(Circle().strokeBorder(Color.accentColor, lineWidth: background == index ? 2.5 : 0).padding(-3))
-                    }
-                    .buttonStyle(.plain)
-                }
-                Spacer()
-                Toggle("阴影", isOn: $shadow)
-            }
-            HStack {
-                Text("留白").frame(width: 36, alignment: .leading)
-                Slider(value: $padding, in: BeautifyStyle.paddingRange)
-                Text("圆角").frame(width: 36, alignment: .leading)
-                Slider(value: $corner, in: BeautifyStyle.cornerRange)
-            }
-            HStack {
-                Text("保存为 PNG，放在原图旁边，原图不动。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if !embedded {
-                    Button("取消") { dismiss() }
-                        .keyboardShortcut(.cancelAction)
-                }
-                Button(urls.count > 1 ? String(localized: "美化 \(urls.count) 张") : String(localized: "保存")) {
-                    MediaTools.shared.beautify(urls, style: style, toShelf: toShelf)
-                    if embedded {
-                        ImageStudio.shared.show(String(localized: "正在美化，保存在原图旁边"))
+        HStack(spacing: 0) {
+            VStack(spacing: 10) {
+                ZStack {
+                    CheckerboardBackground().opacity(style.background == .transparent ? 1 : 0)
+                    if let preview {
+                        Image(nsImage: preview)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .padding(16)
                     } else {
-                        dismiss()
+                        ProgressView()
                     }
                 }
-                .keyboardShortcut(.defaultAction)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                HStack {
+                    Text("保存为 PNG，放在原图旁边，原图不动。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button {
+                        copy()
+                    } label: {
+                        Label("拷贝", systemImage: "doc.on.doc")
+                    }
+                    .disabled(source == nil)
+                    Button(urls.count > 1 ? String(localized: "美化 \(urls.count) 张") : String(localized: "保存")) {
+                        MediaTools.shared.beautify(urls, style: style, toShelf: toShelf)
+                        ImageStudio.shared.show(String(localized: "正在美化，保存在原图旁边"))
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
             }
+            Divider()
+            BeautifyInspector(style: $style, outputSize: outputSize)
+                .frame(width: 300)
         }
-        .padding(22)
-        .frame(width: embedded ? nil : 620)
-        .frame(maxWidth: embedded ? .infinity : nil, maxHeight: embedded ? .infinity : nil)
         .task {
             guard let first = urls.first else { return }
-            source = await Task.detached(priority: .userInitiated) { MediaTools.loadCGImage(first, maxPixel: 1200) }.value
+            let loaded = await Task.detached(priority: .userInitiated) { () -> (CGImage?, CGSize) in
+                let full = MediaTools.loadCGImage(first, maxPixel: nil)
+                let size = full.map { CGSize(width: $0.width, height: $0.height) } ?? .zero
+                return (MediaTools.loadCGImage(first, maxPixel: 1400), size)
+            }.value
+            source = loaded.0
+            fullSize = loaded.1
             redraw()
         }
-        .onChange(of: style) { redraw() }
-    }
-
-    private func color(_ hex: UInt32) -> Color {
-        let c = BeautifyStyle.rgb(hex)
-        return Color(.sRGB, red: c.0, green: c.1, blue: c.2, opacity: 1)
+        .onChange(of: style) {
+            BeautifyDefaults.save(style, "beautifyStyle")
+            redraw()
+        }
     }
 
     private func redraw() {
-        guard let source, let image = MediaTools.render(source, style: style) else { return }
-        preview = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+        if fullSize.width > 0 { outputSize = style.layout(for: fullSize).canvas }
+        guard let source else { return }
+        let current = style
+        Task {
+            let image = await Task.detached(priority: .userInitiated) { MediaTools.render(source, style: current) }.value
+            guard current == style, let image else { return }
+            preview = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+        }
+    }
+
+    private func copy() {
+        guard let first = urls.first else { return }
+        let current = style
+        Task {
+            let image = await Task.detached(priority: .userInitiated) { () -> CGImage? in
+                guard let full = MediaTools.loadCGImage(first, maxPixel: nil) else { return nil }
+                return MediaTools.render(full, style: current)
+            }.value
+            guard let image else { return }
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.writeObjects([NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))])
+            ImageStudio.shared.show(String(localized: "已拷贝美化后的图片"))
+        }
+    }
+}
+
+struct BeautifyInspector: View {
+    @Binding var style: BeautifyStyle
+    let outputSize: CGSize
+
+    private static var swatchCache: [String: NSImage] = [:]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    section("背景") {
+                        group("智能") {
+                            swatches(.smart, count: 1)
+                            swatches(.transparent, count: 1)
+                        }
+                        group("渐变") { swatches(.gradient, count: BeautifyStyle.gradients.count) }
+                        group("纯色") { swatches(.solid, count: BeautifyStyle.solids.count) }
+                        group("壁纸") { swatches(.wallpaper, count: BeautifyStyle.wallpapers.count, wide: true) }
+                    }
+                    Divider()
+                    section("画面") {
+                        slider("边距", value: $style.padding, range: BeautifyStyle.paddingRange,
+                               text: "\(Int((style.padding * 400).rounded()))")
+                        slider("圆角", value: $style.corner, range: BeautifyStyle.cornerRange,
+                               text: "\(Int((style.corner * 400).rounded()))")
+                        slider("阴影", value: $style.shadow, range: 0...1, text: "\(Int((style.shadow * 100).rounded()))%")
+                        Text("比例").font(.subheadline).foregroundStyle(.secondary)
+                        Picker("比例", selection: $style.ratio) {
+                            ForEach(BeautifyStyle.Ratio.allCases, id: \.self) { ratio in
+                                Text(ratio == .auto ? String(localized: "自动") : ratio.title).tag(ratio)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                    }
+                    Divider()
+                    section("窗口") {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                            ForEach(BeautifyStyle.Frame.allCases, id: \.self) { frame in
+                                frameButton(frame)
+                            }
+                        }
+                    }
+                    Divider()
+                    signature
+                }
+                .padding(16)
+            }
+            Divider()
+            VStack(spacing: 6) {
+                HStack {
+                    Button("恢复默认") { style = BeautifyDefaults.userDefault }
+                        .frame(maxWidth: .infinity)
+                    Button("设为默认") {
+                        BeautifyDefaults.save(style, "beautifyDefault")
+                        ImageStudio.shared.show(String(localized: "已设为默认样式"))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .frame(maxWidth: .infinity)
+                }
+                HStack {
+                    if outputSize.width > 0 {
+                        Text("输出 \(Int(outputSize.width)) × \(Int(outputSize.height))")
+                    }
+                    Spacer()
+                    Text("PNG")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+            }
+            .padding(12)
+        }
+    }
+
+    @ViewBuilder
+    private var signature: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle(isOn: $style.signatureOn) {
+                Text("签名").font(.headline)
+            }
+            .toggleStyle(.switch)
+            if style.signatureOn {
+                TextField("名字、网址或 @账号", text: $style.signature)
+                    .textFieldStyle(.roundedBorder)
+                Picker("位置", selection: $style.signaturePlace) {
+                    Text("背景边距").tag(BeautifyStyle.SignaturePlace.background)
+                    Text("截图内").tag(BeautifyStyle.SignaturePlace.inside)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                Text("字体").font(.subheadline).foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    ForEach(BeautifyStyle.SignatureFont.allCases, id: \.self) { font in
+                        fontButton(font)
+                    }
+                }
+                Picker("粗细", selection: $style.signatureWeight) {
+                    Text("细").tag(BeautifyStyle.SignatureWeight.light)
+                    Text("常规").tag(BeautifyStyle.SignatureWeight.regular)
+                    Text("粗").tag(BeautifyStyle.SignatureWeight.bold)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                slider("字号", value: $style.signatureSize, range: BeautifyStyle.signatureSizeRange,
+                       text: "\(Int((style.signatureSize * 100).rounded()))%")
+                HStack(spacing: 8) {
+                    Text("颜色").frame(width: 58, alignment: .leading)
+                    Button("自动") { style.signatureColor = -1 }
+                        .controlSize(.small)
+                        .buttonStyle(.bordered)
+                        .tint(style.signatureColor == -1 ? Color.accentColor : Color.secondary)
+                    ForEach(BeautifyStyle.signatureColors.indices, id: \.self) { index in
+                        Button {
+                            style.signatureColor = index
+                        } label: {
+                            Circle()
+                                .fill(Color(cgColor: BeautifyRenderer.color(BeautifyStyle.signatureColors[index])))
+                                .frame(width: 18, height: 18)
+                                .overlay(Circle().strokeBorder(Color.primary.opacity(0.2), lineWidth: 0.5))
+                                .overlay(Circle().strokeBorder(Color.accentColor, lineWidth: style.signatureColor == index ? 2 : 0).padding(-3))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                slider("不透明度", value: $style.signatureOpacity, range: 0.1...1,
+                       text: "\(Int((style.signatureOpacity * 100).rounded()))%")
+            }
+        }
+    }
+
+    private func fontButton(_ font: BeautifyStyle.SignatureFont) -> some View {
+        let title: String
+        switch font {
+        case .standard: title = String(localized: "默认")
+        case .serif: title = String(localized: "衬线")
+        case .rounded: title = String(localized: "圆体")
+        case .mono: title = String(localized: "等宽")
+        case .script: title = String(localized: "手写")
+        }
+        var sample = style
+        sample.signatureFont = font
+        sample.signatureWeight = .regular
+        let selected = style.signatureFont == font
+        return Button {
+            style.signatureFont = font
+        } label: {
+            VStack(spacing: 2) {
+                Text("Aa").font(Font(BeautifyRenderer.signatureFont(sample, size: 16) as CTFont))
+                Text(title).font(.system(size: 9)).foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 42)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(selected ? 0.12 : 0.04)))
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.accentColor, lineWidth: selected ? 1.5 : 0))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func frameButton(_ frame: BeautifyStyle.Frame) -> some View {
+        let title: String
+        switch frame {
+        case .none: title = String(localized: "无")
+        case .classic: title = String(localized: "经典")
+        case .glass: title = String(localized: "玻璃")
+        case .dark: title = String(localized: "深色")
+        case .light: title = String(localized: "浅色")
+        case .browser: title = String(localized: "浏览器")
+        }
+        let selected = style.frame == frame
+        return Button {
+            style.frame = frame
+        } label: {
+            VStack(spacing: 4) {
+                FrameIcon(frame: frame)
+                    .frame(width: 52, height: 34)
+                Text(title).font(.caption)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.primary.opacity(selected ? 0.12 : 0.04)))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.accentColor, lineWidth: selected ? 1.5 : 0))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func swatches(_ background: BeautifyStyle.Background, count: Int, wide: Bool = false) -> some View {
+        ForEach(0..<count, id: \.self) { index in
+            let selected = style.background == background && (count == 1 || style.index == index)
+            Button {
+                style.background = background
+                style.index = index
+            } label: {
+                swatchImage(background, index: index)
+                    .frame(width: wide ? 58 : 36, height: 36)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.accentColor, lineWidth: selected ? 2 : 0).padding(-3))
+            }
+            .buttonStyle(.plain)
+            .help(swatchHelp(background, index: index))
+        }
+    }
+
+    private func swatchHelp(_ background: BeautifyStyle.Background, index: Int) -> String {
+        switch background {
+        case .smart: return String(localized: "用截图自己做模糊背景")
+        case .transparent: return String(localized: "透明背景")
+        case .wallpaper: return String(localized: "壁纸 \(index + 1)")
+        default: return ""
+        }
+    }
+
+    @ViewBuilder
+    private func swatchImage(_ background: BeautifyStyle.Background, index: Int) -> some View {
+        switch background {
+        case .smart:
+            LinearGradient(colors: [Color(red: 0.35, green: 0.55, blue: 0.85), Color(red: 0.85, green: 0.88, blue: 0.92)],
+                           startPoint: .top, endPoint: .bottom)
+                .blur(radius: 2)
+                .overlay(Image(systemName: "sparkles").foregroundStyle(.white))
+        case .transparent:
+            CheckerboardBackground().background(Color.white)
+        default:
+            let key = "\(background.rawValue)-\(index)"
+            if let image = Self.swatchCache[key] ?? Self.makeSwatch(background, index: index, key: key) {
+                Image(nsImage: image).resizable()
+            } else {
+                Color.gray
+            }
+        }
+    }
+
+    private static func makeSwatch(_ background: BeautifyStyle.Background, index: Int, key: String) -> NSImage? {
+        let image = BeautifyRenderer.swatch(background, index: index, size: CGSize(width: 116, height: 72))
+        swatchCache[key] = image
+        return image
+    }
+
+    private func group<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.subheadline).foregroundStyle(.secondary)
+            FlowRow(spacing: 8) { content() }
+        }
+    }
+
+    private func section<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title).font(.headline)
+            content()
+        }
+    }
+
+    private func slider(_ title: LocalizedStringKey, value: Binding<Double>, range: ClosedRange<Double>, text: String) -> some View {
+        HStack(spacing: 8) {
+            Text(title).frame(width: 58, alignment: .leading)
+            Slider(value: value, in: range)
+            Text(text).monospacedDigit().foregroundStyle(.secondary).frame(width: 40, alignment: .trailing)
+        }
+    }
+}
+
+/// 窗口外框的小示意图。
+private struct FrameIcon: View {
+    let frame: BeautifyStyle.Frame
+
+    var body: some View {
+        let content = LinearGradient(colors: [Color(red: 0.55, green: 0.45, blue: 1), Color(red: 0.95, green: 0.5, blue: 0.85)],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing)
+        ZStack {
+            RoundedRectangle(cornerRadius: 6).fill(Color(red: 1, green: 0.8, blue: 0.75).opacity(0.6))
+            VStack(spacing: 0) {
+                if frame.hasTitleBar {
+                    HStack(spacing: 2) {
+                        ForEach([Color.red, .yellow, .green], id: \.self) { Circle().fill($0).frame(width: 3.5, height: 3.5) }
+                        if frame == .browser {
+                            Capsule().fill(Color.white.opacity(0.25)).frame(width: 16, height: 3.5).padding(.leading, 3)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 3)
+                    .frame(height: 7)
+                    .background(frame == .light ? Color(white: 0.93) : (frame == .classic ? Color(white: 0.12) : Color(white: 0.17)))
+                }
+                content
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 3))
+            .padding(frame == .glass ? 3 : 0)
+            .background(RoundedRectangle(cornerRadius: 4).fill(Color.white.opacity(frame == .glass ? 0.6 : 0)))
+            .padding(6)
+        }
+    }
+}
+
+/// 自动换行的一排小方块。
+private struct FlowRow: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? 260
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > width {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+        return CGSize(width: width, height: y + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > bounds.minX, x + size.width > bounds.maxX {
+                x = bounds.minX
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
     }
 }
 

@@ -54,16 +54,27 @@ final class MediaToolsLogicTests: XCTestCase {
     }
 
     func testBeautifyLayout() {
-        let style = BeautifyStyle(background: 99, padding: 0.1, corner: 0.05, shadow: true)
-        XCTAssertEqual(style.clamped().background, BeautifyStyle.backgrounds.count - 1)
-        let layout = style.layout(for: CGSize(width: 1000, height: 500))
+        var style = BeautifyStyle(background: .gradient, index: 99, padding: 0.1, corner: 0.05)
+        XCTAssertEqual(style.clamped().index, BeautifyStyle.gradients.count - 1)
+        var layout = style.layout(for: CGSize(width: 1000, height: 500))
         XCTAssertEqual(layout.canvas, CGSize(width: 1200, height: 700))
         XCTAssertEqual(layout.imageRect, CGRect(x: 100, y: 100, width: 1000, height: 500))
         XCTAssertEqual(layout.radius, 25)
+        style.ratio = .square
+        layout = style.layout(for: CGSize(width: 1000, height: 500))
+        XCTAssertEqual(layout.canvas, CGSize(width: 1200, height: 1200))
+        XCTAssertEqual(layout.imageRect.midY, 600)
+        style.ratio = .auto
+        style.frame = .dark
+        layout = style.layout(for: CGSize(width: 1000, height: 500))
+        XCTAssertEqual(layout.titleBar, 32)
+        XCTAssertEqual(layout.windowRect.height, 532)
+        XCTAssertEqual(layout.imageRect.minY, layout.windowRect.minY + 32)
         let wild = BeautifyStyle(padding: 5, corner: -1).clamped()
         XCTAssertEqual(wild.padding, BeautifyStyle.paddingRange.upperBound)
         XCTAssertEqual(wild.corner, 0)
     }
+}
 }
 
 final class UninstallLogicTests: XCTestCase {
