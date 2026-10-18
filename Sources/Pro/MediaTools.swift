@@ -774,7 +774,8 @@ struct BeautifySheet: View {
                         MediaTools.shared.beautify(urls, style: style, toShelf: toShelf)
                         ImageStudio.shared.show(String(localized: "正在美化，保存在原图旁边"))
                     }
-                    .keyboardShortcut(.defaultAction)
+                    .keyboardShortcut("s", modifiers: .command)
+                    .help("⌘S")
                     .buttonStyle(.borderedProminent)
                 }
                 .padding(.horizontal, 16)
