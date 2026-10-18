@@ -27,6 +27,8 @@ struct ImageStudioView: View {
                     AnnotatePanel()
                 case .cutout:
                     CutoutPanel()
+                case .upscale:
+                    UpscalePanel()
                 }
             }
         }
@@ -55,7 +57,7 @@ struct ImageStudioView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 260)
+            .frame(width: 340)
             ProBadge()
 
             Button {

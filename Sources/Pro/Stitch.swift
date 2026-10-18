@@ -354,7 +354,7 @@ final class ImageStudio: ObservableObject {
     static let shared = ImageStudio()
 
     enum Mode: String, CaseIterable, Identifiable {
-        case stitch, beautify, annotate, cutout
+        case stitch, beautify, annotate, cutout, upscale
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -362,6 +362,7 @@ final class ImageStudio: ObservableObject {
             case .beautify: return String(localized: "美化")
             case .annotate: return String(localized: "标注")
             case .cutout: return String(localized: "抠图")
+            case .upscale: return String(localized: "AI 放大")
             }
         }
     }

@@ -58,7 +58,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .folderIcon: return String(localized: "文件夹上色")
         case .mediaTools: return String(localized: "拖进来就转换")
         case .uninstaller: return String(localized: "卸载 App 连残留一起清")
-        case .imageTools: return String(localized: "图片工具：拼图、抠图、美化")
+        case .imageTools: return String(localized: "图片工具：拼图、美化、标注、抠图、AI 放大")
         }
     }
 

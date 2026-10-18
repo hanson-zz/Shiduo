@@ -412,6 +412,7 @@ struct MediaToolsMenu: View {
                 if !images.isEmpty {
                     if !videos.isEmpty || MediaToolsLogic.canMergePDF(list) { Divider() }
                     Button("抠图（去背景）") { MediaTools.shared.removeBackground(images, toShelf: toShelf) }
+                    Button("AI 放大…") { ImageStudio.shared.open(images, mode: .upscale, toShelf: toShelf) }
                     Button(images.count > 1 ? String(localized: "拼图、美化…") : String(localized: "截图美化…")) {
                         MediaTools.shared.openImageTools(images, toShelf: toShelf)
                     }

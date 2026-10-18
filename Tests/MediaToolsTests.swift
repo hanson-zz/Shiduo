@@ -84,7 +84,6 @@ final class MediaToolsLogicTests: XCTestCase {
         XCTAssertEqual(wild.corner, 0)
     }
 }
-}
 
 final class UninstallLogicTests: XCTestCase {
     func testProblems() {

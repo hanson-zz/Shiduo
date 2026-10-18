@@ -20325,6 +20325,390 @@
           }
         }
       }
+    },
+    "AI 放大…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI Upscale…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 放大…"
+          }
+        }
+      }
+    },
+    "图片工具：拼图、美化、标注、抠图、AI 放大": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image tools: stitch, style, annotate, cut out, AI upscale"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片工具：拼图、美化、标注、抠图、AI 放大"
+          }
+        }
+      }
+    },
+    "AI 放大": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI Upscale"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 放大"
+          }
+        }
+      }
+    },
+    "照片": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片"
+          }
+        }
+      }
+    },
+    "插画、动漫": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustration & Anime"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插画、动漫"
+          }
+        }
+      }
+    },
+    "适合照片、截图和大多数图片，去噪点、补细节": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For photos, screenshots and most images. Removes noise, restores detail."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "适合照片、截图和大多数图片，去噪点、补细节"
+          }
+        }
+      }
+    },
+    "适合插画、动漫、图标，线条更干净": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For illustrations, anime and icons. Cleaner lines."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "适合插画、动漫、图标，线条更干净"
+          }
+        }
+      }
+    },
+    "放大%lldx": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "upscaled-%lldx"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放大%lldx"
+          }
+        }
+      }
+    },
+    "拖动中间的线对比放大前后": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the divider to compare before and after"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动中间的线对比放大前后"
+          }
+        }
+      }
+    },
+    "%lld × %lld → %lld × %lld，在本机运行，图片不上传": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld × %2$lld → %3$lld × %4$lld. Runs on this Mac; nothing is uploaded."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld × %2$lld → %3$lld × %4$lld，在本机运行，图片不上传"
+          }
+        }
+      }
+    },
+    "之前": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "之前"
+          }
+        }
+      }
+    },
+    "之后": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "之后"
+          }
+        }
+      }
+    },
+    "AI 模型": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI Model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 模型"
+          }
+        }
+      }
+    },
+    "放大倍数": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scale"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放大倍数"
+          }
+        }
+      }
+    },
+    "这张图太大了，换小一点的倍数试试": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This image is too large. Try a smaller scale."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这张图太大了，换小一点的倍数试试"
+          }
+        }
+      }
+    },
+    "放大这张": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upscale This Image"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放大这张"
+          }
+        }
+      }
+    },
+    "全部放大（%lld 张）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upscale All (%lld)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部放大（%lld 张）"
+          }
+        }
+      }
+    },
+    "打开放大后的图": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Upscaled Image"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开放大后的图"
+          }
+        }
+      }
+    },
+    "存在原图旁边，原图不动": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved next to the original; the original is untouched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存在原图旁边，原图不动"
+          }
+        }
+      }
+    },
+    "正在放大…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upscaling…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在放大…"
+          }
+        }
+      }
+    },
+    "已放大 %lld 张，存在原图旁边": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upscaled %lld, saved next to the originals"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已放大 %lld 张，存在原图旁边"
+          }
+        }
+      }
+    },
+    "；%lld 张太大没处理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "; %lld too large, skipped"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "；%lld 张太大没处理"
+          }
+        }
+      }
+    },
+    "；%lld 张失败": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "; %lld failed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "；%lld 张失败"
+          }
+        }
+      }
+    },
+    "正在放大第 %lld / %lld 张…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upscaling %1$lld of %2$lld…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在放大第 %1$lld / %2$lld 张…"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
