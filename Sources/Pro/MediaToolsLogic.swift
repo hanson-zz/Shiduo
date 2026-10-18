@@ -74,6 +74,26 @@ enum MediaToolsLogic {
         return CGSize(width: even(size.width), height: even(size.height))
     }
 
+    /// path 是否就是 folder 或在它里面（按路径段比较）。
+    static func isInside(_ path: String, _ folder: String) -> Bool {
+        let p = (path as NSString).standardizingPath
+        let f = (folder as NSString).standardizingPath
+        guard !f.isEmpty, f != "/" else { return false }
+        return p == f || p.hasPrefix(f + "/")
+    }
+
+    /// EXIF 方向 5…8 是转了 90°：宽高对调。
+    static func orientedSize(width: Int, height: Int, orientation: Int) -> CGSize {
+        (5...8).contains(orientation) ? CGSize(width: height, height: width) : CGSize(width: width, height: height)
+    }
+
+    /// 写到一半的临时文件名：「旅行-压缩.mp4」→「.旅行-压缩.partial-abc123.mp4」（隐藏，扩展名不变）。
+    static func partialName(for name: String, token: String) -> String {
+        let ext = (name as NSString).pathExtension
+        let base = (name as NSString).deletingPathExtension
+        return ext.isEmpty ? ".\(base).partial-\(token)" : ".\(base).partial-\(token).\(ext)"
+    }
+
     /// 「1:05.3」这样的时间文字。
     static func timeLabel(_ seconds: Double) -> String {
         let value = max(seconds.isFinite ? seconds : 0, 0)

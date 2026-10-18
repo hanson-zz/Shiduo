@@ -73,7 +73,6 @@ struct ContentView: View {
         .sheet(isPresented: Binding(get: { !store.convertItems.isEmpty }, set: { if !$0 { store.convertItems = [] } })) {
             ConvertSheet(items: store.convertItems)
         }
-        .modifier(ProToolSheets())
         .sheet(isPresented: Binding(get: { !store.moveOutItems.isEmpty }, set: { if !$0 { store.moveOutItems = [] } })) {
             MoveOutSheet(items: store.moveOutItems)
         }
@@ -156,6 +155,12 @@ struct DetailView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
+            .overlay(alignment: .bottomTrailing) {
+                // 压缩视频这类长任务：进度和取消。
+                MediaTaskBar()
+                    .padding(.trailing, 16)
+                    .padding(.bottom, store.toast == nil && store.copiedPreview == nil ? 20 : 76)
+            }
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.toast)
             .animation(.easeOut(duration: 0.18), value: store.searchFieldFocused)
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.copiedPreview)
@@ -228,29 +233,5 @@ struct DetailView: View {
                     .proGated(.volumes)
             }
         }
-    }
-}
-
-/// 用 URL 驱动 .sheet(item:)。
-struct SheetURL: Identifiable {
-    let url: URL
-    var id: String { url.path }
-}
-
-/// 剪辑、截图美化、卸载 App 三个面板（拆出来，免得 ContentView.body 太长编译器算不过来）。
-struct ProToolSheets: ViewModifier {
-    @ObservedObject private var mediaTools = MediaTools.shared
-    @ObservedObject private var uninstaller = AppUninstaller.shared
-
-    func body(content: Content) -> some View {
-        content
-            .sheet(item: Binding(get: { mediaTools.trimming.map(SheetURL.init) },
-                                 set: { if $0 == nil { mediaTools.trimming = nil } })) { item in
-                TrimSheet(url: item.url, toShelf: mediaTools.sheetToShelf)
-            }
-            .sheet(item: Binding(get: { uninstaller.target.map(SheetURL.init) },
-                                 set: { if $0 == nil { uninstaller.target = nil } })) { item in
-                UninstallSheet(app: item.url)
-            }
     }
 }

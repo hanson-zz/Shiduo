@@ -231,3 +231,42 @@ extension Int64 {
         ByteCountFormatter.string(fromByteCount: self, countStyle: .file)
     }
 }
+
+/// 媒体工具（压缩视频、做 GIF、抠图……）正在做的事：进度和「取消」。
+/// 主窗口右下角和刘海暂存架的转换格子里都有；没有任务时不显示。
+struct MediaTaskBar: View {
+    var compact = false
+    @ObservedObject private var media = MediaTools.shared
+
+    var body: some View {
+        if media.busy {
+            HStack(spacing: 8) {
+                if let progress = media.progress {
+                    ProgressView(value: min(max(progress, 0), 1))
+                        .progressViewStyle(.circular)
+                        .controlSize(.small)
+                } else {
+                    ProgressView().controlSize(.small)
+                }
+                if !compact {
+                    Text(statusText)
+                        .font(.callout)
+                        .lineLimit(1)
+                        .monospacedDigit()
+                }
+                Button(compact ? String(localized: "取消") : String(localized: "取消任务")) { media.cancel() }
+                    .controlSize(.small)
+                    .help(statusText)
+            }
+            .padding(.horizontal, compact ? 6 : 12)
+            .padding(.vertical, compact ? 4 : 8)
+            .background(.regularMaterial, in: Capsule())
+        }
+    }
+
+    private var statusText: String {
+        let text = media.status ?? String(localized: "正在处理…")
+        guard let progress = media.progress else { return text }
+        return text + " · " + "\(Int((min(max(progress, 0), 1) * 100).rounded()))%"
+    }
+}

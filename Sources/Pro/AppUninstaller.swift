@@ -10,18 +10,15 @@ import UniformTypeIdentifiers
 final class AppUninstaller: ObservableObject {
     static let shared = AppUninstaller()
 
-    /// 正在卸载的 App（不为 nil 时主窗口弹出卸载面板）。
-    @Published var target: URL?
+    static let windowID = "uninstall"
 
-    /// 打开卸载面板。不是 Pro 就弹付费页。
+    /// 打开卸载窗口（只有一个，从哪个窗口、暂存架发起都一样；主窗口关着也能打开）。不是 Pro 就弹付费页。
     func open(_ app: URL) {
-        LicenseManager.shared.startTrialIfNeeded()
-        guard LicenseManager.shared.isPro else {
-            LicenseManager.shared.showPaywall = true
-            return
+        guard MediaTools.requirePro() else { return }
+        ToolWindow.show(Self.windowID, title: String(localized: "卸载 App")) {
+            UninstallSheet(app: app) { ToolWindow.close(Self.windowID) }
+                .id(app)
         }
-        MediaTools.bringMainWindow()
-        target = app
     }
 
     /// 让用户在「应用程序」里挑一个 App。
@@ -58,24 +55,33 @@ final class AppUninstaller: ObservableObject {
     }
 
     /// 扫描残留（在后台线程调用）。
-    nonisolated static func leftovers(bundleID: String, appName: String, fileName: String,
+    nonisolated static func leftovers(bundleID: String, appName: String, fileName: String, appPath: String,
                                       home: String = NSHomeDirectory()) -> [AppLeftover] {
         let fm = FileManager.default
         var found: [AppLeftover] = []
         var names = [appName]
         if fileName != appName { names.append(fileName) }
         for name in names {
-            for (path, kind) in UninstallLogic.directCandidates(bundleID: bundleID, appName: name, home: home)
+            for (path, kind, confidence) in UninstallLogic.directCandidates(bundleID: bundleID, appName: name, home: home)
             where fm.fileExists(atPath: path) {
-                found.append(AppLeftover(path: path, kind: kind))
+                found.append(AppLeftover(path: path, kind: kind, confidence: confidence))
             }
         }
         let lib = (home as NSString).appendingPathComponent("Library")
         for (folder, kind) in UninstallLogic.scanFolders() {
             let dir = (lib as NSString).appendingPathComponent(folder)
             guard let entries = try? fm.contentsOfDirectory(atPath: dir) else { continue }
-            for entry in entries where UninstallLogic.nameBelongs(entry, bundleID: bundleID) {
-                found.append(AppLeftover(path: (dir as NSString).appendingPathComponent(entry), kind: kind))
+            for entry in entries {
+                guard let confidence = UninstallLogic.match(entry, bundleID: bundleID) else { continue }
+                var item = AppLeftover(path: (dir as NSString).appendingPathComponent(entry), kind: kind, confidence: confidence)
+                if confidence == .prefix {
+                    // 「com.google.Chrome.canary」这类兄弟 App 还装着：它的数据不算这个 App 的残留。
+                    item.owner = UninstallLogic.otherOwner(entry, bundleID: bundleID, appPath: appPath) { id in
+                        NSWorkspace.shared.urlForApplication(withBundleIdentifier: id)?.path
+                    }
+                    if item.owner != nil { continue }
+                }
+                found.append(item)
             }
         }
         var result = UninstallLogic.dedupe(found).filter { UninstallLogic.isSafeLeftover($0.path, home: home) }
@@ -93,28 +99,45 @@ final class AppUninstaller: ObservableObject {
         return result
     }
 
-    /// 把 App 和选中的残留移到废纸篓，记进清理记录。返回给用户看的结果。
-    func uninstall(app: AppInfo, leftovers: [AppLeftover]) -> String {
-        var urls = [app.url]
-        urls += leftovers.map { URL(fileURLWithPath: $0.path) }
-        let outcome = FileActions.trash(urls)
-        let moved = Set(outcome.moved.map(\.path))
-        var entries: [(name: String, original: String, trashed: String?, size: Int64)] = []
-        if moved.contains(app.url.path) {
-            entries.append((name: app.url.lastPathComponent, original: app.url.path, trashed: outcome.trashed[app.url.path], size: app.size))
+    /// 同一个 bundleID 的其他副本（不含它自己）。
+    nonisolated static func otherCopies(of app: URL, bundleID: String) -> [String] {
+        let all = NSWorkspace.shared.urlsForApplications(withBundleIdentifier: bundleID).map(\.path)
+        return UninstallLogic.otherCopies(appPath: app.path, all: all, home: NSHomeDirectory())
+    }
+
+    /// 正在运行的「这一份」App（别的副本在运行不算）。
+    static func runningInstances(of app: URL, bundleID: String?) -> [NSRunningApplication] {
+        guard let bundleID else { return [] }
+        let me = app.standardizedFileURL.resolvingSymlinksInPath().path
+        return NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).filter { running in
+            guard let url = running.bundleURL else { return true }
+            return url.standardizedFileURL.resolvingSymlinksInPath().path == me
         }
+    }
+
+    /// 先把 App 本体移到废纸篓；只有它真的移走了，才移选中的残留（App 移不走时残留一个不动）。
+    /// 记进清理记录。返回给用户看的结果（空字符串表示全部成功）。
+    func uninstall(app: AppInfo, leftovers: [AppLeftover]) -> String {
+        let first = FileActions.trash([app.url])
+        guard first.moved.contains(app.url) else {
+            return String(localized: "没能把 \(app.name) 移到废纸篓（可能需要管理员权限，或它正在运行），资源库里的数据一个没动。")
+        }
+        var entries: [(name: String, original: String, trashed: String?, size: Int64)] = [
+            (name: app.url.lastPathComponent, original: app.url.path, trashed: first.trashed[app.url.path], size: app.size),
+        ]
+        // 开机启动项先从 launchd 卸下来，不然 plist 进了废纸篓它还在跑，直到注销。
+        for item in leftovers where item.kind == .launchAgents && item.path.hasSuffix(".plist") {
+            Self.bootout(item.path)
+        }
+        let outcome = FileActions.trash(leftovers.map { URL(fileURLWithPath: $0.path) })
+        let moved = Set(outcome.moved.map(\.path))
         for item in leftovers where moved.contains(item.path) {
             entries.append((name: item.name, original: item.path, trashed: outcome.trashed[item.path], size: item.size))
         }
-        if !entries.isEmpty {
-            let batch = CleanupHistory.shared.recordTrash(entries)
-            if let store = LibraryStore.shared {
-                store.filesChangedTick += 1
-                store.showUndoToast(String(localized: "已卸载 \(app.name) · 30 天内可在「清理记录」里恢复"), batch: batch)
-            }
-        }
-        if !moved.contains(app.url.path) {
-            return String(localized: "没能把 \(app.name) 移到废纸篓（可能需要管理员权限，或它正在运行）。")
+        let batch = CleanupHistory.shared.recordTrash(entries)
+        if let store = LibraryStore.shared {
+            store.filesChangedTick += 1
+            store.showUndoToast(String(localized: "已卸载 \(app.name) · 30 天内可在「清理记录」里恢复"), batch: batch)
         }
         let failed = outcome.failed.count + outcome.skipped.count
         if failed > 0 {
@@ -122,22 +145,46 @@ final class AppUninstaller: ObservableObject {
         }
         return ""
     }
+
+    /// launchctl bootout gui/<uid> <plist>：失败（本来就没加载）也没关系。
+    private static func bootout(_ plist: String) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        process.arguments = ["bootout", "gui/\(getuid())", plist]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {}
+    }
 }
 
 // MARK: - 卸载面板
 
 struct UninstallSheet: View {
     let app: URL
-    @Environment(\.dismiss) private var dismiss
+    let close: () -> Void
     @State private var info: AppUninstaller.AppInfo?
     @State private var items: [AppLeftover] = []
     @State private var selected: Set<String> = []
     @State private var scanning = true
-    @State private var running = false
+    @State private var working = false
     @State private var resultText: String?
+    /// 这一份 App 正在运行（收到系统的启动 / 退出通知时刷新）。
+    @State private var appRunning = false
+    /// 正在等它退出（「退出并卸载」）。
+    @State private var quitting = false
+    /// 等了很久还没退出：给「强制退出」。
+    @State private var quitTimedOut = false
+    /// 同一个 App 的其他副本：资源库数据是共用的。
+    @State private var otherCopies: [String] = []
+    @State private var confirmLarge = false
+
+    private var selectedItems: [AppLeftover] { items.filter { selected.contains($0.id) } }
 
     private var selectedBytes: Int64 {
-        (info?.size ?? 0) + items.filter { selected.contains($0.id) }.reduce(0) { $0 + $1.size }
+        (info?.size ?? 0) + selectedItems.reduce(0) { $0 + $1.size }
     }
 
     var body: some View {
@@ -152,7 +199,7 @@ struct UninstallSheet: View {
                             .font(.title2.weight(.semibold))
                         ProBadge()
                     }
-                    Text("App 和勾选的残留都只会移到废纸篓，30 天内可以在「清理记录」里放回。")
+                    Text("先移走 App，成功后才移走勾选的残留。都只是移到废纸篓，30 天内可以在「清理记录」里放回。")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -177,6 +224,7 @@ struct UninstallSheet: View {
                 Label(resultText, systemImage: "exclamationmark.triangle")
                     .font(.callout)
                     .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             HStack {
@@ -186,39 +234,72 @@ struct UninstallSheet: View {
                         .monospacedDigit()
                 }
                 Spacer()
-                Button(resultText == nil ? String(localized: "取消") : String(localized: "完成")) { dismiss() }
+                Button(resultText == nil ? String(localized: "取消") : String(localized: "完成")) { close() }
                     .keyboardShortcut(.cancelAction)
                 if resultText == nil, info?.problem == nil {
-                    Button("移到废纸篓", role: .destructive) { perform() }
+                    if appRunning {
+                        Button(quitting ? String(localized: "正在等它退出…") : String(localized: "退出并卸载"), role: .destructive) {
+                            Task { await quitThenUninstall(force: false) }
+                        }
                         .keyboardShortcut(.defaultAction)
-                        .disabled(scanning || running || info == nil)
+                        .disabled(scanning || working || quitting || info == nil)
+                    } else {
+                        Button("移到废纸篓", role: .destructive) { requestPerform() }
+                            .keyboardShortcut(.defaultAction)
+                            .disabled(scanning || working || quitting || info == nil)
+                    }
                 }
             }
         }
         .padding(22)
         .frame(width: 560)
         .task { await load() }
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in
+            refreshRunning()
+        }
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
+            refreshRunning()
+        }
+        .confirmationDialog(
+            String(localized: "有 \(AppLeftover.largeCount(selectedItems)) 项超过 1 GB"),
+            isPresented: $confirmLarge,
+            titleVisibility: .visible
+        ) {
+            Button("仍然移到废纸篓", role: .destructive) { perform() }
+            Button("再看看", role: .cancel) {}
+        } message: {
+            Text(UninstallLogic.largeItems(selectedItems).map(\.name).joined(separator: "、"))
+        }
     }
 
-    private var isRunning: Bool {
-        guard let id = info?.bundleID else { return false }
-        return !NSRunningApplication.runningApplications(withBundleIdentifier: id).isEmpty
+    private func refreshRunning() {
+        appRunning = !AppUninstaller.runningInstances(of: app, bundleID: info?.bundleID).isEmpty
     }
 
     private var list: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if isRunning {
+            if appRunning {
                 HStack {
-                    Label("\(info?.name ?? "") 正在运行，先退出它再卸载更干净。", systemImage: "exclamationmark.circle")
+                    Label(quitTimedOut ? String(localized: "\(info?.name ?? "") 还没退出，可能有未保存的内容。")
+                                       : String(localized: "\(info?.name ?? "") 正在运行，要先退出才能卸载。"),
+                          systemImage: "exclamationmark.circle")
                         .foregroundStyle(.orange)
                     Spacer()
-                    Button("退出 App") {
-                        if let id = info?.bundleID {
-                            NSRunningApplication.runningApplications(withBundleIdentifier: id).forEach { $0.terminate() }
-                        }
+                    if quitTimedOut {
+                        Button("强制退出") { Task { await quitThenUninstall(force: true) } }
+                    } else {
+                        Button("只退出 App") { quit(force: false) }
+                            .disabled(quitting)
                     }
                 }
                 .font(.callout)
+            }
+            if !otherCopies.isEmpty {
+                Label(String(localized: "另一份副本在 \((otherCopies[0] as NSString).abbreviatingWithTildeInPath)，资源库里的数据是它们共用的。残留默认不勾选，只卸载这一份 App。"),
+                      systemImage: "square.on.square")
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
                 Image(systemName: "checkmark.square.fill").foregroundStyle(.secondary)
@@ -245,30 +326,7 @@ struct UninstallSheet: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(items) { item in
-                            Toggle(isOn: Binding(
-                                get: { selected.contains(item.id) },
-                                set: { on in
-                                    if on { selected.insert(item.id) } else { selected.remove(item.id) }
-                                }
-                            )) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 1) {
-                                        Text(item.name).lineLimit(1).truncationMode(.middle)
-                                        Text("\(item.kind.title) · \((item.path as NSString).abbreviatingWithTildeInPath)")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                            .lineLimit(1)
-                                            .truncationMode(.middle)
-                                    }
-                                    .help(item.path)
-                                    Spacer()
-                                    Text(item.size.byteText)
-                                        .font(.callout)
-                                        .foregroundStyle(.secondary)
-                                        .monospacedDigit()
-                                }
-                            }
-                            .toggleStyle(.checkbox)
+                            row(item)
                         }
                     }
                     .padding(.vertical, 2)
@@ -278,35 +336,126 @@ struct UninstallSheet: View {
         }
     }
 
+    private func row(_ item: AppLeftover) -> some View {
+        Toggle(isOn: Binding(
+            get: { selected.contains(item.id) },
+            set: { on in
+                if on { selected.insert(item.id) } else { selected.remove(item.id) }
+            }
+        )) {
+            HStack {
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 6) {
+                        Text(item.name).lineLimit(1).truncationMode(.middle)
+                        if let note = note(for: item) {
+                            Text(note)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.orange)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Capsule().fill(Color.orange.opacity(0.15)))
+                        }
+                    }
+                    Text("\(item.kind.title) · \((item.path as NSString).abbreviatingWithTildeInPath)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .help(item.path)
+                Spacer()
+                Text(item.size.byteText)
+                    .font(.callout)
+                    .foregroundStyle(item.size >= UninstallLogic.largeBytes ? Color.orange : Color.secondary)
+                    .monospacedDigit()
+            }
+        }
+        .toggleStyle(.checkbox)
+    }
+
+    /// 残留旁边的小标签：说明为什么没默认勾选。
+    private func note(for item: AppLeftover) -> String? {
+        switch item.confidence {
+        case .name: return String(localized: "按名字匹配，请确认")
+        case .prefix: return String(localized: "可能是它的辅助程序，请确认")
+        case .exact:
+            if item.kind == .groupContainers { return String(localized: "多个 App 共用，请确认") }
+            if item.size >= UninstallLogic.largeBytes { return String(localized: "很大，请确认") }
+            return nil
+        }
+    }
+
     private func load() async {
         let url = app
         let loaded = await Task.detached(priority: .userInitiated) { AppUninstaller.info(for: url) }.value
         info = loaded
+        refreshRunning()
         guard loaded.problem == nil, let id = loaded.bundleID else {
             scanning = false
             return
         }
         let fileName = url.deletingPathExtension().lastPathComponent
-        let found = await Task.detached(priority: .userInitiated) {
-            AppUninstaller.leftovers(bundleID: id, appName: loaded.name, fileName: fileName)
+        let (found, copies) = await Task.detached(priority: .userInitiated) {
+            (AppUninstaller.leftovers(bundleID: id, appName: loaded.name, fileName: fileName, appPath: url.path),
+             AppUninstaller.otherCopies(of: url, bundleID: id))
         }.value
         items = found
-        selected = Set(found.map(\.id))
+        otherCopies = copies
+        selected = Set(found.filter { UninstallLogic.selectedByDefault($0, hasOtherCopies: !copies.isEmpty) }.map(\.id))
         scanning = false
     }
 
+    private func quit(force: Bool) {
+        for running in AppUninstaller.runningInstances(of: app, bundleID: info?.bundleID) {
+            if force { running.forceTerminate() } else { running.terminate() }
+        }
+    }
+
+    /// 让它退出（terminate 是异步的），等它真的退出了再卸载；10 秒还没退出就提示可以强制退出。
+    private func quitThenUninstall(force: Bool) async {
+        quitting = true
+        quitTimedOut = false
+        quit(force: force)
+        for _ in 0..<40 {
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            refreshRunning()
+            if !appRunning { break }
+        }
+        quitting = false
+        if appRunning {
+            quitTimedOut = true
+        } else {
+            requestPerform()
+        }
+    }
+
+    private func requestPerform() {
+        refreshRunning()
+        guard !appRunning else { return }
+        if UninstallLogic.largeItems(selectedItems).isEmpty {
+            perform()
+        } else {
+            confirmLarge = true
+        }
+    }
+
     private func perform() {
-        guard let info else { return }
-        running = true
-        let chosen = items.filter { selected.contains($0.id) }
-        let text = AppUninstaller.shared.uninstall(app: info, leftovers: chosen)
-        running = false
+        guard let info, !working else { return }
+        refreshRunning()
+        guard !appRunning else { return }
+        working = true
+        let text = AppUninstaller.shared.uninstall(app: info, leftovers: selectedItems)
+        working = false
         if text.isEmpty {
-            dismiss()
+            close()
         } else {
             resultText = text
         }
     }
+}
+
+extension AppLeftover {
+    static func largeCount(_ items: [AppLeftover]) -> Int { UninstallLogic.largeItems(items).count }
 }
 
 // MARK: - 清理页上的入口

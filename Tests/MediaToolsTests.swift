@@ -62,6 +62,18 @@ final class MediaToolsLogicTests: XCTestCase {
         XCTAssertFalse(UpscaleLogic.fits(width: 6000, height: 4000, scale: 4))
     }
 
+    func testPathsOrientationAndPartials() {
+        XCTAssertTrue(MediaToolsLogic.isInside("/tmp/ShiduoPaste/a.png", "/tmp/ShiduoPaste"))
+        XCTAssertTrue(MediaToolsLogic.isInside("/tmp/ShiduoPaste", "/tmp/ShiduoPaste/"))
+        XCTAssertFalse(MediaToolsLogic.isInside("/tmp/ShiduoPaste2/a.png", "/tmp/ShiduoPaste"))
+        XCTAssertFalse(MediaToolsLogic.isInside("/tmp/a.png", "/"))
+        XCTAssertEqual(MediaToolsLogic.orientedSize(width: 4032, height: 3024, orientation: 6), CGSize(width: 3024, height: 4032))
+        XCTAssertEqual(MediaToolsLogic.orientedSize(width: 4032, height: 3024, orientation: 3), CGSize(width: 4032, height: 3024))
+        XCTAssertEqual(MediaToolsLogic.orientedSize(width: 10, height: 20, orientation: 8), CGSize(width: 20, height: 10))
+        XCTAssertEqual(MediaToolsLogic.partialName(for: "旅行-压缩.mp4", token: "abc123"), ".旅行-压缩.partial-abc123.mp4")
+        XCTAssertEqual(MediaToolsLogic.partialName(for: "noext", token: "x"), ".noext.partial-x")
+    }
+
     func testBeautifyLayout() {
         var style = BeautifyStyle(background: .gradient, index: 99, padding: 0.1, corner: 0.05)
         XCTAssertEqual(style.clamped().index, BeautifyStyle.gradients.count - 1)
@@ -106,6 +118,78 @@ final class UninstallLogicTests: XCTestCase {
         XCTAssertFalse(UninstallLogic.nameBelongs("com.foo", bundleID: id))
         XCTAssertFalse(UninstallLogic.nameBelongs("org.other.com.foo.Editor", bundleID: id))
         XCTAssertFalse(UninstallLogic.nameBelongs("abc", bundleID: "abc"))
+    }
+
+    func testMatchConfidence() {
+        let id = "com.google.Chrome"
+        XCTAssertEqual(UninstallLogic.match("com.google.Chrome", bundleID: id), .exact)
+        XCTAssertEqual(UninstallLogic.match("com.google.Chrome.plist", bundleID: id), .exact)
+        XCTAssertEqual(UninstallLogic.match("com.google.Chrome.savedState", bundleID: id), .exact)
+        XCTAssertEqual(UninstallLogic.match("com.google.Chrome.0A1B2C3D-1111-2222-3333-444455556666.plist", bundleID: id), .exact)
+        XCTAssertEqual(UninstallLogic.match("EQHXZ8M8AV.com.google.Chrome", bundleID: id), .exact)
+        XCTAssertEqual(UninstallLogic.match("group.com.google.Chrome", bundleID: id), .exact)
+        XCTAssertEqual(UninstallLogic.match("com.google.Chrome.canary", bundleID: id), .prefix)
+        XCTAssertEqual(UninstallLogic.match("com.google.Chrome.canary.plist", bundleID: id), .prefix)
+        XCTAssertEqual(UninstallLogic.match("group.com.google.Chrome.shared", bundleID: id), .prefix)
+        // 没有点号边界的不算。
+        XCTAssertNil(UninstallLogic.match("group.com.foo.application", bundleID: "com.foo.app"))
+        XCTAssertNil(UninstallLogic.match("com.google.ChromeBeta", bundleID: id))
+        XCTAssertNil(UninstallLogic.match("com.google", bundleID: id))
+    }
+
+    func testOtherOwner() {
+        let id = "com.google.Chrome"
+        XCTAssertEqual(UninstallLogic.ownerCandidates("com.google.Chrome.canary.helper.plist", bundleID: id),
+                       ["com.google.Chrome.canary", "com.google.Chrome.canary.helper"])
+        XCTAssertEqual(UninstallLogic.ownerCandidates("group.com.google.Chrome.beta", bundleID: id), ["com.google.Chrome.beta"])
+        XCTAssertEqual(UninstallLogic.ownerCandidates("com.google.Chrome", bundleID: id), [])
+        let installed = [
+            "com.google.Chrome.canary": "/Applications/Google Chrome Canary.app",
+            "com.google.Chrome.helper": "/Applications/Google Chrome.app/Contents/Frameworks/Helper.app",
+        ]
+        let app = "/Applications/Google Chrome.app"
+        XCTAssertEqual(UninstallLogic.otherOwner("com.google.Chrome.canary.plist", bundleID: id, appPath: app) { installed[$0] },
+                       "/Applications/Google Chrome Canary.app")
+        // 装在本 App 里面的辅助程序不算别人的。
+        XCTAssertNil(UninstallLogic.otherOwner("com.google.Chrome.helper", bundleID: id, appPath: app) { installed[$0] })
+        XCTAssertNil(UninstallLogic.otherOwner("com.google.Chrome.ShipIt", bundleID: id, appPath: app) { installed[$0] })
+        XCTAssertTrue(UninstallLogic.isSameOrInside("/A/Foo.app/Contents", "/A/Foo.app"))
+        XCTAssertFalse(UninstallLogic.isSameOrInside("/A/Foo.app2", "/A/Foo.app"))
+    }
+
+    func testOtherCopiesAndDefaultSelection() {
+        let home = "/Users/me"
+        let copies = UninstallLogic.otherCopies(appPath: "/Users/me/Downloads/Foo.app", all: [
+            "/Users/me/Downloads/Foo.app", "/Applications/Foo.app", "/Applications/Foo.app/",
+            "/Users/me/.Trash/Foo.app", "/Volumes/X/.Trashes/501/Foo.app",
+        ], home: home)
+        XCTAssertEqual(copies, ["/Applications/Foo.app"])
+        XCTAssertTrue(UninstallLogic.otherCopies(appPath: "/Applications/Foo.app", all: ["/Applications/Foo.app"], home: home).isEmpty)
+
+        let exact = AppLeftover(path: "/Users/me/Library/Caches/com.foo.app", kind: .caches)
+        XCTAssertTrue(UninstallLogic.selectedByDefault(exact, hasOtherCopies: false))
+        XCTAssertFalse(UninstallLogic.selectedByDefault(exact, hasOtherCopies: true))
+        let byName = AppLeftover(path: "/Users/me/Library/Application Support/Steam", kind: .support, confidence: .name)
+        XCTAssertFalse(UninstallLogic.selectedByDefault(byName, hasOtherCopies: false))
+        let prefix = AppLeftover(path: "/Users/me/Library/Preferences/com.foo.app.helper.plist", kind: .preferences, confidence: .prefix)
+        XCTAssertFalse(UninstallLogic.selectedByDefault(prefix, hasOtherCopies: false))
+        let group = AppLeftover(path: "/Users/me/Library/Group Containers/ABC.com.foo.app", kind: .groupContainers)
+        XCTAssertFalse(UninstallLogic.selectedByDefault(group, hasOtherCopies: false))
+        var big = exact
+        big.size = UninstallLogic.largeBytes
+        XCTAssertEqual(UninstallLogic.largeItems([exact, big]).count, 1)
+
+        let names = UninstallLogic.directCandidates(bundleID: "com.foo.app", appName: "Foo App", home: home)
+        XCTAssertEqual(names.first { $0.0.hasSuffix("Application Support/Foo App") }?.2, .name)
+        XCTAssertEqual(names.first { $0.0.hasSuffix("Preferences/com.foo.app.plist") }?.2, .exact)
+    }
+
+    func testDedupeKeepsBestConfidence() {
+        let items = [
+            AppLeftover(path: "/Users/me/Library/Application Support/Foo", kind: .support, confidence: .name),
+            AppLeftover(path: "/Users/me/Library/Application Support/Foo", kind: .support, confidence: .exact),
+        ]
+        XCTAssertEqual(UninstallLogic.dedupe(items).map(\.confidence), [.exact])
     }
 
     func testCandidatesAndSafety() {

@@ -16,39 +16,71 @@ final class MediaTools: ObservableObject {
     static let shared = MediaTools()
 
     @Published private(set) var busy = false
-    /// 正在剪辑的视频（不为 nil 时主窗口弹出剪辑面板）。
-    @Published var trimming: URL?
-    /// 正在美化的截图。
-    @Published var beautifying: [URL] = []
-    /// 剪辑 / 美化面板是从暂存架打开的：结果也放上暂存架。
-    var sheetToShelf = false
+    /// 正在做的事（「正在压缩 2/5」），没有任务时为 nil。
+    @Published private(set) var status: String?
+    /// 当前这一项的进度 0…1；不知道进度时为 nil。
+    @Published private(set) var progress: Double?
+    /// 当前任务（取消用）。
+    private var task: Task<Void, Never>?
+
+    static let trimWindowID = "trim"
+
+    private init() {
+        // 退出 App 时取消任务、清掉没写完的半成品。
+        NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { MediaTools.shared.task?.cancel() }
+            PartialFiles.shared.removeAll()
+        }
+    }
 
     /// 不是 Pro 时打开付费页，返回 false。第一次用 Pro 功能时自动开始试用。
     static func requirePro() -> Bool {
-        LicenseManager.shared.startTrialIfNeeded()
-        return ShelfTools.requirePro()
+        ShelfTools.requirePro()
     }
 
-    /// 把拾掇主窗口拿到前面（从暂存架打开面板时用）。
+    /// 把拾掇主窗口拿到前面。
     static func bringMainWindow() {
         NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
+        if let window = NSApp.windows.first(where: { $0.canBecomeMain && $0.isVisible && !ToolWindow.isToolWindow($0) }) {
             window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    /// 剪贴板粘贴进来的图片临时放在这里（见 ImageStudio.paste）。
+    nonisolated static var pasteFolder: URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("ShiduoPaste", isDirectory: true)
+    }
+
+    /// 「图片 / 拾掇」：粘贴来的图片没有「原文件旁边」，结果放这里。
+    nonisolated static func picturesFolder() -> URL? {
+        let fm = FileManager.default
+        guard let pictures = fm.urls(for: .picturesDirectory, in: .userDomainMask).first else { return nil }
+        let folder = pictures.appendingPathComponent("拾掇", isDirectory: true)
+        do {
+            try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+            return folder
+        } catch {
+            return nil
         }
     }
 
     nonisolated static func outputFolder(for url: URL) -> URL {
         let fm = FileManager.default
         let folder = url.deletingLastPathComponent()
+        let downloads = fm.urls(for: .downloadsDirectory, in: .userDomainMask).first ?? fm.temporaryDirectory
+        if MediaToolsLogic.isInside(folder.resolvingSymlinksInPath().path, pasteFolder.resolvingSymlinksInPath().path)
+            || MediaToolsLogic.isInside(folder.standardizedFileURL.path, pasteFolder.standardizedFileURL.path) {
+            return picturesFolder() ?? downloads
+        }
         if fm.isWritableFile(atPath: folder.path) { return folder }
-        return fm.urls(for: .downloadsDirectory, in: .userDomainMask).first ?? fm.temporaryDirectory
+        return downloads
     }
 
     nonisolated static func outputURL(for url: URL, suffix: String, ext: String) -> URL {
         OrganizeEngine.uniqueURL(for: MediaToolsLogic.outputName(for: url, suffix: suffix, ext: ext), in: outputFolder(for: url))
     }
 
-    // MARK: 提示
+    // MARK: 提示、任务
 
     private func report(_ text: String, toShelf: Bool) {
         if toShelf {
@@ -59,6 +91,10 @@ final class MediaTools: ObservableObject {
     }
 
     private func finish(_ outputs: [URL], text: String, toShelf: Bool) {
+        busy = false
+        status = nil
+        progress = nil
+        task = nil
         if !outputs.isEmpty {
             if toShelf { ShelfStore.shared.add(outputs) }
             LibraryStore.shared?.filesChangedTick += 1
@@ -72,8 +108,38 @@ final class MediaTools: ObservableObject {
             return false
         }
         busy = true
+        status = text
+        progress = nil
         report(text, toShelf: toShelf)
         return true
+    }
+
+    /// 在后台跑一个任务，记下来以便取消。
+    private func run(_ work: @escaping @MainActor () async -> Void) {
+        task = Task { await work() }
+    }
+
+    /// 取消正在做的任务：已经做好的文件保留，没做完的半成品删掉。
+    func cancel() {
+        guard busy else { return }
+        task?.cancel()
+        status = String(localized: "正在取消…")
+    }
+
+    private func setStatus(_ text: String) {
+        status = text
+        progress = nil
+    }
+
+    /// 给后台用的进度回调。
+    private var progressSink: @Sendable (Double) -> Void {
+        { value in Task { @MainActor in if MediaTools.shared.busy { MediaTools.shared.progress = value } } }
+    }
+
+    /// 「，已取消」或空。
+    private static func cancelledSuffix(_ text: String) -> String {
+        guard Task.isCancelled else { return text }
+        return text.isEmpty ? String(localized: "已取消") : text + String(localized: "，其余已取消")
     }
 
     // MARK: 压缩视频
@@ -81,18 +147,20 @@ final class MediaTools: ObservableObject {
     func compressVideos(_ urls: [URL], toShelf: Bool) {
         let videos = urls.filter(MediaToolsLogic.isVideo)
         guard Self.requirePro(), !videos.isEmpty, begin(String(localized: "正在压缩视频…"), toShelf: toShelf) else { return }
-        Task {
+        let sink = progressSink
+        run { [self] in
             var out: [URL] = []
             var notSmaller = 0
             var failed = 0
-            for url in videos {
-                switch await Self.compress(url) {
+            for (index, url) in videos.enumerated() {
+                if Task.isCancelled { break }
+                if videos.count > 1 { setStatus(String(localized: "正在压缩 \(index + 1)/\(videos.count)")) }
+                switch await Self.compress(url, progress: sink) {
                 case .success(let result): out.append(result)
                 case .notSmaller: notSmaller += 1
-                case .failed: failed += 1
+                case .failed: if !Task.isCancelled { failed += 1 }
                 }
             }
-            busy = false
             var text = out.isEmpty ? "" : String(localized: "已压缩 \(out.count) 个视频")
             if notSmaller > 0 {
                 if !text.isEmpty { text += String(localized: "，") }
@@ -102,120 +170,170 @@ final class MediaTools: ObservableObject {
                 if !text.isEmpty { text += String(localized: "，") }
                 text += String(localized: "\(failed) 个没能压缩")
             }
-            finish(out, text: text, toShelf: toShelf)
+            finish(out, text: Self.cancelledSuffix(text), toShelf: toShelf)
         }
     }
 
     enum CompressResult { case success(URL), notSmaller, failed }
 
-    nonisolated static func compress(_ url: URL) async -> CompressResult {
+    nonisolated static func compress(_ url: URL, progress: (@Sendable (Double) -> Void)? = nil) async -> CompressResult {
         let asset = AVURLAsset(url: url)
         let presets = AVAssetExportSession.exportPresets(compatibleWith: asset)
         let preset = presets.contains(AVAssetExportPresetHEVC1920x1080) ? AVAssetExportPresetHEVC1920x1080
             : (presets.contains(AVAssetExportPreset1920x1080) ? AVAssetExportPreset1920x1080 : AVAssetExportPresetMediumQuality)
         let target = outputURL(for: url, suffix: String(localized: "压缩"), ext: "mp4")
-        guard await export(asset, preset: preset, to: target, type: .mp4, range: nil) else { return .failed }
+        guard let result = await export(asset, preset: preset, to: target, type: .mp4, range: nil, progress: progress) else { return .failed }
         let before = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-        let after = (try? target.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        let after = (try? result.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         if before > 0, after >= Int(Double(before) * 0.95) {
-            try? FileManager.default.removeItem(at: target)
+            try? FileManager.default.removeItem(at: result)
             return .notSmaller
         }
-        return .success(target)
+        return .success(result)
     }
 
-    nonisolated static func export(_ asset: AVAsset, preset: String, to target: URL, type: AVFileType, range: CMTimeRange?) async -> Bool {
-        guard let session = AVAssetExportSession(asset: asset, presetName: preset) else { return false }
-        session.outputURL = target
-        session.outputFileType = session.supportedFileTypes.contains(type) ? type : session.supportedFileTypes.first
+    /// 导出视频：先写到同目录的隐藏临时文件，成功后才改成正式文件名（取消、失败、退出都不会留下半成品）。
+    /// 支持取消（Task 被取消时 cancelExport）和进度回调。返回最终文件，失败返回 nil。
+    nonisolated static func export(_ asset: AVAsset, preset: String, to target: URL, type: AVFileType, range: CMTimeRange?,
+                                   progress: (@Sendable (Double) -> Void)? = nil) async -> URL? {
+        guard !Task.isCancelled, let session = AVAssetExportSession(asset: asset, presetName: preset) else { return nil }
+        // 不支持目标格式时直接失败，免得写出 mov 却叫 .mp4。
+        guard session.supportedFileTypes.contains(type) else { return nil }
+        let partial = PartialFiles.partialURL(for: target)
+        PartialFiles.shared.add(partial)
+        defer { PartialFiles.shared.remove(partial) }
+        session.outputURL = partial
+        session.outputFileType = type
         session.shouldOptimizeForNetworkUse = true
         if let range { session.timeRange = range }
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            session.exportAsynchronously { continuation.resume() }
+        let box = ExportBox(session)
+        let poller = Task.detached {
+            while !Task.isCancelled {
+                progress?(Double(box.session.progress))
+                try? await Task.sleep(nanoseconds: 300_000_000)
+            }
         }
-        if session.status != .completed {
-            try? FileManager.default.removeItem(at: target)
-            return false
+        await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                box.session.exportAsynchronously { continuation.resume() }
+            }
+        } onCancel: {
+            box.session.cancelExport()
         }
-        return true
+        poller.cancel()
+        guard session.status == .completed, !Task.isCancelled else {
+            try? FileManager.default.removeItem(at: partial)
+            return nil
+        }
+        return PartialFiles.commit(partial, to: target)
     }
 
     // MARK: 剪片段 / 做 GIF
 
     func openTrim(_ url: URL, toShelf: Bool) {
         guard Self.requirePro(), MediaToolsLogic.isVideo(url) else { return }
-        sheetToShelf = toShelf
-        Self.bringMainWindow()
-        trimming = url
+        ToolWindow.show(Self.trimWindowID, title: String(localized: "剪片段")) {
+            TrimSheet(url: url, toShelf: toShelf) { ToolWindow.close(Self.trimWindowID) }
+                .id(url)
+        }
     }
 
     func trim(_ url: URL, start: Double, end: Double, toShelf: Bool) {
         guard Self.requirePro(), begin(String(localized: "正在剪辑…"), toShelf: toShelf) else { return }
-        Task {
+        let sink = progressSink
+        run { [self] in
             let asset = AVURLAsset(url: url)
             let range = CMTimeRange(start: CMTime(seconds: start, preferredTimescale: 600),
                                     end: CMTime(seconds: end, preferredTimescale: 600))
             let ext = MediaToolsLogic.trimExtension(for: url)
+            let type: AVFileType = ext == "mov" ? .mov : .mp4
             let target = Self.outputURL(for: url, suffix: String(localized: "片段"), ext: ext)
-            var ok = await Self.export(asset, preset: AVAssetExportPresetPassthrough, to: target,
-                                       type: ext == "mov" ? .mov : .mp4, range: range)
-            if !ok {
-                ok = await Self.export(asset, preset: AVAssetExportPresetHighestQuality, to: target,
-                                       type: ext == "mov" ? .mov : .mp4, range: range)
+            var result = await Self.export(asset, preset: AVAssetExportPresetPassthrough, to: target, type: type, range: range, progress: sink)
+            if result == nil, !Task.isCancelled {
+                result = await Self.export(asset, preset: AVAssetExportPresetHighestQuality, to: target, type: type, range: range, progress: sink)
             }
-            busy = false
-            finish(ok ? [target] : [], text: ok ? String(localized: "已剪出 \(target.lastPathComponent)") : String(localized: "没能剪辑这个视频"), toShelf: toShelf)
+            if let result {
+                finish([result], text: String(localized: "已剪出 \(result.lastPathComponent)"), toShelf: toShelf)
+            } else {
+                finish([], text: Task.isCancelled ? String(localized: "已取消") : String(localized: "没能剪辑这个视频"), toShelf: toShelf)
+            }
         }
     }
 
     /// 做成 GIF。不给时间时从头开始，最多 15 秒。
     func makeGIF(_ url: URL, start: Double = 0, end: Double? = nil, toShelf: Bool) {
         guard Self.requirePro(), MediaToolsLogic.isVideo(url), begin(String(localized: "正在做 GIF…"), toShelf: toShelf) else { return }
-        Task {
-            let result = await Self.gif(url, start: start, end: end)
-            busy = false
+        let sink = progressSink
+        run { [self] in
+            let result = await Self.gif(url, start: start, end: end, progress: sink)
             if let result {
                 finish([result], text: String(localized: "已做成 \(result.lastPathComponent)"), toShelf: toShelf)
             } else {
-                finish([], text: String(localized: "没能做成 GIF"), toShelf: toShelf)
+                finish([], text: Task.isCancelled ? String(localized: "已取消") : String(localized: "没能做成 GIF"), toShelf: toShelf)
             }
         }
     }
 
-    nonisolated static func gif(_ url: URL, start: Double, end: Double?) async -> URL? {
+    nonisolated static func gif(_ url: URL, start: Double, end: Double?, progress: (@Sendable (Double) -> Void)? = nil) async -> URL? {
         let asset = AVURLAsset(url: url)
         guard let duration = try? await asset.load(.duration) else { return nil }
-        let total = duration.seconds
-        let range = MediaToolsLogic.clampTrim(start: start, end: end ?? total, duration: total)
+        // 画面轨常常比整体时长短（音轨长出一截）：用画面轨的时间范围收紧，免得取到空帧。
+        var lower = 0.0
+        var upper = duration.seconds
+        if let track = try? await asset.loadTracks(withMediaType: .video).first,
+           let trackRange = try? await track.load(.timeRange) {
+            let s = trackRange.start.seconds
+            let e = trackRange.end.seconds
+            if s.isFinite, e.isFinite, e > s {
+                lower = max(0, s)
+                upper = min(upper.isFinite ? upper : e, e)
+            }
+        }
+        guard upper.isFinite, upper > lower else { return nil }
+        let range = MediaToolsLogic.clampTrim(start: max(start, lower), end: min(end ?? upper, upper), duration: upper)
         let times = MediaToolsLogic.gifFrameTimes(start: range.start, end: range.end)
         let target = outputURL(for: url, suffix: "GIF", ext: "gif")
-        return await Task.detached(priority: .userInitiated) { () -> URL? in
-            let generator = AVAssetImageGenerator(asset: asset)
-            generator.appliesPreferredTrackTransform = true
-            generator.maximumSize = CGSize(width: MediaToolsLogic.gifMaxSide, height: MediaToolsLogic.gifMaxSide)
-            let tolerance = CMTime(seconds: 0.5 / MediaToolsLogic.gifFPS, preferredTimescale: 600)
-            generator.requestedTimeToleranceBefore = tolerance
-            generator.requestedTimeToleranceAfter = tolerance
-            guard let destination = CGImageDestinationCreateWithURL(target as CFURL, UTType.gif.identifier as CFString, times.count, nil) else { return nil }
-            CGImageDestinationSetProperties(destination, [
-                kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFLoopCount: 0],
-            ] as CFDictionary)
-            let frameProps = [
-                kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFDelayTime: 1 / MediaToolsLogic.gifFPS],
-            ] as CFDictionary
-            var added = 0
-            for t in times {
-                if let image = try? generator.copyCGImage(at: CMTime(seconds: t, preferredTimescale: 600), actualTime: nil) {
-                    CGImageDestinationAddImage(destination, image, frameProps)
-                    added += 1
+        let flag = CancelFlag()
+        return await withTaskCancellationHandler {
+            await Task.detached(priority: .userInitiated) { () -> URL? in
+                let generator = AVAssetImageGenerator(asset: asset)
+                generator.appliesPreferredTrackTransform = true
+                generator.maximumSize = CGSize(width: MediaToolsLogic.gifMaxSide, height: MediaToolsLogic.gifMaxSide)
+                let tolerance = CMTime(seconds: 0.5 / MediaToolsLogic.gifFPS, preferredTimescale: 600)
+                generator.requestedTimeToleranceBefore = tolerance
+                generator.requestedTimeToleranceAfter = tolerance
+                // 先把取到的帧收齐，再按实际帧数建 GIF（声明的帧数和实际不符时 Finalize 会失败）。
+                var images: [CGImage] = []
+                for (index, t) in times.enumerated() {
+                    if flag.isCancelled { return nil }
+                    if let image = try? generator.copyCGImage(at: CMTime(seconds: t, preferredTimescale: 600), actualTime: nil) {
+                        images.append(image)
+                    }
+                    progress?(Double(index + 1) / Double(max(times.count, 1)))
                 }
-            }
-            guard added > 0, CGImageDestinationFinalize(destination) else {
-                try? FileManager.default.removeItem(at: target)
-                return nil
-            }
-            return target
-        }.value
+                guard !images.isEmpty, !flag.isCancelled else { return nil }
+                let partial = PartialFiles.partialURL(for: target)
+                PartialFiles.shared.add(partial)
+                defer { PartialFiles.shared.remove(partial) }
+                guard let destination = CGImageDestinationCreateWithURL(partial as CFURL, UTType.gif.identifier as CFString, images.count, nil) else { return nil }
+                CGImageDestinationSetProperties(destination, [
+                    kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFLoopCount: 0],
+                ] as CFDictionary)
+                let frameProps = [
+                    kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFDelayTime: 1 / MediaToolsLogic.gifFPS],
+                ] as CFDictionary
+                for image in images {
+                    CGImageDestinationAddImage(destination, image, frameProps)
+                }
+                guard CGImageDestinationFinalize(destination), !flag.isCancelled else {
+                    try? FileManager.default.removeItem(at: partial)
+                    return nil
+                }
+                return PartialFiles.commit(partial, to: target)
+            }.value
+        } onCancel: {
+            flag.cancel()
+        }
     }
 
     // MARK: 合并 PDF
@@ -227,34 +345,51 @@ final class MediaTools: ObservableObject {
             return
         }
         guard begin(String(localized: "正在合并 PDF…"), toShelf: toShelf) else { return }
-        Task {
+        run { [self] in
             let result = await Task.detached(priority: .userInitiated) { Self.merge(urls) }.value
-            busy = false
-            if let result {
-                finish([result], text: String(localized: "已合并为 \(result.lastPathComponent)"), toShelf: toShelf)
+            if let url = result.url {
+                let text = result.skipped.isEmpty
+                    ? String(localized: "已合并为 \(url.lastPathComponent)")
+                    : String(localized: "已合并为 \(url.lastPathComponent)，跳过 \(result.skipped.count) 个（有密码或读不出）")
+                finish([url], text: text, toShelf: toShelf)
             } else {
                 finish([], text: String(localized: "没能合并这些文件"), toShelf: toShelf)
             }
         }
     }
 
-    nonisolated static func merge(_ urls: [URL]) -> URL? {
-        guard let first = urls.first else { return nil }
+    /// 合并结果：新 PDF（一页都没合进去时为 nil）和被跳过的文件（有密码、读不出）。
+    struct MergeResult {
+        var url: URL?
+        var skipped: [URL]
+    }
+
+    nonisolated static func merge(_ urls: [URL]) -> MergeResult {
+        guard let first = urls.first else { return MergeResult(url: nil, skipped: []) }
         let output = PDFDocument()
+        var skipped: [URL] = []
         for url in urls {
             if MediaToolsLogic.isPDF(url) {
-                guard let doc = PDFDocument(url: url), !doc.isLocked else { continue }
+                guard let doc = PDFDocument(url: url), !doc.isLocked, doc.pageCount > 0 else {
+                    skipped.append(url)
+                    continue
+                }
                 for index in 0..<doc.pageCount {
-                    if let page = doc.page(at: index) { output.insert(page, at: output.pageCount) }
+                    // 拷贝一份再插：直接插原文档的页面对象，源文档释放后可能变成空白页。
+                    if let page = doc.page(at: index)?.copy() as? PDFPage {
+                        output.insert(page, at: output.pageCount)
+                    }
                 }
             } else if let image = NSImage(contentsOf: url), let page = PDFPage(image: image) {
                 output.insert(page, at: output.pageCount)
+            } else {
+                skipped.append(url)
             }
         }
-        guard output.pageCount > 0 else { return nil }
+        guard output.pageCount > 0 else { return MergeResult(url: nil, skipped: skipped) }
         let name = String(localized: "合并") + ".pdf"
         let target = OrganizeEngine.uniqueURL(for: name, in: outputFolder(for: first))
-        return output.write(to: target) ? target : nil
+        return MergeResult(url: output.write(to: target) ? target : nil, skipped: skipped)
     }
 
     // MARK: 抠图
@@ -262,18 +397,22 @@ final class MediaTools: ObservableObject {
     func removeBackground(_ urls: [URL], toShelf: Bool) {
         let images = urls.filter(MediaToolsLogic.isImage)
         guard Self.requirePro(), !images.isEmpty, begin(String(localized: "正在抠图…"), toShelf: toShelf) else { return }
-        Task {
+        run { [self] in
             var out: [URL] = []
             var noSubject = 0
             var failed = 0
-            for url in images {
+            for (index, url) in images.enumerated() {
+                if Task.isCancelled { break }
+                if images.count > 1 {
+                    setStatus(String(localized: "正在抠图 \(index + 1)/\(images.count)"))
+                    progress = Double(index) / Double(images.count)
+                }
                 switch await Task.detached(priority: .userInitiated, operation: { Self.cutout(url) }).value {
                 case .success(let result): out.append(result)
                 case .noSubject: noSubject += 1
                 case .failed: failed += 1
                 }
             }
-            busy = false
             var text = out.isEmpty ? "" : String(localized: "已抠好 \(out.count) 张，透明背景 PNG")
             if noSubject > 0 {
                 if !text.isEmpty { text += String(localized: "，") }
@@ -283,14 +422,16 @@ final class MediaTools: ObservableObject {
                 if !text.isEmpty { text += String(localized: "，") }
                 text += String(localized: "\(failed) 张失败（这台 Mac 可能不支持本机抠图）")
             }
-            finish(out, text: text, toShelf: toShelf)
+            finish(out, text: Self.cancelledSuffix(text), toShelf: toShelf)
         }
     }
 
     enum CutoutResult { case success(URL), noSubject, failed }
 
     nonisolated static func cutout(_ url: URL) -> CutoutResult {
-        let handler = VNImageRequestHandler(url: url, options: [:])
+        // 用已经按 EXIF 方向转正的图：抠出来的 PNG 不带方向标记，直接用原始像素会是横的。
+        guard let oriented = loadCGImage(url, maxPixel: nil) else { return .failed }
+        let handler = VNImageRequestHandler(cgImage: oriented, options: [:])
         let request = VNGenerateForegroundInstanceMaskRequest()
         do {
             try handler.perform([request])
@@ -330,32 +471,59 @@ final class MediaTools: ObservableObject {
 
     func beautify(_ urls: [URL], style: BeautifyStyle, toShelf: Bool) {
         guard Self.requirePro(), begin(String(localized: "正在美化…"), toShelf: toShelf) else { return }
-        Task {
-            let out = await Task.detached(priority: .userInitiated) { () -> [URL] in
-                urls.compactMap { url in
+        run { [self] in
+            var out: [URL] = []
+            for (index, url) in urls.enumerated() {
+                if Task.isCancelled { break }
+                if urls.count > 1 { progress = Double(index) / Double(urls.count) }
+                let result = await Task.detached(priority: .userInitiated) { () -> URL? in
                     guard let image = Self.loadCGImage(url, maxPixel: nil),
                           let result = Self.render(image, style: style) else { return nil }
                     let target = Self.outputURL(for: url, suffix: String(localized: "美化"), ext: "png")
                     return Self.writePNG(result, to: target) ? target : nil
-                }
-            }.value
-            busy = false
-            let text = out.isEmpty ? String(localized: "没能美化这些图片") : String(localized: "已美化 \(out.count) 张，保存为 PNG")
-            finish(out, text: text, toShelf: toShelf)
+                }.value
+                if let result { out.append(result) }
+            }
+            let text = out.isEmpty ? (Task.isCancelled ? "" : String(localized: "没能美化这些图片")) : String(localized: "已美化 \(out.count) 张，保存为 PNG")
+            finish(out, text: Self.cancelledSuffix(text), toShelf: toShelf)
         }
     }
 
+    /// 读图并按 EXIF 方向转正。maxPixel 为 nil 时按原图尺寸（最长边 = 原图最长边）。
     nonisolated static func loadCGImage(_ url: URL, maxPixel: Int?) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let side: Int
         if let maxPixel {
-            let options = [
-                kCGImageSourceCreateThumbnailFromImageAlways: true,
-                kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: maxPixel,
-            ] as CFDictionary
-            return CGImageSourceCreateThumbnailAtIndex(source, 0, options)
+            side = maxPixel
+        } else {
+            let info = pixelInfo(source)
+            side = max(info.width, info.height)
+            // 读不到尺寸时退回原始像素（不转方向总比读不出来好）。
+            guard side > 0 else { return CGImageSourceCreateImageAtIndex(source, 0, nil) }
         }
-        return CGImageSourceCreateImageAtIndex(source, 0, nil)
+        let options = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: side,
+        ] as CFDictionary
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options)
+    }
+
+    /// 原图的像素宽高和 EXIF 方向（1…8，没有时为 1）。
+    nonisolated static func pixelInfo(_ source: CGImageSource) -> (width: Int, height: Int, orientation: Int) {
+        guard let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else { return (0, 0, 1) }
+        let width = (props[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? 0
+        let height = (props[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? 0
+        let orientation = (props[kCGImagePropertyOrientation] as? NSNumber)?.intValue ?? 1
+        return (width, height, orientation)
+    }
+
+    /// 按 EXIF 方向转正后的像素尺寸（竖拍照片宽高对调）。不解码整张图。
+    nonisolated static func orientedPixelSize(_ url: URL) -> CGSize? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let info = pixelInfo(source)
+        guard info.width > 0, info.height > 0 else { return nil }
+        return MediaToolsLogic.orientedSize(width: info.width, height: info.height, orientation: info.orientation)
     }
 
     /// 图片带透明通道，而且四个角里至少有一个是透明的（只带 alpha 但整张不透明的截图照常处理）。
@@ -430,7 +598,7 @@ struct MediaToolsMenu: View {
 struct TrimSheet: View {
     let url: URL
     let toShelf: Bool
-    @Environment(\.dismiss) private var dismiss
+    let close: () -> Void
     @State private var player: AVPlayer?
     @State private var duration: Double = 0
     @State private var start: Double = 0
@@ -484,16 +652,16 @@ struct TrimSheet: View {
                 }
                 .disabled(duration == 0)
                 Spacer()
-                Button("取消") { dismiss() }
+                Button("取消") { close() }
                     .keyboardShortcut(.cancelAction)
                 Button("做成 GIF") {
                     MediaTools.shared.makeGIF(url, start: start, end: end, toShelf: toShelf)
-                    dismiss()
+                    close()
                 }
                 .disabled(duration == 0)
                 Button("剪出片段") {
                     MediaTools.shared.trim(url, start: start, end: end, toShelf: toShelf)
-                    dismiss()
+                    close()
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(duration == 0)
@@ -619,8 +787,8 @@ struct BeautifySheet: View {
         .task {
             guard let first = urls.first else { return }
             let loaded = await Task.detached(priority: .userInitiated) { () -> (CGImage?, CGSize) in
-                let full = MediaTools.loadCGImage(first, maxPixel: nil)
-                let size = full.map { CGSize(width: $0.width, height: $0.height) } ?? .zero
+                // 输出尺寸按转正后的原图算（竖拍照片不会宽高颠倒），不用为此解码整张大图。
+                let size = MediaTools.orientedPixelSize(first) ?? .zero
                 return (MediaTools.loadCGImage(first, maxPixel: 1400), size)
             }.value
             source = loaded.0
@@ -1035,5 +1203,121 @@ struct MediaDropActions: View {
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - 独立的工具窗口
+
+/// 剪辑、卸载这类面板用独立窗口（全 App 只有一个）：开了几个主窗口都不会重复弹，主窗口关着也能打开。
+@MainActor
+enum ToolWindow {
+    private static var windows: [String: NSWindow] = [:]
+    private static let delegate = Delegate()
+
+    static func isToolWindow(_ window: NSWindow) -> Bool {
+        windows.values.contains { $0 === window }
+    }
+
+    /// 打开（或换掉内容后拿到前面）。
+    static func show<Content: View>(_ id: String, title: String, @ViewBuilder content: () -> Content) {
+        let hosting = NSHostingController(rootView: content())
+        hosting.sizingOptions = [.preferredContentSize]
+        let window: NSWindow
+        if let existing = windows[id] {
+            window = existing
+            window.contentViewController = hosting
+        } else {
+            window = NSWindow(contentViewController: hosting)
+            window.styleMask = [.titled, .closable, .miniaturizable]
+            window.isReleasedWhenClosed = false
+            window.delegate = delegate
+            windows[id] = window
+            window.center()
+        }
+        window.title = title
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    static func close(_ id: String) {
+        windows[id]?.close()
+    }
+
+    /// 窗口关掉后拆掉内容（停掉视频播放、放掉大图）。
+    @MainActor
+    private final class Delegate: NSObject, NSWindowDelegate {
+        func windowWillClose(_ notification: Notification) {
+            guard let window = notification.object as? NSWindow else { return }
+            DispatchQueue.main.async { if !window.isVisible { window.contentViewController = nil } }
+        }
+    }
+}
+
+// MARK: - 半成品文件
+
+/// 正在写的临时文件：成功后改成正式文件名；取消、失败、App 退出时删掉。
+final class PartialFiles: @unchecked Sendable {
+    static let shared = PartialFiles()
+    private let lock = NSLock()
+    private var urls: Set<URL> = []
+
+    func add(_ url: URL) {
+        lock.lock(); defer { lock.unlock() }
+        urls.insert(url)
+    }
+
+    func remove(_ url: URL) {
+        lock.lock(); defer { lock.unlock() }
+        urls.remove(url)
+    }
+
+    /// 删掉所有还没写完的文件（退出 App 时调用）。
+    func removeAll() {
+        lock.lock()
+        let list = urls
+        urls = []
+        lock.unlock()
+        for url in list { try? FileManager.default.removeItem(at: url) }
+    }
+
+    /// 同目录下的隐藏临时名：「.旅行-压缩.partial-1a2b3c.mp4」。
+    static func partialURL(for target: URL) -> URL {
+        target.deletingLastPathComponent().appendingPathComponent(
+            MediaToolsLogic.partialName(for: target.lastPathComponent, token: String(UUID().uuidString.prefix(6))))
+    }
+
+    /// 把写好的临时文件改成正式名（这期间正式名被占了就加编号）。失败返回 nil 并删掉临时文件。
+    static func commit(_ partial: URL, to target: URL) -> URL? {
+        let fm = FileManager.default
+        let final = fm.fileExists(atPath: target.path)
+            ? OrganizeEngine.uniqueURL(for: target.lastPathComponent, in: target.deletingLastPathComponent())
+            : target
+        do {
+            try fm.moveItem(at: partial, to: final)
+            return final
+        } catch {
+            try? fm.removeItem(at: partial)
+            return nil
+        }
+    }
+}
+
+/// 让导出会话能在取消回调和进度轮询里用。
+private final class ExportBox: @unchecked Sendable {
+    let session: AVAssetExportSession
+    init(_ session: AVAssetExportSession) { self.session = session }
+}
+
+/// 跨线程的取消标记（后台循环里检查）。
+final class CancelFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    var isCancelled: Bool {
+        lock.lock(); defer { lock.unlock() }
+        return value
+    }
+    func cancel() {
+        lock.lock(); defer { lock.unlock() }
+        value = true
     }
 }

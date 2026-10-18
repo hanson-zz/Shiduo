@@ -24,8 +24,10 @@ final class ShelfTools: ObservableObject {
 
     private var messageToken = 0
 
-    /// 不是 Pro 时打开拾掇 Pro 介绍页，返回 false。
+    /// 不是 Pro 时打开拾掇 Pro 介绍页，返回 false。第一次用 Pro 功能时自动开始试用
+    /// （暂存架、「更多工具」、图片工具都走这里，行为一致）。
     static func requirePro() -> Bool {
+        LicenseManager.shared.startTrialIfNeeded()
         guard LicenseManager.shared.isPro else {
             NSApp.activate(ignoringOtherApps: true)
             LicenseManager.shared.showPaywall = true
@@ -48,7 +50,11 @@ final class ShelfTools: ObservableObject {
     /// 压缩成 ZIP（多个文件时叫「归档.zip」，重名加编号），放上暂存架。
     @discardableResult
     func zip(_ urls: [URL]) async -> URL? {
-        guard !urls.isEmpty, !busy else { return nil }
+        guard !urls.isEmpty else { return nil }
+        guard !busy else {
+            show(String(localized: "上一个任务还在进行，请稍等"))
+            return nil
+        }
         busy = true
         let result = await ShelfActions.zip(urls, multipleName: String(localized: "归档"))
         busy = false
@@ -72,7 +78,10 @@ final class ShelfTools: ObservableObject {
     @discardableResult
     func convert(_ urls: [URL], to format: ImageConverter.OutputFormat) async -> [URL] {
         let images = Self.images(in: urls)
-        guard !busy else { return [] }
+        guard !busy else {
+            show(String(localized: "上一个任务还在进行，请稍等"))
+            return []
+        }
         let todo = images.filter { !format.matches($0.pathExtension.lowercased()) }
         guard !todo.isEmpty else {
             show(images.isEmpty ? String(localized: "没有可以转换的图片")
@@ -84,12 +93,8 @@ final class ShelfTools: ObservableObject {
         var out: [URL] = []
         var failed = 0
         for url in todo {
-            let fm = FileManager.default
-            var folder = url.deletingLastPathComponent()
-            if !fm.isWritableFile(atPath: folder.path) {
-                folder = fm.urls(for: .downloadsDirectory, in: .userDomainMask).first ?? fm.temporaryDirectory
-            }
-            let target = folder
+            // 原图旁边；那里不能写时放进「下载」，粘贴来的临时图片放进「图片 / 拾掇」。
+            let target = MediaTools.outputFolder(for: url)
             let result = await Task.detached(priority: .userInitiated) {
                 ImageConverter.convert(url, to: target, format: format, quality: quality, maxPixel: 0)
             }.value
@@ -140,6 +145,7 @@ struct ImageConvertDropPane: View {
     let height: CGFloat
     let selected: () -> [URL]
     @ObservedObject private var tools = ShelfTools.shared
+    @ObservedObject private var media = MediaTools.shared
     @State private var targeted = false
 
     var body: some View {
@@ -189,7 +195,7 @@ struct ImageConvertDropPane: View {
         } label: {
             VStack(spacing: 6) {
                 Group {
-                    if tools.busy {
+                    if tools.busy || media.busy {
                         ProgressView().controlSize(.small)
                     } else {
                         Image(systemName: "photo.on.rectangle.angled")
@@ -211,6 +217,12 @@ struct ImageConvertDropPane: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .overlay(alignment: .bottom) {
+            if media.busy {
+                MediaTaskBar(compact: true)
+                    .padding(4)
+            }
+        }
     }
 
     private var chooser: some View {
@@ -236,7 +248,7 @@ struct ImageConvertDropPane: View {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)], spacing: 4) {
                 if !tools.pendingFiles.isEmpty {
                     MediaDropActions(urls: tools.pendingFiles) { tools.pendingFiles = [] }
-                        .disabled(MediaTools.shared.busy)
+                        .disabled(media.busy)
                 } else {
                 ForEach(ImageConverter.OutputFormat.available) { format in
                     Button {
@@ -255,7 +267,7 @@ struct ImageConvertDropPane: View {
                     .disabled(tools.busy)
                 }
                 MediaDropActions(urls: tools.pendingImages) { tools.pendingImages = [] }
-                    .disabled(MediaTools.shared.busy)
+                    .disabled(media.busy)
                 }
             }
             }

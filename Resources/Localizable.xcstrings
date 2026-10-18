@@ -20885,6 +20885,374 @@
           }
         }
       }
+    },
+    "卸载 App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uninstall App"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卸载 App"
+          }
+        }
+      }
+    },
+    "没能把 %@ 移到废纸篓（可能需要管理员权限，或它正在运行），资源库里的数据一个没动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t move %@ to the Trash (it may need administrator permission, or it’s running). Nothing in your Library was touched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能把 %@ 移到废纸篓（可能需要管理员权限，或它正在运行），资源库里的数据一个没动。"
+          }
+        }
+      }
+    },
+    "先移走 App，成功后才移走勾选的残留。都只是移到废纸篓，30 天内可以在「清理记录」里放回。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app is moved first; checked leftovers are moved only after that succeeds. Everything goes to the Trash and can be restored from Cleanup History within 30 days."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先移走 App，成功后才移走勾选的残留。都只是移到废纸篓，30 天内可以在「清理记录」里放回。"
+          }
+        }
+      }
+    },
+    "正在等它退出…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for it to quit…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在等它退出…"
+          }
+        }
+      }
+    },
+    "退出并卸载": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit and Uninstall"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出并卸载"
+          }
+        }
+      }
+    },
+    "有 %lld 项超过 1 GB": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld items are larger than 1 GB"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %lld 项超过 1 GB"
+          }
+        }
+      }
+    },
+    "仍然移到废纸篓": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Trash Anyway"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仍然移到废纸篓"
+          }
+        }
+      }
+    },
+    "再看看": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再看看"
+          }
+        }
+      }
+    },
+    "%@ 还没退出，可能有未保存的内容。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hasn’t quit yet. It may have unsaved changes."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 还没退出，可能有未保存的内容。"
+          }
+        }
+      }
+    },
+    "%@ 正在运行，要先退出才能卸载。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is running. Quit it before uninstalling."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 正在运行，要先退出才能卸载。"
+          }
+        }
+      }
+    },
+    "强制退出": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Force Quit"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强制退出"
+          }
+        }
+      }
+    },
+    "只退出 App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit App Only"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只退出 App"
+          }
+        }
+      }
+    },
+    "另一份副本在 %@，资源库里的数据是它们共用的。残留默认不勾选，只卸载这一份 App。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another copy is at %@ and shares the same Library data. Leftovers are unchecked by default, so only this copy of the app is removed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另一份副本在 %@，资源库里的数据是它们共用的。残留默认不勾选，只卸载这一份 App。"
+          }
+        }
+      }
+    },
+    "按名字匹配，请确认": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matched by name — please check"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按名字匹配，请确认"
+          }
+        }
+      }
+    },
+    "可能是它的辅助程序，请确认": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Possibly a helper — please check"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可能是它的辅助程序，请确认"
+          }
+        }
+      }
+    },
+    "多个 App 共用，请确认": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared by several apps — please check"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多个 App 共用，请确认"
+          }
+        }
+      }
+    },
+    "很大，请确认": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large — please check"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "很大，请确认"
+          }
+        }
+      }
+    },
+    "正在取消…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelling…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在取消…"
+          }
+        }
+      }
+    },
+    "，其余已取消": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "; the rest were cancelled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "，其余已取消"
+          }
+        }
+      }
+    },
+    "正在压缩 %lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compressing %1$lld/%2$lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在压缩 %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "已合并为 %@，跳过 %lld 个（有密码或读不出）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merged into %1$@, skipped %2$lld (password-protected or unreadable)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已合并为 %1$@，跳过 %2$lld 个（有密码或读不出）"
+          }
+        }
+      }
+    },
+    "正在抠图 %lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing background %1$lld/%2$lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在抠图 %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "取消任务": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Task"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消任务"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
