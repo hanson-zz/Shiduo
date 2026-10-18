@@ -1,3 +1,4 @@
+import SwiftUI
 import AppKit
 import CoreML
 import UniformTypeIdentifiers
