@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import Foundation
 import Network
+import SwiftUI
 import UserNotifications
 
 /// 和主窗口无关、整个 App 只需要做一次的事情：
