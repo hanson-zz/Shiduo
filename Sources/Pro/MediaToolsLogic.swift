@@ -252,3 +252,36 @@ struct BeautifyStyle: Codable, Equatable {
         (CGFloat((hex >> 16) & 0xFF) / 255, CGFloat((hex >> 8) & 0xFF) / 255, CGFloat(hex & 0xFF) / 255)
     }
 }
+
+// MARK: - AI 放大：分块
+
+enum UpscaleLogic {
+    /// 模型一次处理的边长（像素）和每边多读的重叠，拼起来没有接缝。
+    static let tile = 256
+    static let overlap = 16
+    /// 放大后最多多少像素（防止内存爆掉）。
+    static let maxOutputPixels = 160_000_000
+
+    /// 每块「保留区」的左上角和大小（原图坐标）。保留区之外各多读 overlap 像素喂给模型。
+    static func tiles(width: Int, height: Int) -> [CGRect] {
+        guard width > 0, height > 0 else { return [] }
+        let step = tile - overlap * 2
+        var result: [CGRect] = []
+        var y = 0
+        while y < height {
+            var x = 0
+            let h = min(step, height - y)
+            while x < width {
+                let w = min(step, width - x)
+                result.append(CGRect(x: x, y: y, width: w, height: h))
+                x += step
+            }
+            y += step
+        }
+        return result
+    }
+
+    static func fits(width: Int, height: Int, scale: Int) -> Bool {
+        width * height * scale * scale <= maxOutputPixels
+    }
+}

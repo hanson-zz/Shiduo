@@ -123,13 +123,23 @@ enum BeautifyRenderer {
         context.restoreGState()
     }
 
+    /// 彩虹：围着中心转一圈的色相（用很多细扇形拼出角度渐变）。
     private static func drawRainbow(in context: CGContext, rect: CGRect) {
-        let hues: [UInt32] = [0xFF3B30, 0xFF9500, 0xFFCC00, 0x34C759, 0x00C7BE, 0x007AFF, 0xAF52DE, 0xFF2D55, 0xFF3B30]
-        let locations = hues.indices.map { CGFloat($0) / CGFloat(hues.count - 1) }
-        guard let gradient = CGGradient(colorsSpace: space, colors: hues.map { color($0) } as CFArray, locations: locations) else { return }
         context.saveGState()
         context.clip(to: rect)
-        context.drawConicGradient(gradient, center: CGPoint(x: rect.midX, y: rect.midY), angle: 0)
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let radius = hypot(rect.width, rect.height)
+        let steps = 180
+        for i in 0..<steps {
+            let start = CGFloat(i) / CGFloat(steps) * 2 * .pi
+            let end = CGFloat(i + 1) / CGFloat(steps) * 2 * .pi + 0.01
+            let color = NSColor(calibratedHue: CGFloat(i) / CGFloat(steps), saturation: 0.75, brightness: 1, alpha: 1)
+            context.move(to: center)
+            context.addArc(center: center, radius: radius, startAngle: start, endAngle: end, clockwise: false)
+            context.closePath()
+            context.setFillColor(color.cgColor)
+            context.fillPath()
+        }
         context.restoreGState()
     }
 

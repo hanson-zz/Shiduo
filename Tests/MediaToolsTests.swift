@@ -53,6 +53,15 @@ final class MediaToolsLogicTests: XCTestCase {
         XCTAssertEqual(MediaToolsLogic.timeLabel(0), "0:00.0")
     }
 
+    func testUpscaleTiles() {
+        let tiles = UpscaleLogic.tiles(width: 500, height: 224)
+        XCTAssertEqual(tiles.count, 3)
+        XCTAssertEqual(tiles.last, CGRect(x: 448, y: 0, width: 52, height: 224))
+        XCTAssertEqual(tiles.reduce(0) { $0 + Int($1.width * $1.height) }, 500 * 224)
+        XCTAssertTrue(UpscaleLogic.fits(width: 2000, height: 2000, scale: 4))
+        XCTAssertFalse(UpscaleLogic.fits(width: 6000, height: 4000, scale: 4))
+    }
+
     func testBeautifyLayout() {
         var style = BeautifyStyle(background: .gradient, index: 99, padding: 0.1, corner: 0.05)
         XCTAssertEqual(style.clamped().index, BeautifyStyle.gradients.count - 1)
