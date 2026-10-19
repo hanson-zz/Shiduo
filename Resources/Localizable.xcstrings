@@ -23377,6 +23377,22 @@
           }
         }
       }
+    },
+    "个文件，共 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "files, %@ in total"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个文件，共 %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

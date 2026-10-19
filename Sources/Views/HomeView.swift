@@ -14,11 +14,22 @@ struct HomeView: View {
 
     private var reclaimable: Int64 { cleanup.totalBytes + duplicates.reclaimable }
 
+    /// 首页顶部的「最近使用」：把几个货架里的文件合在一起，按最近打开/加入/修改排序。
+    private var recentItems: [FileItem] {
+        var seen = Set<String>()
+        return store.shelves.flatMap(\.items)
+            .sorted { $0.recentDate > $1.recentDate }
+            .filter { seen.insert($0.id).inserted }
+            .prefix(12)
+            .map { $0 }
+    }
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 34) {
+            VStack(alignment: .leading, spacing: 26) {
                 TrialEndingBanner()
                 header
+                if !recentItems.isEmpty { recentSection }
                 library
                 cleanupSection
                 if !store.sourceGroups.isEmpty { sourcesSection }
@@ -60,33 +71,59 @@ struct HomeView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .center, spacing: 12) {
                 Text(greeting)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                if totalCount > 0 {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        CountingNumber(value: Double(totalCount))
-                            .font(.system(size: 26, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Color.accentColor)
-                        Text("个文件，共 \(totalBytes.byteText)，每一类都有自己的货架")
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Text("正在读取 Spotlight 索引…")
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                Button {
+                    // 走 reload：和切页面共用一个任务，连点只算最后一次。
+                    store.reload()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 26, height: 26)
+                        .background(Circle().fill(.regularMaterial))
+                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.1)))
+                }
+                .buttonStyle(.plain)
+                .help("重新统计")
+                .accessibilityLabel("刷新")
+            }
+            if totalCount > 0 {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    CountingNumber(value: Double(totalCount))
+                        .font(.system(size: 20, weight: .heavy, design: .rounded))
+                        .foregroundStyle(Color.accentColor)
+                    Text("个文件，共 \(totalBytes.byteText)")
                         .foregroundStyle(.secondary)
                 }
+            } else {
+                Text("正在读取 Spotlight 索引…")
+                    .foregroundStyle(.secondary)
             }
-            Spacer()
-            Button {
-                // 走 reload：和切页面共用一个任务，连点只算最后一次。
-                store.reload()
-            } label: {
-                Label("刷新", systemImage: "arrow.clockwise")
-                    .glassCapsule()
+        }
+    }
+
+    // MARK: - 最近使用
+
+    private var recentSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: String(localized: "最近使用"), action: { store.selection = .category(.recents) })
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: 14) {
+                    ForEach(recentItems) { item in
+                        RecentTile(item: item, selected: store.selectedIDs.contains(item.id))
+                            .onTapGesture(count: 2) { store.openItems([item]) }
+                            .onTapGesture { store.selectedIDs = [item.id] }
+                            .contextMenu { FileContextMenu(items: [item]) }
+                            .onDrag { NSItemProvider(object: item.url as NSURL) }
+                            .help(item.path)
+                    }
+                }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 2)
             }
-            .buttonStyle(.plain)
-            .help("重新统计")
         }
     }
 
@@ -95,7 +132,7 @@ struct HomeView: View {
     private var library: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(title: String(localized: "资料库"), count: FileCategory.dashboard.count)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 16)], spacing: 16) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14)], spacing: 12) {
                 ForEach(FileCategory.dashboard) { category in
                     LibraryTile(category: category, total: store.totals[category], previews: store.previews[category] ?? [])
                         .onTapGesture { store.selection = .category(category) }
@@ -113,7 +150,7 @@ struct HomeView: View {
                 badge: reclaimable > 0 ? String(localized: "最多可腾出 \(reclaimable.byteText)") : nil,
                 action: { store.selection = .cleanup }
             )
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 16)], spacing: 16) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 14)], spacing: 12) {
                 DuplicatesTile()
                     .onTapGesture { store.selection = .duplicates }
                 if cleanup.isRunning && cleanup.cards.isEmpty {
@@ -137,7 +174,7 @@ struct HomeView: View {
             if cleanup.isRunning { ProgressView().controlSize(.small) }
             Text(text).foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, minHeight: 132)
+        .frame(maxWidth: .infinity, minHeight: 84)
         .glassCard()
     }
 
@@ -158,72 +195,93 @@ struct HomeView: View {
 
 // MARK: - 卡片
 
-/// 资料库分类卡片：左上角彩色图标，右上角几张最近文件，底部是数量和大小。
+/// 资料库分类卡片：一行矮卡片，左边彩色图标和数量，右边三张斜叠的最近文件。
 struct LibraryTile: View {
     let category: FileCategory
     let total: CategoryTotal?
     let previews: [FileItem]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top) {
-                TintedIcon(symbol: category.symbol, tint: category.tint, size: 42)
-                Spacer()
-                if total == nil {
-                    ProgressView().controlSize(.small)
-                } else {
-                    StackedThumbnails(items: previews, total: total?.count ?? 0, size: 30)
-                }
+        HStack(spacing: 14) {
+            TintedIcon(symbol: category.symbol, tint: category.tint, size: 40)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(category.title)
+                    .font(.system(.headline, design: .rounded))
+                Text(total.map { String(localized: "\($0.count) 个 · \($0.bytes.byteText)") } ?? String(localized: "统计中…"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 18)
-            Text(category.title)
-                .font(.system(.title3, design: .rounded).weight(.semibold))
-            HStack(spacing: 6) {
-                Text(total.map { String(localized: "\($0.count) 个项目") } ?? String(localized: "统计中…"))
-                Text("·")
-                Text(total.map { $0.bytes.byteText } ?? "")
+            Spacer(minLength: 8)
+            if total == nil {
+                ProgressView().controlSize(.small)
+            } else {
+                FannedThumbnails(items: previews, total: total?.count ?? 0)
             }
-            .font(.callout)
-            .foregroundStyle(.secondary)
-            .padding(.top, 2)
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 148, alignment: .leading)
-        .glassCard(tint: category.tint, interactive: true)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
+        .glassCard(tint: category.tint, radius: 18, interactive: true)
     }
 }
 
+/// 清理卡片：标题、能腾出的空间，右边一个「清理」按钮（点卡片任何地方都进入清理）。
 struct CleanupTile: View {
     let card: CleanupCard
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top) {
-                TintedIcon(symbol: card.kind.symbol, tint: card.kind.tint, size: 36)
-                Spacer()
-                StackedThumbnails(items: card.items, total: card.items.count, size: 26)
-            }
-            Spacer(minLength: 14)
-            Text(card.kind.title)
-                .font(.callout.weight(.medium))
-                .foregroundStyle(.secondary)
-            HStack(alignment: .firstTextBaseline) {
-                Text(card.bytes.byteText)
-                    .font(.system(size: 30, weight: .bold, design: .rounded))
-                    .minimumScaleFactor(0.7)
+        CompactCleanupTile(
+            symbol: card.kind.symbol, tint: card.kind.tint, title: card.kind.title,
+            value: card.bytes.byteText, detail: String(localized: "\(card.items.count) 个项目")
+        )
+    }
+}
+
+struct CompactCleanupTile: View {
+    let symbol: String
+    let tint: Color
+    let title: String
+    let value: String
+    var detail: String = ""
+    var progress: Double? = nil
+
+    var body: some View {
+        HStack(spacing: 12) {
+            TintedIcon(symbol: symbol, tint: tint, size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
-                Spacer()
-                HStack(spacing: 3) {
-                    Text("\(card.items.count) 个项目")
-                    Image(systemName: "chevron.right")
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(value)
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                    if !detail.isEmpty {
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 6)
+            if let progress {
+                ProgressView(value: progress).frame(width: 54)
+            } else {
+                Text("清理")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(tint)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(.regularMaterial))
+                    .overlay(Capsule().strokeBorder(Color.primary.opacity(0.1)))
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
-        .glassCard(tint: card.kind.tint, interactive: true)
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, minHeight: 84, alignment: .leading)
+        .glassCard(tint: tint, radius: 18, interactive: true)
     }
 }
 
@@ -236,43 +294,14 @@ struct DuplicatesTile: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top) {
-                TintedIcon(symbol: "doc.on.doc", tint: tint, size: 36)
-                Spacer()
-                if scanner.isRunning {
-                    ProgressView(value: scanner.progress)
-                        .frame(width: 70)
-                } else {
-                    StackedThumbnails(items: scanner.groups.compactMap(\.items.first), total: scanner.groups.count, size: 26)
-                }
-            }
-            Spacer(minLength: 14)
-            Text("重复文件")
-                .font(.callout.weight(.medium))
-                .foregroundStyle(.secondary)
-            HStack(alignment: .firstTextBaseline) {
-                if scanner.hasScanned {
-                    Text(scanner.reclaimable.byteText)
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
-                } else {
-                    Text(scanner.isRunning ? String(localized: "扫描中…") : String(localized: "点按扫描"))
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
-                }
-                Spacer()
-                HStack(spacing: 3) {
-                    Text(scanner.hasScanned ? String(localized: "多出 \(extraCopies) 份") : "")
-                    Image(systemName: "chevron.right")
-                }
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            }
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
-        .glassCard(tint: tint, interactive: true)
+        CompactCleanupTile(
+            symbol: "doc.on.doc", tint: tint, title: String(localized: "重复文件"),
+            value: scanner.hasScanned
+                ? scanner.reclaimable.byteText
+                : (scanner.isRunning ? String(localized: "扫描中…") : String(localized: "点按扫描")),
+            detail: scanner.hasScanned ? String(localized: "多出 \(extraCopies) 份") : "",
+            progress: scanner.isRunning ? scanner.progress : nil
+        )
     }
 }
 
@@ -335,5 +364,69 @@ struct ShelfView: View {
                 .padding(.horizontal, 4)
             }
         }
+    }
+}
+
+/// 首页「最近使用」里的一格：宽缩略图 + 文件名。
+struct RecentTile: View {
+    let item: FileItem
+    var selected = false
+
+    var body: some View {
+        VStack(spacing: 7) {
+            ThumbnailView(url: item.url, size: 132, fill: true, modified: item.modified)
+                .frame(width: 132, height: 76)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(selected ? Color.accentColor : Color.primary.opacity(0.08), lineWidth: selected ? 2 : 1)
+                )
+                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+            Text(item.name)
+                .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(width: 128)
+        }
+    }
+}
+
+/// 三张斜着叠在一起的最近文件缩略图，右下角挂「+N」。
+struct FannedThumbnails: View {
+    let items: [FileItem]
+    var total: Int = 0
+    var size: CGFloat = 34
+
+    private static let angles: [Double] = [-12, -3, 8]
+
+    var body: some View {
+        let shown = Array(items.prefix(3))
+        ZStack(alignment: .bottomTrailing) {
+            ZStack {
+                ForEach(Array(shown.enumerated()), id: \.element.id) { index, item in
+                    ThumbnailView(url: item.url, size: size, fill: true, modified: item.modified)
+                        .frame(width: size, height: size)
+                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                        .padding(2)
+                        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.white))
+                        .shadow(color: .black.opacity(0.12), radius: 3, y: 1.5)
+                        .rotationEffect(.degrees(Self.angles[index]))
+                        .offset(x: CGFloat(index) * size * 0.58)
+                }
+            }
+            .frame(width: size * 2.3, height: size + 10, alignment: .leading)
+            let extra = total - shown.count
+            if extra > 0 {
+                Text(extra > 99 ? "+99" : "+\(extra)")
+                    .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(.regularMaterial))
+                    .overlay(Capsule().strokeBorder(Color.primary.opacity(0.1)))
+                    .offset(x: 6, y: 4)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }

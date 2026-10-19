@@ -50,14 +50,17 @@ struct TopBar: View {
                 NowPlayingView()
             }
 
-            HStack(spacing: 6) {
-                Text("资料库大小")
-                    .foregroundStyle(.secondary)
-                Text(store.libraryBytes > 0 ? store.libraryBytes.byteText : "--")
-                    .fontWeight(.semibold)
-                    .monospacedDigit()
+            // 首页的问候语里已经写了总大小，这里就不重复。
+            if store.selection != .home {
+                HStack(spacing: 6) {
+                    Text("资料库大小")
+                        .foregroundStyle(.secondary)
+                    Text(store.libraryBytes > 0 ? store.libraryBytes.byteText : "--")
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                }
+                .font(.callout)
             }
-            .font(.callout)
         }
         .padding(.horizontal, 24)
         .padding(.top, 6)
