@@ -1,5 +1,7 @@
 import Foundation
 
+extension FileItem: TodayAddable {}
+
 extension FileCategory {
     func predicate(now: Date = Date()) -> NSPredicate {
         switch self {
@@ -50,7 +52,9 @@ extension SearchQuery {
         if !kinds.isEmpty {
             parts.append(P.any(kinds.map(\.predicate)))
         }
-        if let date {
+        if let date, date.addedOnly {
+            parts.append(P.date("kMDItemDateAdded", from: date.start, to: date.end))
+        } else if let date {
             parts.append(P.any([
                 P.date("kMDItemFSContentChangeDate", from: date.start, to: date.end),
                 P.date("kMDItemDateAdded", from: date.start, to: date.end),
@@ -82,7 +86,10 @@ extension SearchQuery {
             }
             if !ok { return false }
         }
-        if let date {
+        if let date, date.addedOnly {
+            let d = item.added ?? .distantPast
+            if d < date.start || d >= date.end { return false }
+        } else if let date {
             let d = item.modified ?? item.added ?? item.created ?? .distantPast
             if d < date.start || d >= date.end { return false }
         }
@@ -98,7 +105,10 @@ extension SearchQuery {
     }
 
     var scopes: [Any] {
-        kinds.contains(.category(.apps)) ? Scopes.everywhere : Scopes.home
+        // 今天新增：和首页一样，个人文件夹 + 应用程序文件夹（今天装的 App）。
+        if date?.addedOnly == true { return Scopes.home + ["/Applications"] }
+        if kinds.contains(.category(.apps)) { return Scopes.everywhere }
+        return Scopes.home
     }
 }
 
@@ -170,6 +180,17 @@ enum Queries {
             predicate: q.predicate, scopes: q.scopes, maxItems: 3000, accept: filter
         ).items
         if Task.isCancelled { return items }
+        // 今天新增：和首页的小标签用同一套规则（隐藏文件、缓存、包里面的文件、工程里的零碎文件不算）。
+        if q.date?.addedOnly == true {
+            let home = NSHomeDirectory()
+            // 弹窗里 .dmg / .pkg 算「安装包」，不算「压缩包」。
+            let archivesOnly = q.kinds == [.category(.archives)]
+            items = items.filter {
+                TodayAddedLogic.isRelevant($0, home: home)
+                    && !(archivesOnly && TodayAddedLogic.kind(of: $0) == .installers)
+            }
+                .sorted { ($0.added ?? .distantPast) > ($1.added ?? .distantPast) }
+        }
         // 拼音 / 首字母：“nianbao”、“nb” 找到「年报.pdf」。
         // 这一步要把个人文件夹里的文件名都过一遍：英文单词（invoice、report）只在第一次几乎没搜到时才补，
         // 而且最多看 5 万条，在后台队列里过滤。
@@ -221,6 +242,21 @@ enum Queries {
     static var mountedVolumes: [Any] {
         let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: nil, options: [.skipHiddenVolumes]) ?? []
         return urls.map(\.path).filter { $0.hasPrefix("/Volumes/") }.map { $0 as Any }
+    }
+
+    /// 今天（本地日历）加入的文件：个人文件夹里的文件，加上今天装进「应用程序」的 App。
+    static func addedToday(now: Date = Date()) async -> [FileItem] {
+        let range = TodayAddedLogic.dayRange(containing: now)
+        let added = P.date("kMDItemDateAdded", from: range.start, to: range.end)
+        let files = await SpotlightSearch.run(
+            predicate: P.all([added, P.notFolder]), scopes: Scopes.home,
+            maxItems: 2000, sortKey: "kMDItemDateAdded"
+        ).items
+        let apps = await SpotlightSearch.run(
+            predicate: P.all([added, P.type("com.apple.application-bundle")]), scopes: ["/Applications"],
+            maxItems: 200, sortKey: "kMDItemDateAdded"
+        ).items
+        return TodayAddedLogic.filter(files + apps, home: NSHomeDirectory(), range: range)
     }
 
     /// 固定文件夹：直接读磁盘，不依赖 Spotlight 索引。

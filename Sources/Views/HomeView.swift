@@ -97,6 +97,10 @@ struct HomeView: View {
                         .foregroundStyle(Color.accentColor)
                     Text("个文件，共 \(totalBytes.byteText)")
                         .foregroundStyle(.secondary)
+                    if !store.todayAdded.isEmpty {
+                        TodayAddedChip()
+                            .padding(.leading, 6)
+                    }
                 }
             } else {
                 Text("正在读取 Spotlight 索引…")

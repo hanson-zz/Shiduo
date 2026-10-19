@@ -260,6 +260,8 @@ final class LibraryStore: ObservableObject {
     @Published var shelves: [Shelf] = []
     @Published var previews: [FileCategory: [FileItem]] = [:]
     @Published var sourceGroups: [SourceGroup] = []
+    /// 首页「今天新增」：今天（本地日历）加入的文件，新的在前。
+    @Published private(set) var todayAdded: [FileItem] = []
     /// 打开“下载来源”时默认选中的来源。
     @Published var downloadSourceFilter: String?
     /// 演示模式的示例文件。
@@ -323,6 +325,67 @@ final class LibraryStore: ObservableObject {
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.appBecameActive() }
         }
+        // 过了 0 点：「今天新增」换成新的一天（系统在跨天、从睡眠醒来跨了天、改时区时都会发这个通知）。
+        NotificationCenter.default.addObserver(
+            forName: .NSCalendarDayChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshTodayAdded() }
+        }
+    }
+
+    // MARK: - 今天新增
+
+    private var todayTask: Task<Void, Never>?
+    private var midnightTask: Task<Void, Never>?
+
+    /// 重新查今天加入的文件（首页刷新、回到拾掇、跨天、文件被清理 / 搬走后都会调用）。
+    func refreshTodayAdded() {
+        scheduleMidnightRefresh()
+        guard !Demo.isOn else { return }
+        todayTask?.cancel()
+        todayTask = Task {
+            let result = await Queries.addedToday()
+            guard !Task.isCancelled else { return }
+            if result.map(\.id) != todayAdded.map(\.id) || result.map(\.size) != todayAdded.map(\.size) {
+                remember(result)
+                todayAdded = result
+            }
+        }
+    }
+
+    /// 应用一直开着时，到 0 点也换一天（NSCalendarDayChanged 之外再保险一次）。
+    private func scheduleMidnightRefresh() {
+        midnightTask?.cancel()
+        let delay = TodayAddedLogic.nextMidnight(after: Date()).timeIntervalSinceNow + 2
+        midnightTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(max(delay, 1) * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.refreshTodayAdded()
+        }
+    }
+
+    /// 「今天新增」弹窗里的「全部显示」：用搜索结果页列出今天加入的全部文件。
+    /// 弹窗里选了类型时，列表也只列这一类（「其他」没有对应的搜索条件，列全部）。
+    func showAddedToday(kind: TodayKind? = nil) {
+        let range = TodayAddedLogic.dayRange(containing: Date())
+        var query = SearchQuery()
+        query.date = DateRange(start: range.start, end: range.end, label: String(localized: "今天新增"), addedOnly: true)
+        switch kind {
+        case .images: query.kinds = [.category(.images)]
+        case .documents: query.kinds = [.category(.documents)]
+        case .videos: query.kinds = [.category(.videos)]
+        case .music: query.kinds = [.category(.music)]
+        case .archives: query.kinds = [.category(.archives)]
+        case .installers:
+            query.kinds = [.extensions(Array(TodayAddedLogic.installerExtensions).sorted(), label: TodayKind.installers.title)]
+        case .apps: query.kinds = [.category(.apps)]
+        case .other, nil: break
+        }
+        editingSavedSearchID = nil
+        removedChipKeys = []
+        photoConceptRemoved = false
+        activeQuery = query
+        runSearch()
     }
 
     // MARK: - 列表跟着磁盘变（访达里的改动、自动整理、拾掇自己写出的文件）
@@ -333,6 +396,7 @@ final class LibraryStore: ObservableObject {
     private var lastActivationRefresh = Date.distantPast
 
     private func appBecameActive() {
+        refreshTodayAdded()
         // Spotlight 类页面每次都要重新查，节流一下；文件夹页面直接读磁盘，很便宜。
         let isFolderPage = currentFolder != nil
         guard isFolderPage || Date().timeIntervalSince(lastActivationRefresh) > 30 else { return }
@@ -522,6 +586,7 @@ final class LibraryStore: ObservableObject {
         var stale: Bool { Task.isCancelled || generation != dashboardGeneration }
         var totals: [FileCategory: CategoryTotal] = [:]
         var previews: [FileCategory: [FileItem]] = [:]
+        refreshTodayAdded()
         for category in FileCategory.dashboard {
             let r = await SpotlightSearch.run(
                 predicate: category.predicate(), scopes: category.scopes, maxItems: 3,
@@ -603,6 +668,7 @@ final class LibraryStore: ObservableObject {
             }
             let large = await Self.countLargeFiles()
             if Task.isCancelled { return }
+            refreshTodayAdded()
             totals = fresh
             largeFileCount = large
         }

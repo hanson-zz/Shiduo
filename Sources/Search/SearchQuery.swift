@@ -27,6 +27,8 @@ struct DateRange: Hashable {
     var start: Date
     var end: Date
     var label: String
+    /// 只看「加入时间」（首页「今天新增」的全部列表），不看修改时间。
+    var addedOnly = false
 }
 
 /// 哪个条件对应哪个标签，删除标签时用。
