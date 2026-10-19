@@ -252,7 +252,7 @@ struct FilePreviewView: NSViewRepresentable {
     let url: URL
 
     func makeNSView(context: Context) -> QLPreviewView {
-        let view = QLPreviewView(frame: .zero, style: .normal) ?? QLPreviewView(frame: .zero)
+        let view: QLPreviewView = QLPreviewView(frame: .zero, style: .normal) ?? QLPreviewView()
         view.autostarts = false
         view.previewItem = url as NSURL
         return view
