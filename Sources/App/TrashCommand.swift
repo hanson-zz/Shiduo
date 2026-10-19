@@ -152,7 +152,8 @@ struct TrashCommands: Commands {
 struct TrashContextModifier: ViewModifier {
     let ids: Set<String>
     let items: () -> [FileItem]
-    let perform: ([FileItem]) -> Void
+    /// nil：移到废纸篓（LibraryStore.moveToTrash）。
+    let perform: (([FileItem]) -> Void)?
 
     @State private var id = UUID()
     @State private var window: NSWindow?
@@ -167,8 +168,10 @@ struct TrashContextModifier: ViewModifier {
             .onChange(of: window) { update() }
     }
 
+    @MainActor
     private func update() {
         guard visible, let window else { return }
+        let perform = self.perform ?? { LibraryStore.shared?.moveToTrash($0) }
         TrashCommandCenter.shared.register(id, window: window, ids: ids, items: items, perform: perform)
     }
 }
@@ -176,7 +179,7 @@ struct TrashContextModifier: ViewModifier {
 extension View {
     /// 见 TrashContextModifier。
     func trashContext(ids: Set<String>, items: @escaping () -> [FileItem],
-                      perform: @escaping ([FileItem]) -> Void = { LibraryStore.shared?.moveToTrash($0) }) -> some View {
+                      perform: (([FileItem]) -> Void)? = nil) -> some View {
         modifier(TrashContextModifier(ids: ids, items: items, perform: perform))
     }
 }
