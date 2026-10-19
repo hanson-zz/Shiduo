@@ -234,8 +234,8 @@ enum CelebrationLayout {
     static let haloCenter = CGPoint(x: 280, y: 296)
     static let haloRadius: CGFloat = 138
     static let pedestal = CGPoint(x: 280, y: 444)
-    static let leftGift = CGPoint(x: 60, y: 440)
-    static let rightGift = CGPoint(x: 494, y: 428)
+    static let leftGift = CGPoint(x: 54, y: 418)
+    static let rightGift = CGPoint(x: 492, y: 412)
     static let ticket = CGPoint(x: 116, y: 414)
     static let ticketWidth: CGFloat = 150
 
@@ -369,7 +369,7 @@ struct UnlockCelebrationCard: View {
 
     private var scene: some View {
         ZStack(alignment: .topLeading) {
-            gift(width: 140, flipped: true)
+            gift(width: 130, flipped: true)
                 .position(L.leftGift)
             gift(width: 160, flipped: false)
                 .position(L.rightGift)
