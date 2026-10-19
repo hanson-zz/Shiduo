@@ -24365,6 +24365,742 @@
           }
         }
       }
+    },
+    "拾掇正在用终端运行 Mole（你另外安装的开源工具）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo is running Mole (the open-source tool you installed separately) in Terminal: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇正在用终端运行 Mole（你另外安装的开源工具）：%@"
+          }
+        }
+      }
+    },
+    "上面是预览。确认清理请按回车，不想清理就直接关掉这个窗口… ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That was a preview. Press Return to clean, or just close this window to cancel… "
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上面是预览。确认清理请按回车，不想清理就直接关掉这个窗口… "
+          }
+        }
+      }
+    },
+    "完成。按任意键关闭，回到拾掇后会自动重新检测… ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done. Press any key to close; Shiduo re-checks when you switch back… "
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成。按任意键关闭，回到拾掇后会自动重新检测… "
+          }
+        }
+      }
+    },
+    "免费": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FREE"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费"
+          }
+        }
+      }
+    },
+    "深度清理（搭配 Mole）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deep Clean (with Mole)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深度清理（搭配 Mole）"
+          }
+        }
+      }
+    },
+    "Mole 是免费开源的 Mac 清理工具，需要另外安装。装好后，拾掇可以直接调用它做更深的清理，并随它一起更新。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole is a free, open-source Mac cleaner you install separately. Once it’s installed, Shiduo can use it for deeper cleanups and keep it up to date."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole 是免费开源的 Mac 清理工具，需要另外安装。装好后，拾掇可以直接调用它做更深的清理，并随它一起更新。"
+          }
+        }
+      }
+    },
+    "调用你电脑上安装的开源工具 Mole，清理系统缓存、日志、开发工具缓存和已删 App 的残留。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses Mole, the open-source tool installed on your Mac, to clear system caches, logs, developer tool caches and leftovers from deleted apps."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "调用你电脑上安装的开源工具 Mole，清理系统缓存、日志、开发工具缓存和已删 App 的残留。"
+          }
+        }
+      }
+    },
+    "安装需要 Homebrew 或一条终端命令，大约 1 分钟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installs with Homebrew or one Terminal command, about 1 minute"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装需要 Homebrew 或一条终端命令，大约 1 分钟"
+          }
+        }
+      }
+    },
+    "安装 Mole…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install Mole…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装 Mole…"
+          }
+        }
+      }
+    },
+    "重新检测": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新检测"
+          }
+        }
+      }
+    },
+    "正在检测 Mole…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking for Mole…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检测 Mole…"
+          }
+        }
+      }
+    },
+    "打开终端预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview in Terminal"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开终端预览"
+          }
+        }
+      }
+    },
+    "打开终端": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Terminal"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开终端"
+          }
+        }
+      }
+    },
+    "打开终端安装": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install in Terminal"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开终端安装"
+          }
+        }
+      }
+    },
+    "已安装 Mole %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole %@ installed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已安装 Mole %@"
+          }
+        }
+      }
+    },
+    "已安装 Mole": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole installed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已安装 Mole"
+          }
+        }
+      }
+    },
+    "有新版本 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ available"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有新版本 %@"
+          }
+        }
+      }
+    },
+    "更新 Mole": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update Mole"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新 Mole"
+          }
+        }
+      }
+    },
+    "检查更新": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Updates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查更新"
+          }
+        }
+      }
+    },
+    "注意：缓存清理和项目文件夹由 Mole 直接删除，不进废纸篓，执行前会再提醒一次。命令在终端里由 Mole 执行，按它的提示确认即可。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note: Cache Cleanup and Project Folders are deleted permanently by Mole, not moved to the Trash. You’ll be asked again first. Mole runs in Terminal; follow its prompts to confirm."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注意：缓存清理和项目文件夹由 Mole 直接删除，不进废纸篓，执行前会再提醒一次。命令在终端里由 Mole 执行，按它的提示确认即可。"
+          }
+        }
+      }
+    },
+    "关于 Mole": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Mole"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于 Mole"
+          }
+        }
+      }
+    },
+    "用 Mole 清理缓存？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean caches with Mole?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Mole 清理缓存？"
+          }
+        }
+      }
+    },
+    "用 Mole 清理项目文件夹？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean project folders with Mole?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Mole 清理项目文件夹？"
+          }
+        }
+      }
+    },
+    "安装 Mole？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install Mole?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装 Mole？"
+          }
+        }
+      }
+    },
+    "终端会先运行 mo clean --dry-run 列出要清理的内容，你按回车后才真正清理。\n\nMole 的缓存清理是直接删除，不进废纸篓，也不能在「清理记录」里放回。它默认还会清空废纸篓（可以用 mo clean --whitelist 保留）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal first runs mo clean --dry-run to list what would be removed. Nothing is cleaned until you press Return.\n\nMole deletes caches permanently. They don’t go to the Trash and can’t be restored from Cleanup History. By default it also empties the Trash (keep it with mo clean --whitelist)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "终端会先运行 mo clean --dry-run 列出要清理的内容，你按回车后才真正清理。\n\nMole 的缓存清理是直接删除，不进废纸篓，也不能在「清理记录」里放回。它默认还会清空废纸篓（可以用 mo clean --whitelist 保留）。"
+          }
+        }
+      }
+    },
+    "Mole 会在终端里列出 node_modules、build、dist 这类可以重新生成的文件夹，最近 7 天动过的默认不选，由你勾选确认。\n\n选中的会直接删除，不进废纸篓。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole lists rebuildable folders such as node_modules, build and dist in Terminal. Anything changed in the last 7 days starts unselected, and you confirm what to remove.\n\nSelected folders are deleted permanently, not moved to the Trash."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole 会在终端里列出 node_modules、build、dist 这类可以重新生成的文件夹，最近 7 天动过的默认不选，由你勾选确认。\n\n选中的会直接删除，不进废纸篓。"
+          }
+        }
+      }
+    },
+    "将打开终端，运行 Mole 官方的安装命令：\n\n%@\n\nMole 是 tw93 维护的独立开源软件（GPL-3.0），不是拾掇的一部分；拾掇只在你装好之后调用它。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal will open and run Mole’s official install command:\n\n%@\n\nMole is independent open-source software (GPL-3.0) maintained by tw93. It isn’t part of Shiduo; Shiduo only calls it after you install it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将打开终端，运行 Mole 官方的安装命令：\n\n%@\n\nMole 是 tw93 维护的独立开源软件（GPL-3.0），不是拾掇的一部分；拾掇只在你装好之后调用它。"
+          }
+        }
+      }
+    },
+    "磁盘分析": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disk Analysis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁盘分析"
+          }
+        }
+      }
+    },
+    "由 Mole 统计主文件夹里各个文件夹的大小": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole measures the folders in your home folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "由 Mole 统计主文件夹里各个文件夹的大小"
+          }
+        }
+      }
+    },
+    "正在统计，已用 %lld 秒。文件多时要几分钟。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measuring… %lld s so far. This can take a few minutes with lots of files."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在统计，已用 %lld 秒。文件多时要几分钟。"
+          }
+        }
+      }
+    },
+    "没能读到 Mole 的分析结果，已改在终端里打开 Mole 磁盘分析。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t read Mole’s results, so Mole’s disk analyzer was opened in Terminal instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能读到 Mole 的分析结果，已改在终端里打开 Mole 磁盘分析。"
+          }
+        }
+      }
+    },
+    "合计 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合计 %@"
+          }
+        }
+      }
+    },
+    "最占地方的位置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biggest Locations"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最占地方的位置"
+          }
+        }
+      }
+    },
+    "带 + 的大小只统计到一部分（有些文件夹没有权限读取）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sizes with + are partial (some folders couldn’t be read)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "带 + 的大小只统计到一部分（有些文件夹没有权限读取）。"
+          }
+        }
+      }
+    },
+    "在拾掇里打开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在拾掇里打开"
+          }
+        }
+      }
+    },
+    "缓存清理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache Cleanup"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缓存清理"
+          }
+        }
+      }
+    },
+    "系统缓存、日志、开发工具缓存": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System caches, logs, dev tool caches"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统缓存、日志、开发工具缓存"
+          }
+        }
+      }
+    },
+    "先预览，再确认": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview, then confirm"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先预览，再确认"
+          }
+        }
+      }
+    },
+    "卸载 App（含残留）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uninstall Apps (with Leftovers)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卸载 App（含残留）"
+          }
+        }
+      }
+    },
+    "连偏好、缓存、启动项一起找出来": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds preferences, caches and login items too"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连偏好、缓存、启动项一起找出来"
+          }
+        }
+      }
+    },
+    "Mole 一步步引导": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole guides you step by step"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole 一步步引导"
+          }
+        }
+      }
+    },
+    "项目文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project Folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "项目文件夹"
+          }
+        }
+      }
+    },
+    "node_modules / build / dist": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "node_modules / build / dist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "node_modules / build / dist"
+          }
+        }
+      }
+    },
+    "近 7 天动过的默认不选": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 7 days unselected by default"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "近 7 天动过的默认不选"
+          }
+        }
+      }
+    },
+    "哪些文件夹最占地方": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which folders take the most space"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "哪些文件夹最占地方"
+          }
+        }
+      }
+    },
+    "在拾掇里查看": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View in Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在拾掇里查看"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
