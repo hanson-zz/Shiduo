@@ -224,7 +224,7 @@ struct PaywallView: View {
                     close()
                     UnlockCelebrationWindow.shared.replay()
                 } label: {
-                    Label("再看一次庆祝动画", systemImage: "party.popper")
+                    Label("重看解锁动画", systemImage: "party.popper")
                 }
                 .buttonStyle(.link)
             }

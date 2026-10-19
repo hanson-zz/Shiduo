@@ -194,7 +194,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                 if license.state == .pro {
                     HStack {
-                        Button("再看一次庆祝动画") { UnlockCelebrationWindow.shared.replay() }
+                        Button("重看解锁动画") { UnlockCelebrationWindow.shared.replay() }
                         Spacer()
                     }
                 }
@@ -211,7 +211,7 @@ struct SettingsView: View {
             Toggle("解锁动画音效", isOn: $celebrationSound)
         } header: {
             HStack(spacing: 6) {
-                Text("授权")
+                Text("关于 Pro")
                 ProBadge()
             }
         }

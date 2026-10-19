@@ -2,38 +2,119 @@ import CoreGraphics
 import XCTest
 
 final class UnlockCelebrationTests: XCTestCase {
+    private typealias T = CelebrationTimeline
+
     func testTimelinePhases() {
-        XCTAssertEqual(CelebrationTimeline.phase(at: 0), .entrance)
-        XCTAssertEqual(CelebrationTimeline.phase(at: 0.39), .entrance)
-        XCTAssertEqual(CelebrationTimeline.phase(at: 0.4), .crown)
-        XCTAssertEqual(CelebrationTimeline.phase(at: 0.7), .gifts)
-        XCTAssertEqual(CelebrationTimeline.phase(at: 1.2), .reveal)
-        XCTAssertEqual(CelebrationTimeline.phase(at: 10), .settled)
-        XCTAssertLessThan(CelebrationPhase.crown, CelebrationPhase.reveal)
+        XCTAssertEqual(T.phase(at: 0), .entrance)
+        XCTAssertEqual(T.phase(at: 0.39), .entrance)
+        XCTAssertEqual(T.phase(at: 0.4), .bow)
+        XCTAssertEqual(T.phase(at: 1.2), .unlock)
+        XCTAssertEqual(T.phase(at: 2.0), .reveal)
+        XCTAssertEqual(T.phase(at: 2.6), .finale)
+        XCTAssertEqual(T.phase(at: 10), .settled)
+        XCTAssertLessThan(CelebrationPhase.bow, CelebrationPhase.reveal)
+        // 王冠在鞠躬那一段里落稳，左烟花先于右烟花。
+        XCTAssertGreaterThan(T.crownLandAt, T.bowAt)
+        XCTAssertLessThan(T.crownLandAt, T.unlockAt)
+        XCTAssertLessThan(T.leftFireworkAt, T.rightFireworkAt)
     }
 
-    func testChipsAreStaggeredAfterReveal() {
-        XCTAssertGreaterThanOrEqual(CelebrationTimeline.chipTime(0), CelebrationTimeline.revealAt)
-        XCTAssertEqual(CelebrationTimeline.chipTime(3) - CelebrationTimeline.chipTime(2), 0.08, accuracy: 1e-9)
-        XCTAssertGreaterThan(CelebrationTimeline.buttonsTime(chipCount: 6), CelebrationTimeline.chipTime(5))
-        XCTAssertEqual(CelebrationTimeline.overflowCount(total: 15, shown: 5), 10)
-        XCTAssertEqual(CelebrationTimeline.overflowCount(total: 3, shown: 5), 0)
+    func testTagsAreStaggeredInsideRevealPhase() {
+        XCTAssertGreaterThanOrEqual(T.chipTime(0), T.revealAt)
+        XCTAssertEqual(T.chipTime(3) - T.chipTime(2), T.chipStagger, accuracy: 1e-9)
+        XCTAssertLessThanOrEqual(T.chipTime(5), T.finaleAt)
+        XCTAssertEqual(T.overflowCount(total: 15, shown: 5), 10)
+        XCTAssertEqual(T.overflowCount(total: 3, shown: 5), 0)
     }
 
     func testCrownDropsAndLands() {
-        let start = CelebrationTimeline.crownDropAt
-        XCTAssertEqual(CelebrationTimeline.crownOffset(at: 0), -CelebrationTimeline.crownDropHeight, accuracy: 1e-9)
-        XCTAssertEqual(CelebrationTimeline.crownOffset(at: CelebrationTimeline.crownLandAt), 0, accuracy: 1e-6)
-        XCTAssertEqual(CelebrationTimeline.crownOffset(at: 5), 0, accuracy: 1e-6)
-        // 下落途中在两者之间，且永远不会低于落点（不会穿进头里）。
+        XCTAssertEqual(T.crownOffset(at: 0), -T.crownDropHeight, accuracy: 1e-9)
+        XCTAssertEqual(T.crownOffset(at: T.crownLandAt), 0, accuracy: 1e-6)
+        XCTAssertEqual(T.crownOffset(at: 5), 0, accuracy: 1e-6)
         for i in 1..<40 {
-            let t = start + Double(i) / 40 * CelebrationTimeline.crownDropDuration
-            let y = CelebrationTimeline.crownOffset(at: t)
-            XCTAssertLessThanOrEqual(y, 1e-9)
-            XCTAssertGreaterThanOrEqual(y, -CelebrationTimeline.crownDropHeight)
+            let y = T.crownOffset(at: T.crownDropAt + Double(i) / 40 * T.crownDropDuration)
+            XCTAssertLessThanOrEqual(y, 1e-9, "王冠不会穿进头里")
+            XCTAssertGreaterThanOrEqual(y, -T.crownDropHeight)
         }
-        XCTAssertEqual(CelebrationTimeline.easeOutBounce(0), 0, accuracy: 1e-9)
-        XCTAssertEqual(CelebrationTimeline.easeOutBounce(1), 1, accuracy: 1e-9)
+        XCTAssertEqual(T.crownOpacity(at: 0.5), 0)
+        XCTAssertEqual(T.crownOpacity(at: 1), 1)
+    }
+
+    func testPandaGestures() {
+        XCTAssertEqual(T.motionLines(at: 0), 1)
+        XCTAssertEqual(T.motionLines(at: 1), 0)
+        // 耳朵只在鞠躬那段摆动，幅度很小。
+        XCTAssertEqual(T.earWiggle(at: 0.2), 0)
+        XCTAssertEqual(T.earWiggle(at: 1.5), 0)
+        let wiggles = stride(from: 0.4, through: 1.0, by: 0.01).map { T.earWiggle(at: $0) }
+        XCTAssertTrue(wiggles.contains { abs($0) > 0.5 })
+        XCTAssertTrue(wiggles.allSatisfy { abs($0) <= 2.2 + 1e-9 })
+        // 挥手从 2.4 秒开始，一直轻轻摆动。
+        XCTAssertEqual(T.waveAngle(at: 2.0), 0)
+        let waves = stride(from: 3.0, through: 6.0, by: 0.05).map { T.waveAngle(at: $0) }
+        XCTAssertTrue(waves.contains { $0 > 2 } && waves.contains { $0 < -2 })
+        XCTAssertTrue(waves.allSatisfy { abs($0) <= 3 + 1e-9 })
+    }
+
+    func testBadgeHaloGlintAndBreath() {
+        XCTAssertEqual(T.badge(at: 0.9).opacity, 0)
+        let mid = T.badge(at: T.unlockAt + T.badgeDuration * 0.4)
+        XCTAssertGreaterThan(mid.opacity, 0.9)
+        XCTAssertGreaterThan(mid.rise, 0)
+        XCTAssertGreaterThan(mid.spin, 0)
+        XCTAssertEqual(T.badge(at: T.unlockAt + T.badgeDuration + 0.01).opacity, 0)
+        XCTAssertEqual(T.haloOpacity(at: 0.5), 0)
+        XCTAssertEqual(T.haloOpacity(at: 2), 1, accuracy: 1e-9)
+        XCTAssertGreaterThan(T.haloAngle(at: 3), T.haloAngle(at: 2))
+        XCTAssertNil(T.glint(at: 1.0))
+        XCTAssertEqual(T.glint(at: T.glintAt + T.glintDuration / 2) ?? -1, 0.5, accuracy: 1e-9)
+        XCTAssertEqual(T.buttonBreath(at: 1), 0)
+        let breaths = stride(from: 2.4, through: 6, by: 0.05).map { T.buttonBreath(at: $0) }
+        XCTAssertTrue(breaths.allSatisfy { $0 >= 0 && $0 <= 1 })
+        XCTAssertGreaterThan(breaths.max() ?? 0, 0.95)
+    }
+
+    func testSoundScript() {
+        let cues = CelebrationSoundScript.cues(tagCount: 6, reduceMotion: false)
+        XCTAssertEqual(cues.map(\.time), cues.map(\.time).sorted())
+        XCTAssertEqual(cues.first?.sound, .whoosh)
+        XCTAssertEqual(cues.first?.time, 0)
+        XCTAssertTrue(cues.contains(SoundCue(time: T.crownLandAt, sound: .pop, volume: 0.9)))
+        // 两朵烟花：左边先（pan < 0），右边后（pan > 0），口哨在绽放之前。
+        let crackles = cues.filter { $0.sound == .crackle }
+        XCTAssertEqual(crackles.count, 2)
+        XCTAssertLessThan(crackles[0].pan, 0)
+        XCTAssertGreaterThan(crackles[1].pan, 0)
+        let whistles = cues.filter { $0.sound == .whistle }
+        XCTAssertEqual(whistles.count, 2)
+        XCTAssertLessThan(whistles[0].time, crackles[0].time)
+        // 每个标签一声叮，音高（文件）一个比一个高，跟着标签出现。
+        let tings = cues.filter { if case .ting = $0.sound { return true } else { return false } }
+        XCTAssertEqual(tings.count, 6)
+        XCTAssertEqual(tings.map(\.sound.resourceName), (1...6).map { "unlock-ting-\($0)" })
+        XCTAssertEqual(tings.map(\.time), (0..<6).map { T.chipTime($0) })
+        XCTAssertTrue(tings.allSatisfy { $0.volume < 0.8 })
+        XCTAssertEqual(cues.last?.sound, .chime)
+        XCTAssertEqual(cues.last?.time, T.finaleAt)
+        XCTAssertTrue(cues.allSatisfy { $0.pan >= -1 && $0.pan <= 1 && $0.volume > 0 && $0.volume <= 1 })
+
+        // 减少动态效果：只有最后的和弦。
+        let still = CelebrationSoundScript.cues(tagCount: 6, reduceMotion: true)
+        XCTAssertEqual(still.map(\.sound), [.chime])
+
+        // 点小熊猫：啵 + 噼啪。
+        XCTAssertEqual(CelebrationSoundScript.tapCues(at: 5).map(\.sound), [.pop, .crackle])
+
+        // due：区间左开右闭，nil 表示从头开始。
+        XCTAssertEqual(CelebrationSoundScript.due(cues, after: nil, upTo: 0).map(\.sound), [.whoosh])
+        XCTAssertTrue(CelebrationSoundScript.due(cues, after: 0, upTo: 0.5).isEmpty)
+        XCTAssertEqual(CelebrationSoundScript.due(cues, after: 0.5, upTo: T.crownLandAt).map(\.sound), [.pop])
+        XCTAssertEqual(CelebrationSoundScript.due(cues, after: nil, upTo: 100).count, cues.count)
+
+        // 资源名：11 个文件，不重复，ting 的序号会被夹在范围里。
+        XCTAssertEqual(Set(CelebrationSound.allResourceNames).count, 11)
+        XCTAssertEqual(CelebrationSound.ting(99).resourceName, "unlock-ting-6")
+        XCTAssertEqual(CelebrationSound.ting(-1).resourceName, "unlock-ting-1")
     }
 
     func testConfettiIsDeterministic() {
@@ -44,47 +125,55 @@ final class UnlockCelebrationTests: XCTestCase {
         XCTAssertNotEqual(a, c)
         XCTAssertEqual(a.count, 50)
         XCTAssertTrue(a.allSatisfy { $0.birth >= 0.4 && $0.origin.y < 0 })
+        XCTAssertEqual(Set(a.map(\.shape.rawValue)), [0, 1, 2], "有长条、方块和菱形")
     }
 
     func testConfettiFallsWithGravityAndDrag() {
         let piece = ConfettiPiece(birth: 1, origin: CGPoint(x: 100, y: -20), velocity: CGVector(dx: 50, dy: -100),
-                                  colorIndex: 0, size: CGSize(width: 8, height: 4), angle: 0, spin: 2,
+                                  colorIndex: 0, shape: .square, size: CGSize(width: 7, height: 7), angle: 0, spin: 2,
                                   flutterAmplitude: 0, flutterFrequency: 4, phase: 0)
         XCTAssertNil(ConfettiPhysics.state(of: piece, at: 0.5), "还没出生")
         let s0 = ConfettiPhysics.state(of: piece, at: 1)!
         XCTAssertEqual(Double(s0.position.y), -20, accuracy: 1e-9)
-        // 一开始往上抛，然后被重力拉下来。
         let early = ConfettiPhysics.state(of: piece, at: 1.05)!
         let late = ConfettiPhysics.state(of: piece, at: 3)!
         let later = ConfettiPhysics.state(of: piece, at: 4)!
-        XCTAssertLessThan(early.position.y, -20)
-        XCTAssertGreaterThan(late.position.y, 0)
-        // 有空气阻力：速度不会超过终端速度。
+        XCTAssertLessThan(early.position.y, -20, "先被往上抛")
+        XCTAssertGreaterThan(late.position.y, 0, "再被重力拉下来")
         let speed = Double(later.position.y - late.position.y)
         XCTAssertLessThanOrEqual(speed, ConfettiPhysics.terminalVelocity + 1e-6)
         XCTAssertGreaterThan(speed, ConfettiPhysics.terminalVelocity * 0.9)
-        // 横向速度被阻力吃掉，总位移有限。
         XCTAssertLessThan(Double(later.position.x) - 100, 50 / ConfettiPhysics.drag + 1e-6)
-        // 掉出地板就不画了。
-        XCTAssertNil(ConfettiPhysics.state(of: piece, at: 20, floor: 720))
+        XCTAssertNil(ConfettiPhysics.state(of: piece, at: 20, floor: 500))
     }
 
-    func testFireworkExpandsThenFades() {
-        let burst = FireworkBurst(center: CGPoint(x: 100, y: 100), radius: 60, colorIndex: 0, birth: 0.6)
-        XCTAssertTrue(FireworkPhysics.rays(of: burst, at: 0.5).isEmpty)
-        XCTAssertTrue(FireworkPhysics.rays(of: burst, at: 0.6 + FireworkPhysics.lifetime + 0.01).isEmpty)
-        let early = FireworkPhysics.rays(of: burst, at: 0.7)
-        let mid = FireworkPhysics.rays(of: burst, at: 1.2)
-        let late = FireworkPhysics.rays(of: burst, at: 2.1)
+    func testFireworksExpandFadeAndRest() {
+        let size = CGSize(width: 560, height: 760)
+        let bursts = FireworkPhysics.bursts(in: size)
+        XCTAssertEqual(bursts.count, 4)
+        // 左边的先绽放，在左半边；右边的后绽放，在右半边。
+        XCTAssertLessThan(bursts[0].center.x, 280)
+        XCTAssertGreaterThan(bursts[1].center.x, 280)
+        XCTAssertLessThan(bursts[0].birth, bursts[1].birth)
+
+        let burst = bursts[0]
+        XCTAssertTrue(FireworkPhysics.rays(of: burst, at: burst.birth - 0.01).isEmpty)
+        let early = FireworkPhysics.rays(of: burst, at: burst.birth + 0.1)
+        let mid = FireworkPhysics.rays(of: burst, at: burst.birth + 0.6)
         XCTAssertEqual(early.count, burst.rays)
         func reach(_ rays: [FireworkRay]) -> Double {
-            Double(hypot(rays[0].end.x - 100, rays[0].end.y - 100))
+            Double(hypot(rays[0].end.x - burst.center.x, rays[0].end.y - burst.center.y))
         }
         XCTAssertLessThan(reach(early), reach(mid))
-        XCTAssertLessThanOrEqual(reach(mid), 60 * 1.2)
-        XCTAssertEqual(mid[0].opacity, 1, accuracy: 1e-9)
-        XCTAssertLessThan(late[0].opacity, mid[0].opacity)
-        XCTAssertEqual(FireworkPhysics.bursts(in: CGSize(width: 560, height: 720)).count, 4)
+        XCTAssertLessThanOrEqual(reach(mid), burst.radius * 1.2)
+        // 多种颜色交错。
+        XCTAssertEqual(Set(mid.map(\.colorIndex)).count, CelebrationPalette.fireworks.count)
+        // 2.4 秒前全亮，3 秒后减弱到留存亮度并保持。
+        XCTAssertEqual(FireworkPhysics.overallOpacity(at: 2.0), 1, accuracy: 1e-9)
+        XCTAssertEqual(FireworkPhysics.overallOpacity(at: 3.0), T.fireworkRestOpacity, accuracy: 1e-9)
+        XCTAssertEqual(FireworkPhysics.overallOpacity(at: 30), T.fireworkRestOpacity, accuracy: 1e-9)
+        XCTAssertEqual(FireworkPhysics.rays(of: burst, at: 30), FireworkPhysics.rays(of: burst, at: 40), "停在最终画面")
+        XCTAssertEqual(FireworkPhysics.staticRays(of: burst).first?.opacity ?? 0, T.fireworkRestOpacity, accuracy: 1e-9)
     }
 
     func testStreamersStayOnTheEdges() {
@@ -105,11 +194,11 @@ final class UnlockCelebrationTests: XCTestCase {
     }
 
     func testStarsAndTwinkle() {
-        let size = CGSize(width: 560, height: 720)
-        let stars = StarField.stars(count: 12, size: size, seed: 7)
-        XCTAssertEqual(stars.count, 12)
-        XCTAssertEqual(stars, StarField.stars(count: 12, size: size, seed: 7))
+        let stars = StarField.stars(count: 14, width: 560, sceneHeight: 480, seed: 7)
+        XCTAssertEqual(stars.count, 14)
+        XCTAssertEqual(stars, StarField.stars(count: 14, width: 560, sceneHeight: 480, seed: 7))
         for star in stars {
+            XCTAssertLessThanOrEqual(Double(star.center.y), 480)
             XCTAssertEqual(StarField.twinkle(star, at: 0), 0, accuracy: 1e-9)
             let level = StarField.twinkle(star, at: 2)
             XCTAssertGreaterThanOrEqual(level, 0.34)
@@ -121,13 +210,13 @@ final class UnlockCelebrationTests: XCTestCase {
         XCTAssertEqual(Double(points[0].y), -10, accuracy: 1e-9)
     }
 
-    func testStaticScatterAvoidsCenter() {
-        let size = CGSize(width: 560, height: 720)
-        let items = ConfettiPhysics.staticScatter(count: 60, size: size, seed: 3)
+    func testStaticScatterStaysInSceneAndAvoidsCenter() {
+        let items = ConfettiPhysics.staticScatter(count: 60, width: 560, sceneHeight: 480, seed: 3)
         XCTAssertEqual(items.count, 60)
         for item in items {
             let x = Double(item.state.position.x), y = Double(item.state.position.y)
-            XCTAssertFalse(abs(x - 280) / 560 < 0.2 && y > 720 * 0.12)
+            XCTAssertLessThanOrEqual(y, 480)
+            XCTAssertFalse(abs(x - 280) / 560 < 0.2 && y > 480 * 0.15)
         }
     }
 }
