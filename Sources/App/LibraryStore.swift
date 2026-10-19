@@ -1070,8 +1070,13 @@ final class LibraryStore: ObservableObject {
     private var customUndo: [UUID: @MainActor () -> Void] = [:]
 
     /// 移到废纸篓。真正的移动在后台线程做（几千个文件、iCloud 云盘或网络盘上也不卡界面），完成后再更新列表和清理记录。
-    func moveToTrash(_ list: [FileItem]) {
-        guard !list.isEmpty else { return }
+    /// App 里所有「移到废纸篓」都走这里：FileManager.trashItem（访达里「放回原处」可用）、记进清理记录、⌘Z 撤销、
+    /// 和访达一样的音效。completion 收到真正移走的原路径（主窗口以外的列表用它把文件拿掉）。
+    func moveToTrash(_ list: [FileItem], completion: (@MainActor (Set<String>) -> Void)? = nil) {
+        guard !list.isEmpty else {
+            completion?([])
+            return
+        }
         let urls = list.map(\.url)
         let onShelf = Set(list.map(\.path).filter { ShelfStore.shared.contains($0) })
         trashingCount += list.count
@@ -1083,6 +1088,7 @@ final class LibraryStore: ObservableObject {
             let outcome = await Task.detached(priority: .userInitiated) { FileActions.trash(urls) }.value
             trashingCount = max(0, trashingCount - list.count)
             finishTrash(list, outcome: outcome, onShelf: onShelf)
+            completion?(Set(outcome.moved.map(\.path)))
         }
     }
 
@@ -1095,6 +1101,7 @@ final class LibraryStore: ObservableObject {
 
         // 记到「清理记录」，30 天内可以放回原处。
         if !moved.isEmpty {
+            TrashSound.play()
             let entries: [(name: String, original: String, trashed: String?, size: Int64)] = movedItems.map {
                 (name: $0.name, original: $0.path, trashed: outcome.trashed[$0.path], size: $0.size)
             }
@@ -1128,6 +1135,52 @@ final class LibraryStore: ObservableObject {
             notes.append(String(localized: "\(outcome.failed.count) 个项目无法移到废纸篓（可能需要管理员权限）：\(names)"))
         }
         if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
+    }
+
+    /// 「立即删除…」（⌥⌘⌫，调用前已经确认过）：真的删掉，不进废纸篓、不能撤销，也不记进清理记录。
+    /// 只在 iCloud 云端的文件照样跳过（删掉会连云端一起没）。删除在后台线程做。
+    func deleteImmediately(_ list: [FileItem]) {
+        guard !list.isEmpty else { return }
+        let urls = list.map(\.url)
+        trashingCount += list.count
+        Task {
+            let outcome = await Task.detached(priority: .userInitiated) { () -> (removed: [String], failed: [String], skipped: Int) in
+                var removed: [String] = []
+                var failed: [String] = []
+                var skipped = 0
+                for url in urls {
+                    guard FileActions.isLocal(url) else {
+                        skipped += 1
+                        continue
+                    }
+                    do {
+                        try FileManager.default.removeItem(at: url)
+                        removed.append(url.path)
+                    } catch {
+                        failed.append(url.lastPathComponent)
+                    }
+                }
+                return (removed, failed, skipped)
+            }.value
+            trashingCount = max(0, trashingCount - list.count)
+            let removed = Set(outcome.removed)
+            if !removed.isEmpty {
+                forget(paths: removed)
+                pinnedFolders.removeAll { removed.contains($0) }
+                filesChangedTick += 1
+                showToast(String(localized: "已立即删除 \(removed.count) 个项目"))
+                scheduleCountsRefresh()
+            }
+            var notes: [String] = []
+            if outcome.skipped > 0 {
+                notes.append(String(localized: "\(outcome.skipped) 个项目只在 iCloud 云端或已不存在，已跳过。"))
+            }
+            if !outcome.failed.isEmpty {
+                let names = outcome.failed.prefix(5).joined(separator: String(localized: "、"))
+                notes.append(String(localized: "\(outcome.failed.count) 个项目无法删除（可能需要管理员权限）：\(names)"))
+            }
+            if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
+        }
     }
 
     /// 文件被清理、搬走或放回之后：重新统计清理建议、首页和空间占用图。
@@ -1182,6 +1235,8 @@ final class LibraryStore: ObservableObject {
                   items: shelf.items.filter { !gone($0.path) }, target: shelf.target)
         }
         previews = previews.mapValues { $0.filter { !gone($0.path) } }
+        // 首页「今天新增」的弹窗里移到废纸篓的，马上从弹窗和数字里拿掉。
+        if todayAdded.contains(where: { gone($0.path) }) { todayAdded.removeAll { gone($0.path) } }
         sourceGroups = sourceGroups.compactMap { group in
             let left = group.items.filter { !gone($0.path) }
             if left.count == group.items.count { return group }

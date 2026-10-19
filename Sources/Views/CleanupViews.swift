@@ -236,6 +236,11 @@ struct CleanupReviewPage: View {
             .padding(.vertical, 12)
             .background(.regularMaterial)
         }
+        // ⌘⌫ 把点选的直接移到废纸篓（和访达一样不确认，小提示上可以撤销）；底部按钮仍然先确认。
+        .trashContext(ids: selected, items: { selectedItems }) { list in
+            store.moveToTrash(list)
+            selected.subtract(list.map(\.id))
+        }
         .confirmationDialog(
             "将 \(confirm.count) 个项目移到废纸篓？",
             isPresented: Binding(get: { !confirm.isEmpty }, set: { if !$0 { confirm = [] } }),

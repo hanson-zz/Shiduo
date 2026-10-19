@@ -116,28 +116,37 @@ final class AppUninstaller: ObservableObject {
     }
 
     /// 先把 App 本体移到废纸篓；只有它真的移走了，才移选中的残留（App 移不走时残留一个不动）。
-    /// 记进清理记录。返回给用户看的结果（空字符串表示全部成功）。
-    func uninstall(app: AppInfo, leftovers: [AppLeftover]) -> String {
-        let first = FileActions.trash([app.url])
-        guard first.moved.contains(app.url) else {
+    /// 移动在后台线程做（残留可能很多、很大），和其他地方一样：FileManager.trashItem（访达里能「放回原处」）、
+    /// 记进清理记录、⌘Z 撤销、移到废纸篓的音效。返回给用户看的结果（空字符串表示全部成功）。
+    func uninstall(app: AppInfo, leftovers: [AppLeftover]) async -> String {
+        let appURL = app.url
+        let leftoverPaths = leftovers.map(\.path)
+        let agents = leftovers.filter { $0.kind == .launchAgents && $0.path.hasSuffix(".plist") }.map(\.path)
+        let work = await Task.detached(priority: .userInitiated) { () -> (app: (moved: [URL], failed: [URL], skipped: [URL], trashed: [String: String]), rest: (moved: [URL], failed: [URL], skipped: [URL], trashed: [String: String])?) in
+            let first = FileActions.trash([appURL])
+            guard first.moved.contains(appURL) else { return (first, nil) }
+            // 开机启动项先从 launchd 卸下来，不然 plist 进了废纸篓它还在跑，直到注销。
+            for plist in agents { Self.bootout(plist) }
+            return (first, FileActions.trash(leftoverPaths.map { URL(fileURLWithPath: $0) }))
+        }.value
+        guard let outcome = work.rest else {
             return String(localized: "没能把 \(app.name) 移到废纸篓（可能需要管理员权限，或它正在运行），资源库里的数据一个没动。")
         }
         var entries: [(name: String, original: String, trashed: String?, size: Int64)] = [
-            (name: app.url.lastPathComponent, original: app.url.path, trashed: first.trashed[app.url.path], size: app.size),
+            (name: app.url.lastPathComponent, original: app.url.path, trashed: work.app.trashed[app.url.path], size: app.size),
         ]
-        // 开机启动项先从 launchd 卸下来，不然 plist 进了废纸篓它还在跑，直到注销。
-        for item in leftovers where item.kind == .launchAgents && item.path.hasSuffix(".plist") {
-            Self.bootout(item.path)
-        }
-        let outcome = FileActions.trash(leftovers.map { URL(fileURLWithPath: $0.path) })
         let moved = Set(outcome.moved.map(\.path))
         for item in leftovers where moved.contains(item.path) {
             entries.append((name: item.name, original: item.path, trashed: outcome.trashed[item.path], size: item.size))
         }
+        TrashSound.play()
         let batch = CleanupHistory.shared.recordTrash(entries)
         if let store = LibraryStore.shared {
+            store.forget(paths: moved.union([app.url.path]))
             store.filesChangedTick += 1
-            store.showUndoToast(String(localized: "已卸载 \(app.name) · 30 天内可在「清理记录」里恢复"), batch: batch)
+            // 小提示上的「撤销」和 ⌘Z 走同一个撤销栈。
+            FileUndoCenter.shared.registerHistory(batch: batch, name: String(localized: "卸载 App"),
+                                                  toast: String(localized: "已卸载 \(app.name) · 30 天内可在「清理记录」里恢复"))
         }
         let failed = outcome.failed.count + outcome.skipped.count
         if failed > 0 {
@@ -147,7 +156,7 @@ final class AppUninstaller: ObservableObject {
     }
 
     /// launchctl bootout gui/<uid> <plist>：失败（本来就没加载）也没关系。
-    private static func bootout(_ plist: String) {
+    nonisolated private static func bootout(_ plist: String) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
         process.arguments = ["bootout", "gui/\(getuid())", plist]
@@ -444,12 +453,15 @@ struct UninstallSheet: View {
         refreshRunning()
         guard !appRunning else { return }
         working = true
-        let text = AppUninstaller.shared.uninstall(app: info, leftovers: selectedItems)
-        working = false
-        if text.isEmpty {
-            close()
-        } else {
-            resultText = text
+        let leftovers = selectedItems
+        Task {
+            let text = await AppUninstaller.shared.uninstall(app: info, leftovers: leftovers)
+            working = false
+            if text.isEmpty {
+                close()
+            } else {
+                resultText = text
+            }
         }
     }
 }

@@ -380,6 +380,23 @@ final class NotchShelfController: NSObject, ObservableObject {
         }
     }
 
+    /// ⌘⌫ 能移到废纸篓的：暂存架和「最近下载」里选中的那个文件（提醒、专注两页没有）。
+    var trashableSelection: [FileItem] {
+        guard tab == .shelf || tab == .downloads, let item = selectedItem else { return [] }
+        return [item]
+    }
+
+    /// ⌘⌫：移到废纸篓（和主窗口同一套：清理记录、⌘Z 撤销、音效），暂存架上的会一起拿掉。
+    func trashSelected(_ list: [FileItem]? = nil) {
+        let list = list ?? trashableSelection
+        guard !list.isEmpty, let store = LibraryStore.shared else { return }
+        store.moveToTrash(list) { [weak self] moved in
+            guard let self, !moved.isEmpty else { return }
+            self.downloads.removeAll { moved.contains($0.path) }
+            self.selectedIndex = min(self.selectedIndex, max(self.currentItems.count - 1, 0))
+        }
+    }
+
     func switchTab() {
         let all = Tab.allCases
         tab = all[((all.firstIndex(of: tab) ?? 0) + 1) % all.count]
@@ -506,7 +523,18 @@ struct NotchShelfView: View {
         .onKeyPress(.leftArrow) { controller.moveSelection(-1); return .handled }
         .onKeyPress(.rightArrow) { controller.moveSelection(1); return .handled }
         .onKeyPress(.return) { controller.openSelected(); return .handled }
-        .onKeyPress(.delete) { controller.deleteSelected(); return .handled }
+        // ⌫ 从暂存架拿掉；⌘⌫ 移到废纸篓（「文件」菜单拿到按键时由菜单处理，这里兜底，不会删两次）。
+        .onKeyPress(keys: [.delete]) { press in
+            if press.modifiers.subtracting([.numericPad, .function, .capsLock]) == .command {
+                controller.trashSelected()
+            } else {
+                controller.deleteSelected()
+            }
+            return .handled
+        }
+        .trashContext(ids: Set(controller.trashableSelection.map(\.id)),
+                      items: { controller.trashableSelection },
+                      perform: { controller.trashSelected($0) })
         .onKeyPress(.tab) { controller.switchTab(); return .handled }
         .onKeyPress(.space) {
             if controller.tab == .focus { FocusTimer.shared.toggle(); return .handled }
@@ -750,9 +778,12 @@ struct NotchShelfView: View {
                 }
                 MediaToolsMenu(urls: { [item.url] }, toShelf: true)
                 Divider()
-                Button("从暂存架移除") { shelf.remove(paths: [item.path]) }
+                Button("从暂存架移除（⌫）") { shelf.remove(paths: [item.path]) }
+                Button("移到废纸篓（⌘⌫）") { controller.trashSelected([item]) }
             case .downloads:
                 Button("加入暂存架") { shelf.add([item.url]) }
+                Divider()
+                Button("移到废纸篓（⌘⌫）") { controller.trashSelected([item]) }
             case .reminders:
                 Button("加入暂存架") { shelf.add([item.url]) }
                 if let reminder = reminders.reminder(for: item.path) {

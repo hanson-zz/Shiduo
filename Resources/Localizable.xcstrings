@@ -24221,6 +24221,150 @@
           }
         }
       }
+    },
+    "已立即删除 %lld 个项目": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted %lld items immediately"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已立即删除 %lld 个项目"
+          }
+        }
+      }
+    },
+    "%lld 个项目无法删除（可能需要管理员权限）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld items couldn't be deleted (administrator permission may be required): %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个项目无法删除（可能需要管理员权限）：%@"
+          }
+        }
+      }
+    },
+    "确定要立即删除“%@”吗？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to delete “%@” immediately?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确定要立即删除“%@”吗？"
+          }
+        }
+      }
+    },
+    "确定要立即删除这 %lld 个项目吗？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to delete these %lld items immediately?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确定要立即删除这 %lld 个项目吗？"
+          }
+        }
+      }
+    },
+    "此操作不能撤销，也不会进废纸篓。只在 iCloud 云端的文件会被跳过。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't undo this action, and the items won't go to the Trash. Files that are only in iCloud are skipped."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此操作不能撤销，也不会进废纸篓。只在 iCloud 云端的文件会被跳过。"
+          }
+        }
+      }
+    },
+    "立即删除…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Immediately…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即删除…"
+          }
+        }
+      }
+    },
+    "从暂存架移除（⌫）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Shelf (⌫)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从暂存架移除（⌫）"
+          }
+        }
+      }
+    },
+    "移到废纸篓（⌘⌫）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Trash (⌘⌫)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到废纸篓（⌘⌫）"
+          }
+        }
+      }
+    },
+    "⌫ 从暂存架移除（文件留在原处），⌘⌫ 移到废纸篓": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌫ removes from the Shelf (the file stays where it is); ⌘⌫ moves it to the Trash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌫ 从暂存架移除（文件留在原处），⌘⌫ 移到废纸篓"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

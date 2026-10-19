@@ -52,6 +52,13 @@ struct HomeView: View {
         }
         .scrollContentBackground(.hidden)
         .navigationTitle("首页")
+        // 点选了「最近使用」或下面货架里的文件后，⌘⌫ 把它移到废纸篓（和访达一样）。
+        .trashContext(ids: store.selectedIDs) {
+            let ids = store.selectedIDs
+            guard !ids.isEmpty else { return [] }
+            var seen = Set<String>()
+            return store.shelves.flatMap(\.items).filter { ids.contains($0.id) && seen.insert($0.id).inserted }
+        }
         .task {
             // 回到首页时重新算一下：应用一直开着时，也能在到期前一天出现横幅。
             LicenseManager.shared.refreshState()

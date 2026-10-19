@@ -292,6 +292,8 @@ struct FileCollectionView: View {
             }
         }
         .nativeQuickLook($previewURL, in: sortedURLs, forwardsArrowKeys: true)
+        // 「文件」菜单的 ⌘⌫：焦点在侧边栏、搜索框旁边、简介栏，或者开着快速查看时也能把选中的移到废纸篓。
+        .trashContext(ids: store.selectedIDs) { resolve(store.selectedIDs) }
         .onChange(of: items) { resort() }
         .onChange(of: sortKey) { resort() }
         .onChange(of: sortAscending) { resort() }
@@ -681,6 +683,7 @@ final class GridCellFrames {
 }
 
 /// ⌘⌫ 移到废纸篓、⌘O / ⌘↓ 打开（网格和列表共用）。
+/// ⌘⌫ 平时由「文件」菜单处理（菜单先拿到按键，这里收不到，不会删两次）；菜单项不可用时这里兜底。
 struct FileKeyCommands: ViewModifier {
     let onTrash: () -> KeyPress.Result
     let onOpen: () -> KeyPress.Result

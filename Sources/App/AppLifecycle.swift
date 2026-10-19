@@ -28,6 +28,8 @@ final class AppLifecycle {
     func start() {
         guard !started else { return }
         started = true
+        // ⌘⌫ 移到废纸篓：编辑文字时把按键留给输入框；前台窗口变化时刷新菜单项。
+        TrashCommandCenter.shared.install()
 
         // 通知中心代理和文件提醒的按钮类别必须在启动完成前设好，冷启动时点的通知按钮才不会丢。
         CleanupReminder.shared.installNotificationDelegate()

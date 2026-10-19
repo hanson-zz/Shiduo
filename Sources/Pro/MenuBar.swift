@@ -51,6 +51,17 @@ struct MenuBarContent: View {
             }
             ForEach(recent) { item in
                 RecentDownloadRow(item: item)
+                    .contextMenu {
+                        Button("在访达中显示") { FileActions.reveal([item]) }
+                        Button("加入暂存架") { store.addToShelf([item]) }
+                        Divider()
+                        // 和主窗口同一套：清理记录、⌘Z 撤销、音效。
+                        Button("移到废纸篓") {
+                            store.moveToTrash([item]) { moved in
+                                recent.removeAll { moved.contains($0.path) }
+                            }
+                        }
+                    }
             }
 
             Divider()

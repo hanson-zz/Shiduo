@@ -433,6 +433,8 @@ struct FloatingShelfView: View {
                                 MediaToolsMenu(urls: { [item.url] }, toShelf: true)
                                 Divider()
                                 Button("从暂存架移除") { shelf.remove(paths: [item.path]) }
+                                // 和主窗口同一套：清理记录、⌘Z 撤销、音效；暂存架上会一起拿掉。
+                                Button("移到废纸篓") { LibraryStore.shared?.moveToTrash([item]) }
                             }
                             .help(item.path)
                         }

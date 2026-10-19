@@ -5,6 +5,8 @@ struct ShiduoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var store = LibraryStore()
     @StateObject private var license = LicenseManager.shared
+    /// ⌘⌫「移到废纸篓」：哪个窗口里选中了什么。
+    @StateObject private var trash = TrashCommandCenter.shared
     /// Pro：菜单栏小助手（设置里打开，默认关闭）。
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
     // 「显示」菜单的勾选状态（各自存在 UserDefaults，下次打开保持原样）。
@@ -38,6 +40,8 @@ struct ShiduoApp: App {
                 Button("固定文件夹…") { store.choosePinnedFolder() }
                     .keyboardShortcut("o", modifiers: [.command, .shift])
             }
+            // 和访达一样：「文件」菜单里的「移到废纸篓 ⌘⌫」，不管焦点在侧边栏、搜索结果还是简介栏都能用。
+            TrashCommands(center: trash)
             CommandGroup(after: .textEditing) {
                 Button("搜索") { store.focusSearch() }
                     .keyboardShortcut("f", modifiers: .command)

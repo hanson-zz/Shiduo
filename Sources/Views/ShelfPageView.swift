@@ -250,13 +250,25 @@ struct ShelfPageView: View {
                 previewURL = nil
                 return .handled
             }
-            .onKeyPress(.delete) {
+            // ⌫ 只从暂存架拿掉（文件还在原处）；⌘⌫ 才移到废纸篓（平时由「文件」菜单处理，这里兜底）。
+            .onKeyPress(keys: [.delete, .deleteForward]) { press in
                 guard !selection.isEmpty else { return .ignored }
+                let modifiers = press.modifiers.subtracting([.numericPad, .function, .capsLock])
+                if modifiers == .command {
+                    store.moveToTrash(selectedItems)
+                    return .handled
+                }
+                guard modifiers.isEmpty else { return .ignored }
                 removeTargets()
                 return .handled
             }
+            .trashContext(ids: selection) { selectedItems }
+            .help("⌫ 从暂存架移除（文件留在原处），⌘⌫ 移到废纸篓")
         }
     }
+
+    /// 选中的（没选中时为空，不像 targets 那样退回到全部）。
+    private var selectedItems: [FileItem] { shelf.items.filter { selection.contains($0.id) } }
 
     @ViewBuilder
     private func menu(for item: FileItem) -> some View {
@@ -277,8 +289,8 @@ struct ShelfPageView: View {
         Divider()
         Button(list.count > 1 ? String(localized: "拷贝 \(list.count) 个路径") : String(localized: "拷贝路径")) { FileActions.copyPaths(list) }
         Divider()
-        Button("从暂存架移除") { shelf.remove(paths: Set(list.map(\.path))) }
-        Button("移到废纸篓", role: .destructive) { store.requestTrash(list) }
+        Button("从暂存架移除（⌫）") { shelf.remove(paths: Set(list.map(\.path))) }
+        Button("移到废纸篓（⌘⌫）", role: .destructive) { store.moveToTrash(list) }
     }
 
     /// 拖动选中的格子时带上全部选中的文件，拖动没选中的格子时只带它自己。

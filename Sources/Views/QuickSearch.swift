@@ -34,6 +34,16 @@ final class QuickSearchModel: ObservableObject {
         return list.indices.contains(selected) ? list[selected] : nil
     }
 
+    /// 右键「移到废纸篓」：和主窗口同一套（清理记录、⌘Z 撤销、音效），移走后从结果里拿掉。
+    func trash(_ item: FileItem) {
+        guard let store else { return }
+        store.moveToTrash([item]) { [weak self] moved in
+            guard let self, !moved.isEmpty else { return }
+            self.results.removeAll { moved.contains($0.path) }
+            self.selected = min(self.selected, max(self.visible.count - 1, 0))
+        }
+    }
+
     func move(_ delta: Int) {
         let count = visible.count
         guard count > 0 else { return }
@@ -290,6 +300,9 @@ struct QuickSearchView: View {
                                     Button("打开") { open(item) }
                                     Button("在访达中显示") { reveal(item) }
                                     Button("拷贝路径") { FileActions.copy(item.path) }
+                                    Divider()
+                                    // 搜索框一直在输入状态，⌘⌫ 留给它删到行首；这里用右键移到废纸篓。
+                                    Button("移到废纸篓") { model.trash(item) }
                                 }
                         }
                     }

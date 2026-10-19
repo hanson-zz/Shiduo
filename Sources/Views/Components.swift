@@ -116,7 +116,8 @@ struct FileContextMenu: View {
             }
         }
         Button("搬到…") { store.requestMoveOut(items) }
-        Button("移到废纸篓", role: .destructive) { store.requestTrash(items) }
+        // 和访达一样不再弹确认：直接移到废纸篓，小提示上可以撤销（⌘Z 也行）。
+        Button("移到废纸篓", role: .destructive) { store.moveToTrash(items) }
     }
 }
 
