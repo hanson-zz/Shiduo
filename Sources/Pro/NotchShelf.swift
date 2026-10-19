@@ -1,5 +1,4 @@
 import AppKit
-import QuickLook
 import SwiftUI
 
 // MARK: - 暂存架样式
@@ -269,6 +268,8 @@ final class NotchShelfController: NSObject, ObservableObject {
         watchTimer = nil
         outsideSince = nil
         guard let panel, panel.isVisible else { return }
+        // 收起时一起关掉从刘海暂存架打开的快速查看。
+        QuickLookPanel.shared.close(in: panel)
         let screen = self.screen
         let generation = showGeneration
         NSAnimationContext.runAnimationGroup({ context in
@@ -512,8 +513,12 @@ struct NotchShelfView: View {
             previewURL = previewURL == nil ? controller.selectedItem?.url : nil
             return .handled
         }
-        .onKeyPress(.escape) { controller.hide(); return .handled }
-        .quickLookPreview($previewURL, in: items.map(\.url))
+        .onKeyPress(.escape) {
+            // 先关快速查看，再按一次才收起暂存架。
+            if previewURL != nil { previewURL = nil } else { controller.hide() }
+            return .handled
+        }
+        .nativeQuickLook($previewURL, in: items.map(\.url), forwardsArrowKeys: true)
         .onChange(of: controller.selectedIndex) {
             if previewURL != nil { previewURL = controller.selectedItem?.url }
         }
@@ -701,6 +706,7 @@ struct NotchShelfView: View {
         let selected = index == controller.selectedIndex
         return VStack(spacing: 4) {
             ThumbnailView(url: item.url, size: cardSize)
+                .quickLookSource(item.url)
                 .overlay(alignment: .topTrailing) {
                     if reminders.paths.contains(item.path) {
                         Image(systemName: "alarm.fill")

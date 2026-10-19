@@ -1,5 +1,6 @@
 import CoreServices
 import ImageIO
+import Quartz
 import SwiftUI
 
 /// 简介面板里的媒体信息：尺寸、时长、相机、页数。
@@ -66,14 +67,30 @@ struct InspectorView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var ocr: OCRStore
     let item: FileItem?
+    /// 选中了几个（多于一个时显示合计）。
+    var selectionCount = 1
+    /// 选中了多个时的这些文件。
+    var selection: [FileItem] = []
+    /// 简介（缩略图）还是预览（大的实时预览，视频能播放、PDF 能翻页）。
+    var mode: InspectorMode = .info
     @State private var media = MediaInfo()
+    @State private var tags: [String] = []
 
     var body: some View {
-        if let item {
+        if selectionCount > 1, !selection.isEmpty {
+            SelectionSummaryView(items: selection, mode: mode)
+        } else if let item {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    ThumbnailView(url: item.url, size: 220, modified: item.modified)
-                        .frame(maxWidth: .infinity)
+                    if mode == .preview {
+                        FilePreviewView(url: item.url)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 300)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    } else {
+                        ThumbnailView(url: item.url, size: 220, modified: item.modified)
+                            .frame(maxWidth: .infinity)
+                    }
                     Text(item.name)
                         .font(.headline)
                         .textSelection(.enabled)
@@ -101,6 +118,14 @@ struct InspectorView: View {
                     if let added = item.added { InfoRow(title: String(localized: "添加时间"), value: added.shortText) }
                     InfoRow(title: String(localized: "上次打开"), value: item.lastUsed?.shortText ?? String(localized: "从未打开或无记录"))
                     InfoRow(title: String(localized: "inspector.where", defaultValue: "位置"), value: item.url.deletingLastPathComponent().path)
+                    if !tags.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("标签")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            FlowTags(tags: tags)
+                        }
+                    }
                     if item.isDirectory {
                         FolderBreakdownSection(item: item)
                     }
@@ -146,11 +171,101 @@ struct InspectorView: View {
             }
             .task(id: item.path) {
                 media = MediaInfo()
+                tags = []
+                tags = await Self.loadTags(item.url)
                 media = await MediaInfo.load(item.url)
             }
         } else {
             ContentUnavailableView("未选择文件", systemImage: "info.circle", description: Text("选中一个文件查看简介。"))
         }
+    }
+}
+
+extension InspectorView {
+    /// 访达标签（不在主线程上读）。
+    static func loadTags(_ url: URL) async -> [String] {
+        await Task.detached(priority: .userInitiated) { () -> [String] in
+            (try? url.resourceValues(forKeys: [.tagNamesKey]))?.tagNames ?? []
+        }.value
+    }
+}
+
+/// 标签一个个排开，放不下就换行。
+private struct FlowTags: View {
+    let tags: [String]
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 6, alignment: .leading)], alignment: .leading, spacing: 6) {
+            ForEach(tags, id: \.self) { tag in
+                Text(tag)
+                    .font(.caption)
+                    .lineLimit(1)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Color.primary.opacity(0.08)))
+            }
+        }
+    }
+}
+
+/// 选中了多个文件：几个、一共多大，前几个的缩略图。
+private struct SelectionSummaryView: View {
+    let items: [FileItem]
+    let mode: InspectorMode
+
+    private var files: [FileItem] { items.filter { !$0.needsComputedSize } }
+    private var unsizedFolders: Int { items.count - files.count }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                let shown = Array(items.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }.prefix(9))
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], spacing: 8) {
+                    ForEach(shown) { item in
+                        ThumbnailView(url: item.url, size: mode == .preview ? 80 : 64, modified: item.modified)
+                            .help(item.name)
+                    }
+                }
+                Text("已选 \(items.count) 项")
+                    .font(.headline)
+                Divider()
+                InfoRow(title: String(localized: "大小"), value: files.reduce(Int64(0)) { $0 + $1.size }.byteText)
+                if unsizedFolders > 0 {
+                    Text("另有 \(unsizedFolders) 个文件夹未计入大小")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                let kinds = Dictionary(grouping: items, by: { $0.kindText })
+                    .map { (name: $0.key, count: $0.value.count) }
+                    .sorted { $0.count > $1.count }
+                ForEach(Array(kinds.prefix(6)), id: \.name) { kind in
+                    InfoRow(title: kind.name, value: String(localized: "\(kind.count) 项"))
+                }
+            }
+            .padding(16)
+        }
+    }
+}
+
+/// 简介栏里的大预览：系统的 QLPreviewView（和快速查看同一套，视频能播放、PDF 能翻页）。
+struct FilePreviewView: NSViewRepresentable {
+    let url: URL
+
+    func makeNSView(context: Context) -> QLPreviewView {
+        let view = QLPreviewView(frame: .zero, style: .normal) ?? QLPreviewView(frame: .zero)
+        view.autostarts = false
+        view.previewItem = url as NSURL
+        return view
+    }
+
+    func updateNSView(_ view: QLPreviewView, context: Context) {
+        if view.previewItem?.previewItemURL != url {
+            view.previewItem = url as NSURL
+        }
+    }
+
+    static func dismantleNSView(_ view: QLPreviewView, coordinator: ()) {
+        view.close()
     }
 }
 

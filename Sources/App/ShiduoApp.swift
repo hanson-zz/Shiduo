@@ -7,6 +7,12 @@ struct ShiduoApp: App {
     @StateObject private var license = LicenseManager.shared
     /// Pro：菜单栏小助手（设置里打开，默认关闭）。
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
+    // 「显示」菜单的勾选状态（各自存在 UserDefaults，下次打开保持原样）。
+    @AppStorage("viewMode") private var viewMode: ViewMode = .grid
+    @AppStorage(ViewPrefs.showToolbarKey) private var showToolbar = true
+    @AppStorage(ViewPrefs.showPathBarKey) private var showPathBar = true
+    @AppStorage(ViewPrefs.showStatusBarKey) private var showStatusBar = true
+    @AppStorage(Queries.showHiddenFilesKey) private var showHiddenFiles = false
 
     var body: some Scene {
         WindowGroup("拾掇", id: MainWindow.sceneID) {
@@ -26,11 +32,11 @@ struct ShiduoApp: App {
                 .frame(minWidth: 960, minHeight: 600)
         }
         .commands {
-            SidebarCommands()
             SupportCommands()
             CommandGroup(after: .newItem) {
+                // ⇧⌘P 让给「显示预览」（和访达一样），固定文件夹改成 ⇧⌘O。
                 Button("固定文件夹…") { store.choosePinnedFolder() }
-                    .keyboardShortcut("p", modifiers: [.command, .shift])
+                    .keyboardShortcut("o", modifiers: [.command, .shift])
             }
             CommandGroup(after: .textEditing) {
                 Button("搜索") { store.focusSearch() }
@@ -40,16 +46,48 @@ struct ShiduoApp: App {
                 Button("加入暂存架") { store.addToShelf(store.selectedItems) }
                     .disabled(store.selectedItems.isEmpty)
             }
-            CommandGroup(after: .toolbar) {
-                Button("以图标显示") { UserDefaults.standard.set(ViewMode.grid.rawValue, forKey: "viewMode") }
+            // 「显示」菜单：系统的「显示 / 隐藏工具栏」换成我们自己的（能记住状态）；
+            // 「进入全屏幕」「显示标签页栏」仍由系统自动加在菜单最后。
+            CommandGroup(replacing: .toolbar) {
+                Toggle("为图标", isOn: Binding(get: { viewMode == .grid }, set: { if $0 { viewMode = .grid } }))
                     .keyboardShortcut("1", modifiers: .command)
-                Button("以列表显示") { UserDefaults.standard.set(ViewMode.list.rawValue, forKey: "viewMode") }
+                Toggle("为列表", isOn: Binding(get: { viewMode == .list }, set: { if $0 { viewMode = .list } }))
                     .keyboardShortcut("2", modifiers: .command)
-                Button(store.showInspector ? String(localized: "隐藏简介") : String(localized: "显示简介")) { store.showInspector.toggle() }
-                    .keyboardShortcut("i", modifiers: .command)
+                Divider()
+                Button(store.isShowingInspector(.info) ? String(localized: "隐藏简介") : String(localized: "显示简介")) {
+                    store.toggleInspector(.info)
+                }
+                .keyboardShortcut("i", modifiers: .command)
+                Button(store.isShowingInspector(.preview) ? String(localized: "隐藏预览") : String(localized: "显示预览")) {
+                    store.toggleInspector(.preview)
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
+                Divider()
+                Button(showToolbar ? String(localized: "隐藏工具栏") : String(localized: "显示工具栏")) { showToolbar.toggle() }
+                    .keyboardShortcut("t", modifiers: [.command, .option])
+                Button(showPathBar ? String(localized: "隐藏路径栏") : String(localized: "显示路径栏")) { showPathBar.toggle() }
+                    .keyboardShortcut("p", modifiers: [.command, .option])
+                Button(showStatusBar ? String(localized: "隐藏状态栏") : String(localized: "显示状态栏")) { showStatusBar.toggle() }
+                    .keyboardShortcut("/", modifiers: .command)
+                Divider()
+                Button("查看显示选项") { ViewOptionsPanel.shared.toggle(store: store) }
+                    .keyboardShortcut("j", modifiers: .command)
+                Button(showHiddenFiles ? String(localized: "不显示隐藏文件") : String(localized: "显示隐藏文件")) {
+                    showHiddenFiles.toggle()
+                    if store.currentFolder != nil && store.activeQuery == nil { store.reload() }
+                }
+                Divider()
+                // 全局快捷键可在设置里换（默认 ⌃⌥S），这里不再固定占用 ⌥⌘S。
+                Button("显示 / 隐藏悬浮暂存架（\(FloatingShelfHotKey.current.title)）") { FloatingShelfController.shared.toggle() }
                 Divider()
                 Button("刷新") { store.reload() }
                     .keyboardShortcut("r", modifiers: .command)
+            }
+            CommandGroup(replacing: .sidebar) {
+                Button(store.sidebarVisible ? String(localized: "隐藏侧边栏") : String(localized: "显示侧边栏")) {
+                    withAnimation { store.sidebarVisible.toggle() }
+                }
+                .keyboardShortcut("s", modifiers: [.command, .control])
             }
             CommandMenu("前往") {
                 Button("快速搜索浮窗（\(QuickSearchHotKey.current.title)）") { QuickSearchController.shared.show() }
@@ -57,8 +95,6 @@ struct ShiduoApp: App {
                 Button("首页") { store.selection = .home }
                     .keyboardShortcut("h", modifiers: [.command, .shift])
                 Button("暂存架") { store.selection = .shelf }
-                // 全局快捷键可在设置里换（默认 ⌃⌥S），这里不再固定占用 ⌥⌘S。
-                Button("显示 / 隐藏悬浮暂存架（\(FloatingShelfHotKey.current.title)）") { FloatingShelfController.shared.toggle() }
                 Button("下载来源") { store.selection = .downloads }
                     .keyboardShortcut("j", modifiers: [.command, .shift])
                 Button("重复文件") { store.selection = .duplicates }

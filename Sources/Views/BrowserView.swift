@@ -1,4 +1,3 @@
-import QuickLook
 import SwiftUI
 
 enum ViewMode: String {
@@ -64,6 +63,7 @@ struct BrowserView: View {
                 Divider()
             }
             content
+            BrowserBottomBar(itemCount: visibleCount, selected: firstSelected, selectedCount: store.selectedIDs.count)
         }
         .onChange(of: store.selection) { sourceFilter = nil }
         // 进子文件夹、换一个搜索也清掉来源筛选。
@@ -71,6 +71,17 @@ struct BrowserView: View {
         .onChange(of: store.activeQuery) { sourceFilter = nil }
         .navigationTitle(title)
         .navigationSubtitle(subtitle)
+    }
+
+    private var visibleCount: Int { visible.count }
+
+    /// 底部路径栏显示的那个：选中的文件里排在列表最前的（只选了一个时就是它）。
+    private var firstSelected: FileItem? {
+        let ids = store.selectedIDs
+        guard !ids.isEmpty else { return nil }
+        let items = store.selectedItems
+        if items.count <= 1 { return items.first }
+        return items.min { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     private var subtitle: String {
@@ -204,18 +215,21 @@ struct FileCollectionView: View {
     @EnvironmentObject private var store: LibraryStore
     let items: [FileItem]
 
-    private static let defaultSort = [KeyPathComparator(\FileItem.sortDate, order: .reverse)]
-
     init(items: [FileItem]) {
         self.items = items
-        let sorted = items.sorted(using: Self.defaultSort)
+        let stored = FileSortKey.stored
+        let sorted = items.sorted(using: stored.key.comparators(ascending: stored.ascending))
         _sortedItems = State(initialValue: sorted)
         _sortedURLs = State(initialValue: sorted.map(\.url))
     }
 
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
     @AppStorage("thumbnailSize") private var thumbnailSize: Double = 120
-    @State private var sortOrder: [KeyPathComparator<FileItem>] = FileCollectionView.defaultSort
+    /// 排序方式存在 UserDefaults：工具栏菜单、列表表头和「查看显示选项」（⌘J）改的是同一个。
+    @AppStorage(ViewPrefs.sortKeyKey) private var sortKey: FileSortKey = .date
+    @AppStorage(ViewPrefs.sortAscendingKey) private var sortAscending = false
+    @AppStorage(ViewPrefs.showExtensionsKey) private var showExtensions = true
+    @AppStorage(ViewPrefs.showItemInfoKey) private var showItemInfo = true
     /// 排好序的列表：只在文件或排序方式变了时重排，框选拖动时不会每帧重排几千个文件。
     @State private var sortedItems: [FileItem]
     @State private var sortedURLs: [URL]
@@ -237,6 +251,31 @@ struct FileCollectionView: View {
 
     private var sorted: [FileItem] { sortedItems }
 
+    private var sortOrder: [KeyPathComparator<FileItem>] { sortKey.comparators(ascending: sortAscending) }
+
+    /// 列表表头用：点表头换排序时写回 UserDefaults。
+    private var sortBinding: Binding<[KeyPathComparator<FileItem>]> {
+        Binding(
+            get: { sortKey.comparators(ascending: sortAscending) },
+            set: { newValue in
+                guard let parsed = FileSortKey.from(newValue) else { return }
+                if sortKey != parsed.key { sortKey = parsed.key }
+                if sortAscending != parsed.ascending { sortAscending = parsed.ascending }
+            }
+        )
+    }
+
+    /// 工具栏「排序」菜单：换方式时用这种方式的默认顺序。
+    private var sortKeyBinding: Binding<FileSortKey> {
+        Binding(
+            get: { sortKey },
+            set: { key in
+                sortKey = key
+                sortAscending = key.defaultAscending
+            }
+        )
+    }
+
     private func resort() {
         sortedItems = items.sorted(using: sortOrder)
         sortedURLs = sortedItems.map(\.url)
@@ -252,9 +291,10 @@ struct FileCollectionView: View {
                 table
             }
         }
-        .quickLookPreview($previewURL, in: sortedURLs)
+        .nativeQuickLook($previewURL, in: sortedURLs, forwardsArrowKeys: true)
         .onChange(of: items) { resort() }
-        .onChange(of: sortOrder) { resort() }
+        .onChange(of: sortKey) { resort() }
+        .onChange(of: sortAscending) { resort() }
         .onChange(of: thumbnailSize) { cellFrames.frames = [:] }
         .onChange(of: gridWidth) { cellFrames.frames = [:] }
         .onCopyCommand { copyProviders() }
@@ -269,7 +309,13 @@ struct FileCollectionView: View {
         .overlay {
             if let liveItem {
                 LiveTextPreview(item: liveItem, onClose: { self.liveItem = nil }, onStep: { _ = step($0) },
-                                onStepRow: { _ = step($0 * (viewMode == .grid ? gridColumns : 1)) })
+                                onStepRow: { _ = step($0 * (viewMode == .grid ? gridColumns : 1)) },
+                                onSystemPreview: {
+                                    // 换成系统的快速查看（全屏、更多格式），之后翻页也留在系统预览里。
+                                    let url = liveItem.url
+                                    self.liveItem = nil
+                                    previewURL = url
+                                })
                     .transition(.opacity)
             }
         }
@@ -289,18 +335,18 @@ struct FileCollectionView: View {
                 }
                 .pickerStyle(.segmented)
                 Menu {
-                    Button("按日期（新的在前）") {
-                        sortOrder = [KeyPathComparator(\FileItem.sortDate, order: .reverse)]
+                    Picker("排序方式", selection: sortKeyBinding) {
+                        ForEach(FileSortKey.allCases) { Text($0.title).tag($0) }
                     }
-                    Button("按名称") {
-                        sortOrder = [KeyPathComparator(\FileItem.name)]
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                    Divider()
+                    Picker("顺序", selection: $sortAscending) {
+                        Text("升序").tag(true)
+                        Text("降序").tag(false)
                     }
-                    Button("按大小（大的在前）") {
-                        sortOrder = [KeyPathComparator(\FileItem.size, order: .reverse)]
-                    }
-                    Button("按种类") {
-                        sortOrder = [KeyPathComparator(\FileItem.kindText), KeyPathComparator(\FileItem.name)]
-                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
                 } label: {
                     Label("排序", systemImage: "arrow.up.arrow.down")
                 }
@@ -312,7 +358,7 @@ struct FileCollectionView: View {
                 .keyboardShortcut("y", modifiers: .command)
                 .help("快速查看（空格或 ⌘Y）")
                 Button {
-                    store.showInspector.toggle()
+                    store.toggleInspector(.info)
                 } label: {
                     Label("简介", systemImage: "info.circle")
                 }
@@ -341,7 +387,8 @@ struct FileCollectionView: View {
                                     select(item, flags: flags)
                                 }
                             }
-                        )
+                        ),
+                        showsExtension: showExtensions, showsInfo: showItemInfo
                     )
                         .contextMenu {
                             FileContextMenu(items: targets(for: item), preview: { preview($0) })
@@ -497,23 +544,33 @@ struct FileCollectionView: View {
     }
 
     /// 预览开着、选中换了：预览换成新选中的那个。
+    /// 系统快速查看开着时一直留在系统预览里（图片也是，能捏合缩放、全屏）；
+    /// 能划选文字的图片预览开着时，图片继续用它，换到不是图片的文件再交给系统快速查看。
     private func followSelection() {
         guard previewURL != nil || liveItem != nil,
               let item = sorted.first(where: { store.selectedIDs.contains($0.id) }) else { return }
-        if item.url == previewURL || item.id == liveItem?.id { return }
-        previewURL = nil
-        liveItem = nil
-        preview(item)
+        if previewURL != nil {
+            if previewURL != item.url { previewURL = item.url }
+            return
+        }
+        if item.id == liveItem?.id { return }
+        if item.isImage {
+            liveItem = item
+        } else {
+            liveItem = nil
+            previewURL = item.url
+        }
     }
 
     // MARK: 列表
 
     private var table: some View {
-        Table(of: FileItem.self, selection: $store.selectedIDs, sortOrder: $sortOrder) {
+        Table(of: FileItem.self, selection: $store.selectedIDs, sortOrder: sortBinding) {
             TableColumn("名称", value: \FileItem.name) { item in
                 HStack(spacing: 6) {
                     ThumbnailView(url: item.url, size: 20, modified: item.modified)
-                    Text(item.name)
+                        .quickLookSource(item.url)
+                    Text(item.shownName(extensions: showExtensions))
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
@@ -553,6 +610,12 @@ struct FileCollectionView: View {
         }
         .onKeyPress(.space) {
             quickLookSelection()
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            guard previewURL != nil || liveItem != nil else { return .ignored }
+            previewURL = nil
+            liveItem = nil
             return .handled
         }
         // 列表自带 ⌘A 全选；回车由列表自己处理（打开）。
@@ -833,22 +896,28 @@ struct FileGridCell: View {
     /// 盖在格子上处理点按、双击和拖出的 AppKit 视图（可以一次拖出多个文件）。
     /// 「拷贝文字」按钮放在它上面，仍然点得到。
     var mouseArea: FileCellMouseArea? = nil
+    /// 「查看显示选项」：显示文件扩展名、在图标下显示大小。
+    var showsExtension = true
+    var showsInfo = true
 
     @State private var hovering = false
 
     var body: some View {
         VStack(spacing: 6) {
             ThumbnailView(url: item.url, size: size, modified: item.modified)
-            Text(item.name)
+                .quickLookSource(item.url)
+            Text(item.shownName(extensions: showsExtension))
                 .font(.callout)
                 .lineLimit(2)
                 .truncationMode(.middle)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: size + 16)
-            ItemSizeText(item: item)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            if showsInfo {
+                ItemSizeText(item: item)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
         }
         .padding(8)
         .background {

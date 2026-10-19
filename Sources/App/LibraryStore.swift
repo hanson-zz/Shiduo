@@ -74,6 +74,12 @@ struct Shelf: Identifiable {
     let target: SidebarItem
 }
 
+/// 右边栏的两种样子：简介（缩略图 + 信息）和预览（大的实时预览 + 信息）。
+enum InspectorMode: String {
+    case info
+    case preview
+}
+
 /// 整个应用的状态：当前选中的位置、列出的文件、搜索条件和各个扫描器。
 @MainActor
 final class LibraryStore: ObservableObject {
@@ -282,7 +288,30 @@ final class LibraryStore: ObservableObject {
     private var photoConceptRemoved = false
 
     @Published var selectedIDs: Set<String> = []
-    @Published var showInspector = false
+    /// 右边的简介 / 预览栏（「显示」菜单 ⌘I / ⇧⌘P），下次打开拾掇时保持原样。
+    @Published var showInspector = UserDefaults.standard.bool(forKey: "showInspector") {
+        didSet { UserDefaults.standard.set(showInspector, forKey: "showInspector") }
+    }
+    /// 右边栏显示简介（小缩略图）还是预览（大的实时预览）。
+    @Published var inspectorMode: InspectorMode = InspectorMode(rawValue: UserDefaults.standard.string(forKey: "inspectorMode") ?? "") ?? .info {
+        didSet { UserDefaults.standard.set(inspectorMode.rawValue, forKey: "inspectorMode") }
+    }
+    /// 左边的侧边栏（⌃⌘S）。
+    @Published var sidebarVisible = UserDefaults.standard.object(forKey: "sidebarVisible") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(sidebarVisible, forKey: "sidebarVisible") }
+    }
+
+    /// ⌘I / ⇧⌘P：已经在显示这一种就收起，否则切到这一种并打开。
+    func toggleInspector(_ mode: InspectorMode) {
+        if showInspector && inspectorMode == mode {
+            showInspector = false
+        } else {
+            inspectorMode = mode
+            showInspector = true
+        }
+    }
+
+    func isShowingInspector(_ mode: InspectorMode) -> Bool { showInspector && inspectorMode == mode }
     @Published var ocrItem: FileItem?
     /// 正在批量重命名 / 转换的文件（非空时弹出对应面板）。
     @Published var renameItems: [FileItem] = []

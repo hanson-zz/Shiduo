@@ -13,13 +13,25 @@ struct ContentView: View {
         SheetOwnership.shared.present(kind, active: active, in: hostWindow)
     }
 
+    /// 「显示」菜单的「隐藏工具栏」（⌥⌘T）。
+    @AppStorage(ViewPrefs.showToolbarKey) private var showToolbar = true
+
+    /// 侧边栏显示 / 隐藏（⌃⌘S，或拖动分隔线收起），记在 store 里，下次打开保持原样。
+    private var columnVisibility: Binding<NavigationSplitViewVisibility> {
+        Binding(
+            get: { store.sidebarVisible ? .all : .detailOnly },
+            set: { store.sidebarVisible = $0 != .detailOnly }
+        )
+    }
+
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: columnVisibility) {
             SidebarView()
                 .navigationSplitViewColumnWidth(min: 200, ideal: 230, max: 300)
         } detail: {
             DetailView()
         }
+        .toolbar(showToolbar ? .automatic : .hidden, for: .windowToolbar)
         .background(GlassWindowConfigurator())
         .background(MainWindowTagger())
         .background(HostWindowReader(window: $hostWindow))
@@ -174,7 +186,9 @@ struct DetailView: View {
             .background(GlassBackdrop())
             .toolbarBackground(.hidden, for: .windowToolbar)
             .inspector(isPresented: $store.showInspector) {
-                InspectorView(item: store.inspectedItem)
+                InspectorView(item: store.inspectedItem, selectionCount: store.selectedIDs.count,
+                              selection: store.selectedIDs.count > 1 ? store.selectedItems : [],
+                              mode: store.inspectorMode)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     // 窗口是透明的：简介栏自己铺一层毛玻璃，不然会直接透出窗口后面的东西
                     .background(VisualEffectView(material: .sidebar, blending: .behindWindow).ignoresSafeArea())

@@ -52,4 +52,18 @@ final class PathLogicTests: XCTestCase {
         XCTAssertEqual(list, ["/c", "/d", "/b"])
         XCTAssertEqual(OrganizeIgnoreList.adding(["/x", "/x"], to: [], limit: 5), ["/x"])
     }
+
+    func testCrumbs() {
+        let home = "/Users/han"
+        XCTAssertEqual(PathLogic.crumbs(for: "/Users/han/Downloads/a.pdf", home: home),
+                       ["/Users/han", "/Users/han/Downloads", "/Users/han/Downloads/a.pdf"])
+        XCTAssertEqual(PathLogic.crumbs(for: "/Users/han/", home: home + "/"), ["/Users/han"])
+        // 「/Users/hanson」不在「/Users/han」里面
+        XCTAssertEqual(PathLogic.crumbs(for: "/Users/hanson/x", home: home), ["/", "/Users", "/Users/hanson", "/Users/hanson/x"])
+        XCTAssertEqual(PathLogic.crumbs(for: "/Volumes/Disk/Photos", home: home), ["/Volumes/Disk", "/Volumes/Disk/Photos"])
+        XCTAssertEqual(PathLogic.crumbs(for: "/Volumes", home: home), ["/", "/Volumes"])
+        XCTAssertEqual(PathLogic.crumbs(for: "/", home: home), ["/"])
+        XCTAssertEqual(PathLogic.crumbs(for: "/Applications/Safari.app", home: home), ["/", "/Applications", "/Applications/Safari.app"])
+        XCTAssertEqual(PathLogic.crumbs(for: "relative/path", home: home), [])
+    }
 }

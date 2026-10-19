@@ -41,6 +41,36 @@ enum PathLogic {
     }
 }
 
+extension PathLogic {
+    /// 底部路径栏的每一层（从起点到 path 本身，都是完整路径）。
+    /// 在个人文件夹里从个人文件夹开始，在外接磁盘（/Volumes/名字）里从磁盘开始，其余从根目录「/」开始。
+    static func crumbs(for path: String, home: String) -> [String] {
+        var path = path
+        while path.count > 1 && path.hasSuffix("/") { path.removeLast() }
+        guard path.hasPrefix("/") else { return [] }
+        var home = home
+        while home.count > 1 && home.hasSuffix("/") { home.removeLast() }
+        let start: String
+        if home.count > 1, isSameOrInside(path, home) {
+            start = home
+        } else if path.hasPrefix("/Volumes/") {
+            let parts = path.split(separator: "/", omittingEmptySubsequences: true)
+            start = parts.count >= 2 ? "/\(parts[0])/\(parts[1])" : "/"
+        } else {
+            start = "/"
+        }
+        var list = [start]
+        guard path != start else { return list }
+        let rest = path.dropFirst(start == "/" ? 1 : start.count + 1)
+        var current = start
+        for part in rest.split(separator: "/", omittingEmptySubsequences: true) {
+            current = current == "/" ? "/\(part)" : "\(current)/\(part)"
+            list.append(current)
+        }
+        return list
+    }
+}
+
 /// 自动整理「不再处理」的列表：按加入先后排，同一路径只留一份（重新加入算最新），超过上限去掉最旧的。
 enum OrganizeIgnoreList {
     static func adding(_ paths: [String], to list: [String], limit: Int) -> [String] {

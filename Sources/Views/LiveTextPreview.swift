@@ -10,6 +10,8 @@ struct LiveTextPreview: View {
     let onStep: (Int) -> Void
     /// ↑ ↓：上一行 / 下一行（网格里一次跳一整行）。
     var onStepRow: ((Int) -> Void)? = nil
+    /// 换成系统的快速查看（全屏、更多格式）。
+    var onSystemPreview: (() -> Void)? = nil
 
     @State private var highlight = false
     @State private var transcript = ""
@@ -84,6 +86,12 @@ struct LiveTextPreview: View {
                 Label("拷贝全部文字", systemImage: "doc.on.doc")
             }
             .disabled(transcript.isEmpty)
+            if let onSystemPreview {
+                Button(action: onSystemPreview) {
+                    Label("快速查看", systemImage: "eye")
+                }
+                .help("用系统的快速查看打开（可以全屏）")
+            }
             Button {
                 NSWorkspace.shared.open(item.url)
             } label: {
@@ -106,7 +114,7 @@ struct LiveTextPreview: View {
             Image(systemName: status.symbol)
             Text(status.text)
             Spacer()
-            Text("← → 上一张 / 下一张")
+            Text("双指捏合缩放 · ← → 上一张 / 下一张")
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -140,7 +148,18 @@ enum LiveTextStatus: Equatable {
     }
 }
 
-/// NSImageView + VisionKit 的 ImageAnalysisOverlayView。
+/// 能缩放的滚动视图：内容（图片 + 文字层）始终和可见区域一样大，放大后可以拖动查看。
+/// 触控板双指捏合缩放，双指轻点两下在适合大小和放大之间切换（NSScrollView 自带）。
+final class ZoomingImageScrollView: NSScrollView {
+    override func tile() {
+        super.tile()
+        guard let documentView else { return }
+        let size = contentSize
+        if documentView.frame.size != size { documentView.setFrameSize(size) }
+    }
+}
+
+/// NSImageView + VisionKit 的 ImageAnalysisOverlayView，放在能缩放的滚动视图里。
 struct LiveTextImageView: NSViewRepresentable {
     let url: URL
     let highlight: Bool
@@ -151,13 +170,26 @@ struct LiveTextImageView: NSViewRepresentable {
         var task: Task<Void, Never>?
         let analyzer = ImageAnalyzer()
         let overlay = ImageAnalysisOverlayView()
+        weak var imageView: NSImageView?
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> NSView {
+        let scroll = ZoomingImageScrollView()
+        scroll.drawsBackground = false
+        scroll.borderType = .noBorder
+        scroll.hasHorizontalScroller = true
+        scroll.hasVerticalScroller = true
+        scroll.autohidesScrollers = true
+        scroll.allowsMagnification = true
+        scroll.minMagnification = 1
+        scroll.maxMagnification = 8
+        scroll.contentView.drawsBackground = false
+
         let container = NSView()
         let imageView = NSImageView()
+        context.coordinator.imageView = imageView
         imageView.imageScaling = .scaleProportionallyUpOrDown
         imageView.imageAlignment = .alignCenter
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -184,8 +216,9 @@ struct LiveTextImageView: NSViewRepresentable {
                 view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
             ])
         }
+        scroll.documentView = container
         load(into: imageView, context: context)
-        return container
+        return scroll
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
@@ -193,7 +226,9 @@ struct LiveTextImageView: NSViewRepresentable {
         if overlay.selectableItemsHighlighted != highlight {
             overlay.selectableItemsHighlighted = highlight
         }
-        if context.coordinator.url != url, let imageView = nsView.subviews.first as? NSImageView {
+        if context.coordinator.url != url, let imageView = context.coordinator.imageView {
+            // 换了一张：回到适合大小。
+            (nsView as? NSScrollView)?.magnification = 1
             load(into: imageView, context: context)
         }
     }

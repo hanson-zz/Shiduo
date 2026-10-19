@@ -51,7 +51,13 @@ struct ShelfPageView: View {
             }
         }
         .animation(.easeOut(duration: 0.15), value: targeted)
-        .quickLookPreview($previewURL, in: shelf.urls)
+        .nativeQuickLook($previewURL, in: shelf.urls)
+        // 在快速查看里用 ← → 翻页时，暂存架的选中跟着走。
+        .onChange(of: previewURL) {
+            guard let url = previewURL, let item = shelf.items.first(where: { $0.url == url }),
+                  selection != [item.id] else { return }
+            selection = [item.id]
+        }
         .onAppear { shelf.refresh() }
         .onChange(of: shelf.items) {
             selection.formIntersection(Set(shelf.items.map(\.id)))
@@ -237,6 +243,11 @@ struct ShelfPageView: View {
                 } else if let first = shelf.items.first(where: { selection.contains($0.id) }) {
                     previewURL = first.url
                 }
+                return .handled
+            }
+            .onKeyPress(.escape) {
+                guard previewURL != nil else { return .ignored }
+                previewURL = nil
                 return .handled
             }
             .onKeyPress(.delete) {

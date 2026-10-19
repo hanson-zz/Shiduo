@@ -259,12 +259,16 @@ enum Queries {
         return TodayAddedLogic.filter(files + apps, home: NSHomeDirectory(), range: range)
     }
 
+    /// 「查看显示选项」里的「显示隐藏文件」（只对直接读磁盘的文件夹页面有效）。
+    static let showHiddenFilesKey = "showHiddenFiles"
+
     /// 固定文件夹：直接读磁盘，不依赖 Spotlight 索引。
     static func folder(_ path: String) async -> [FileItem] {
-        await Task.detached(priority: .userInitiated) { () -> [FileItem] in
+        let showHidden = UserDefaults.standard.bool(forKey: showHiddenFilesKey)
+        return await Task.detached(priority: .userInitiated) { () -> [FileItem] in
             let url = URL(fileURLWithPath: path)
             let urls = (try? FileManager.default.contentsOfDirectory(
-                at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]
+                at: url, includingPropertiesForKeys: nil, options: showHidden ? [] : [.skipsHiddenFiles]
             )) ?? []
             return urls.compactMap { FileItem(url: $0) }
         }.value
