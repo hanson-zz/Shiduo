@@ -23393,6 +23393,86 @@
           }
         }
       }
+    },
+    "兑换成功": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocked!"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兑换成功"
+          }
+        }
+      }
+    },
+    "版本已解锁，所有高级功能现已开启": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unlocked — all premium features are now on"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本已解锁，所有高级功能现已开启"
+          }
+        }
+      }
+    },
+    "立即体验 Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Pro Now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即体验 Pro"
+          }
+        }
+      }
+    },
+    "再看一次庆祝动画": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replay Celebration"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再看一次庆祝动画"
+          }
+        }
+      }
+    },
+    "解锁动画音效": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound for Unlock Celebration"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解锁动画音效"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
