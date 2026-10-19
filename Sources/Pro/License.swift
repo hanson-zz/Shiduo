@@ -215,6 +215,11 @@ enum LicenseAPI {
     }
 }
 
+extension Notification.Name {
+    /// 用授权码 / 兑换码激活成功。UnlockCelebrationWindow 监听它，第一次激活时播放庆祝动画。
+    static let licenseDidActivate = Notification.Name("io.github.hansonzz.shiduo.licenseDidActivate")
+}
+
 // MARK: - 授权状态
 
 enum LicenseState: Equatable {
@@ -500,6 +505,7 @@ final class LicenseManager: ObservableObject {
             LicenseKeychain.set(instance, for: .instanceID)
             markValidated(serverDate: response.serverDate)
             refreshState()
+            NotificationCenter.default.post(name: .licenseDidActivate, object: nil)
             return true
         } catch {
             errorMessage = String(localized: "无法连接授权服务器，请检查网络后再试。")

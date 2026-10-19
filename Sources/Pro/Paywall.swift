@@ -219,6 +219,14 @@ struct PaywallView: View {
                             .foregroundStyle(.orange)
                     }
                 }
+            } else if license.state == .pro {
+                Button {
+                    close()
+                    UnlockCelebrationWindow.shared.replay()
+                } label: {
+                    Label("重看解锁动画", systemImage: "party.popper")
+                }
+                .buttonStyle(.link)
             }
         }
         .padding(26)
@@ -245,6 +253,8 @@ final class PaywallWindow: NSObject, NSWindowDelegate {
 
     /// App 启动时调用一次，开始跟随 LicenseManager.showPaywall。
     func start() {
+        // 第一次激活成功时的庆祝动画也从这里开始监听。
+        UnlockCelebrationWindow.shared.start()
         guard cancellable == nil else { return }
         cancellable = LicenseManager.shared.$showPaywall
             .receive(on: DispatchQueue.main)

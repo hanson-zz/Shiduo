@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var hotKeyMessage: String?
     // 拾掇 Pro
     @State private var licenseKey = ""
+    @AppStorage(UnlockCelebrationWindow.soundKey) private var celebrationSound = true
     @State private var reminderDenied = false
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
     @AppStorage(FloatingShelfController.enabledKey) private var floatingShelfEnabled = false
@@ -191,6 +192,12 @@ struct SettingsView: View {
                 Text("换新 Mac 前先在这里解绑，激活名额会留给新的 Mac。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if license.state == .pro {
+                    HStack {
+                        Button("重看解锁动画") { UnlockCelebrationWindow.shared.replay() }
+                        Spacer()
+                    }
+                }
             } else {
                 LicenseKeyField(key: $licenseKey)
                 HStack {
@@ -201,9 +208,10 @@ struct SettingsView: View {
                     Spacer()
                 }
             }
+            Toggle("解锁动画音效", isOn: $celebrationSound)
         } header: {
             HStack(spacing: 6) {
-                Text("授权")
+                Text("关于 Pro")
                 ProBadge()
             }
         }
