@@ -86,7 +86,9 @@ final class QuickLookPanel: NSResponder {
             list = urls
             index = found
         } else if current.urls.contains(url), current.urls != urls {
-            guard !urls.isEmpty else {
+            // 整个列表都换了（进了别的文件夹、换了搜索）：关掉，不去预览一个没选过的文件。
+            let before = Set(current.urls)
+            guard !urls.isEmpty, urls.contains(where: { before.contains($0) }) else {
                 end(notify: true)
                 return
             }
