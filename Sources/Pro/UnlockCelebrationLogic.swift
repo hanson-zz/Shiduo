@@ -578,3 +578,40 @@ enum StarField {
         }
     }
 }
+
+// MARK: - 什么时候可以停止逐帧重画
+
+/// 彩纸、彩带都落出画面后，前层就没有东西可画了：停掉它的逐帧刷新，省电。
+enum CelebrationActivity {
+    /// 一片彩纸掉出画面（低于 floor）的时刻。最多看 limit 秒（算不出来就按 birth + limit）。
+    static func exitTime(of piece: ConfettiPiece, floor: Double, limit: Double = 12, step: Double = 0.05) -> Double {
+        var age = step
+        while age < limit {
+            if ConfettiPhysics.state(of: piece, at: piece.birth + age, floor: floor) == nil { return piece.birth + age }
+            age += step
+        }
+        return piece.birth + limit
+    }
+
+    /// 一条彩带整条（连尾巴）落到 floor 以下的时刻。
+    static func exitTime(of streamer: Streamer, floor: Double) -> Double {
+        let tail = Double(max(0, streamer.length - 1)) * StreamerPhysics.segment
+        // points(of:) 里头部从 y = -20 出发，速度 speed。
+        return streamer.birth + (floor + 20 + tail) / max(1, streamer.speed)
+    }
+
+    /// 前层（彩纸、彩带、星光扫过）要一直重画到这个时刻；之后可以停。
+    static func frontActiveUntil(confetti: [ConfettiPiece], streamers: [Streamer],
+                                 confettiFloor: Double, streamerFloor: Double) -> Double {
+        var until = CelebrationTimeline.glintAt + CelebrationTimeline.glintDuration
+        for piece in confetti { until = max(until, exitTime(of: piece, floor: confettiFloor)) }
+        for streamer in streamers { until = max(until, exitTime(of: streamer, floor: streamerFloor)) }
+        return until
+    }
+
+    /// 王冠落下、PRO 徽章升起那一层用完的时刻（之后王冠已经在熊猫图里，徽章已淡出）。
+    static var badgeLayerUntil: Double {
+        max(CelebrationTimeline.crownLandAt, CelebrationTimeline.unlockAt + CelebrationTimeline.badgeDuration)
+    }
+}
+

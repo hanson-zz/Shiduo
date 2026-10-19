@@ -28,6 +28,10 @@ final class UnlockCelebrationWindow: NSObject {
     /// App 启动时调用一次（PaywallWindow.start 里），开始监听激活成功。
     func start() {
         guard observer == nil else { return }
+        // 更新到这一版之前就已经激活过的 Mac：算作已经播放过，之后解绑再激活也不会自动弹出。
+        if LicenseManager.shared.isActivated {
+            UserDefaults.standard.set(true, forKey: Self.playedKey)
+        }
         observer = NotificationCenter.default.addObserver(forName: .licenseDidActivate, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated {
                 UnlockCelebrationWindow.shared.activationSucceeded()
@@ -51,7 +55,11 @@ final class UnlockCelebrationWindow: NSObject {
 
     private func show() {
         close(animated: false)
-        let screen = NSApp.keyWindow?.screen ?? NSScreen.main ?? NSScreen.screens.first
+        // 优先：当前窗口所在的屏幕；从 Pro 介绍页点「重看」时那个窗口已经关了，就用鼠标所在的屏幕。
+        let mouse = NSEvent.mouseLocation
+        let screen = NSApp.keyWindow?.screen
+            ?? NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) })
+            ?? NSScreen.main ?? NSScreen.screens.first
         guard let screen else { return }
         let panel = CelebrationPanel(contentRect: screen.frame, styleMask: [.borderless], backing: .buffered, defer: false)
         panel.isReleasedWhenClosed = false
@@ -83,6 +91,14 @@ final class UnlockCelebrationWindow: NSObject {
         guard let panel else { return }
         self.panel = nil
         panel.onClose = nil
+        // 关掉以后不再响新的音效（还在排队的、点小熊猫补的那几声），正在响的和弦让它自然收尾再释放。
+        if let audio {
+            audio.mute()
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5))
+                withExtendedLifetime(audio) {}
+            }
+        }
         audio = nil
         guard animated else {
             panel.orderOut(nil)
@@ -141,6 +157,8 @@ enum UnlockSound {
 final class CelebrationAudio {
     private var pools: [String: [AVAudioPlayer]] = [:]
     private var nextIndex: [String: Int] = [:]
+    /// 弹窗关了：之后的 play 都不响。
+    private var muted = false
 
     init() {
         // 关掉音效时什么都不加载。
@@ -158,7 +176,7 @@ final class CelebrationAudio {
     }
 
     func play(_ cue: SoundCue) {
-        guard UnlockSound.isEnabled else { return }
+        guard !muted, UnlockSound.isEnabled else { return }
         let name = cue.sound.resourceName
         guard let pool = pools[name], !pool.isEmpty else { return }
         let index = nextIndex[name, default: 0] % pool.count
@@ -169,6 +187,10 @@ final class CelebrationAudio {
         player.pan = Float(max(-1, min(1, cue.pan)))
         player.volume = Float(max(0, min(1, cue.volume)))
         player.play()
+    }
+
+    func mute() {
+        muted = true
     }
 
     func stopAll() {
@@ -307,6 +329,13 @@ struct UnlockCelebrationCard: View {
     @State private var tagsShown = 0
     @State private var buttonIn = false
     @State private var burstSeed: UInt64 = 100
+    /// 王冠落下 / PRO 徽章那一层：只在用得到的那一秒多里存在。
+    @State private var badgeLayerOn = false
+    /// 彩纸彩带还在画面里：前层才逐帧重画；都落完了就拿掉，点小熊猫补彩纸时再打开。
+    @State private var frontLive = false
+    @State private var frontGeneration = 0
+    /// 停在最终画面以后：光芒、光环、星星、挥手这些慢动作降到每秒 30 帧。
+    @State private var settled = false
 
     private var size: CGSize { L.card }
 
@@ -315,9 +344,9 @@ struct UnlockCelebrationCard: View {
             nightSky
             backLayer
             scene
-            badgeAndCrownLayer
+            if badgeLayerOn { badgeAndCrownLayer }
             panel
-            frontLayer
+            if frontLive || reduceMotion { frontLayer }
             // Esc 关闭（面板本身也处理 Esc / ⌘W）。
             Button { onClose(false) } label: { EmptyView() }
                 .keyboardShortcut(.cancelAction)
@@ -331,7 +360,12 @@ struct UnlockCelebrationCard: View {
             RoundedRectangle(cornerRadius: L.corner, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.35), radius: 34, y: 16)
+        // 阴影画在一块静止的底板上：直接加在整张卡片上，每一帧都要把动画内容重新模糊一遍。
+        .background(
+            RoundedRectangle(cornerRadius: L.corner, style: .continuous)
+                .fill(Color(r: 30, g: 16, b: 72))
+                .shadow(color: .black.opacity(0.35), radius: 34, y: 16)
+        )
         .scaleEffect(appeared ? 1 : 0.85)
         .opacity(appeared ? 1 : 0)
         .task { await run() }
@@ -354,7 +388,7 @@ struct UnlockCelebrationCard: View {
     // MARK: 后层：光芒、光环、烟花、星星、速度线
 
     private var backLayer: some View {
-        TimelineView(.animation(minimumInterval: nil, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: settled ? 1.0 / 30 : nil, paused: reduceMotion)) { timeline in
             let t = reduceMotion ? T.settleAt : timeline.date.timeIntervalSince(start)
             Canvas { context, canvasSize in
                 CelebrationRenderer.drawBack(&context, size: canvasSize, t: t, still: reduceMotion)
@@ -434,7 +468,7 @@ struct UnlockCelebrationCard: View {
     }
 
     private var panda: some View {
-        TimelineView(.animation(minimumInterval: nil, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: settled ? 1.0 / 30 : nil, paused: reduceMotion)) { timeline in
             let t = timeline.date.timeIntervalSince(start)
             let sway = reduceMotion ? 0 : T.earWiggle(at: t) + T.waveAngle(at: t)
             ZStack {
@@ -609,6 +643,8 @@ struct UnlockCelebrationCard: View {
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.defaultAction)
+            // 按钮出现之前按回车不算。
+            .disabled(!buttonIn)
         }
         .opacity(buttonIn ? 1 : 0)
         .scaleEffect(buttonIn ? 1 : 0.9)
@@ -638,6 +674,7 @@ struct UnlockCelebrationCard: View {
             showFinal()
             return
         }
+        badgeLayerOn = true
         // 0–0.4s 卡片弹出，小熊猫从下方跳上来。
         withAnimation(.spring(response: 0.42, dampingFraction: 0.7)) { appeared = true }
         withAnimation(.spring(response: 0.45, dampingFraction: 0.6).delay(0.08)) { pandaIn = true }
@@ -647,6 +684,7 @@ struct UnlockCelebrationCard: View {
         withAnimation(.easeInOut(duration: 0.28)) { bowing = true }
         confetti = ConfettiPhysics.burst(count: 110, width: size.width, seed: 11, birth: elapsed)
         streamers = StreamerPhysics.streamers(width: size.width, seed: 5, birth: elapsed)
+        keepFrontLive()
         withAnimation(.spring(response: 0.5, dampingFraction: 0.62).delay(0.2)) { propsIn = true }
 
         // 0.9s 王冠落稳，换成戴王冠的图。
@@ -662,6 +700,8 @@ struct UnlockCelebrationCard: View {
         withAnimation(.spring(response: 0.45, dampingFraction: 0.62)) { titleIn = true }
         guard await wait(until: T.subtitleAt) else { return }
         withAnimation(.easeOut(duration: 0.35)) { subtitleIn = true }
+        guard await wait(until: CelebrationActivity.badgeLayerUntil) else { return }
+        badgeLayerOn = false
         for index in tags.indices {
             guard await wait(until: T.chipTime(index)) else { return }
             withAnimation(.spring(response: 0.32, dampingFraction: 0.55)) { tagsShown = index + 1 }
@@ -671,6 +711,25 @@ struct UnlockCelebrationCard: View {
         guard await wait(until: T.finaleAt) else { return }
         withAnimation(.easeInOut(duration: 0.25)) { pandaStage = 2 }
         withAnimation(.spring(response: 0.4, dampingFraction: 0.65)) { buttonIn = true }
+
+        // 3s 停在最终画面：只留慢慢转的光芒、闪烁的星星和挥手。
+        guard await wait(until: T.settleAt) else { return }
+        settled = true
+    }
+
+    /// 前层要画到彩纸、彩带都落出画面为止；之后拿掉前层，不再逐帧重画。
+    private func keepFrontLive() {
+        let height = Double(L.panelTop + 26)
+        let until = CelebrationActivity.frontActiveUntil(confetti: confetti, streamers: streamers,
+                                                         confettiFloor: height + 10, streamerFloor: height)
+        frontLive = true
+        frontGeneration += 1
+        let generation = frontGeneration
+        let delay = until - elapsed + 0.1
+        Task { @MainActor in
+            if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
+            if generation == frontGeneration { frontLive = false }
+        }
     }
 
     /// 减少动态效果：直接停在最终画面。
@@ -696,6 +755,11 @@ struct UnlockCelebrationCard: View {
         // 去掉早已落地的彩纸，数组不会越来越长。
         confetti.removeAll { now - $0.birth > 8 }
         confetti += ConfettiPhysics.burst(count: 70, width: size.width, seed: burstSeed, birth: now)
+        // 第一轮的彩带早就落完了，不用再算。
+        if streamers.allSatisfy({ CelebrationActivity.exitTime(of: $0, floor: Double(L.panelTop + 26)) < now }) {
+            streamers = []
+        }
+        keepFrontLive()
         let cues = CelebrationSoundScript.tapCues(at: now)
         Task { @MainActor in
             for cue in cues {

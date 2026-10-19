@@ -219,4 +219,30 @@ final class UnlockCelebrationTests: XCTestCase {
             XCTAssertFalse(abs(x - 280) / 560 < 0.2 && y > 480 * 0.15)
         }
     }
+
+    func testFrontLayerStopsAfterEverythingFell() {
+        let floor = 506.0
+        let confetti = ConfettiPhysics.burst(count: 110, width: 560, seed: 11, birth: 0.4)
+        let streamers = StreamerPhysics.streamers(width: 560, seed: 5, birth: 0.4)
+        let until = CelebrationActivity.frontActiveUntil(confetti: confetti, streamers: streamers,
+                                                         confettiFloor: floor, streamerFloor: floor - 10)
+        // 至少等星光扫完，也不会一直画下去。
+        XCTAssertGreaterThanOrEqual(until, T.glintAt + T.glintDuration)
+        XCTAssertLessThan(until, 15)
+        // 到那一刻，彩纸都已掉出画面，彩带整条都在画面下面。
+        for piece in confetti {
+            XCTAssertNil(ConfettiPhysics.state(of: piece, at: until + 0.01, floor: floor))
+        }
+        for streamer in streamers {
+            let points = StreamerPhysics.points(of: streamer, at: until + 0.01)
+            XCTAssertTrue(points.allSatisfy { Double($0.y) > floor - 10 })
+        }
+    }
+
+    func testBadgeLayerEndsAfterBadgeFades() {
+        let end = CelebrationActivity.badgeLayerUntil
+        XCTAssertGreaterThanOrEqual(end, T.crownLandAt)
+        XCTAssertEqual(T.badge(at: end + 0.01).opacity, 0, accuracy: 1e-9)
+        XCTAssertLessThan(end, T.settleAt)
+    }
 }
