@@ -390,7 +390,7 @@ final class NotchShelfController: NSObject, ObservableObject {
     func trashSelected(_ list: [FileItem]? = nil) {
         let list = list ?? trashableSelection
         guard !list.isEmpty, let store = LibraryStore.shared else { return }
-        store.moveToTrash(list) { [weak self] moved in
+        store.moveToTrash(list, origin: panel) { [weak self] moved in
             guard let self, !moved.isEmpty else { return }
             self.downloads.removeAll { moved.contains($0.path) }
             self.selectedIndex = min(self.selectedIndex, max(self.currentItems.count - 1, 0))
@@ -432,6 +432,10 @@ final class NotchShelfController: NSObject, ObservableObject {
 final class NotchShelfPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
+    /// 这块面板在最前面时，「编辑 › 撤销 / 重做」（⌘Z / ⌘⇧Z）用主窗口的文件撤销栈：在这里移到废纸篓后马上就能撤销。
+    override var undoManager: UndoManager? {
+        MainActor.assumeIsolated { FileUndoCenter.shared.undoManager } ?? super.undoManager
+    }
 
     override func cancelOperation(_ sender: Any?) {
         MainActor.assumeIsolated { NotchShelfController.shared.hide() }
@@ -551,6 +555,7 @@ struct NotchShelfView: View {
             if previewURL != nil { previewURL = controller.selectedItem?.url }
         }
         .onChange(of: previewURL) { controller.previewing = previewURL != nil }
+        .panelUndoToast()
     }
 
     private var header: some View {

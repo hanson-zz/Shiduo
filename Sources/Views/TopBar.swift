@@ -153,6 +153,41 @@ struct ToastView: View {
 }
 
 
+/// 主窗口以外的面板（悬浮 / 刘海暂存架、菜单栏、快速搜索）里的小提示：在这块面板里移到废纸篓后，
+/// 就在这里显示带「撤销」的提示（主窗口可能被挡住或者没开）。主窗口照样显示同一条。
+private struct PanelUndoToast: View {
+    @ObservedObject var store: LibraryStore
+    @State private var window: ObjectIdentifier?
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Color.clear
+                .allowsHitTesting(false)
+            if let window, store.toastOrigin == window, let batch = store.toastUndoBatch, store.toast != nil {
+                ToastView(text: String(localized: "已移到废纸篓")) { store.undoBatch(batch) }
+                    .padding(.bottom, 10)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.toastUndoBatch)
+        .background(WindowReader { found in
+            let id = found.map { ObjectIdentifier($0) }
+            if window != id { window = id }
+        })
+    }
+}
+
+extension View {
+    /// 在这块面板里显示从这里操作出来的「已移到废纸篓 · 撤销」。
+    func panelUndoToast() -> some View {
+        overlay(alignment: .bottom) {
+            if let store = LibraryStore.shared {
+                PanelUndoToast(store: store)
+            }
+        }
+    }
+}
+
 /// 拷贝文字后弹出的预览卡：看一眼拷了什么。
 struct CopiedTextCard: View {
     @EnvironmentObject private var store: LibraryStore

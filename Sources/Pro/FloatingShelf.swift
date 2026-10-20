@@ -30,6 +30,8 @@ final class FloatingShelfController: NSObject {
     private let panelSize = NSSize(width: 248, height: 340)
 
     private var panel: FloatingShelfPanel?
+    /// 悬浮暂存架的面板（在这里移到废纸篓时，带「撤销」的小提示显示在这里）。
+    var window: NSWindow? { panel }
     private var monitors: [Any] = []
     /// 按下鼠标时拖动剪贴板的计数；之后变了，说明开始了一次新的拖动。
     private var dragCountAtMouseDown = NSPasteboard(name: .drag).changeCount
@@ -333,7 +335,7 @@ final class FloatingShelfController: NSObject {
         effect.wantsLayer = true
         effect.layer?.cornerRadius = 18
         effect.layer?.masksToBounds = true
-        let host = NSHostingView(rootView: FloatingShelfView(controller: self))
+        let host = NSHostingView(rootView: FloatingShelfView(controller: self).panelUndoToast())
         host.translatesAutoresizingMaskIntoConstraints = false
         effect.addSubview(host)
         NSLayoutConstraint.activate([
@@ -350,6 +352,10 @@ final class FloatingShelfController: NSObject {
 final class FloatingShelfPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
+    /// 这块面板在最前面时，「编辑 › 撤销 / 重做」（⌘Z / ⌘⇧Z）用主窗口的文件撤销栈：在这里移到废纸篓后马上就能撤销。
+    override var undoManager: UndoManager? {
+        MainActor.assumeIsolated { FileUndoCenter.shared.undoManager } ?? super.undoManager
+    }
 }
 
 /// 悬浮面板里的内容：放进来的文件、拖出全部、在拾掇中打开。
@@ -434,7 +440,7 @@ struct FloatingShelfView: View {
                                 Divider()
                                 Button("从暂存架移除") { shelf.remove(paths: [item.path]) }
                                 // 和主窗口同一套：清理记录、⌘Z 撤销、音效；暂存架上会一起拿掉。
-                                Button("移到废纸篓") { LibraryStore.shared?.moveToTrash([item]) }
+                                Button("移到废纸篓") { LibraryStore.shared?.moveToTrash([item], origin: controller.window) }
                             }
                             .help(item.path)
                         }

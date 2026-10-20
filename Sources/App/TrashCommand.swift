@@ -63,10 +63,12 @@ final class TrashCommandCenter: ObservableObject {
 
     func changed() { tick &+= 1 }
 
-    /// 菜单要处理的窗口：前台窗口；系统快速查看面板在最前面时，处理它背后的主窗口（和访达一样，预览着也能 ⌘⌫）。
+    /// 菜单要处理的窗口：前台窗口；系统快速查看面板在最前面时，处理发起这次预览的窗口（和访达一样，预览着也能 ⌘⌫）。
+    /// 不能用 NSApp.mainWindow：从刘海暂存架打开预览时，mainWindow 是主窗口，会删掉主窗口里看不见的选中。
+    /// 找不到发起预览的窗口时返回 nil，菜单不可用。
     private var targetWindow: NSWindow? {
         guard let key = NSApp.keyWindow else { return nil }
-        if key is QLPreviewPanel { return NSApp.mainWindow }
+        if key is QLPreviewPanel { return QuickLookPanel.shared.sessionWindow }
         return key
     }
 

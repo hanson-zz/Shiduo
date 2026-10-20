@@ -65,8 +65,10 @@ final class FileUndoCenter {
         let manager = undoManager
         action.manager = manager
         if let manager {
-            manager.registerUndo(withTarget: action) { target in
-                MainActor.assumeIsolated { FileUndoCenter.shared.performUndo(target, manager: manager) }
+            // UndoManager 对 target 只留 unowned 引用：闭包里强引用 action，撤销栈里还有它，它就一直活着
+            // （action.manager 是 weak，不会循环引用）。manager 用 weak，免得撤销栈里的闭包反过来留住撤销栈。
+            manager.registerUndo(withTarget: action) { [action, weak manager] _ in
+                MainActor.assumeIsolated { FileUndoCenter.shared.performUndo(action, manager: manager) }
             }
             manager.setActionName(action.name)
         }
@@ -121,8 +123,8 @@ final class FileUndoCenter {
         store?.toast = nil
         store?.toastUndoBatch = nil
         if let manager, action.canRedo {
-            manager.registerUndo(withTarget: action) { target in
-                MainActor.assumeIsolated { FileUndoCenter.shared.performRedo(target, manager: manager) }
+            manager.registerUndo(withTarget: action) { [action, weak manager] _ in
+                MainActor.assumeIsolated { FileUndoCenter.shared.performRedo(action, manager: manager) }
             }
             manager.setActionName(action.name)
         }
@@ -133,8 +135,8 @@ final class FileUndoCenter {
         guard action.isUndone else { return }
         action.markUndone(false)
         if let manager {
-            manager.registerUndo(withTarget: action) { target in
-                MainActor.assumeIsolated { FileUndoCenter.shared.performUndo(target, manager: manager) }
+            manager.registerUndo(withTarget: action) { [action, weak manager] _ in
+                MainActor.assumeIsolated { FileUndoCenter.shared.performUndo(action, manager: manager) }
             }
             manager.setActionName(action.name)
         }

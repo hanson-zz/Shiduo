@@ -37,7 +37,7 @@ final class QuickSearchModel: ObservableObject {
     /// 右键「移到废纸篓」：和主窗口同一套（清理记录、⌘Z 撤销、音效），移走后从结果里拿掉。
     func trash(_ item: FileItem) {
         guard let store else { return }
-        store.moveToTrash([item]) { [weak self] moved in
+        store.moveToTrash([item], origin: QuickSearchController.shared.window) { [weak self] moved in
             guard let self, !moved.isEmpty else { return }
             self.results.removeAll { moved.contains($0.path) }
             self.selected = min(self.selected, max(self.visible.count - 1, 0))
@@ -79,6 +79,10 @@ final class QuickSearchModel: ObservableObject {
 final class QuickSearchPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
+    /// 这块面板在最前面时，「编辑 › 撤销 / 重做」（⌘Z / ⌘⇧Z）用主窗口的文件撤销栈：在这里移到废纸篓后马上就能撤销。
+    override var undoManager: UndoManager? {
+        MainActor.assumeIsolated { FileUndoCenter.shared.undoManager } ?? super.undoManager
+    }
 }
 
 @MainActor
@@ -87,6 +91,8 @@ final class QuickSearchController: NSObject, NSWindowDelegate {
 
     let model = QuickSearchModel()
     private var panel: QuickSearchPanel?
+    /// 快速搜索的面板（在这里移到废纸篓时，带「撤销」的小提示显示在这里）。
+    var window: NSWindow? { panel }
     private var monitor: Any?
 
     func configure(store: LibraryStore) {
@@ -157,7 +163,7 @@ final class QuickSearchController: NSObject, NSWindowDelegate {
         effect.wantsLayer = true
         effect.layer?.cornerRadius = 16
         effect.layer?.masksToBounds = true
-        let host = NSHostingView(rootView: root)
+        let host = NSHostingView(rootView: root.panelUndoToast())
         host.translatesAutoresizingMaskIntoConstraints = false
         effect.addSubview(host)
         NSLayoutConstraint.activate([

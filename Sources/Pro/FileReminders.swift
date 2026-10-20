@@ -208,6 +208,16 @@ final class ReminderStore: ObservableObject {
         if changed { save() }
     }
 
+    /// 文件被「立即删除」以后：去掉指向它（或它里面）的提醒，撤掉已经排好的通知。
+    func remove(where gone: (String) -> Bool) {
+        let ids = reminders.filter { gone($0.path) }.map { Self.idPrefix + $0.id.uuidString }
+        guard !ids.isEmpty else { return }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids)
+        reminders.removeAll { gone($0.path) }
+        save()
+    }
+
     func reminder(for path: String) -> FileReminder? {
         reminders.first { $0.path == path }
     }

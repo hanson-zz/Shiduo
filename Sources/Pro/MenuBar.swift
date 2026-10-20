@@ -84,6 +84,7 @@ struct MenuBarContent: View {
         }
         .padding(14)
         .frame(width: 300)
+        .panelUndoToast()
         .task { await refresh() }
     }
 

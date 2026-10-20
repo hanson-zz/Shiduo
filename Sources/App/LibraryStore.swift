@@ -1,4 +1,5 @@
 import AppKit
+import Quartz
 import SwiftUI
 
 enum SidebarItem: Hashable {
@@ -248,6 +249,9 @@ final class LibraryStore: ObservableObject {
     @Published var toast: String?
     /// 小提示上的「撤销」：移到废纸篓后可以把这一批放回去（清理记录里的 batchID）。
     @Published var toastUndoBatch: UUID?
+    /// 小提示是在主窗口以外的哪个窗口里操作出来的（悬浮 / 刘海暂存架、菜单栏、快速搜索）。
+    /// 那块面板里也显示一份带「撤销」的小提示；主窗口照样显示（主窗口没开、被挡住时用户也能看到）。
+    @Published private(set) var toastOrigin: ObjectIdentifier?
     /// 正在选择搬家目标的文件（Pro：大文件搬家，非空时弹出面板）。
     @Published var moveOutItems: [FileItem] = []
     /// 刚拷贝的文字预览（标题, 内容）。
@@ -882,6 +886,7 @@ final class LibraryStore: ObservableObject {
     func showToast(_ text: String) {
         toast = text
         toastUndoBatch = nil
+        toastOrigin = nil
         let current = text
         Task {
             try? await Task.sleep(nanoseconds: 2_200_000_000)
@@ -893,6 +898,7 @@ final class LibraryStore: ObservableObject {
     func showUndoToast(_ text: String, batch: UUID) {
         toast = text
         toastUndoBatch = batch
+        toastOrigin = nil
         Task {
             try? await Task.sleep(nanoseconds: 7_000_000_000)
             if toastUndoBatch == batch {
@@ -907,6 +913,7 @@ final class LibraryStore: ObservableObject {
         toast = nil
         toastUndoBatch = nil
         if let action = customUndo.removeValue(forKey: batch) {
+            customUndoOrder.removeAll { $0 == batch }
             action()
             return
         }
@@ -916,9 +923,12 @@ final class LibraryStore: ObservableObject {
     /// 带「撤销」按钮的小提示，按钮执行自定义动作（不是清理记录里的一批）。
     func showUndoToast(_ text: String, undo: @escaping @MainActor () -> Void) {
         let batch = UUID()
-        // 只留最近几个，旧的小提示早就消失了。
-        if customUndo.count > 20 { customUndo.removeAll() }
+        // 只留最近 20 个（旧的小提示早就消失了）：去掉最旧的，不整个清空。
         customUndo[batch] = undo
+        customUndoOrder.append(batch)
+        while customUndoOrder.count > 20 {
+            customUndo[customUndoOrder.removeFirst()] = nil
+        }
         showUndoToast(text, batch: batch)
     }
 
@@ -1068,17 +1078,36 @@ final class LibraryStore: ObservableObject {
     private var trashedFromShelf: [UUID: Set<String>] = [:]
     /// 小提示上「撤销」按钮的自定义动作（比如撤销重命名），按 batchID 找。
     private var customUndo: [UUID: @MainActor () -> Void] = [:]
+    /// customUndo 加入的先后（旧的在前）。
+    private var customUndoOrder: [UUID] = []
+
+    /// 现在操作的是主窗口以外的哪个窗口（主窗口、没有前台窗口时为 nil）。
+    /// 快速查看在最前面时，算发起预览的那个窗口（比如刘海暂存架）。
+    static func actionOriginWindow() -> ObjectIdentifier? {
+        var window = NSApp.keyWindow
+        if window is QLPreviewPanel { window = QuickLookPanel.shared.sessionWindow }
+        guard let window, !MainWindow.isMain(window) else { return nil }
+        return ObjectIdentifier(window)
+    }
 
     /// 移到废纸篓。真正的移动在后台线程做（几千个文件、iCloud 云盘或网络盘上也不卡界面），完成后再更新列表和清理记录。
     /// App 里所有「移到废纸篓」都走这里：FileManager.trashItem（访达里「放回原处」可用）、记进清理记录、⌘Z 撤销、
     /// 和访达一样的音效。completion 收到真正移走的原路径（主窗口以外的列表用它把文件拿掉）。
-    func moveToTrash(_ list: [FileItem], completion: (@MainActor (Set<String>) -> Void)? = nil) {
+    /// origin：在主窗口以外的哪块面板里操作的（nil 时按前台窗口判断），带「撤销」的小提示也显示在那里。
+    func moveToTrash(_ list: [FileItem], origin: NSWindow? = nil,
+                     completion: (@MainActor (Set<String>) -> Void)? = nil) {
         guard !list.isEmpty else {
             completion?([])
             return
         }
         let urls = list.map(\.url)
         let onShelf = Set(list.map(\.path).filter { ShelfStore.shared.contains($0) })
+        let originID: ObjectIdentifier?
+        if let origin {
+            originID = MainWindow.isMain(origin) ? nil : ObjectIdentifier(origin)
+        } else {
+            originID = Self.actionOriginWindow()
+        }
         trashingCount += list.count
         if list.count >= 30 {
             toast = String(localized: "正在移到废纸篓：\(list.count) 个…")
@@ -1087,14 +1116,14 @@ final class LibraryStore: ObservableObject {
         Task {
             let outcome = await Task.detached(priority: .userInitiated) { FileActions.trash(urls) }.value
             trashingCount = max(0, trashingCount - list.count)
-            finishTrash(list, outcome: outcome, onShelf: onShelf)
+            finishTrash(list, outcome: outcome, onShelf: onShelf, origin: originID)
             completion?(Set(outcome.moved.map(\.path)))
         }
     }
 
     private func finishTrash(_ list: [FileItem],
                              outcome: (moved: [URL], failed: [URL], skipped: [URL], trashed: [String: String]),
-                             onShelf: Set<String>) {
+                             onShelf: Set<String>, origin: ObjectIdentifier?) {
         let moved = Set(outcome.moved.map(\.path))
         let movedItems = list.filter { moved.contains($0.path) }
         forget(paths: moved)
@@ -1111,6 +1140,7 @@ final class LibraryStore: ObservableObject {
             // 小提示上的「撤销」和 ⌘Z 走同一个撤销栈（原位置被占用时跳过，不覆盖）。
             FileUndoCenter.shared.registerHistory(batch: batch, name: String(localized: "移到废纸篓"),
                                                   toast: String(localized: "已移到废纸篓 · 30 天内可在「清理记录」里恢复"))
+            toastOrigin = origin
             filesChangedTick += 1
             // 首页、侧边栏的数量先按刚移走的减掉，过几秒再按 Spotlight 重新数一次。
             for item in movedItems where !item.isDirectory {
@@ -1166,7 +1196,12 @@ final class LibraryStore: ObservableObject {
             let removed = Set(outcome.removed)
             if !removed.isEmpty {
                 forget(paths: removed)
-                pinnedFolders.removeAll { removed.contains($0) }
+                // 暂存架、文件提醒、固定的文件夹、文件夹颜色里指向已删路径（或它里面）的记录一起拿掉，不留「丢失」的条目。
+                let gone = PathLogic.Removed(removed)
+                pinnedFolders.removeAll { gone.contains($0) }
+                ShelfStore.shared.remove(paths: Set(ShelfStore.shared.items.map(\.path).filter { gone.contains($0) }))
+                ReminderStore.shared.remove { gone.contains($0) }
+                FolderWallModel.shared.forget { gone.contains($0) }
                 filesChangedTick += 1
                 showToast(String(localized: "已立即删除 \(removed.count) 个项目"))
                 scheduleCountsRefresh()

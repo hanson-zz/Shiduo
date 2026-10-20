@@ -120,6 +120,18 @@ final class FolderWallModel: ObservableObject {
         FolderIconService.shared.movePath(old, to: new)
     }
 
+    /// 文件夹被「立即删除」以后：去掉它（和它里面的文件夹）记下的颜色和概要。
+    func forget(where gone: (String) -> Bool) {
+        let manual = manualColors.filter { !gone($0.key) }
+        if manual.count != manualColors.count { manualColors = manual }
+        let custom = customColors.filter { !gone($0.key) }
+        if custom.count != customColors.count { customColors = custom }
+        let left = summaries.filter { !gone($0.key) }
+        if left.count != summaries.count { summaries = left }
+        let tints = photoTints.filter { !gone($0.key) }
+        if tints.count != photoTints.count { photoTints = tints }
+    }
+
     /// 打开系统色盘，拖动时实时改这个文件夹的颜色。
     func openColorPanel(for s: FolderSummary) {
         FolderColorPanel.shared.open(initial: tint(for: s)) { [weak self] color in

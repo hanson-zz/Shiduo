@@ -43,6 +43,9 @@ final class QuickLookPanel: NSResponder {
 
     func isShowing(owner: UUID) -> Bool { session?.owner == owner }
 
+    /// 发起这次预览的窗口（主窗口、刘海暂存架……）。没有在预览时为 nil。
+    var sessionWindow: NSWindow? { session?.window }
+
     /// 打开预览（已经开着就换到这个文件）。
     func present(owner: UUID, urls: [URL], current: URL, window: NSWindow?, forwardsArrowKeys: Bool,
                  onChange: @escaping (URL?) -> Void) {
@@ -294,6 +297,11 @@ extension QuickLookPanel: QLPreviewPanelDataSource, QLPreviewPanelDelegate {
         }
         guard let url else { return nil }
         return url as NSURL
+    }
+
+    /// 快速查看在最前面时，⌘Z / ⌘⇧Z 用发起预览的窗口的撤销栈（最终都是主窗口的文件撤销栈）：预览着 ⌘⌫ 之后马上能撤销。
+    nonisolated func windowWillReturnUndoManager(_ window: NSWindow) -> UndoManager? {
+        MainActor.assumeIsolated { session?.window?.undoManager ?? FileUndoCenter.shared.undoManager }
     }
 
     nonisolated func previewPanel(_ panel: QLPreviewPanel!, handle event: NSEvent!) -> Bool {

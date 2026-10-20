@@ -24,6 +24,9 @@ enum MainWindow {
         flushPending()
     }
 
+    /// 这个窗口是不是拾掇的主窗口。
+    static func isMain(_ window: NSWindow) -> Bool { windows.contains(window) }
+
     /// 现在开着的主窗口（最小化的也算），前面的优先。
     static var current: NSWindow? {
         let alive = windows.allObjects.filter { $0.isVisible || $0.isMiniaturized }
