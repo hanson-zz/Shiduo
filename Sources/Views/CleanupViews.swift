@@ -68,50 +68,11 @@ struct CleanupView: View {
                 Label("以上清理不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。", systemImage: "checkmark.shield")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-
-                AdvancedToolsSection()
-                    .padding(.top, 8)
             }
             .padding(.horizontal, 32)
             .padding(.vertical, 24)
         }
         .scrollContentBackground(.hidden)
-    }
-}
-
-/// 清理页最底下的「进阶工具」：默认收起，展开状态记在偏好里。收起时不显示 Mole 卡片，也就不会检测 Mole 或联网。
-private struct AdvancedToolsSection: View {
-    @AppStorage("cleanupAdvancedExpanded") private var expanded = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.secondary)
-                        .rotationEffect(.degrees(expanded ? 90 : 0))
-                        .frame(width: 14)
-                    Text("进阶工具")
-                        .font(.headline)
-                    Text("搭配开源工具 Mole，适合熟悉终端的用户")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityValue(expanded ? Text("已展开") : Text("已收起"))
-
-            if expanded {
-                MoleCleanupCard()
-                    .transition(.opacity)
-            }
-        }
     }
 }
 
