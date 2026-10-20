@@ -266,22 +266,36 @@ extension NSColor {
 
 // MARK: - 页面
 
+/// 文件夹墙：常用文件夹的卡片墙（以前侧边栏的「固定文件夹」也在这里，是同一份 pinnedFolders）。免费。
 struct FolderWallView: View {
     @EnvironmentObject private var store: LibraryStore
     @ObservedObject private var model = FolderWallModel.shared
     @ObservedObject private var reminders = ReminderStore.shared
+    @ObservedObject private var transfer = ShelfTransfer.shared
     @State private var query = ""
-    @State private var sort: Sort = .recent
+    @AppStorage("folderWall.sort") private var sort: Sort = .recent
+    /// 卡片大小（右下角的滑块、⌘+ / ⌘-），存在 UserDefaults。
+    @AppStorage(LibraryStore.wallTileSizeKey) private var tileSize: Double = FolderWallView.defaultTileSize
     @FocusState private var searchFocused: Bool
+    @FocusState private var gridFocused: Bool
+    @State private var selectedPath: String?
+    @State private var renamingPath: String?
+    @State private var gridWidth: CGFloat = 900
+    @State private var wallTargeted = false
+
+    static let defaultTileSize: Double = 122
+    /// 卡片拖动排序时放进拖动内容里的前缀（不是文件，拖到别的 App 里没用）。
+    static let tilePrefix = "shiduo-folder-wall:"
 
     enum Sort: String, CaseIterable, Identifiable {
-        case recent, name, size
+        case recent, name, size, manual
         var id: Self { self }
         var title: String {
             switch self {
             case .recent: return String(localized: "最近")
             case .name: return String(localized: "名称")
             case .size: return String(localized: "大小")
+            case .manual: return String(localized: "自定")
             }
         }
         var symbol: String {
@@ -289,9 +303,13 @@ struct FolderWallView: View {
             case .recent: return "clock"
             case .name: return "textformat"
             case .size: return "internaldrive"
+            case .manual: return "hand.draw"
             }
         }
     }
+
+    /// 卡片里文件夹本体的宽度（滑块 48–160 对应 77–256pt）。
+    private var cardWidth: CGFloat { CGFloat(min(max(tileSize, LibraryStore.wallTileSizeRange.lowerBound), LibraryStore.wallTileSizeRange.upperBound)) * 1.6 }
 
     private var folders: [FolderSummary] {
         let all = store.pinnedFolders.map { model.summaries[$0] ?? FolderSummary(path: $0, name: FileManager.default.displayName(atPath: $0)) }
@@ -303,7 +321,13 @@ struct FolderWallView: View {
         case .recent: return filtered.sorted { ($0.updated ?? .distantPast) > ($1.updated ?? .distantPast) }
         case .name: return filtered.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         case .size: return filtered.sorted { $0.bytes > $1.bytes }
+        case .manual: return filtered
         }
+    }
+
+    /// 每行几张卡片（方向键上下用）。
+    private var columns: Int {
+        max(1, Int((gridWidth + 20) / (cardWidth + 32 + 20)))
     }
 
     var body: some View {
@@ -313,21 +337,80 @@ struct FolderWallView: View {
                 empty
             } else {
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 228, maximum: 260), spacing: 20)], spacing: 30) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: cardWidth + 32, maximum: cardWidth + 64), spacing: 20)], spacing: 24) {
                         ForEach(folders, id: \.path) { s in
                             FolderCard(summary: s,
                                        tint: model.tint(for: s),
-                                       reminderCount: reminders.reminders.filter { $0.path.hasPrefix(s.path + "/") }.count)
+                                       reminderCount: reminders.reminders.filter { $0.path.hasPrefix(s.path + "/") }.count,
+                                       width: cardWidth,
+                                       selected: selectedPath == s.path,
+                                       renamingPath: $renamingPath,
+                                       onSelect: {
+                                           selectedPath = s.path
+                                           gridFocused = true
+                                       },
+                                       onDropTile: { moved in reorder(moved, before: s.path) })
                         }
                     }
+                    .background(GeometryReader { proxy in
+                        Color.clear
+                            .onAppear { gridWidth = proxy.size.width }
+                            .onChange(of: proxy.size.width) { gridWidth = proxy.size.width }
+                    })
                     .padding(.horizontal, 24)
-                    .padding(.top, 34)
-                    .padding(.bottom, 30)
+                    .padding(.top, 30)
+                    .padding(.bottom, 44)
+                }
+                .focusable()
+                .focused($gridFocused)
+                .focusEffectDisabled()
+                .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow]) { press in
+                    guard press.modifiers.subtracting([.numericPad, .function]).isEmpty else { return .ignored }
+                    switch press.key {
+                    case .leftArrow: return step(-1)
+                    case .rightArrow: return step(1)
+                    case .upArrow: return step(-columns)
+                    default: return step(columns)
+                    }
+                }
+                // 回车：重命名（和访达一样）；⌘↓ / ⌘O：打开。
+                .onKeyPress(.return) {
+                    guard let path = selectedPath, NSEvent.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+                    else { return .ignored }
+                    renamingPath = path
+                    return .handled
+                }
+                .onKeyPress(keys: [.downArrow, "o"]) { press in
+                    guard press.modifiers.subtracting([.numericPad, .function]) == .command, let path = selectedPath else { return .ignored }
+                    open(path)
+                    return .handled
+                }
+                .onKeyPress(.escape) {
+                    guard selectedPath != nil else { return .ignored }
+                    selectedPath = nil
+                    return .handled
                 }
             }
         }
+        // 把文件夹从访达或拾掇的列表拖到墙上：放上墙；拖动卡片到空白处：排到最后。
+        .onDrop(of: [.fileURL, .plainText], isTargeted: $wallTargeted) { providers in
+            handleWallDrop(providers)
+        }
+        .overlay {
+            if wallTargeted {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(Color.accentColor.opacity(0.7), style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
+                    .padding(8)
+                    .allowsHitTesting(false)
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if !store.pinnedFolders.isEmpty { sizeSlider }
+        }
         .onAppear { model.reload(store.pinnedFolders) }
         .onChange(of: store.pinnedFolders) { model.reload(store.pinnedFolders) }
+        // 拖进卡片的文件移动 / 拷贝完了：重新读一下数量和预览。
+        .onChange(of: transfer.isRunning) { if !transfer.isRunning { model.reload(store.pinnedFolders) } }
         .background {
             Button("") { searchFocused = true }
                 .keyboardShortcut("/", modifiers: [])
@@ -335,6 +418,29 @@ struct FolderWallView: View {
                 .disabled(searchFocused || store.searchFieldFocused)
                 .opacity(0)
         }
+    }
+
+    /// 访达状态栏那样的图标大小滑块：左边小文件夹，右边大文件夹。
+    private var sizeSlider: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "folder.fill")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+            Slider(value: $tileSize, in: LibraryStore.wallTileSizeRange)
+                .controlSize(.mini)
+                .frame(width: 96)
+                .accessibilityLabel("卡片大小")
+            Image(systemName: "folder.fill")
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Capsule().fill(.regularMaterial))
+        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08)))
+        .padding(.trailing, 16)
+        .padding(.bottom, 12)
+        .help("卡片大小（⌘+ / ⌘-）")
     }
 
     private var header: some View {
@@ -356,12 +462,14 @@ struct FolderWallView: View {
                 }
                 .buttonStyle(.borderless)
                 .help("刷新")
+                .accessibilityLabel("刷新")
                 Button {
                     store.choosePinnedFolder()
                 } label: {
-                    Label("固定文件夹", systemImage: "plus")
+                    Label("添加到文件夹墙", systemImage: "plus")
                 }
                 .buttonStyle(.borderedProminent)
+                .help(AppShortcut.addToFolderWall.help)
             }
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
@@ -382,12 +490,13 @@ struct FolderWallView: View {
                 .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.08)))
                 .frame(maxWidth: 460)
 
-                Picker("", selection: $sort) {
+                Picker("排序", selection: $sort) {
                     ForEach(Sort.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .fixedSize()
+                .help("「自定」按你拖动排好的顺序")
             }
         }
         .padding(.horizontal, 24)
@@ -399,14 +508,82 @@ struct FolderWallView: View {
             Image(systemName: "folder.badge.plus")
                 .font(.system(size: 44))
                 .foregroundStyle(.secondary)
-            Text("还没有固定文件夹")
+            Text("文件夹墙还是空的")
                 .font(.title3.weight(.semibold))
-            Text("固定常用的文件夹，这里会变成一面卡片墙，一眼看到里面有什么。")
+            Text("把常用的文件夹放上来，这里会变成一面卡片墙，一眼看到里面有什么。也可以直接把文件夹从访达拖到这里。")
                 .foregroundStyle(.secondary)
-            Button("固定文件夹…") { store.choosePinnedFolder() }
-                .controlSize(.large)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 420)
+            Button {
+                store.choosePinnedFolder()
+            } label: {
+                Label("添加到文件夹墙", systemImage: "plus")
+            }
+            .controlSize(.large)
+            .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: 操作
+
+    private func open(_ path: String) {
+        store.openFolder(URL(fileURLWithPath: path, isDirectory: true))
+    }
+
+    private func step(_ offset: Int) -> KeyPress.Result {
+        let list = folders
+        guard !list.isEmpty else { return .ignored }
+        let index = list.firstIndex { $0.path == selectedPath } ?? (offset > 0 ? -1 : list.count)
+        let target = min(max(index + offset, 0), list.count - 1)
+        selectedPath = list[target].path
+        return .handled
+    }
+
+    /// 拖动卡片排序：把 moved 排到 target 前面（target 为 nil 排到最后），之后按「自定」顺序显示。
+    private func reorder(_ moved: String, before target: String?) {
+        var order = store.pinnedFolders
+        guard order.contains(moved), moved != target else { return }
+        // 先按眼前看到的顺序排好，拖动的结果才和看到的一致。
+        if sort != .manual {
+            order = folders.map(\.path) + order.filter { path in !folders.contains { $0.path == path } }
+        }
+        order.removeAll { $0 == moved }
+        if let target, let index = order.firstIndex(of: target) {
+            order.insert(moved, at: index)
+        } else {
+            order.append(moved)
+        }
+        store.pinnedFolders = order
+        sort = .manual
+    }
+
+    private func handleWallDrop(_ providers: [NSItemProvider]) -> Bool {
+        if FolderWallDrop.loadTile(providers, completion: { reorder($0, before: nil) }) { return true }
+        return FileDrop.load(providers) { urls in
+            let dirs = urls.filter { LibraryStore.isBrowsableFolder($0) }
+            for dir in dirs { store.pin(dir.path) }
+            if dirs.isEmpty { store.showToast(String(localized: "只有文件夹能放上文件夹墙；文件可以拖到某张卡片上，移进那个文件夹")) }
+        }
+    }
+}
+
+/// 文件夹墙的拖放：卡片之间拖动排序用一段带前缀的文字（不是文件），和拖进来的文件分开。
+enum FolderWallDrop {
+    /// 是卡片排序的拖动就读出路径交给 completion，返回 true。
+    static func loadTile(_ providers: [NSItemProvider], completion: @escaping @MainActor (String) -> Void) -> Bool {
+        guard !providers.contains(where: { $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) }),
+              let provider = providers.first(where: { $0.canLoadObject(ofClass: NSString.self) }) else { return false }
+        _ = provider.loadObject(ofClass: NSString.self) { object, _ in
+            guard let text = object as? String, text.hasPrefix(FolderWallView.tilePrefix) else { return }
+            let path = String(text.dropFirst(FolderWallView.tilePrefix.count))
+            Task { @MainActor in completion(path) }
+        }
+        return true
+    }
+
+    static func tileProvider(_ path: String) -> NSItemProvider {
+        NSItemProvider(object: (FolderWallView.tilePrefix + path) as NSString)
     }
 }
 
@@ -418,14 +595,23 @@ struct FolderCard: View {
     let summary: FolderSummary
     let tint: NSColor
     let reminderCount: Int
+    /// 文件夹本体的宽度（右下角滑块调）。
+    var width: CGFloat = 196
+    var selected = false
+    /// 墙上按回车时设成这张卡片的路径：弹出重命名。
+    @Binding var renamingPath: String?
+    var onSelect: () -> Void = {}
+    /// 别的卡片拖到这张上面：排到它前面。
+    var onDropTile: (String) -> Void = { _ in }
 
     @State private var hovering = false
     @State private var dropTargeted = false
     @State private var renaming = false
     @State private var newName = ""
 
-    private let width: CGFloat = 196
     private var height: CGFloat { width * 0.80 }
+    /// 小卡片上字也小一点。
+    private var nameSize: CGFloat { width < 120 ? 12 : 14 }
 
     var body: some View {
         VStack(spacing: 6) {
@@ -433,30 +619,54 @@ struct FolderCard: View {
                 .frame(width: width, height: height)
                 .scaleEffect(dropTargeted ? 1.05 : 1)
             Text(summary.name)
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: nameSize, weight: .medium))
                 .lineLimit(1)
+                .frame(maxWidth: width + 16)
                 .padding(.top, 10)
             Text(subtitle)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+                .frame(maxWidth: width + 16)
         }
         .padding(.horizontal, 16)
         .padding(.top, 26)
         .padding(.bottom, 14)
         .background(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.primary.opacity(hovering || dropTargeted ? 0.055 : 0))
+                .fill(selected ? Color.accentColor.opacity(0.14) : Color.primary.opacity(hovering || dropTargeted ? 0.055 : 0))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(selected ? Color.accentColor.opacity(0.7) : .clear, lineWidth: 1.5)
         )
         .contentShape(RoundedRectangle(cornerRadius: 22))
         .onHover { h in guard !Demo.isOn else { return }; withAnimation(.spring(response: 0.32, dampingFraction: 0.7)) { hovering = h } }
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: dropTargeted)
-        .onTapGesture { store.selection = .pinned(summary.path) }
-        .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
-            FileDrop.load(providers) { urls in moveIn(urls) }
+        // 和访达一样：点一下选中，双击打开。
+        .onTapGesture(count: 2) { openFolder() }
+        .onTapGesture { onSelect() }
+        // 拖动卡片：在墙上换位置（拖到另一张卡片上，排到它前面）。
+        .onDrag { FolderWallDrop.tileProvider(summary.path) }
+        // 把文件拖到卡片上：移进这个文件夹（按住 ⌥ 拷贝），⌘Z 可以撤销移动。
+        .onDrop(of: [.fileURL, .plainText], isTargeted: $dropTargeted) { providers in
+            if FolderWallDrop.loadTile(providers, completion: { onDropTile($0) }) { return true }
+            let copy = NSEvent.modifierFlags.contains(.option)
+            return FileDrop.load(providers) { urls in moveIn(urls, copy: copy) }
         }
         .help(summary.path)
         .contextMenu { menu }
+        .onChange(of: renamingPath) {
+            guard renamingPath == summary.path else { return }
+            renamingPath = nil
+            startRename()
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: "\(summary.name)，\(subtitle)"))
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAction { openFolder() }
+        .accessibilityAction(named: Text("重命名")) { startRename() }
+        .accessibilityAction(named: Text("从文件夹墙移除")) { store.unpin(summary.path) }
         .alert("重命名文件夹", isPresented: $renaming) {
             TextField("名称", text: $newName)
             Button("重命名") { rename(to: newName) }
@@ -637,13 +847,10 @@ struct FolderCard: View {
         ZStack {
             if hovering {
                 HStack(spacing: 4) {
-                    actionButton("pencil", help: String(localized: "重命名")) {
-                        newName = summary.name
-                        renaming = true
-                    }
+                    actionButton("pencil", help: String(localized: "重命名")) { startRename() }
                     actionButton("folder", help: String(localized: "移动到…")) { moveFolder() }
                     actionButton("paintpalette", help: String(localized: "自定义颜色…")) { model.openColorPanel(for: summary) }
-                    actionButton("pin.slash", help: String(localized: "取消固定"), tint: .red) { store.unpin(summary.path) }
+                    actionButton("minus.circle", help: String(localized: "从文件夹墙移除"), tint: .red) { store.unpin(summary.path) }
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
@@ -692,19 +899,28 @@ struct FolderCard: View {
         .help(help)
     }
 
+    private var item: FileItem? { FileItem(url: URL(fileURLWithPath: summary.path, isDirectory: true)) }
+
+    /// 右键菜单：和主窗口同一套（打开、在访达中显示、显示简介、拷贝路径……），
+    /// 「重命名…」用卡片自己的（墙上记的路径跟着改），多一项「从文件夹墙移除」和颜色。
     @ViewBuilder
     private var menu: some View {
-        Button("打开") { store.selection = .pinned(summary.path) }
-        Button("在访达中显示") {
-            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: summary.path)])
+        if let item {
+            FileContextMenu(items: [item], context: FileMenuContext(
+                rename: { startRename() },
+                removeFromWall: { store.unpin(summary.path) }
+            )) {
+                colorMenu
+            }
+        } else {
+            // 文件夹已经不在了（被移走、在没插上的硬盘里）：只能从墙上拿掉。
+            Button("从文件夹墙移除") { store.unpin(summary.path) }
         }
-        Divider()
-        Button("重命名…") {
-            newName = summary.name
-            renaming = true
-        }
-        Button("移动到…") { moveFolder() }
-        Menu("颜色") {
+    }
+
+    @ViewBuilder
+    private var colorMenu: some View {
+        Menu("卡片颜色") {
             Button("自动") { model.setPreset(nil, for: summary.path) }
             Divider()
             ForEach(FolderPalette.colors.indices, id: \.self) { i in
@@ -718,11 +934,6 @@ struct FolderCard: View {
             if !outcome.succeeded.isEmpty { store.showToast(String(localized: "访达里的「\(summary.name)」已换成这个颜色")) }
             if !outcome.failed.isEmpty { store.alertMessage = outcome.failureText }
         }
-        Button("文件夹上色…") {
-            FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path)], color: tint)
-        }
-        Divider()
-        Button("取消固定") { store.unpin(summary.path) }
     }
 
     // MARK: 操作
@@ -774,31 +985,32 @@ struct FolderCard: View {
         }
     }
 
-    /// 把文件拖到卡片上：移进这个文件夹（重名时自动加编号）。
-    private func moveIn(_ urls: [URL]) {
+    private func openFolder() {
+        store.openFolder(URL(fileURLWithPath: summary.path, isDirectory: true))
+    }
+
+    private func startRename() {
+        newName = summary.name
+        renaming = true
+    }
+
+    /// 把文件拖到卡片上：移进这个文件夹（按住 ⌥ 拷贝）。走和「移动到…」同一条路：同名自动加编号、不覆盖，
+    /// 移动记进「清理记录」，⌘Z / 小提示上的「撤销」可以放回。
+    private func moveIn(_ urls: [URL], copy: Bool) {
         let folder = URL(fileURLWithPath: summary.path)
-        var moved: [FileUndoLogic.PathPair] = []
-        for url in urls where url.deletingLastPathComponent().standardizedFileURL.path != folder.standardizedFileURL.path {
-            guard url.standardizedFileURL.path != folder.standardizedFileURL.path,
-                  !folder.standardizedFileURL.path.hasPrefix(url.standardizedFileURL.path + "/") else { continue }
-            var dst = folder.appendingPathComponent(url.lastPathComponent)
-            var n = 2
-            let base = url.deletingPathExtension().lastPathComponent, ext = url.pathExtension
-            while FileManager.default.fileExists(atPath: dst.path) {
-                dst = folder.appendingPathComponent(ext.isEmpty ? "\(base) \(n)" : "\(base) \(n).\(ext)")
-                n += 1
-            }
-            if (try? FileManager.default.moveItem(at: url, to: dst)) != nil {
-                moved.append(FileUndoLogic.PathPair(from: url.path, to: dst.path))
-            }
+        let target = folder.standardizedFileURL.path
+        let list = urls.filter { url in
+            let path = url.standardizedFileURL.path
+            // 已经在这个文件夹里的、文件夹自己、它的上层文件夹：不动。
+            return url.deletingLastPathComponent().standardizedFileURL.path != target
+                && path != target && !target.hasPrefix(path + "/")
         }
-        if !moved.isEmpty {
-            FileUndoCenter.shared.relocate(moved)
-            store.forget(paths: Set(moved.map(\.from)))
-            FileUndoCenter.shared.registerPaths(moved, name: String(localized: "移动"),
-                                                toast: String(localized: "已移到「\(summary.name)」：\(moved.count) 个"))
-            model.reload(store.pinnedFolders)
+        guard !list.isEmpty else { return }
+        guard !ShelfTransfer.shared.isRunning else {
+            store.showToast(String(localized: "还有文件在移动，请稍等"))
+            return
         }
+        ShelfTransfer.shared.start(list, to: folder, copy: copy, store: store)
     }
 }
 

@@ -394,6 +394,8 @@ final class ShelfTransfer: ObservableObject {
                 ShelfStore.shared.relocate(from: file.from, to: URL(fileURLWithPath: file.to))
                 ReminderStore.shared.relocate(from: file.from, to: file.to)
                 FolderIconService.shared.movePath(file.from, to: file.to)
+                // 搬走的是文件夹墙上的文件夹：墙上记的路径、卡片颜色、自动整理规则跟着改。
+                store.folderMoved(from: file.from, to: file.to)
             }
             let batch = UUID()
             let now = Date()

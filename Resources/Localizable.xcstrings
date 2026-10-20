@@ -3795,22 +3795,6 @@
         }
       }
     },
-    "取消固定": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unpin"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "取消固定"
-          }
-        }
-      }
-    },
     "只移动、不覆盖：同名文件会自动加编号；只在 iCloud 云端的文件会跳过。移到废纸篓的随时可以放回。": {
       "localizations": {
         "en": {
@@ -4227,22 +4211,6 @@
         }
       }
     },
-    "固定常用的文件夹，这里会变成一面卡片墙，一眼看到里面有什么。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pin the folders you use most and they become a wall of cards that show what's inside at a glance."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "固定常用的文件夹，这里会变成一面卡片墙，一眼看到里面有什么。"
-          }
-        }
-      }
-    },
     "固定文件夹": {
       "localizations": {
         "en": {
@@ -4255,22 +4223,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "固定文件夹"
-          }
-        }
-      }
-    },
-    "固定文件夹…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pin Folder…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "固定文件夹…"
           }
         }
       }
@@ -5587,22 +5539,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "已移到「%@」"
-          }
-        }
-      }
-    },
-    "已移到「%@」：%lld 个": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moved to “%1$@”: %2$lld"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已移到「%1$@」：%2$lld 个"
           }
         }
       }
@@ -25255,6 +25191,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "继续播放"
+          }
+        }
+      }
+    },
+    "自定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定"
+          }
+        }
+      }
+    },
+    "卡片大小（⌘+ / ⌘-）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card size (⌘+ / ⌘-)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卡片大小（⌘+ / ⌘-）"
+          }
+        }
+      }
+    },
+    "「自定」按你拖动排好的顺序": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Custom” keeps the order you dragged the cards into"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「自定」按你拖动排好的顺序"
+          }
+        }
+      }
+    },
+    "文件夹墙还是空的": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Folder Wall Is Empty"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹墙还是空的"
+          }
+        }
+      }
+    },
+    "把常用的文件夹放上来，这里会变成一面卡片墙，一眼看到里面有什么。也可以直接把文件夹从访达拖到这里。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the folders you use most and they become a wall of cards that show what's inside. You can also drag folders here from Finder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把常用的文件夹放上来，这里会变成一面卡片墙，一眼看到里面有什么。也可以直接把文件夹从访达拖到这里。"
+          }
+        }
+      }
+    },
+    "只有文件夹能放上文件夹墙；文件可以拖到某张卡片上，移进那个文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only folders go on the Folder Wall. Drop files on a card to move them into that folder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有文件夹能放上文件夹墙；文件可以拖到某张卡片上，移进那个文件夹"
+          }
+        }
+      }
+    },
+    "卡片颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card Color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卡片颜色"
           }
         }
       }

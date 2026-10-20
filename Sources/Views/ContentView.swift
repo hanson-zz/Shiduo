@@ -192,6 +192,13 @@ struct DetailView: View {
             .animation(.easeOut(duration: 0.18), value: store.searchFieldFocused)
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.copiedPreview)
             .background(GlassBackdrop())
+            .background {
+                // 「显示」菜单的「放大图标」是 ⌘+；美式键盘上不按 ⇧ 打出来的是 ⌘=，也算。
+                Button("") { store.iconSizeStep(1) }
+                    .keyboardShortcut("=", modifiers: .command)
+                    .opacity(0)
+                    .accessibilityHidden(true)
+            }
             .toolbarBackground(.hidden, for: .windowToolbar)
             .inspector(isPresented: $store.showInspector) {
                 InspectorView(item: store.inspectedItem, selectionCount: store.selectedIDs.count,

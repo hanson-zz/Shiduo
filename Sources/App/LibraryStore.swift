@@ -1126,7 +1126,7 @@ final class LibraryStore: ObservableObject {
         FileUndoCenter.shared.relocate([FileUndoLogic.PathPair(from: src.path, to: dst.path)])
         ShelfStore.shared.relocate(from: src.path, to: dst)
         FolderIconService.shared.movePath(src.path, to: dst.path)
-        if let index = pinnedFolders.firstIndex(of: src.path) { pinnedFolders[index] = dst.path }
+        folderMoved(from: src.path, to: dst.path)
         FileUndoCenter.shared.registerRename([(old: src, new: dst)], toast: String(localized: "已重命名为「\(trimmed)」"))
         if let renamed = FileItem(url: dst), let index = items.firstIndex(where: { $0.id == item.id }) {
             remember([renamed])
@@ -1189,6 +1189,14 @@ final class LibraryStore: ObservableObject {
 
     // MARK: - 文件夹墙、前往
 
+    /// 文件夹被移动 / 改名：文件夹墙上记的路径、卡片颜色、自动整理规则跟着改。
+    func folderMoved(from old: String, to new: String) {
+        guard let index = pinnedFolders.firstIndex(of: old) else { return }
+        pinnedFolders[index] = new
+        FolderWallModel.shared.movePath(old, to: new)
+        organizer.retarget(from: old, to: new)
+    }
+
     /// ⌃⌘T「添加到文件夹墙…」：选中了文件夹就直接放上墙（和访达的「添加到边栏」一样），否则选一个。
     func addSelectionToFolderWall() {
         let folders = selectedItems.filter(\.isDirectory)
@@ -1232,7 +1240,7 @@ final class LibraryStore: ObservableObject {
         let defaults = UserDefaults.standard
         if selection == .folderWall && activeQuery == nil {
             let range = Self.wallTileSizeRange
-            let current = defaults.object(forKey: Self.wallTileSizeKey) as? Double ?? 112
+            let current = defaults.object(forKey: Self.wallTileSizeKey) as? Double ?? FolderWallView.defaultTileSize
             defaults.set(min(max(current + Double(direction) * 16, range.lowerBound), range.upperBound), forKey: Self.wallTileSizeKey)
         } else {
             let current = defaults.object(forKey: "thumbnailSize") as? Double ?? 120
