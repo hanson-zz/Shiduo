@@ -53,8 +53,10 @@ final class MoleBridgeTests: XCTestCase {
         XCTAssertTrue(dry!.lowerBound < confirm!.lowerBound && confirm!.lowerBound < real!.lowerBound)
         XCTAssertTrue(clean.contains("echo 'It'\\''s Mole'"))
 
-        XCTAssertEqual(MoleLogic.commands(for: .uninstall, mo: "/x/mo"), ["'/x/mo' uninstall"])
         XCTAssertEqual(MoleLogic.commands(for: .purge, mo: "/x/mo"), ["'/x/mo' purge"])
+        // 「卸载 App」交给拾掇自己的卸载器，不再调用 mo uninstall。
+        let all: [MoleLogic.TerminalAction] = [.clean, .purge, .analyze, .install(brew: nil), .update(viaHomebrew: false, brew: nil)]
+        XCTAssertFalse(all.flatMap { MoleLogic.commands(for: $0, mo: "/x/mo") }.contains { $0.contains("uninstall") })
         XCTAssertEqual(MoleLogic.commands(for: .install(brew: "/opt/homebrew/bin/brew"), mo: "mo"),
                        ["'/opt/homebrew/bin/brew' install mole"])
         XCTAssertEqual(MoleLogic.commands(for: .install(brew: nil), mo: "mo"), [MoleLogic.scriptInstall])

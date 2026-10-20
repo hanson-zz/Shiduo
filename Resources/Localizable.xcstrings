@@ -24542,38 +24542,6 @@
         }
       }
     },
-    "打开终端预览": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preview in Terminal"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打开终端预览"
-          }
-        }
-      }
-    },
-    "打开终端": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Terminal"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打开终端"
-          }
-        }
-      }
-    },
     "打开终端安装": {
       "localizations": {
         "en": {
@@ -24670,22 +24638,6 @@
         }
       }
     },
-    "注意：缓存清理和项目文件夹由 Mole 直接删除，不进废纸篓，执行前会再提醒一次。命令在终端里由 Mole 执行，按它的提示确认即可。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Note: Cache Cleanup and Project Folders are deleted permanently by Mole, not moved to the Trash. You’ll be asked again first. Mole runs in Terminal; follow its prompts to confirm."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "注意：缓存清理和项目文件夹由 Mole 直接删除，不进废纸篓，执行前会再提醒一次。命令在终端里由 Mole 执行，按它的提示确认即可。"
-          }
-        }
-      }
-    },
     "关于 Mole": {
       "localizations": {
         "en": {
@@ -24702,38 +24654,6 @@
         }
       }
     },
-    "用 Mole 清理缓存？": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clean caches with Mole?"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用 Mole 清理缓存？"
-          }
-        }
-      }
-    },
-    "用 Mole 清理项目文件夹？": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clean project folders with Mole?"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用 Mole 清理项目文件夹？"
-          }
-        }
-      }
-    },
     "安装 Mole？": {
       "localizations": {
         "en": {
@@ -24746,38 +24666,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "安装 Mole？"
-          }
-        }
-      }
-    },
-    "终端会先运行 mo clean --dry-run 列出要清理的内容，你按回车后才真正清理。\n\nMole 的缓存清理是直接删除，不进废纸篓，也不能在「清理记录」里放回。它默认还会清空废纸篓（可以用 mo clean --whitelist 保留）。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Terminal first runs mo clean --dry-run to list what would be removed. Nothing is cleaned until you press Return.\n\nMole deletes caches permanently. They don’t go to the Trash and can’t be restored from Cleanup History. By default it also empties the Trash (keep it with mo clean --whitelist)."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "终端会先运行 mo clean --dry-run 列出要清理的内容，你按回车后才真正清理。\n\nMole 的缓存清理是直接删除，不进废纸篓，也不能在「清理记录」里放回。它默认还会清空废纸篓（可以用 mo clean --whitelist 保留）。"
-          }
-        }
-      }
-    },
-    "Mole 会在终端里列出 node_modules、build、dist 这类可以重新生成的文件夹，最近 7 天动过的默认不选，由你勾选确认。\n\n选中的会直接删除，不进废纸篓。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mole lists rebuildable folders such as node_modules, build and dist in Terminal. Anything changed in the last 7 days starts unselected, and you confirm what to remove.\n\nSelected folders are deleted permanently, not moved to the Trash."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mole 会在终端里列出 node_modules、build、dist 这类可以重新生成的文件夹，最近 7 天动过的默认不选，由你勾选确认。\n\n选中的会直接删除，不进废纸篓。"
           }
         }
       }
@@ -24974,54 +24862,6 @@
         }
       }
     },
-    "卸载 App（含残留）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uninstall Apps (with Leftovers)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "卸载 App（含残留）"
-          }
-        }
-      }
-    },
-    "连偏好、缓存、启动项一起找出来": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finds preferences, caches and login items too"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "连偏好、缓存、启动项一起找出来"
-          }
-        }
-      }
-    },
-    "Mole 一步步引导": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mole guides you step by step"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mole 一步步引导"
-          }
-        }
-      }
-    },
     "项目文件夹": {
       "localizations": {
         "en": {
@@ -25098,6 +24938,198 @@
           "stringUnit": {
             "state": "translated",
             "value": "在拾掇里查看"
+          }
+        }
+      }
+    },
+    "以上清理不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing above is deleted outright. Everything goes to the Trash, so you can put it back anytime. Files that are only in iCloud are skipped."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以上清理不会直接删除，都进废纸篓，随时可以放回原处。只在 iCloud 云端的文件会被跳过。"
+          }
+        }
+      }
+    },
+    "进阶工具": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced Tools"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进阶工具"
+          }
+        }
+      }
+    },
+    "搭配开源工具 Mole，适合熟悉终端的用户": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works with the open-source tool Mole, for people comfortable with Terminal"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搭配开源工具 Mole，适合熟悉终端的用户"
+          }
+        }
+      }
+    },
+    "已展开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expanded"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已展开"
+          }
+        }
+      }
+    },
+    "已收起": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapsed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已收起"
+          }
+        }
+      }
+    },
+    "永久清理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Permanently"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "永久清理"
+          }
+        }
+      }
+    },
+    "命令在终端里由 Mole 执行，按它的提示确认即可。执行前拾掇会再提醒一次。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole runs the commands in Terminal; just follow its prompts. Shiduo asks you once more before anything runs."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令在终端里由 Mole 执行，按它的提示确认即可。执行前拾掇会再提醒一次。"
+          }
+        }
+      }
+    },
+    "用 Mole 永久清理缓存？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently clean caches with Mole?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Mole 永久清理缓存？"
+          }
+        }
+      }
+    },
+    "用 Mole 永久清理项目文件夹？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently clean project folders with Mole?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Mole 永久清理项目文件夹？"
+          }
+        }
+      }
+    },
+    "终端会先运行 mo clean --dry-run 列出要清理的内容，你按回车后才真正清理，不想清理就关掉终端窗口。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal first runs mo clean --dry-run to list what would be removed. Nothing is cleaned until you press Return; to cancel, just close the Terminal window."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "终端会先运行 mo clean --dry-run 列出要清理的内容，你按回车后才真正清理，不想清理就关掉终端窗口。"
+          }
+        }
+      }
+    },
+    "Mole 会在终端里列出 node_modules、build、dist 这类可以重新生成的文件夹，最近 7 天动过的默认不选，由你勾选确认。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole lists folders that can be regenerated, like node_modules, build and dist, in Terminal. Ones changed in the last 7 days are unselected by default; you choose what to remove."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole 会在终端里列出 node_modules、build、dist 这类可以重新生成的文件夹，最近 7 天动过的默认不选，由你勾选确认。"
+          }
+        }
+      }
+    },
+    "Mole 会永久删除文件，不进废纸篓，也无法在「清理记录」里恢复。缓存清理默认还会清空废纸篓。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole deletes files permanently. They don’t go to the Trash and can’t be restored from Cleanup History. Cache cleanup also empties the Trash by default."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mole 会永久删除文件，不进废纸篓，也无法在「清理记录」里恢复。缓存清理默认还会清空废纸篓。"
           }
         }
       }

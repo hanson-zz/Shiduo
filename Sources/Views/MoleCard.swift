@@ -81,6 +81,11 @@ struct MoleCleanupCard: View {
                 installedBody(install)
                     .padding(.leading, 40)
             }
+
+            if bridge.status == .notInstalled || bridge.install != nil {
+                MoleCautionStrip()
+                    .padding(.leading, 40)
+            }
         }
         .padding(14)
         .glassCard(radius: 16)
@@ -92,9 +97,9 @@ struct MoleCleanupCard: View {
         .alert(promptTitle, isPresented: Binding(get: { prompt != nil }, set: { if !$0 { prompt = nil } }), presenting: prompt) { p in
             switch p {
             case .clean:
-                Button("打开终端预览") { bridge.runInTerminal(.clean) }
+                Button("永久清理", role: .destructive) { bridge.runInTerminal(.clean) }
             case .purge:
-                Button("打开终端") { bridge.runInTerminal(.purge) }
+                Button("永久清理", role: .destructive) { bridge.runInTerminal(.purge) }
             case .install:
                 Button("打开终端安装") { bridge.runInTerminal(installAction) }
             }
@@ -148,17 +153,14 @@ struct MoleCleanupCard: View {
 
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], spacing: 10) {
             MoleTile(title: "缓存清理", detail: "系统缓存、日志、开发工具缓存", hint: "先预览，再确认") { prompt = .clean }
-            MoleTile(title: "卸载 App（含残留）", detail: "连偏好、缓存、启动项一起找出来", hint: "Mole 一步步引导") {
-                bridge.runInTerminal(.uninstall)
-            }
             MoleTile(title: "项目文件夹", detail: "node_modules / build / dist", hint: "近 7 天动过的默认不选") { prompt = .purge }
             MoleTile(title: "磁盘分析", detail: "哪些文件夹最占地方", hint: "在拾掇里查看") { showAnalyze = true }
         }
 
         HStack(alignment: .firstTextBaseline) {
-            Text("注意：缓存清理和项目文件夹由 Mole 直接删除，不进废纸篓，执行前会再提醒一次。命令在终端里由 Mole 执行，按它的提示确认即可。")
+            Text("命令在终端里由 Mole 执行，按它的提示确认即可。执行前拾掇会再提醒一次。")
                 .font(.caption)
-                .foregroundStyle(.orange)
+                .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 8)
             Link("关于 Mole", destination: MoleLogic.homepage)
@@ -172,8 +174,8 @@ struct MoleCleanupCard: View {
 
     private var promptTitle: Text {
         switch prompt {
-        case .clean: return Text("用 Mole 清理缓存？")
-        case .purge: return Text("用 Mole 清理项目文件夹？")
+        case .clean: return Text("用 Mole 永久清理缓存？")
+        case .purge: return Text("用 Mole 永久清理项目文件夹？")
         case .install: return Text("安装 Mole？")
         case nil: return Text(verbatim: "")
         }
@@ -182,13 +184,39 @@ struct MoleCleanupCard: View {
     private func promptMessage(_ p: Prompt) -> String {
         switch p {
         case .clean:
-            return String(localized: "终端会先运行 mo clean --dry-run 列出要清理的内容，你按回车后才真正清理。\n\nMole 的缓存清理是直接删除，不进废纸篓，也不能在「清理记录」里放回。它默认还会清空废纸篓（可以用 mo clean --whitelist 保留）。")
+            return MoleCautionStrip.message + "\n\n"
+                + String(localized: "终端会先运行 mo clean --dry-run 列出要清理的内容，你按回车后才真正清理，不想清理就关掉终端窗口。")
         case .purge:
-            return String(localized: "Mole 会在终端里列出 node_modules、build、dist 这类可以重新生成的文件夹，最近 7 天动过的默认不选，由你勾选确认。\n\n选中的会直接删除，不进废纸篓。")
+            return MoleCautionStrip.message + "\n\n"
+                + String(localized: "Mole 会在终端里列出 node_modules、build、dist 这类可以重新生成的文件夹，最近 7 天动过的默认不选，由你勾选确认。")
         case .install:
             let command = bridge.displayCommands(for: installAction)
             return String(localized: "将打开终端，运行 Mole 官方的安装命令：\n\n\(command)\n\nMole 是 tw93 维护的独立开源软件（GPL-3.0），不是拾掇的一部分；拾掇只在你装好之后调用它。")
         }
+    }
+}
+
+/// 卡片里醒目的永久删除提醒：Mole 不走拾掇的废纸篓 / 清理记录。
+private struct MoleCautionStrip: View {
+    static var message: String {
+        String(localized: "Mole 会永久删除文件，不进废纸篓，也无法在「清理记录」里恢复。缓存清理默认还会清空废纸篓。")
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+            Text("Mole 会永久删除文件，不进废纸篓，也无法在「清理记录」里恢复。缓存清理默认还会清空废纸篓。")
+                .font(.callout.weight(.medium))
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.orange.opacity(0.14)))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.orange.opacity(0.45), lineWidth: 0.8))
+        .accessibilityElement(children: .combine)
     }
 }
 

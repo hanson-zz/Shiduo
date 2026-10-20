@@ -113,7 +113,7 @@ enum MoleLogic {
     // MARK: 终端脚本
 
     enum TerminalAction: Equatable {
-        case clean, uninstall, purge, analyze
+        case clean, purge, analyze
         case install(brew: String?)
         case update(viaHomebrew: Bool, brew: String?)
     }
@@ -135,7 +135,6 @@ enum MoleLogic {
         let m = shellQuote(mo)
         switch action {
         case .clean: return ["\(m) clean --dry-run", "\(m) clean"]
-        case .uninstall: return ["\(m) uninstall"]
         case .purge: return ["\(m) purge"]
         case .analyze: return ["\(m) analyze"]
         case .install(let brew):
