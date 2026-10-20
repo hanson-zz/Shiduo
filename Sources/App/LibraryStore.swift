@@ -804,7 +804,6 @@ final class LibraryStore: ObservableObject {
     func saveCurrentSearch(name: String) {
         let text = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard activeQuery != nil, !text.isEmpty else { return }
-        license.startTrialIfNeeded()
         guard license.isPro else {
             license.showPaywall = true
             return
@@ -1289,7 +1288,6 @@ final class LibraryStore: ObservableObject {
 
     func requestMoveOut(_ list: [FileItem]) {
         guard !list.isEmpty else { return }
-        license.startTrialIfNeeded()
         if license.isPro {
             moveOutItems = list
         } else {

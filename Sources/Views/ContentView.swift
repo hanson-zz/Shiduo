@@ -6,6 +6,7 @@ struct ContentView: View {
     @ObservedObject private var reminders = ReminderStore.shared
     @ObservedObject private var folderIcons = FolderIconService.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
+    @ObservedObject private var trialExpiry = TrialExpiryNotice.shared
     /// 这个主窗口（开了多个窗口时，全局面板只在一个窗口里弹）。
     @State private var hostWindow: NSWindow?
 
@@ -71,6 +72,13 @@ struct ContentView: View {
             set: { if !$0 { fullDiskAccess.showLostSheet = false } }
         )) {
             FullDiskAccessLostSheet(monitor: fullDiskAccess)
+        }
+        .sheet(isPresented: Binding(
+            get: { ownsSheet("trialEnded", trialExpiry.showSheet && !store.showOnboarding) },
+            set: { if !$0 { trialExpiry.showSheet = false; SheetOwnership.shared.release("trialEnded") } }
+        )) {
+            TrialEndedSheet()
+                .environmentObject(license)
         }
         .sheet(isPresented: Binding(get: { ownsSheet("reminder", !reminders.composing.isEmpty) },
                                     set: { if !$0 { reminders.composing = []; SheetOwnership.shared.release("reminder") } })) {

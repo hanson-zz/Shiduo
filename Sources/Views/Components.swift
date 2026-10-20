@@ -61,7 +61,6 @@ struct FileContextMenu: View {
         TagMenu(items: items)
         Button("加入暂存架") { store.addToShelf(items) }
         Button("提醒我处理…") {
-            LicenseManager.shared.startTrialIfNeeded()
             if LicenseManager.shared.isPro {
                 ReminderStore.shared.composing = items
             } else {

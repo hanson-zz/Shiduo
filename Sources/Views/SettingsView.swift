@@ -203,7 +203,7 @@ struct SettingsView: View {
                 HStack {
                     Button("购买拾掇 Pro…") { NSWorkspace.shared.open(LicenseConfig.buyURL) }
                     if license.canStartTrial {
-                        Button("开始 \(LicenseConfig.trialDays) 天免费试用") { license.startTrialIfNeeded() }
+                        Button("开始 \(LicenseConfig.trialDays) 天免费试用") { license.startTrial() }
                     }
                     Spacer()
                 }

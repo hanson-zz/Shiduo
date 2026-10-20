@@ -4,12 +4,64 @@ import SwiftUI
 /// 菜单栏小助手（Pro，设置里打开，默认关闭）：剩余空间、最近下载、快速搜索、打开清理。
 struct MenuBarContent: View {
     @EnvironmentObject private var store: LibraryStore
+    @EnvironmentObject private var license: LicenseManager
     @State private var recent: [FileItem] = []
     @State private var free: Int64 = 0
     @State private var total: Int64 = 0
     @State private var diskName = String(localized: "启动磁盘")
 
     var body: some View {
+        if license.isPro {
+            unlocked
+        } else {
+            locked
+        }
+    }
+
+    /// 试用结束后菜单栏图标不直接消失：点开是一张小小的上锁卡片，可以购买或输入授权码。
+    private var locked: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 22, height: 22)
+                Text("拾掇")
+                    .font(.headline)
+                ProBadge()
+                Spacer()
+                Image(systemName: "lock.fill")
+                    .foregroundStyle(.secondary)
+            }
+            Text("菜单栏小助手是拾掇 Pro 的功能，试用已经结束。")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            ProPriceLine()
+            HStack(spacing: 8) {
+                Button {
+                    NSWorkspace.shared.open(LicenseConfig.buyURL)
+                } label: {
+                    Text("购买 Pro · \(ProPricing.price)")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                Button {
+                    MainWindow.show { license.showPaywall = true }
+                } label: {
+                    Text("输入授权码…")
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .controlSize(.large)
+            Button("不再在菜单栏显示") { UserDefaults.standard.set(false, forKey: "menuBarEnabled") }
+                .buttonStyle(.link)
+                .font(.caption)
+        }
+        .padding(14)
+        .frame(width: 300)
+    }
+
+    private var unlocked: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(nsImage: NSApp.applicationIconImage)

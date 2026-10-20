@@ -60,6 +60,7 @@ targets:
       - path: Sources/Services/OCRCacheKeys.swift
       - path: Sources/Pro/PhotoConcepts.swift
       - path: Sources/Pro/License.swift
+      - path: Sources/Pro/TrialLogic.swift
       - path: Sources/Pro/ShakeDetector.swift
       - path: Sources/Services/CleanupHistory.swift
       - path: Sources/Pro/FolderIconStyle.swift

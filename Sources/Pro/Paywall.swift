@@ -146,9 +146,11 @@ struct PaywallView: View {
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
             }
-            Text("现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。")
+            Text("浏览、搜索、清理、暂存架这些免费功能，永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。")
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            ProPriceLine()
 
             ScrollView {
             VStack(alignment: .leading, spacing: 12) {
@@ -180,7 +182,7 @@ struct PaywallView: View {
             HStack(spacing: 10) {
                 if license.canStartTrial {
                     Button {
-                        license.startTrialIfNeeded()
+                        license.startTrial()
                         close()
                     } label: {
                         Text("开始 \(LicenseConfig.trialDays) 天免费试用")
@@ -188,15 +190,22 @@ struct PaywallView: View {
                     }
                     .controlSize(.large)
                     .buttonStyle(.borderedProminent)
+                    .help("不用注册，也不用填付款信息")
                 }
                 Button {
                     NSWorkspace.shared.open(LicenseConfig.buyURL)
                 } label: {
-                    Text("购买")
-                        .frame(minWidth: 80)
+                    Text("购买 Pro · \(ProPricing.price)")
+                        .frame(minWidth: 120)
                 }
                 .controlSize(.large)
                 .buttonStyle(.bordered)
+            }
+            if license.canStartTrial {
+                Text("试用不用注册，也不用填付款信息；只有点了上面的按钮才开始计时。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             if !license.isActivated {
@@ -345,8 +354,28 @@ struct LicenseKeyField: View {
     }
 }
 
+/// 价格和条款：「$9.90 一次买断 · 以后更新免费 · 14 天内可退款」；早鸟价有效时（试用最后一天）多一行。
+struct ProPriceLine: View {
+    @EnvironmentObject private var license: LicenseManager
+    var compact = false
+
+    var body: some View {
+        VStack(alignment: compact ? .center : .leading, spacing: 3) {
+            Text("\(ProPricing.price) 一次买断 · 以后更新免费 · \(ProPricing.refundDays) 天内可退款")
+                .font(compact ? .callout.weight(.semibold) : .headline)
+            if ProPricing.earlyBirdActive(state: license.state, trialEnd: license.trialEndDate, now: Date()) {
+                Text("早鸟价 \(ProPricing.earlyBirdPrice)：结账时输入优惠码 \(ProPricing.earlyBirdCode)")
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(.orange)
+            }
+        }
+        .multilineTextAlignment(compact ? .center : .leading)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
 /// Pro 功能的门：已是 Pro（含试用）就显示内容，否则显示一个上锁的占位页。
-/// 第一次打开任何 Pro 功能时自动开始 7 天试用。
+/// 不会自动开始试用：占位页上有「开始 7 天免费试用」按钮，用户点了才开始。
 struct ProGate<Content: View>: View {
     @EnvironmentObject private var license: LicenseManager
     let feature: ProFeature
@@ -358,14 +387,11 @@ struct ProGate<Content: View>: View {
     }
 
     var body: some View {
-        Group {
-            if license.isPro {
-                content
-            } else {
-                ProLockedView(feature: feature)
-            }
+        if license.isPro {
+            content
+        } else {
+            ProLockedView(feature: feature)
         }
-        .onAppear { license.startTrialIfNeeded() }
     }
 }
 
@@ -376,7 +402,7 @@ extension View {
     }
 }
 
-/// 上锁的占位页：说明这是 Pro 功能，按钮打开介绍页。
+/// 上锁的占位页：说明这是 Pro 功能。没试用过时主按钮是「开始 7 天免费试用」；试用结束后是购买 / 输入授权码。
 struct ProLockedView: View {
     @EnvironmentObject private var license: LicenseManager
     let feature: ProFeature
@@ -391,17 +417,47 @@ struct ProLockedView: View {
             }
             Text(feature.detail)
                 .foregroundStyle(.secondary)
-            Text(license.state == .expiredTrial ? String(localized: "7 天试用已经结束。升级到拾掇 Pro 就能继续使用。") : String(localized: "这是拾掇 Pro 的功能。"))
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            Button {
-                license.showPaywall = true
-            } label: {
-                Label("了解拾掇 Pro", systemImage: "lock.open")
-                    .frame(minWidth: 140)
+                .multilineTextAlignment(.center)
+            switch license.access {
+            case .trialEnded:
+                Text("\(LicenseConfig.trialDays) 天试用已经结束。升级到拾掇 Pro 就能继续使用。")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    Button {
+                        NSWorkspace.shared.open(LicenseConfig.buyURL)
+                    } label: {
+                        Text("购买 Pro · \(ProPricing.price)")
+                            .frame(minWidth: 140)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button("输入授权码…") { license.showPaywall = true }
+                }
+                .controlSize(.large)
+            default:
+                Text("这是拾掇 Pro 的功能，可以先免费试用 \(LicenseConfig.trialDays) 天，不用注册。")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    if license.canStartTrial {
+                        Button {
+                            license.startTrial()
+                        } label: {
+                            Text("开始 \(LicenseConfig.trialDays) 天免费试用")
+                                .frame(minWidth: 150)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    Button {
+                        license.showPaywall = true
+                    } label: {
+                        Label("了解拾掇 Pro", systemImage: "lock.open")
+                    }
+                }
+                .controlSize(.large)
             }
-            .controlSize(.large)
-            .buttonStyle(.borderedProminent)
+            ProPriceLine(compact: true)
+                .foregroundStyle(.secondary)
         }
         .padding(40)
         .glassCard(tint: feature.tint, radius: 24)

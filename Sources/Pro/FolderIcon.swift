@@ -238,7 +238,6 @@ final class FolderIconService: ObservableObject {
 
     /// 打开编辑器；不是 Pro 就弹付费页（跟「提醒我处理…」一样）。
     func openEditor(_ urls: [URL], color: NSColor? = nil) {
-        LicenseManager.shared.startTrialIfNeeded()
         guard LicenseManager.shared.isPro else {
             LicenseManager.shared.showPaywall = true
             return
@@ -249,7 +248,6 @@ final class FolderIconService: ObservableObject {
 
     /// 不开编辑器，直接用一个颜色（无叠加层）。不是 Pro 就弹付费页，返回 nil。
     func quickApply(color: NSColor, to urls: [URL]) -> FolderIconOutcome? {
-        LicenseManager.shared.startTrialIfNeeded()
         guard LicenseManager.shared.isPro else {
             LicenseManager.shared.showPaywall = true
             return nil

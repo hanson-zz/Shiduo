@@ -24,10 +24,9 @@ final class ShelfTools: ObservableObject {
 
     private var messageToken = 0
 
-    /// 不是 Pro 时打开拾掇 Pro 介绍页，返回 false。第一次用 Pro 功能时自动开始试用
-    /// （暂存架、「更多工具」、图片工具都走这里，行为一致）。
+    /// 不是 Pro 时打开拾掇 Pro 介绍页（那里有「开始 7 天免费试用」按钮），返回 false。
+    /// 不会自动开始试用（暂存架、「更多工具」、图片工具都走这里，行为一致）。
     static func requirePro() -> Bool {
-        LicenseManager.shared.startTrialIfNeeded()
         guard LicenseManager.shared.isPro else {
             NSApp.activate(ignoringOtherApps: true)
             LicenseManager.shared.showPaywall = true

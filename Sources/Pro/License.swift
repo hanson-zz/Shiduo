@@ -344,8 +344,11 @@ final class LicenseManager: ObservableObject {
 
     /// 还没开始过试用，也没有激活。
     var canStartTrial: Bool {
-        state == .free
+        TrialStartRule.canStart(state: state, trialStart: LicenseKeychain.date(.trialStart))
     }
+
+    /// 碰到 Pro 功能时该显示什么（试用从不自动开始）。
+    var access: ProAccess { ProAccess.of(state) }
 
     var statusText: String {
         switch state {
@@ -390,9 +393,9 @@ final class LicenseManager: ObservableObject {
         if state != output.state { state = output.state }
     }
 
-    /// 第一次打开 Pro 功能或点「开始试用」时开始 7 天试用。开始过就不会再重置。
-    func startTrialIfNeeded() {
-        guard state == .free, LicenseKeychain.get(.trialStart) == nil else { return }
+    /// 用户点了「开始 7 天免费试用」才开始试用（打开 Pro 页面、右键点 Pro 项都不会自动开始）。开始过就不会再重置。
+    func startTrial() {
+        guard canStartTrial else { return }
         LicenseKeychain.setDate(Date(), for: .trialStart)
         refreshState()
     }

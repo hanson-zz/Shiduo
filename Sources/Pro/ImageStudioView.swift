@@ -6,8 +6,21 @@ import UniformTypeIdentifiers
 
 struct ImageStudioView: View {
     @EnvironmentObject private var studio: ImageStudio
+    @ObservedObject private var license = LicenseManager.shared
 
     var body: some View {
+        // 在入口就说清楚：不是 Pro（试用结束了窗口还开着）时整个窗口换成上锁页，不让人编辑半天到导出才被拦下。
+        if license.isPro {
+            editor
+        } else {
+            ProLockedView(feature: .imageTools)
+                .environmentObject(license)
+                .padding(40)
+                .frame(minWidth: 900, minHeight: 600)
+        }
+    }
+
+    private var editor: some View {
         VStack(spacing: 0) {
             toolbar
             Divider()
@@ -52,7 +65,7 @@ struct ImageStudioView: View {
 
     private var toolbar: some View {
         HStack(spacing: 12) {
-            Picker("", selection: $studio.mode) {
+            Picker("图片工具", selection: $studio.mode) {
                 ForEach(ImageStudio.Mode.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
@@ -69,7 +82,7 @@ struct ImageStudioView: View {
             Spacer()
 
             if studio.mode == .stitch {
-                Picker("", selection: $studio.settings.layout) {
+                Picker("拼图方式", selection: $studio.settings.layout) {
                     ForEach(StitchLayout.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)

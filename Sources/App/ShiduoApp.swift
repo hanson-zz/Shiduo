@@ -142,10 +142,10 @@ struct ShiduoApp: App {
         .menuBarExtraStyle(.window)
     }
 
-    /// 只有打开了开关、并且是 Pro（含试用）时才显示在菜单栏。
+    /// 打开了开关、并且是 Pro（含试用）时显示在菜单栏。试用结束后图标仍然留着（点开是上锁卡片），不悄悄消失。
     private var menuBarInserted: Binding<Bool> {
         Binding(
-            get: { menuBarEnabled && license.isPro },
+            get: { menuBarEnabled && (license.isPro || license.state == .expiredTrial) },
             set: { menuBarEnabled = $0 }
         )
     }

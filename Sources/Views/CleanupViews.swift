@@ -112,7 +112,6 @@ private struct AutoCleanInstallersRow: View {
                 get: { license.isPro && organizer.autoCleansInstallers },
                 set: { on in
                     if on {
-                        license.startTrialIfNeeded()
                         guard license.isPro else {
                             license.showPaywall = true
                             return

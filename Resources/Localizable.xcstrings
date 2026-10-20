@@ -1204,22 +1204,6 @@
         }
       }
     },
-    "7 天试用已经结束。升级到拾掇 Pro 就能继续使用。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your 7-day trial has ended. Upgrade to Shiduo Pro to keep using this."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 天试用已经结束。升级到拾掇 Pro 就能继续使用。"
-          }
-        }
-      }
-    },
     "999+": {
       "shouldTranslate": false
     },
@@ -7126,22 +7110,6 @@
         }
       }
     },
-    "拾掇 Pro 试用明天到期 · 早鸟价 $6.90（原价 $9.90），使用优惠码 EARLYBIRD": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your Shiduo Pro trial ends tomorrow · Early-bird price $6.90 (regularly $9.90) with code EARLYBIRD"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "拾掇 Pro 试用明天到期 · 早鸟价 $6.90（原价 $9.90），使用优惠码 EARLYBIRD"
-          }
-        }
-      }
-    },
     "拾掇 Shiduo：免费开源的 Mac 文件管家，看图找文件、搜图里的字、清理重复和大文件。": {
       "localizations": {
         "en": {
@@ -8382,22 +8350,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "早上好"
-          }
-        }
-      }
-    },
-    "早鸟价 $6.90（原价 $9.90），使用优惠码 EARLYBIRD。点这里购买或输入许可证。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Early-bird price $6.90 (regularly $9.90) with code EARLYBIRD. Click to buy or enter a license key."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "早鸟价 $6.90（原价 $9.90），使用优惠码 EARLYBIRD。点这里购买或输入许可证。"
           }
         }
       }
@@ -10466,22 +10418,6 @@
         }
       }
     },
-    "现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Everything Shiduo does today stays free forever. Pro adds a few more helpers, and everything still happens only on this Mac."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "现在的所有功能都永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。"
-          }
-        }
-      }
-    },
     "玻璃": {
       "localizations": {
         "en": {
@@ -12190,22 +12126,6 @@
         }
       }
     },
-    "输入许可证": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter License Key"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "输入许可证"
-          }
-        }
-      }
-    },
     "返回上一层": {
       "localizations": {
         "en": {
@@ -12458,22 +12378,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "这张图里没有识别到文字"
-          }
-        }
-      }
-    },
-    "这是拾掇 Pro 的功能。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This is a Shiduo Pro feature."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这是拾掇 Pro 的功能。"
           }
         }
       }
@@ -24426,6 +24330,406 @@
           "stringUnit": {
             "state": "translated",
             "value": "已移到废纸篓"
+          }
+        }
+      }
+    },
+    "拼图方式": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layout"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拼图方式"
+          }
+        }
+      }
+    },
+    "菜单栏小助手是拾掇 Pro 的功能，试用已经结束。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The menu bar helper is a Shiduo Pro feature, and your trial has ended."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "菜单栏小助手是拾掇 Pro 的功能，试用已经结束。"
+          }
+        }
+      }
+    },
+    "购买 Pro · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buy Pro · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "购买 Pro · %@"
+          }
+        }
+      }
+    },
+    "输入授权码…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter License Key…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入授权码…"
+          }
+        }
+      }
+    },
+    "输入授权码": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter License Key"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入授权码"
+          }
+        }
+      }
+    },
+    "不再在菜单栏显示": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Menu Bar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不再在菜单栏显示"
+          }
+        }
+      }
+    },
+    "浏览、搜索、清理、暂存架这些免费功能，永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browsing, search, cleanup and the Shelf stay free forever. Pro adds a few more helpers, and everything still happens on this Mac."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览、搜索、清理、暂存架这些免费功能，永远免费。Pro 再多给你几样省心的帮手，所有处理仍然只在这台 Mac 上完成。"
+          }
+        }
+      }
+    },
+    "不用注册，也不用填付款信息": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sign-up, no payment details"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不用注册，也不用填付款信息"
+          }
+        }
+      }
+    },
+    "试用不用注册，也不用填付款信息；只有点了上面的按钮才开始计时。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The trial needs no sign-up or payment details, and it only starts when you click the button above."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试用不用注册，也不用填付款信息；只有点了上面的按钮才开始计时。"
+          }
+        }
+      }
+    },
+    "%@ 一次买断 · 以后更新免费 · %lld 天内可退款": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ one-time purchase · Free updates · %2$lld-day refund"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 一次买断 · 以后更新免费 · %2$lld 天内可退款"
+          }
+        }
+      }
+    },
+    "早鸟价 %@：结账时输入优惠码 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early-bird price %1$@: enter code %2$@ at checkout"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "早鸟价 %1$@：结账时输入优惠码 %2$@"
+          }
+        }
+      }
+    },
+    "%lld 天试用已经结束。升级到拾掇 Pro 就能继续使用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your %lld-day trial has ended. Upgrade to Shiduo Pro to keep using it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 天试用已经结束。升级到拾掇 Pro 就能继续使用。"
+          }
+        }
+      }
+    },
+    "这是拾掇 Pro 的功能，可以先免费试用 %lld 天，不用注册。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a Shiduo Pro feature. Try it free for %lld days, no sign-up needed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这是拾掇 Pro 的功能，可以先免费试用 %lld 天，不用注册。"
+          }
+        }
+      }
+    },
+    "早鸟价 %@（原价 %@），使用优惠码 %@。点这里购买或输入授权码。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early-bird price %1$@ (regular %2$@) with code %3$@. Click to buy or enter a license key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "早鸟价 %1$@（原价 %2$@），使用优惠码 %3$@。点这里购买或输入授权码。"
+          }
+        }
+      }
+    },
+    "拾掇 Pro 试用明天到期 · 早鸟价 %@（原价 %@），使用优惠码 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Shiduo Pro trial ends tomorrow · Early-bird price %1$@ (regular %2$@) with code %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 试用明天到期 · 早鸟价 %1$@（原价 %2$@），使用优惠码 %3$@"
+          }
+        }
+      }
+    },
+    "拾掇 Pro 试用已结束": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Shiduo Pro Trial Has Ended"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 试用已结束"
+          }
+        }
+      }
+    },
+    "免费功能照常可用。点这里购买 Pro 或输入授权码。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free features keep working. Click to buy Pro or enter a license key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费功能照常可用。点这里购买 Pro 或输入授权码。"
+          }
+        }
+      }
+    },
+    "已暂停：%@。点这里购买 Pro 或输入授权码。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused: %@. Click to buy Pro or enter a license key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已暂停：%@。点这里购买 Pro 或输入授权码。"
+          }
+        }
+      }
+    },
+    "%lld 条自动整理规则": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld auto-organize rules"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 条自动整理规则"
+          }
+        }
+      }
+    },
+    "每周清理提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly cleanup reminder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每周清理提醒"
+          }
+        }
+      }
+    },
+    "%lld 个文件提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld file reminders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件提醒"
+          }
+        }
+      }
+    },
+    "%lld 个保存的搜索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld saved searches"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个保存的搜索"
+          }
+        }
+      }
+    },
+    "Pro 功能已经锁上，免费功能（浏览、搜索、清理、暂存架）照常可用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro features are locked. Free features (browsing, search, cleanup, the Shelf) keep working."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro 功能已经锁上，免费功能（浏览、搜索、清理、暂存架）照常可用。"
+          }
+        }
+      }
+    },
+    "这些 Pro 功能已经暂停（设置都还在，升级后马上恢复）：": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These Pro features are paused (your settings are kept and come back as soon as you upgrade):"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些 Pro 功能已经暂停（设置都还在，升级后马上恢复）："
+          }
+        }
+      }
+    },
+    "免费功能（浏览、搜索、清理、暂存架）照常可用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free features (browsing, search, cleanup, the Shelf) keep working."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费功能（浏览、搜索、清理、暂存架）照常可用。"
           }
         }
       }
