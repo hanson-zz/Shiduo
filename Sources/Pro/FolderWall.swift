@@ -650,10 +650,7 @@ struct FolderCard: View {
         .onDrag { FolderWallDrop.tileProvider(summary.path) }
         // 把文件拖到卡片上：移进这个文件夹（按住 ⌥ 拷贝），⌘Z 可以撤销移动。
         // 光标：按 ⌥ 显示拷贝，不按显示移动（和实际一致）。
-        .onDrop(of: [.fileURL, .plainText], delegate: FileMoveDropDelegate(
-            enabled: true, targeted: $dropTargeted, types: [.fileURL, .plainText],
-            other: { providers in FolderWallDrop.loadTile(providers, completion: { onDropTile($0) }) },
-            perform: { urls, copy in moveIn(urls, copy: copy) }))
+        .onDrop(of: [.fileURL, .plainText], delegate: dropDelegate)
         .help(summary.path)
         .contextMenu { menu }
         .onChange(of: renamingPath) {
@@ -674,6 +671,15 @@ struct FolderCard: View {
             Button("重命名") { rename(to: newName) }
             Button("取消", role: .cancel) {}
         }
+    }
+
+    /// 拖到卡片上：卡片排序（私有文字）或者把文件移进来（⌥ 拷贝）。
+    private var dropDelegate: FileMoveDropDelegate {
+        let tile = onDropTile
+        return FileMoveDropDelegate(
+            enabled: true, targeted: $dropTargeted, types: [.fileURL, .plainText],
+            other: { providers in FolderWallDrop.loadTile(providers, completion: { tile($0) }) },
+            perform: { urls, copy in moveIn(urls, copy: copy) })
     }
 
     private var subtitle: String {
