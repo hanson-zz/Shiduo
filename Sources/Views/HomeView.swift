@@ -1,4 +1,13 @@
+import AppKit
 import SwiftUI
+
+/// 点选首页的文件时先把键盘焦点从搜索框拿开：首页的格子点了不拿焦点，搜索框还拿着的话，
+/// ⌘⌫ 会交给输入框（删到行首），文件删不掉。
+@MainActor
+private func releaseTextFocus() {
+    guard let window = NSApp.keyWindow, window.firstResponder is NSText else { return }
+    window.makeFirstResponder(nil)
+}
 
 struct HomeView: View {
     @EnvironmentObject private var store: LibraryStore
@@ -49,6 +58,15 @@ struct HomeView: View {
             }
             .padding(.horizontal, 32)
             .padding(.vertical, 28)
+            // 点空白处取消选中（和访达一样），也把键盘焦点从搜索框拿开。
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        releaseTextFocus()
+                        if !store.selectedIDs.isEmpty { store.selectedIDs = [] }
+                    }
+            )
         }
         .scrollContentBackground(.hidden)
         .navigationTitle("首页")
@@ -64,6 +82,11 @@ struct HomeView: View {
             LicenseManager.shared.refreshState()
             await TrialReminder.shared.update()
         }
+    }
+
+    private func select(_ item: FileItem) {
+        releaseTextFocus()
+        store.selectedIDs = [item.id]
     }
 
     // MARK: - 问候
@@ -126,7 +149,7 @@ struct HomeView: View {
                     ForEach(recentItems) { item in
                         RecentTile(item: item, selected: store.selectedIDs.contains(item.id))
                             .onTapGesture(count: 2) { store.openItems([item]) }
-                            .onTapGesture { store.selectedIDs = [item.id] }
+                            .onTapGesture { select(item) }
                             .contextMenu { FileContextMenu(items: [item]) }
                             .onDrag { NSItemProvider(object: item.url as NSURL) }
                             .help(item.path)
@@ -365,7 +388,10 @@ struct ShelfView: View {
                             radius: 14, interactive: true
                         )
                         .onTapGesture(count: 2) { store.openItems([item]) }
-                        .onTapGesture { store.selectedIDs = [item.id] }
+                        .onTapGesture {
+                            releaseTextFocus()
+                            store.selectedIDs = [item.id]
+                        }
                         .contextMenu { FileContextMenu(items: [item]) }
                         .onDrag { NSItemProvider(object: item.url as NSURL) }
                         .help(item.path)

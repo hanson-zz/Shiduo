@@ -277,7 +277,19 @@ struct FileCollectionView: View {
     }
 
     private func resort() {
-        sortedItems = items.sorted(using: sortOrder)
+        let next: [FileItem]
+        if sortKey == .size {
+            // 文件夹 / 包按后台算出的大小排（和显示的一致）；还没算出来的先按已知大小，算完后再重排。
+            let sizes = FolderSizeStore.shared
+            next = SizeSortLogic.sorted(items, ascending: sortAscending,
+                                        size: { $0.needsComputedSize ? (sizes.knownSize($0.path) ?? $0.size) : $0.size },
+                                        name: \.name)
+        } else {
+            next = items.sorted(using: sortOrder)
+        }
+        // 顺序没变就不动（文件夹大小陆续算完时，不要每次都清掉格子位置）。
+        guard next != sortedItems else { return }
+        sortedItems = next
         sortedURLs = sortedItems.map(\.url)
         // 排版变了：之前记下的格子位置都作废
         cellFrames.frames = [:]
@@ -297,6 +309,9 @@ struct FileCollectionView: View {
         .onChange(of: items) { resort() }
         .onChange(of: sortKey) { resort() }
         .onChange(of: sortAscending) { resort() }
+        // 按大小排序时：文件夹大小算出来以后重排（攒一小会儿才发一次）。
+        .onReceive(FolderSizeStore.shared.sizesSettled) { if sortKey == .size { resort() } }
+        .onAppear { if sortKey == .size { resort() } }
         .onChange(of: thumbnailSize) { cellFrames.frames = [:] }
         .onChange(of: gridWidth) { cellFrames.frames = [:] }
         .onCopyCommand { copyProviders() }

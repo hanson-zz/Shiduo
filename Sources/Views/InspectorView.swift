@@ -248,24 +248,58 @@ private struct SelectionSummaryView: View {
 }
 
 /// 简介栏里的大预览：系统的 QLPreviewView（和快速查看同一套，视频能播放、PDF 能翻页）。
+/// 外面包一层容器：QLPreviewView 建不出来时（可失败的 init 返回 nil）显示缩略图 / 图标，不会崩溃。
 struct FilePreviewView: NSViewRepresentable {
     let url: URL
 
-    func makeNSView(context: Context) -> QLPreviewView {
-        let view: QLPreviewView = QLPreviewView(frame: .zero, style: .normal) ?? QLPreviewView()
-        view.autostarts = false
-        view.previewItem = url as NSURL
+    func makeNSView(context: Context) -> FilePreviewContainer {
+        let view = FilePreviewContainer()
+        view.show(url)
         return view
     }
 
-    func updateNSView(_ view: QLPreviewView, context: Context) {
-        if view.previewItem?.previewItemURL != url {
-            view.previewItem = url as NSURL
+    func updateNSView(_ view: FilePreviewContainer, context: Context) {
+        view.show(url)
+    }
+
+    static func dismantleNSView(_ view: FilePreviewContainer, coordinator: ()) {
+        view.close()
+    }
+}
+
+final class FilePreviewContainer: NSView {
+    private var preview: QLPreviewView?
+    private var fallback: NSImageView?
+    private var shownURL: URL?
+
+    func show(_ url: URL) {
+        if preview == nil, fallback == nil {
+            if let view = QLPreviewView(frame: bounds, style: .normal) {
+                view.autostarts = false
+                view.autoresizingMask = [.width, .height]
+                addSubview(view)
+                preview = view
+            } else {
+                let image = NSImageView(frame: bounds)
+                image.imageScaling = .scaleProportionallyUpOrDown
+                image.autoresizingMask = [.width, .height]
+                addSubview(image)
+                fallback = image
+            }
+        }
+        guard shownURL != url else { return }
+        shownURL = url
+        if let preview {
+            preview.previewItem = url as NSURL
+        } else if let fallback {
+            fallback.image = ThumbnailService.shared.cached(for: url, size: 512)
+                ?? ThumbnailService.shared.cached(for: url, size: 256)
+                ?? NSWorkspace.shared.icon(forFile: url.path)
         }
     }
 
-    static func dismantleNSView(_ view: QLPreviewView, coordinator: ()) {
-        view.close()
+    func close() {
+        preview?.close()
     }
 }
 

@@ -275,6 +275,22 @@ struct FolderStatsCache {
     }
 
     mutating func removeAll() { entries = [:] }
+
+    /// 只看一眼（不校验修改时间、不算使用、不删过期的）：按大小排序时用，旧一点的值也比 0 强。
+    func peek(_ path: String) -> FolderStats? { entries[path]?.stats }
+}
+
+/// 按大小排序：文件夹 / 包用后台算出的大小（还没算出来的按已知大小，通常是 0），大小一样时按名称排，结果稳定。
+enum SizeSortLogic {
+    static func sorted<T>(_ items: [T], ascending: Bool, size: (T) -> Int64, name: (T) -> String) -> [T] {
+        let keyed = items.map { (item: $0, size: size($0), name: name($0)) }
+        return keyed.sorted { a, b in
+            if a.size != b.size { return ascending ? a.size < b.size : a.size > b.size }
+            let order = a.name.localizedStandardCompare(b.name)
+            if order != .orderedSame { return order == .orderedAscending }
+            return false
+        }.map(\.item)
+    }
 }
 
 /// 列表、网格里显示的文字（不含“计算中…”这种状态）。

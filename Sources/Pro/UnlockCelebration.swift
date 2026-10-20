@@ -336,6 +336,9 @@ struct UnlockCelebrationCard: View {
     @State private var frontGeneration = 0
     /// 停在最终画面以后：光芒、光环、星星、挥手这些慢动作降到每秒 30 帧。
     @State private var settled = false
+    /// 停在最终画面 10 秒后没有再点：光芒、熊猫、按钮的慢动作也停下（弹窗一直开着时不再每秒重画 30 次）。点小熊猫会重新动起来。
+    @State private var idle = false
+    @State private var idleGeneration = 0
 
     private var size: CGSize { L.card }
 
@@ -388,7 +391,7 @@ struct UnlockCelebrationCard: View {
     // MARK: 后层：光芒、光环、烟花、星星、速度线
 
     private var backLayer: some View {
-        TimelineView(.animation(minimumInterval: settled ? 1.0 / 30 : nil, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: settled ? 1.0 / 30 : nil, paused: reduceMotion || idle)) { timeline in
             let t = reduceMotion ? T.settleAt : timeline.date.timeIntervalSince(start)
             Canvas { context, canvasSize in
                 CelebrationRenderer.drawBack(&context, size: canvasSize, t: t, still: reduceMotion)
@@ -468,7 +471,7 @@ struct UnlockCelebrationCard: View {
     }
 
     private var panda: some View {
-        TimelineView(.animation(minimumInterval: settled ? 1.0 / 30 : nil, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: settled ? 1.0 / 30 : nil, paused: reduceMotion || idle)) { timeline in
             let t = timeline.date.timeIntervalSince(start)
             let sway = reduceMotion ? 0 : T.earWiggle(at: t) + T.waveAngle(at: t)
             ZStack {
@@ -617,7 +620,7 @@ struct UnlockCelebrationCard: View {
     }
 
     private var breathingButton: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || !buttonIn)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || !buttonIn || idle)) { timeline in
             let breath = reduceMotion ? 0.5 : T.buttonBreath(at: timeline.date.timeIntervalSince(start))
             Button {
                 onClose(true)
@@ -715,6 +718,7 @@ struct UnlockCelebrationCard: View {
         // 3s 停在最终画面：只留慢慢转的光芒、闪烁的星星和挥手。
         guard await wait(until: T.settleAt) else { return }
         settled = true
+        scheduleIdle()
     }
 
     /// 前层要画到彩纸、彩带都落出画面为止；之后拿掉前层，不再逐帧重画。
@@ -745,8 +749,21 @@ struct UnlockCelebrationCard: View {
     }
 
     /// 点小熊猫：再鞠一次躬（戴王冠的鞠躬图），补一轮彩纸，啵 + 噼啪。
+    /// 10 秒后停下慢动作（期间又点了小熊猫就重新计时）。
+    private func scheduleIdle() {
+        idleGeneration += 1
+        let generation = idleGeneration
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(10))
+            guard !Task.isCancelled, generation == idleGeneration else { return }
+            idle = true
+        }
+    }
+
     private func replayBow() {
         guard !reduceMotion, pandaIn else { return }
+        idle = false
+        if settled { scheduleIdle() }
         let now = elapsed
         let wasWaving = pandaStage == 2
         withAnimation(.easeInOut(duration: 0.12)) { pandaStage = max(pandaStage, 1) }

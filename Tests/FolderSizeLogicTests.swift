@@ -118,6 +118,31 @@ final class FolderSizeLogicTests: XCTestCase {
         XCTAssertEqual(Set(cache.entries.keys), ["/u/docsx", "/u/pics"])
     }
 
+    func testCachePeekIgnoresStampAndDoesNotEvict() {
+        var cache = FolderStatsCache(capacity: 10, maxAge: 1)
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        var stats = FolderStats()
+        stats.size = 7
+        cache.insert("/a", stamp: FileStamp(modified: t0, size: nil), stats: stats, now: t0)
+        XCTAssertEqual(cache.peek("/a")?.size, 7)
+        XCTAssertNil(cache.peek("/b"))
+        XCTAssertNotNil(cache.entries["/a"], "peek 不删条目")
+    }
+
+    func testSizeSortUsesProvidedSizeAndNameTiebreak() {
+        // (名字, 已知大小)：文件夹的已知大小是 0，算出来的是 2 GB。
+        let items: [(String, Int64)] = [("b.txt", 10), ("Folder", 0), ("a.txt", 10), ("small", 1)]
+        let computed: [String: Int64] = ["Folder": 2_000_000_000]
+        let size: ((String, Int64)) -> Int64 = { computed[$0.0] ?? $0.1 }
+        let desc = SizeSortLogic.sorted(items, ascending: false, size: size, name: { $0.0 }).map(\.0)
+        XCTAssertEqual(desc, ["Folder", "a.txt", "b.txt", "small"])
+        let asc = SizeSortLogic.sorted(items, ascending: true, size: size, name: { $0.0 }).map(\.0)
+        XCTAssertEqual(asc, ["small", "a.txt", "b.txt", "Folder"])
+        // 名字里的数字按数值排（和访达一样）
+        let numbered: [(String, Int64)] = [("f10", 1), ("f2", 1)]
+        XCTAssertEqual(SizeSortLogic.sorted(numbered, ascending: true, size: { $0.1 }, name: { $0.0 }).map(\.0), ["f2", "f10"])
+    }
+
     // MARK: 遍历磁盘
 
     private var temp: URL!
