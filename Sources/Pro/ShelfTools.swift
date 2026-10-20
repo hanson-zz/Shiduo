@@ -101,7 +101,7 @@ final class ShelfTools: ObservableObject {
         }
         busy = false
         if !out.isEmpty { ShelfStore.shared.add(out) }
-        var text = String(localized: "已转换 \(out.count) 张为 \(format.title)，已放上暂存架")
+        var text = String(localized: "已转换 \(out.count) 张为 \(format.title)，已加入暂存架")
         if failed > 0 { text += String(localized: "，\(failed) 张失败") }
         show(text)
         return out

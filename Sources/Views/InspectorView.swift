@@ -106,6 +106,7 @@ struct InspectorView: View {
                     InfoRow(title: String(localized: "种类"), value: item.kindText)
                     if item.needsComputedSize {
                         FolderStatsSection(item: item)
+                        FullDiskAccessNote(compact: true)
                     } else {
                         InfoRow(title: String(localized: "大小"), value: item.sizeText)
                     }

@@ -2239,22 +2239,6 @@
         }
       }
     },
-    "个文件，共 %@，每一类都有自己的货架": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "files, %@ in total, each kind on its own shelf"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "个文件，共 %@，每一类都有自己的货架"
-          }
-        }
-      }
-    },
     "中": {
       "localizations": {
         "en": {
@@ -3312,7 +3296,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notch / floating shelf"
+            "value": "Notch / floating Shelf"
           }
         },
         "zh-Hans": {
@@ -3328,7 +3312,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notch shelf opacity"
+            "value": "Notch Shelf opacity"
           }
         },
         "zh-Hans": {
@@ -4211,22 +4195,6 @@
         }
       }
     },
-    "固定文件夹": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pinned Folders"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "固定文件夹"
-          }
-        }
-      }
-    },
     "图中文字": {
       "localizations": {
         "en": {
@@ -4360,7 +4328,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show / hide the floating shelf from any app with a shortcut"
+            "value": "Show / hide the floating Shelf from any app with a shortcut"
           }
         },
         "zh-Hans": {
@@ -5483,34 +5451,6 @@
         }
       }
     },
-    "已放上暂存架：%lld 个": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Added %lld item to the shelf"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Added %lld items to the shelf"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已放上暂存架：%lld 个"
-          }
-        }
-      }
-    },
     "已暂停": {
       "localizations": {
         "en": {
@@ -5592,7 +5532,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Already on the shelf"
+            "value": "Already on the Shelf"
           }
         },
         "zh-Hans": {
@@ -6168,7 +6108,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Floating shelf"
+            "value": "Floating Shelf"
           }
         },
         "zh-Hans": {
@@ -6184,7 +6124,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Floating shelf style"
+            "value": "Floating Shelf style"
           }
         },
         "zh-Hans": {
@@ -6200,7 +6140,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Floating shelf: pops up when you drag files to the notch or screen edge"
+            "value": "Floating Shelf: pops up when you drag files to the notch or screen edge"
           }
         },
         "zh-Hans": {
@@ -6480,7 +6420,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Drop files here to AirDrop them to a nearby iPhone, iPad or Mac. Click to send the selected shelf file."
+            "value": "Drop files here to AirDrop them to a nearby iPhone, iPad or Mac. Click to send the selected Shelf file."
           }
         },
         "zh-Hans": {
@@ -6496,7 +6436,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Move the files to another folder; the shelf follows them"
+            "value": "Move the files to another folder; the Shelf follows them"
           }
         },
         "zh-Hans": {
@@ -6604,7 +6544,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show a floating shelf when dragging files to the screen edge"
+            "value": "Show a floating Shelf when dragging files to the screen edge"
           }
         },
         "zh-Hans": {
@@ -7715,22 +7655,6 @@
         }
       }
     },
-    "放上暂存架": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Put on Shelf"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "放上暂存架"
-          }
-        }
-      }
-    },
     "放克": {
       "localizations": {
         "en": {
@@ -8388,7 +8312,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The shelf only remembers where files are. Nothing is copied."
+            "value": "The Shelf only remembers where files are. Nothing is copied."
           }
         },
         "zh-Hans": {
@@ -9535,22 +9459,6 @@
         }
       }
     },
-    "每类文件都有自己的货架": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Every kind of file gets its own shelf"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每类文件都有自己的货架"
-          }
-        }
-      }
-    },
     "每组标着“保留”的文件不会动。随时可以从废纸篓里恢复。": {
       "localizations": {
         "en": {
@@ -9871,22 +9779,6 @@
         }
       }
     },
-    "添加文件夹…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add Folder…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "添加文件夹…"
-          }
-        }
-      }
-    },
     "添加时间": {
       "localizations": {
         "en": {
@@ -10139,22 +10031,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "点按扫描"
-          }
-        }
-      }
-    },
-    "点缩略图选择要移除的文件": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Click thumbnails to choose files to remove"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "点缩略图选择要移除的文件"
           }
         }
       }
@@ -10671,22 +10547,6 @@
         }
       }
     },
-    "移除所选": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove Selected"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移除所选"
-          }
-        }
-      }
-    },
     "稍后再说": {
       "localizations": {
         "en": {
@@ -11140,7 +11000,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto: screens with a notch use the notch; external displays and Macs without a notch use the screen edge. Both styles show the same shelf."
+            "value": "Auto: screens with a notch use the notch; external displays and Macs without a notch use the screen edge. Both styles show the same Shelf."
           }
         },
         "zh-Hans": {
@@ -11927,38 +11787,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "还在找，数字会继续变大…"
-          }
-        }
-      }
-    },
-    "还没有固定文件夹": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No pinned folders yet"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "还没有固定文件夹"
-          }
-        }
-      }
-    },
-    "还没有固定文件夹。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No pinned folders yet."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "还没有固定文件夹。"
           }
         }
       }
@@ -12880,7 +12708,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Close the notch shelf 0.5 s after the pointer leaves"
+            "value": "Close the notch Shelf 0.5 s after the pointer leaves"
           }
         },
         "zh-Hans": {
@@ -12983,22 +12811,6 @@
         }
       }
     },
-    "已转换 %lld 张为 %@，已放上暂存架": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Converted %1$lld to %2$@ and added to the Shelf"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已转换 %1$lld 张为 %2$@，已放上暂存架"
-          }
-        }
-      }
-    },
     "转换格式": {
       "localizations": {
         "en": {
@@ -13095,22 +12907,6 @@
         }
       }
     },
-    "压缩成 ZIP 放在原文件旁边，并放上暂存架": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compress to a ZIP next to the original files and add it to the Shelf"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "压缩成 ZIP 放在原文件旁边，并放上暂存架"
-          }
-        }
-      }
-    },
     "转换格式…": {
       "localizations": {
         "en": {
@@ -13127,22 +12923,6 @@
         }
       }
     },
-    "把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并放上暂存架（Pro）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Convert images to JPG, PNG, HEIC and more; new files are saved next to the originals and added to the Shelf (Pro)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并放上暂存架（Pro）"
-          }
-        }
-      }
-    },
     "正在处理…": {
       "localizations": {
         "en": {
@@ -13155,22 +12935,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在处理…"
-          }
-        }
-      }
-    },
-    "把暂存架上的文件压缩为 ZIP，并放上暂存架": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compress the files on the Shelf to a ZIP and add it to the Shelf"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "把暂存架上的文件压缩为 ZIP，并放上暂存架"
           }
         }
       }
@@ -13388,7 +13152,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Drop files on the hoop to AirDrop them to a nearby iPhone, iPad or Mac. You can also hold ⌥ and drag a shelf card to fling it into the hoop. Click to send the selected shelf file."
+            "value": "Drop files on the hoop to AirDrop them to a nearby iPhone, iPad or Mac. You can also hold ⌥ and drag a Shelf card to fling it into the hoop. Click to send the selected Shelf file."
           }
         },
         "zh-Hans": {
@@ -14243,22 +14007,6 @@
         }
       }
     },
-    "30 天内移到废纸篓或搬走的文件，可以放回原处": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Files trashed or moved in the last 30 days. Put them back"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 天内移到废纸篓或搬走的文件，可以放回原处"
-          }
-        }
-      }
-    },
     "restore.suffix": {
       "localizations": {
         "en": {
@@ -14879,22 +14627,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld 个已经搬走，但原位置没能留下替身，要去新位置打开：%2$@"
-          }
-        }
-      }
-    },
-    "“下载”里所有 .dmg / .pkg 都会移到废纸篓（这条规则没设天数，可以在「自动整理」里改）。30 天内可以在「清理记录」里放回。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Every .dmg / .pkg in Downloads will be moved to the Trash (this rule has no age limit — change it in Auto-Organize). You can put them back from Cleanup History within 30 days."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "“下载”里所有 .dmg / .pkg 都会移到废纸篓（这条规则没设天数，可以在「自动整理」里改）。30 天内可以在「清理记录」里放回。"
           }
         }
       }
@@ -25303,6 +25035,550 @@
           "stringUnit": {
             "state": "translated",
             "value": "卡片颜色"
+          }
+        }
+      }
+    },
+    "把暂存架上的文件压缩为 ZIP，并加入暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compress the files on the Shelf to a ZIP and add it to the Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把暂存架上的文件压缩为 ZIP，并加入暂存架"
+          }
+        }
+      }
+    },
+    "刘海暂存架已暂停": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notch Shelf is paused"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刘海暂存架已暂停"
+          }
+        }
+      }
+    },
+    "拾掇 Pro 试用已结束。暂存架里的文件还在，可以在主窗口的「暂存架」里继续用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Shiduo Pro trial has ended. Your Shelf files are still there — keep using them from Shelf in the main window."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 试用已结束。暂存架里的文件还在，可以在主窗口的「暂存架」里继续用。"
+          }
+        }
+      }
+    },
+    "关掉刘海暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off Notch Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关掉刘海暂存架"
+          }
+        }
+      }
+    },
+    "关掉时，把文件拖到刘海处或点一下刘海才展开。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When off, the Notch Shelf opens only when you drag files to the notch or click the notch."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关掉时，把文件拖到刘海处或点一下刘海才展开。"
+          }
+        }
+      }
+    },
+    "已转换 %lld 张为 %@，已加入暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Converted %1$lld to %2$@ and added to the Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已转换 %1$lld 张为 %2$@，已加入暂存架"
+          }
+        }
+      }
+    },
+    "概览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "概览"
+          }
+        }
+      }
+    },
+    "空间占用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空间占用"
+          }
+        }
+      }
+    },
+    "已开启「自动清理用过的安装包」。按规则自动把下载里的文件归类或移到废纸篓。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Clean up used installers” is on. Rules sort files in Downloads into folders or move them to the Trash."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已开启「自动清理用过的安装包」。按规则自动把下载里的文件归类或移到废纸篓。"
+          }
+        }
+      }
+    },
+    "按规则自动把下载里的文件归类或移到废纸篓，比如自动清理用过的安装包。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules that sort files in Downloads into folders or move them to the Trash — for example, cleaning up used installers."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按规则自动把下载里的文件归类或移到废纸篓，比如自动清理用过的安装包。"
+          }
+        }
+      }
+    },
+    "“下载”里所有 .dmg / .pkg 都会移到废纸篓（这条规则没设天数，可以在下面的规则里改）。30 天内可以在「清理记录」里放回。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every .dmg / .pkg in Downloads will be moved to the Trash (this rule has no age limit — change it in the rules below). You can put them back from Cleanup History within 30 days."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“下载”里所有 .dmg / .pkg 都会移到废纸篓（这条规则没设天数，可以在下面的规则里改）。30 天内可以在「清理记录」里放回。"
+          }
+        }
+      }
+    },
+    "点缩略图选择要移到废纸篓的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click thumbnails to choose files to move to the Trash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点缩略图选择要移到废纸篓的文件"
+          }
+        }
+      }
+    },
+    "把所选移到废纸篓": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Selected to Trash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把所选移到废纸篓"
+          }
+        }
+      }
+    },
+    "一次移动的比较多，先确认一下。随时可以从废纸篓里恢复，只在 iCloud 云端的文件会被跳过。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That’s a lot at once, so please confirm. You can restore them from the Trash anytime. Files that are only in iCloud are skipped."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次移动的比较多，先确认一下。随时可以从废纸篓里恢复，只在 iCloud 云端的文件会被跳过。"
+          }
+        }
+      }
+    },
+    "未授予完全磁盘访问，统计可能偏小": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Full Disk Access — sizes may be underreported"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未授予完全磁盘访问，统计可能偏小"
+          }
+        }
+      }
+    },
+    "去授权": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant Access"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去授权"
+          }
+        }
+      }
+    },
+    "打开「系统设置 › 隐私与安全性 › 完全磁盘访问权限」，打开拾掇的开关": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings › Privacy & Security › Full Disk Access and turn on Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开「系统设置 › 隐私与安全性 › 完全磁盘访问权限」，打开拾掇的开关"
+          }
+        }
+      }
+    },
+    "首页按类型分栏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home sorts files by kind"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "首页按类型分栏"
+          }
+        }
+      }
+    },
+    "通用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通用"
+          }
+        }
+      }
+    },
+    "搜索与识别": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search & Recognition"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索与识别"
+          }
+        }
+      }
+    },
+    "更新与隐私": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates & Privacy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新与隐私"
+          }
+        }
+      }
+    },
+    "启动": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startup"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动"
+          }
+        }
+      }
+    },
+    "关掉拾掇的窗口后它仍在后台，快捷键随时可用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo keeps running after you close its windows, so shortcuts always work."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关掉拾掇的窗口后它仍在后台，快捷键随时可用。"
+          }
+        }
+      }
+    },
+    "文件夹墙还是空的。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Folder Wall is empty."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹墙还是空的。"
+          }
+        }
+      }
+    },
+    "主窗口里的「暂存架」免费；拖到刘海或屏幕边缘弹出的悬浮暂存架、数字键直达是 Pro 功能。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shelf in the main window is free. The floating Shelf that pops up at the notch or screen edge, and number-key quick picks, are Pro features."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主窗口里的「暂存架」免费；拖到刘海或屏幕边缘弹出的悬浮暂存架、数字键直达是 Pro 功能。"
+          }
+        }
+      }
+    },
+    "几点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "几点"
+          }
+        }
+      }
+    },
+    "试用已结束，这些 Pro 设置暂时不能改": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial has ended, so these Pro settings are locked"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试用已结束，这些 Pro 设置暂时不能改"
+          }
+        }
+      }
+    },
+    "这些是 Pro 功能": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are Pro features"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些是 Pro 功能"
+          }
+        }
+      }
+    },
+    "了解 Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Pro"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "了解 Pro"
+          }
+        }
+      }
+    },
+    "压缩成 ZIP 放在原文件旁边，并加入暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compress to a ZIP next to the original files and add it to the Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩成 ZIP 放在原文件旁边，并加入暂存架"
+          }
+        }
+      }
+    },
+    "把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并加入暂存架（Pro）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convert images to JPG, PNG, HEIC and more; new files are saved next to the originals and added to the Shelf (Pro)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并加入暂存架（Pro）"
+          }
+        }
+      }
+    },
+    "可以清理的文件、空间占用图、清理记录和自动整理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files you can clean up, the storage map, Cleanup History and Auto-Organize"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可以清理的文件、空间占用图、清理记录和自动整理"
+          }
+        }
+      }
+    },
+    "它占了 %@。随时可以从废纸篓里恢复。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It takes up %@. You can restore it from the Trash anytime."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它占了 %@。随时可以从废纸篓里恢复。"
+          }
+        }
+      }
+    },
+    "Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro"
           }
         }
       }

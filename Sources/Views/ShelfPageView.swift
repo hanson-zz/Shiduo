@@ -93,15 +93,30 @@ struct ShelfPageView: View {
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
 
-            Spacer()
-
             if working || tools.busy { ProgressView().controlSize(.small) }
 
+            // 窗口窄（比如 760 宽、分屏）时按钮只显示图标，悬停提示里有名字。
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) { actionButtons }
+                HStack(spacing: 4) { actionButtons }
+                    .labelStyle(.iconOnly)
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .disabled(working || tools.busy || transfer.isRunning)
+        .controlSize(.regular)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private var actionButtons: some View {
             Button { moveTargets() } label: { Label("移动到…", systemImage: "folder") }
                 .help("把文件移到另一个文件夹，暂存架会跟着更新")
             Button { copyTargets() } label: { Label("拷贝到…", systemImage: "doc.on.doc") }
+                .help("拷贝到…")
             Button { zipTargets() } label: { Label("压缩为 ZIP", systemImage: "doc.zipper") }
-                .help("压缩成 ZIP 放在原文件旁边，并放上暂存架")
+                .help("压缩成 ZIP 放在原文件旁边，并加入暂存架")
             Menu {
                 ForEach(ImageConverter.OutputFormat.available) { format in
                     Button(String(localized: "转换为 \(format.title)")) { convert(targets, to: format) }
@@ -111,7 +126,7 @@ struct ShelfPageView: View {
             }
             .fixedSize()
             .disabled(ShelfTools.images(in: targets.map(\.url)).isEmpty)
-            .help("把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并放上暂存架（Pro）")
+            .help("把图片转成 JPG、PNG、HEIC 等格式，新文件放在原图旁边并加入暂存架（Pro）")
             Button { ShelfActions.share(targets.map(\.url)) } label: { Label("共享…", systemImage: "square.and.arrow.up") }
                 .help("隔空投送、信息、邮件……")
             Menu {
@@ -130,11 +145,6 @@ struct ShelfPageView: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-        }
-        .disabled(working || tools.busy || transfer.isRunning)
-        .controlSize(.regular)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
     }
 
     /// 移动 / 拷贝的进度和取消。
@@ -294,7 +304,7 @@ struct ShelfPageView: View {
 
     private func add(_ urls: [URL]) {
         let added = shelf.add(urls)
-        if added > 0 { store.showToast(String(localized: "已放上暂存架：\(added) 个")) }
+        if added > 0 { store.showToast(String(localized: "已加入暂存架：\(added) 个")) }
     }
 
     private func removeTargets() {

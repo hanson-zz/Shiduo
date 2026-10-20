@@ -129,26 +129,16 @@ struct SidebarView: View {
             SavedSearchesSidebarSection()
 
             CollapsibleSection("organize", title: "整理") {
+                // 空间占用、清理记录、自动整理都是清理页里的页内标签，侧边栏只占一行。
                 Label("清理", systemImage: "sparkles")
                     .badge(cleanup.totalBytes > 0 ? Text(cleanup.totalBytes.byteText).foregroundColor(.green) : nil)
-                    .tag(SidebarItem.cleanup)
+                    .tag(cleanupRow)
+                    .help("可以清理的文件、空间占用图、清理记录和自动整理")
                 // 重复文件和相似照片是同一个页面（页内切换），侧边栏只占一行。
                 Label("重复与相似", systemImage: "doc.on.doc")
                     .badge(duplicates.hasScanned && duplicates.reclaimable > 0 ? Text(duplicates.reclaimable.byteText).foregroundColor(.green) : nil)
                     .tag(duplicatesRow)
                     .help("完全相同的副本，以及看起来差不多的照片")
-                Label("空间占用图", systemImage: "square.grid.3x3.square")
-                    .tag(SidebarItem.storageMap)
-                Label("清理记录", systemImage: "clock.arrow.circlepath")
-                    .tag(SidebarItem.cleanupHistory)
-                    .help("30 天内移到废纸篓或搬走的文件，可以放回原处")
-                HStack {
-                    Label("自动整理", systemImage: "wand.and.stars")
-                    Spacer()
-                    ProBadge()
-                        .opacity(license.isPro ? 0.55 : 1)
-                }
-                .tag(SidebarItem.autoOrganize)
             }
 
             if !chat.installedApps.isEmpty {
@@ -245,6 +235,14 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .modifier(SavedSearchRenameAlert())
+    }
+
+    /// 正在看空间占用图、清理记录、自动整理时，侧边栏也选中「清理」这一行。
+    private var cleanupRow: SidebarItem {
+        switch store.selection {
+        case .storageMap, .cleanupHistory, .autoOrganize: return store.selection ?? .cleanup
+        default: return .cleanup
+        }
     }
 
     /// 正在看相似照片时，侧边栏也选中「重复与相似」这一行。

@@ -16,9 +16,28 @@ final class FloatingShelfController: NSObject {
         UserDefaults.standard.object(forKey: shakeKey) as? Bool ?? true
     }
 
-    /// 打开了开关，并且是 Pro（含试用）。
+    /// 打开了开关，并且是 Pro（含试用）；试用刚结束时也算（碰到刘海 / 边缘时弹出上锁卡片，不悄悄消失）。
     var isActive: Bool {
-        UserDefaults.standard.bool(forKey: Self.enabledKey) && LicenseManager.shared.isPro
+        UserDefaults.standard.bool(forKey: Self.enabledKey) && (LicenseManager.shared.isPro || isLocked)
+    }
+
+    /// 试用结束、开关还开着：触发时只显示上锁卡片（购买 / 输入授权码 / 关掉这个功能）。
+    var isLocked: Bool {
+        LicenseManager.shared.state == .expiredTrial
+    }
+
+    /// 上锁卡片上的「关掉刘海暂存架」：关开关，拿掉监听。
+    func turnOffAfterTrial() {
+        UserDefaults.standard.set(false, forKey: Self.enabledKey)
+        NotchShelfController.shared.hide()
+        hide()
+        apply()
+    }
+
+    /// 上锁时不管哪种样式，都在这块屏幕顶部中间显示刘海样式的上锁卡片。
+    private func showLocked(on screen: NSScreen?, byDrag: Bool) {
+        guard let screen = screen ?? NSScreen.main, !NotchShelfController.shared.isVisible else { return }
+        NotchShelfController.shared.show(on: screen, byDrag: byDrag)
     }
 
     var isVisible: Bool { panel?.isVisible == true }
@@ -62,7 +81,7 @@ final class FloatingShelfController: NSObject {
             installMonitors()
         } else {
             removeMonitors()
-            if !LicenseManager.shared.isPro {
+            if !LicenseManager.shared.isPro || !isActive {
                 hide()
                 NotchShelfController.shared.hide()
             }
@@ -75,6 +94,15 @@ final class FloatingShelfController: NSObject {
 
     /// 菜单命令：显示或隐藏。不是 Pro 时打开 Pro 介绍页。
     func toggle() {
+        if isLocked && isActive {
+            if NotchShelfController.shared.isVisible {
+                NotchShelfController.shared.hide()
+            } else {
+                let mouse = NSEvent.mouseLocation
+                showLocked(on: NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }), byDrag: false)
+            }
+            return
+        }
         guard LicenseManager.shared.isPro else {
             NSApp.activate(ignoringOtherApps: true)
             LicenseManager.shared.showPaywall = true
@@ -132,6 +160,8 @@ final class FloatingShelfController: NSObject {
     }
 
     private func mouseWentDown() {
+        // 点一下刘海：展开刘海暂存架（试用结束时是上锁卡片）。
+        NotchShelfController.shared.mouseDown(at: NSEvent.mouseLocation)
         dragCountAtMouseDown = NSPasteboard(name: .drag).changeCount
         shake.reset()
         // 拖动开始后，别的 App 不一定还会发出 leftMouseDragged，所以按住期间也轮询一下鼠标位置。
@@ -171,6 +201,14 @@ final class FloatingShelfController: NSObject {
               pasteboard.canReadObject(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) else { return }
         let mouse = NSEvent.mouseLocation
         guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) else { return }
+        if isLocked {
+            // 试用结束：碰到刘海或边缘时弹出上锁卡片，告诉用户为什么不再展开。
+            let atEdge = mouse.x <= screen.frame.minX + edgeThreshold || mouse.x >= screen.frame.maxX - edgeThreshold
+            if NotchShelfController.shared.isAtNotch(mouse, on: screen) || (!ShelfStyle.usesNotch(on: screen) && atEdge) {
+                showLocked(on: screen, byDrag: true)
+            }
+            return
+        }
         // 刘海样式：拖到屏幕顶部中间就从刘海展开；边缘样式：碰左右两边。
         if ShelfStyle.usesNotch(on: screen) {
             if NotchShelfController.shared.isAtNotch(mouse, on: screen) {
@@ -195,7 +233,7 @@ final class FloatingShelfController: NSObject {
     }
 
     private func sampleShake() {
-        guard isActive, Self.shakeToSummon, !isVisible, !NotchShelfController.shared.isVisible else { return }
+        guard isActive, !isLocked, Self.shakeToSummon, !isVisible, !NotchShelfController.shared.isVisible else { return }
         let mouse = NSEvent.mouseLocation
         guard shake.add(x: Double(mouse.x), time: ProcessInfo.processInfo.systemUptime) else { return }
         guard isDraggingFiles else { return }
@@ -466,7 +504,7 @@ struct FloatingShelfView: View {
                     }
                     .buttonStyle(.borderless)
                     .disabled(tools.busy)
-                    .help("把暂存架上的文件压缩为 ZIP，并放上暂存架")
+                    .help("把暂存架上的文件压缩为 ZIP，并加入暂存架")
                     Menu {
                         Button("在访达中显示") { FileActions.reveal(shelf.items) }
                         Button("全部压缩为 ZIP") { tools.startZip(shelf.urls) }

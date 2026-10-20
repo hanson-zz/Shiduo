@@ -30,6 +30,8 @@ final class AppLifecycle {
         started = true
         // ⌘⌫ 移到废纸篓：编辑文字时把按键留给输入框；前台窗口变化时刷新菜单项。
         TrashCommandCenter.shared.install()
+        // 刘海暂存架「鼠标碰到就展开」：老用户保持原来的设置，新装的默认关闭。
+        NotchShelfPrefs.migrateHoverDefault()
 
         // 通知中心代理和文件提醒的按钮类别必须在启动完成前设好，冷启动时点的通知按钮才不会丢。
         CleanupReminder.shared.installNotificationDelegate()

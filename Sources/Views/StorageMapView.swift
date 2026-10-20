@@ -180,6 +180,7 @@ struct StorageMapView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            FullDiskAccessNote()
             Divider()
             GeometryReader { geo in
                 let shown = Array(model.nodes.filter { $0.size > 0 }.prefix(80))
@@ -295,13 +296,20 @@ struct StorageMapView: View {
                         store.requestMoveOut([copy])
                     }
                 }
-                // 和其他地方一样不弹确认：小提示上可以撤销（⌘Z 也行）。
+                // 和其他地方一样不弹确认：小提示上可以撤销（⌘Z 也行）。只有 5 GB 以上的大块才先问一句。
                 Button("移到废纸篓", role: .destructive) {
-                    if let item = FileItem(url: node.url) {
-                        var copy = item
-                        copy.size = node.size
-                        store.moveToTrash([copy]) { moved in model.removed(moved) }
+                    guard let item = FileItem(url: node.url) else { return }
+                    var copy = item
+                    copy.size = node.size
+                    if TrashConfirm.needsConfirm(count: 1, bytes: node.size) {
+                        let alert = NSAlert()
+                        alert.messageText = String(localized: "将“\(copy.name)”移到废纸篓？")
+                        alert.informativeText = String(localized: "它占了 \(node.size.byteText)。随时可以从废纸篓里恢复。")
+                        alert.addButton(withTitle: String(localized: "移到废纸篓"))
+                        alert.addButton(withTitle: String(localized: "取消"))
+                        guard alert.runModal() == .alertFirstButtonReturn else { return }
                     }
+                    store.moveToTrash([copy]) { moved in model.removed(moved) }
                 }
             }
             .animation(.easeOut(duration: 0.2), value: rect)

@@ -118,7 +118,7 @@ struct ContentView: View {
             }
             Button("取消", role: .cancel) { store.pendingTrash = [] }
         } message: {
-            Text("随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。")
+            Text("一次移动的比较多，先确认一下。随时可以从废纸篓里恢复，只在 iCloud 云端的文件会被跳过。")
         }
         .alert(
             "提示",
@@ -247,20 +247,22 @@ struct DetailView: View {
             case .similarPhotos:
                 DuplicatesView()
             case .cleanup:
-                CleanupView()
+                CleanupTabs { CleanupView() }
             case .tag(let name):
                 BrowserView(title: String(localized: "标签：\(name)"), showsOCRTools: false)
             case .storageMap:
-                StorageMapView()
+                CleanupTabs { StorageMapView() }
             case .chat(let app):
                 BrowserView(title: String(localized: "\(app.name)文件"), showsOCRTools: false, chatApp: app)
             case .pinned(let path), .folder(let path):
                 BrowserView(title: FileManager.default.displayName(atPath: store.currentFolder ?? path), showsOCRTools: false)
             case .autoOrganize:
-                AutoOrganizeView()
-                    .proGated(.autoOrganize)
+                CleanupTabs {
+                    AutoOrganizeView()
+                        .proGated(.autoOrganize)
+                }
             case .cleanupHistory:
-                CleanupHistoryView()
+                CleanupTabs { CleanupHistoryView() }
             case .savedSearch(let id):
                 SavedSearchPage(id: id)
                     .proGated(.savedSearch)

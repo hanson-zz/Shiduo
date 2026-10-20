@@ -1189,6 +1189,24 @@ final class LibraryStore: ObservableObject {
 
     // MARK: - 文件夹墙、前往
 
+    /// 把文件拖进拾掇里的某个文件夹（浏览视图的文件夹格子 / 行、当前文件夹的空白处、路径栏、文件夹墙的卡片）：
+    /// 移动，按住 ⌥ 拷贝。走和「移动到…」同一条路（后台进行、同名自动加编号、不覆盖、记进清理记录），⌘Z / 小提示上的「撤销」可以放回。
+    func transferDropped(_ urls: [URL], into folder: URL, copy: Bool) {
+        let target = folder.standardizedFileURL.path
+        let list = urls.filter { url in
+            let path = url.standardizedFileURL.path
+            // 文件夹自己、它的上层文件夹：不动；移动时已经在这个文件夹里的也不动。
+            guard path != target, !target.hasPrefix(path + "/") else { return false }
+            return copy || url.deletingLastPathComponent().standardizedFileURL.path != target
+        }
+        guard !list.isEmpty else { return }
+        guard !ShelfTransfer.shared.isRunning else {
+            showToast(String(localized: "还有文件在移动，请稍等"))
+            return
+        }
+        ShelfTransfer.shared.start(list, to: folder, copy: copy, store: self)
+    }
+
     /// 文件夹被移动 / 改名：文件夹墙上记的路径、卡片颜色、自动整理规则跟着改。
     func folderMoved(from old: String, to new: String) {
         guard let index = pinnedFolders.firstIndex(of: old) else { return }
@@ -1293,8 +1311,14 @@ final class LibraryStore: ObservableObject {
 
     // MARK: - 废纸篓
 
+    /// 「移到废纸篓」按钮：少量的直接移（小提示上可以撤销），大批量（≥100 个或 ≥5 GB）先确认。
     func requestTrash(_ list: [FileItem]) {
-        pendingTrash = list
+        guard !list.isEmpty else { return }
+        if TrashConfirm.needsConfirm(count: list.count, bytes: list.reduce(0) { $0 + $1.size }) {
+            pendingTrash = list
+        } else {
+            moveToTrash(list)
+        }
     }
 
     /// 正在移到废纸篓的文件数（大批量时界面上显示进度）。

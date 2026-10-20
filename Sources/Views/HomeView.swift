@@ -150,6 +150,10 @@ struct HomeView: View {
                         RecentTile(item: item, selected: store.selectedIDs.contains(item.id))
                             .onTapGesture(count: 2) { store.openItems([item]) }
                             .onTapGesture { select(item) }
+                            // 键盘 / VoiceOver：读出文件名，是可以按的；默认动作是打开。
+                            .accessibilityElement(children: .combine)
+                            .accessibilityAddTraits(store.selectedIDs.contains(item.id) ? [.isButton, .isSelected] : .isButton)
+                            .accessibilityAction { store.openItems([item]) }
                             .contextMenu { FileContextMenu(items: [item]) }
                             .onDrag { NSItemProvider(object: item.url as NSURL) }
                             .help(item.path)
@@ -168,8 +172,10 @@ struct HomeView: View {
             SectionHeader(title: String(localized: "资料库"), count: FileCategory.dashboard.count)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14)], spacing: 12) {
                 ForEach(FileCategory.dashboard) { category in
-                    LibraryTile(category: category, total: store.totals[category], previews: store.previews[category] ?? [])
-                        .onTapGesture { store.selection = .category(category) }
+                    Button { store.selection = .category(category) } label: {
+                        LibraryTile(category: category, total: store.totals[category], previews: store.previews[category] ?? [])
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -185,16 +191,16 @@ struct HomeView: View {
                 action: { store.selection = .cleanup }
             )
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 14)], spacing: 12) {
-                DuplicatesTile()
-                    .onTapGesture { store.selection = .duplicates }
+                Button { store.selection = .duplicates } label: { DuplicatesTile() }
+                    .buttonStyle(.plain)
                 if cleanup.isRunning && cleanup.cards.isEmpty {
                     placeholderTile(String(localized: "正在找可以清理的文件…"))
                 } else if cleanup.hasScanned && cleanupCards.isEmpty {
                     placeholderTile(String(localized: "没有需要清理的，很整齐"))
                 }
                 ForEach(cleanupCards.prefix(3)) { card in
-                    CleanupTile(card: card)
-                        .onTapGesture { store.openCleanup(card.kind) }
+                    Button { store.openCleanup(card.kind) } label: { CleanupTile(card: card) }
+                        .buttonStyle(.plain)
                 }
             }
             Label("不会直接删除，都进废纸篓，随时可以放回原处。", systemImage: "checkmark.shield")
@@ -219,8 +225,8 @@ struct HomeView: View {
             SectionHeader(title: String(localized: "下载来源"), count: store.sourceGroups.count, action: { store.openDownloads(source: nil) })
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 14)], spacing: 14) {
                 ForEach(store.sourceGroups.prefix(8)) { group in
-                    SourceTile(group: group)
-                        .onTapGesture { store.openDownloads(source: group.source.id) }
+                    Button { store.openDownloads(source: group.source.id) } label: { SourceTile(group: group) }
+                        .buttonStyle(.plain)
                 }
             }
         }
@@ -392,6 +398,9 @@ struct ShelfView: View {
                             releaseTextFocus()
                             store.selectedIDs = [item.id]
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityAddTraits(store.selectedIDs.contains(item.id) ? [.isButton, .isSelected] : .isButton)
+                        .accessibilityAction { store.openItems([item]) }
                         .contextMenu { FileContextMenu(items: [item]) }
                         .onDrag { NSItemProvider(object: item.url as NSURL) }
                         .help(item.path)

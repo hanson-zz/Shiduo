@@ -21,6 +21,39 @@ enum FullDiskAccess {
     }
 }
 
+/// 没有完全磁盘访问权限时，空间统计的地方（空间占用图、简介栏里文件夹的大小）显示一行说明和「去授权」按钮。
+/// 资源库里的 Containers 这些文件夹读不到，算出来的会偏小。切回拾掇时重新检查，授权后自动消失。
+struct FullDiskAccessNote: View {
+    var compact = false
+    @State private var granted = FullDiskAccess.isGranted
+
+    var body: some View {
+        Group {
+            if !granted {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.shield")
+                        .foregroundStyle(.orange)
+                    Text("未授予完全磁盘访问，统计可能偏小")
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 6)
+                    Button("去授权") { FullDiskAccess.openSettings() }
+                        .buttonStyle(.link)
+                        .help("打开「系统设置 › 隐私与安全性 › 完全磁盘访问权限」，打开拾掇的开关")
+                }
+                .font(compact ? .caption : .callout)
+                .padding(.horizontal, compact ? 0 : 16)
+                .padding(.vertical, compact ? 2 : 6)
+                .background(compact ? Color.clear : Color.orange.opacity(0.07))
+                .accessibilityElement(children: .combine)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            granted = FullDiskAccess.isGranted
+        }
+    }
+}
+
 /// 「无需账号 · 不上云 · 不上传」
 struct PrivacyBadges: View {
     var compact = false
@@ -111,7 +144,7 @@ struct OnboardingView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 440)
             VStack(alignment: .leading, spacing: 12) {
-                feature("square.grid.2x2.fill", .blue, String(localized: "每类文件都有自己的货架"), String(localized: "大缩略图，一眼认出要找的那个"))
+                feature("square.grid.2x2.fill", .blue, String(localized: "首页按类型分栏"), String(localized: "大缩略图，一眼认出要找的那个"))
                 feature("text.magnifyingglass", .purple, String(localized: "像说话一样搜索"), String(localized: "“上周超过5MB的pdf”“来自微信的图片”"))
                 feature("sparkles", .orange, String(localized: "安全地腾出空间"), String(localized: "重复文件、旧安装包、微信大文件，只移到废纸篓"))
             }

@@ -493,6 +493,8 @@ struct AutoOrganizeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 header
+                // 现成的一条：自动清理用过的安装包（以前在清理页上，现在和其他规则放在一起）。
+                AutoCleanInstallersRow()
                 if organizer.rules.isEmpty {
                     Text("还没有规则。点「新建规则」，比如把下载文件夹里的安装包自动移到废纸篓。")
                         .foregroundStyle(.secondary)

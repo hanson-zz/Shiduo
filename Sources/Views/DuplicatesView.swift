@@ -134,7 +134,12 @@ struct DuplicatesView: View {
             Spacer()
             VStack(alignment: .trailing, spacing: 10) {
                 Button {
-                    confirmAll = true
+                    // 少量的直接移（小提示上可以撤销）；大批量（≥100 个或 ≥5 GB）先确认。
+                    if TrashConfirm.needsConfirm(count: allExtras.count, bytes: freeBytes) {
+                        confirmAll = true
+                    } else {
+                        safeTrash(groups)
+                    }
                 } label: {
                     Label("全部移到废纸篓", systemImage: "trash")
                         .font(.body.weight(.semibold))

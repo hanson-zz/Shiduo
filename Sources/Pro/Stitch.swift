@@ -466,7 +466,7 @@ final class ImageStudio: ObservableObject {
             window.title = String(localized: "图片工具")
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             window.setContentSize(NSSize(width: 1180, height: 760))
-            window.minSize = NSSize(width: 900, height: 600)
+            window.minSize = NSSize(width: 760, height: 600)
             window.isReleasedWhenClosed = false
             window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden

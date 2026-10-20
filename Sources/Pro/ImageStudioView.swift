@@ -16,7 +16,7 @@ struct ImageStudioView: View {
             ProLockedView(feature: .imageTools)
                 .environmentObject(license)
                 .padding(40)
-                .frame(minWidth: 900, minHeight: 600)
+                .frame(minWidth: 760, minHeight: 600)
         }
     }
 
@@ -45,7 +45,7 @@ struct ImageStudioView: View {
                 }
             }
         }
-        .frame(minWidth: 900, minHeight: 600)
+        .frame(minWidth: 760, minHeight: 600)
         .overlay(alignment: .bottom) {
             if let message = studio.message {
                 Text(message)
@@ -70,7 +70,7 @@ struct ImageStudioView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 340)
+            .fixedSize()
             ProBadge()
 
             Button {
@@ -82,12 +82,21 @@ struct ImageStudioView: View {
             Spacer()
 
             if studio.mode == .stitch {
-                Picker("拼图方式", selection: $studio.settings.layout) {
-                    ForEach(StitchLayout.allCases) { Text($0.title).tag($0) }
+                // 窗口窄（760 宽）时换成下拉菜单，不挤掉别的按钮。
+                ViewThatFits(in: .horizontal) {
+                    Picker("拼图方式", selection: $studio.settings.layout) {
+                        ForEach(StitchLayout.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .fixedSize()
+                    Picker("拼图方式", selection: $studio.settings.layout) {
+                        ForEach(StitchLayout.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .fixedSize()
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 360)
                 .onChange(of: studio.settings.layout) { studio.refresh() }
             }
 
@@ -403,7 +412,7 @@ struct StitchInspector: View {
                         HStack {
                             Text("背景色")
                             Spacer()
-                            ColorPicker("", selection: color(\.background), supportsOpacity: true).labelsHidden()
+                            ColorPicker("背景色", selection: color(\.background), supportsOpacity: true).labelsHidden()
                         }
                     }
 
@@ -430,7 +439,7 @@ struct StitchInspector: View {
                                         .controlSize(.small)
                                 }
                                 Spacer()
-                                ColorPicker("", selection: color(\.watermarkColor), supportsOpacity: false)
+                                ColorPicker("文字颜色", selection: color(\.watermarkColor), supportsOpacity: false)
                                     .labelsHidden()
                                     .disabled(studio.settings.watermarkImage != nil)
                                     .help("文字颜色")

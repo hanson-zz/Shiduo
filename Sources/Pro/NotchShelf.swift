@@ -129,9 +129,16 @@ enum NotchShelfPrefs {
         UserDefaults.standard.object(forKey: autoHideKey) as? Bool ?? true
     }
 
-    /// 不拖文件、只把鼠标移到刘海处也展开。
+    /// 不拖文件、只把鼠标移到刘海处也展开。新装的默认关闭（拖文件过去、点一下刘海才展开，免得去点菜单栏时误触）。
     static var hoverToOpen: Bool {
-        UserDefaults.standard.object(forKey: hoverKey) as? Bool ?? true
+        UserDefaults.standard.object(forKey: hoverKey) as? Bool ?? false
+    }
+
+    /// 启动时调用一次：这个开关以前默认打开，老用户没动过它的，记成打开（行为不变）；新装的记成关闭。
+    static func migrateHoverDefault() {
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: hoverKey) == nil else { return }
+        defaults.set(defaults.bool(forKey: "onboardingDone"), forKey: hoverKey)
     }
 }
 
@@ -174,6 +181,19 @@ final class NotchShelfController: NSObject, ObservableObject {
         let width = max(screen.notchWidth + (english ? 460 : 400), english ? 640 : 580)
         let height = screen.notchHeight + card + 92
         return NSSize(width: min(width, screen.frame.width - 40), height: height)
+    }
+
+    /// 点在刘海本身上（不含两边的余量：两边是菜单栏图标）。
+    func isInNotch(_ point: NSPoint, on screen: NSScreen) -> Bool {
+        point.y >= screen.frame.maxY - screen.notchHeight && abs(point.x - screen.frame.midX) <= screen.notchWidth / 2
+    }
+
+    /// 点一下刘海：展开 / 收起（刘海那块本来什么都点不到）。
+    func mouseDown(at point: NSPoint) {
+        guard !isVisible,
+              let screen = NSScreen.screens.first(where: { NSMouseInRect(point, $0.frame, false) }),
+              ShelfStyle.usesNotch(on: screen), isInNotch(point, on: screen) else { return }
+        show(on: screen, byDrag: false)
     }
 
     /// 鼠标是不是在这块屏幕刘海附近的顶边上。
@@ -477,10 +497,76 @@ struct NotchShelfView: View {
     @FocusState private var focused: Bool
     @AppStorage(NotchShelfPrefs.opacityKey) private var opacity = 1.0
 
+    @ObservedObject private var license = LicenseManager.shared
+
     private var cardSize: CGFloat { NotchShelfPrefs.cardSize }
     private var items: [FileItem] { controller.currentItems }
 
     var body: some View {
+        if license.isPro {
+            unlockedBody
+        } else {
+            lockedBody
+        }
+    }
+
+    /// 试用结束后：碰到刘海不再悄悄没反应，而是展开这张上锁卡片，说明原因，可以购买、输入授权码或关掉这个功能。
+    private var lockedBody: some View {
+        VStack(spacing: 10) {
+            Color.clear.frame(height: max(topInset - 4, 20))
+            HStack(spacing: 14) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.8))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("刘海暂存架已暂停")
+                        .font(.headline)
+                    Text("拾掇 Pro 试用已结束。暂存架里的文件还在，可以在主窗口的「暂存架」里继续用。")
+                        .font(.callout)
+                        .foregroundStyle(.white.opacity(0.7))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                VStack(spacing: 6) {
+                    Button {
+                        controller.hide()
+                        NSWorkspace.shared.open(LicenseConfig.buyURL)
+                    } label: {
+                        Text("购买 Pro · \(ProPricing.price)")
+                            .frame(minWidth: 150)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button {
+                        controller.hide()
+                        MainWindow.show { LicenseManager.shared.showPaywall = true }
+                    } label: {
+                        Text("输入授权码…")
+                            .frame(minWidth: 150)
+                    }
+                }
+                .controlSize(.regular)
+            }
+            Button("关掉刘海暂存架") { FloatingShelfController.shared.turnOffAfterTrial() }
+                .buttonStyle(.link)
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.6))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, 12)
+        .foregroundStyle(.white)
+        .background(Color.black.clipShape(NotchShape()))
+        .environment(\.colorScheme, .dark)
+        .focusable()
+        .focusEffectDisabled()
+        .focused($focused)
+        .onAppear { focused = true }
+        .onKeyPress(.escape) { controller.hide(); return .handled }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("刘海暂存架已暂停")
+    }
+
+    private var unlockedBody: some View {
         VStack(spacing: 8) {
             header
                 .frame(height: max(topInset - 4, 24))
@@ -705,7 +791,7 @@ struct NotchShelfView: View {
                             }
                             .buttonStyle(.plain)
                             .fixedSize()
-                            .help("把暂存架上的文件压缩为 ZIP，并放上暂存架")
+                            .help("把暂存架上的文件压缩为 ZIP，并加入暂存架")
                         }
                     }
                     .padding(.horizontal, 2)
@@ -806,7 +892,7 @@ struct NotchShelfView: View {
 /// 设置 › Pro 里的悬浮暂存架样式选项。
 struct ShelfStyleSettings: View {
     @AppStorage(ShelfStyle.key) private var style: ShelfStyle = .auto
-    @AppStorage(NotchShelfPrefs.hoverKey) private var hoverToOpen = true
+    @AppStorage(NotchShelfPrefs.hoverKey) private var hoverToOpen = false
     @AppStorage(NotchShelfPrefs.delayKey) private var delay = 0.2
     @AppStorage(NotchShelfPrefs.cardSizeKey) private var cardSize = 64.0
     @AppStorage(NotchShelfPrefs.autoHideKey) private var autoHide = true
@@ -846,6 +932,9 @@ struct ShelfStyleSettings: View {
             }
         }
         Toggle("鼠标移到刘海处就展开（不用拖文件）", isOn: $hoverToOpen)
+        Text("关掉时，把文件拖到刘海处或点一下刘海才展开。")
+            .font(.caption)
+            .foregroundStyle(.secondary)
         Picker("展开延迟", selection: $delay) {
             Text("立即").tag(0.05)
             Text("0.2 秒").tag(0.2)

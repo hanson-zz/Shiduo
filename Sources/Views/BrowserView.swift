@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 enum ViewMode: String {
     case grid
@@ -282,6 +283,33 @@ struct FileCollectionView: View {
     @State private var viewportHeight: CGFloat = 0
     /// 每个格子在网格里的位置（引用类型，更新它不会重画网格）。
     @State private var cellFrames = GridCellFrames()
+    /// 正在往哪个文件夹格子上拖文件（高亮用）。
+    @State private var dropFolderID: FileItem.ID?
+    /// 正在往当前文件夹的空白处拖文件。
+    @State private var dropOnBackground = false
+
+    /// 正在浏览的文件夹（不是搜索、分类这些跨文件夹的列表）：空白处可以放进拖来的文件。
+    private var dropFolder: URL? {
+        guard store.activeQuery == nil, let current = store.currentFolder else { return nil }
+        return URL(fileURLWithPath: current, isDirectory: true)
+    }
+
+    /// 拖到文件夹格子 / 行上：移进那个文件夹；拖到普通文件上：放进当前文件夹。按住 ⌥ 拷贝。
+    private func drop(_ urls: [URL], onto item: FileItem?) {
+        let copy = NSEvent.modifierFlags.contains(.option)
+        if let item, item.isDirectory {
+            store.transferDropped(urls, into: item.url, copy: copy)
+        } else if let folder = dropFolder {
+            store.transferDropped(urls, into: folder, copy: copy)
+        }
+    }
+
+    private func dropTargeted(_ item: FileItem) -> Binding<Bool> {
+        Binding(get: { dropFolderID == item.id },
+                set: { on in
+                    if on { dropFolderID = item.id } else if dropFolderID == item.id { dropFolderID = nil }
+                })
+    }
 
     private var sorted: [FileItem] { sortedItems }
 
@@ -447,6 +475,9 @@ struct FileCollectionView: View {
                             FileContextMenu(items: targets(for: item), preview: { preview($0) })
                         }
                         .help(item.path)
+                        // 把文件拖到文件夹格子上：移进去（⌥ 拷贝），⌘Z 可以撤销。
+                        .modifier(FolderDropTarget(enabled: item.isDirectory,
+                                                   targeted: dropTargeted(item)) { drop($0, onto: item) })
                         .background(GeometryReader { proxy in
                             Color.clear.preference(key: GridCellFramesKey.self,
                                                    value: [item.id: proxy.frame(in: .named(Self.gridSpace))])
@@ -473,6 +504,8 @@ struct FileCollectionView: View {
             // 合并而不是整个替换：LazyVGrid 回收了滚出屏幕的格子，它们的位置还留着，框选时照样能选中
             .onPreferenceChange(GridCellFramesKey.self) { frames in cellFrames.frames.merge(frames) { $1 } }
         }
+        // 拖到空白处：放进正在浏览的文件夹（⌥ 拷贝）。
+        .modifier(FolderDropTarget(enabled: dropFolder != nil, targeted: $dropOnBackground, highlight: .background) { drop($0, onto: nil) })
         .background(GeometryReader { proxy in
             Color.clear
                 .onAppear { viewportHeight = proxy.size.height }
@@ -661,6 +694,8 @@ struct FileCollectionView: View {
             ForEach(sorted) { item in
                 TableRow(item)
                     .itemProvider { NSItemProvider(object: item.url as NSURL) }
+                    // 拖到文件夹那一行：移进去；拖到文件那一行：放进当前文件夹。按住 ⌥ 拷贝，⌘Z 可以撤销。
+                    .dropDestination(for: URL.self) { urls in drop(urls.filter(\.isFileURL), onto: item) }
             }
         }
         .scrollContentBackground(.hidden)
@@ -1090,6 +1125,14 @@ struct FileGridCell: View {
 /// 固定文件夹 / 外接磁盘 / 任意文件夹页面顶部：返回、上一层、可点的路径。子文件夹都在拾掇里打开，不跳到访达。
 struct FolderPathBar: View {
     @EnvironmentObject private var store: LibraryStore
+    @State private var targetedCrumb: String?
+
+    private func crumbTargeted(_ path: String) -> Binding<Bool> {
+        Binding(get: { targetedCrumb == path },
+                set: { on in
+                    if on { targetedCrumb = path } else if targetedCrumb == path { targetedCrumb = nil }
+                })
+    }
 
     /// 从根目录（或个人文件夹）到当前文件夹的每一层。
     private var crumbs: [(name: String, path: String)] {
@@ -1177,6 +1220,11 @@ struct FolderPathBar: View {
                         .buttonStyle(.plain)
                         .disabled(index == list.count - 1)
                         .help(crumb.path)
+                        // 把文件拖到路径上的某一层：移进那个文件夹（⌥ 拷贝），⌘Z 可以撤销。
+                        .modifier(FolderDropTarget(enabled: index < list.count - 1, targeted: crumbTargeted(crumb.path)) { urls in
+                            store.transferDropped(urls, into: URL(fileURLWithPath: crumb.path, isDirectory: true),
+                                                  copy: NSEvent.modifierFlags.contains(.option))
+                        })
                     }
                 }
             }
@@ -1194,5 +1242,46 @@ struct FolderPathBar: View {
         .buttonStyle(.borderless)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
+    }
+}
+
+/// 能把文件拖进来的地方（文件夹格子、路径栏、当前文件夹的空白处）：接住文件、高亮。enabled 为 false 时什么都不做。
+struct FolderDropTarget: ViewModifier {
+    enum Highlight { case outline, background }
+
+    let enabled: Bool
+    @Binding var targeted: Bool
+    var highlight: Highlight = .outline
+    let perform: ([URL]) -> Void
+
+    init(enabled: Bool, targeted: Binding<Bool>, highlight: Highlight = .outline, perform: @escaping ([URL]) -> Void) {
+        self.enabled = enabled
+        _targeted = targeted
+        self.highlight = highlight
+        self.perform = perform
+    }
+
+    func body(content: Content) -> some View {
+        // 不能放的时候不接受任何类型（不高亮），但保持同一个视图结构，切换时不会重建内容。
+        content
+            .onDrop(of: enabled ? [.fileURL] : [], isTargeted: $targeted) { providers in
+                guard enabled else { return false }
+                return FileDrop.load(providers) { urls in perform(urls) }
+            }
+            .overlay {
+                if enabled && targeted {
+                    switch highlight {
+                    case .outline:
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(Color.accentColor, lineWidth: 2)
+                            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.accentColor.opacity(0.12)))
+                            .allowsHitTesting(false)
+                    case .background:
+                        Rectangle()
+                            .strokeBorder(Color.accentColor.opacity(0.6), lineWidth: 2)
+                            .allowsHitTesting(false)
+                    }
+                }
+            }
     }
 }

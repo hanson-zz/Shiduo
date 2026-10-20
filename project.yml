@@ -78,6 +78,7 @@ targets:
       - path: Sources/Pro/DownloadsPlanLogic.swift
       - path: Sources/Services/FileUndoLogic.swift
       - path: Sources/Model/TodayAddedLogic.swift
+      - path: Sources/Model/TrashConfirmLogic.swift
       - path: Sources/Pro/UnlockCelebrationLogic.swift
     settings:
       base:

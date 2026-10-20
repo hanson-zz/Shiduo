@@ -34,14 +34,11 @@ final class QuickSearchModel: ObservableObject {
         return list.indices.contains(selected) ? list[selected] : nil
     }
 
-    /// 右键「移到废纸篓」：和主窗口同一套（清理记录、⌘Z 撤销、音效），移走后从结果里拿掉。
-    func trash(_ item: FileItem) {
-        guard let store else { return }
-        store.moveToTrash([item], origin: QuickSearchController.shared.window) { [weak self] moved in
-            guard let self, !moved.isEmpty else { return }
-            self.results.removeAll { moved.contains($0.path) }
-            self.selected = min(self.selected, max(self.visible.count - 1, 0))
-        }
+    /// 右键菜单里移到废纸篓之后（和主窗口同一套：清理记录、⌘Z 撤销、音效）：从结果里拿掉。
+    func removeTrashed(_ moved: Set<String>) {
+        guard !moved.isEmpty else { return }
+        results.removeAll { moved.contains($0.path) }
+        selected = min(selected, max(visible.count - 1, 0))
     }
 
     func move(_ delta: Int) {
@@ -302,13 +299,12 @@ struct QuickSearchView: View {
                                 .onTapGesture(count: 2) { open(item) }
                                 .onTapGesture { model.selected = index }
                                 .onDrag { NSItemProvider(object: item.url as NSURL) }
+                                // 和主窗口同一套右键菜单。搜索框一直在输入状态，⌘⌫ 留给它删到行首；这里用右键移到废纸篓。
                                 .contextMenu {
-                                    Button("打开") { open(item) }
-                                    Button("在访达中显示") { reveal(item) }
-                                    Button("拷贝路径") { FileActions.copy(item.path) }
-                                    Divider()
-                                    // 搜索框一直在输入状态，⌘⌫ 留给它删到行首；这里用右键移到废纸篓。
-                                    Button("移到废纸篓") { model.trash(item) }
+                                    FileContextMenu(items: [item], context: FileMenuContext(
+                                        outsideMainWindow: true,
+                                        trashOrigin: QuickSearchController.shared.window,
+                                        afterTrash: { moved in model.removeTrashed(moved) }))
                                 }
                         }
                     }

@@ -117,7 +117,7 @@ final class ReminderStore: ObservableObject {
     nonisolated static func registerCategories() {
         let center = UNUserNotificationCenter.current()
         let open = UNNotificationAction(identifier: Self.actionOpen, title: String(localized: "打开"), options: [.foreground])
-        let shelf = UNNotificationAction(identifier: Self.actionShelf, title: String(localized: "放上暂存架"), options: [])
+        let shelf = UNNotificationAction(identifier: Self.actionShelf, title: String(localized: "加入暂存架"), options: [])
         let snooze = UNNotificationAction(identifier: Self.actionSnooze, title: String(localized: "1 小时后再提醒"), options: [])
         let done = UNNotificationAction(identifier: Self.actionDone, title: String(localized: "完成"), options: [])
         let category = UNNotificationCategory(identifier: Self.category, actions: [open, shelf, snooze, done],
@@ -581,7 +581,7 @@ struct RemindersPageView: View {
             .help("打开")
             Menu {
                 Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([reminder.url]) }
-                Button("放上暂存架") { ShelfStore.shared.add([reminder.url]) }
+                Button("加入暂存架") { ShelfStore.shared.add([reminder.url]) }
                 Divider()
                 Button("1 小时后再提醒") { store.snooze(reminder.id) }
                 Button("明天再提醒") { store.snooze(reminder.id, by: 86400) }

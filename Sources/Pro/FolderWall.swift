@@ -997,20 +997,7 @@ struct FolderCard: View {
     /// 把文件拖到卡片上：移进这个文件夹（按住 ⌥ 拷贝）。走和「移动到…」同一条路：同名自动加编号、不覆盖，
     /// 移动记进「清理记录」，⌘Z / 小提示上的「撤销」可以放回。
     private func moveIn(_ urls: [URL], copy: Bool) {
-        let folder = URL(fileURLWithPath: summary.path)
-        let target = folder.standardizedFileURL.path
-        let list = urls.filter { url in
-            let path = url.standardizedFileURL.path
-            // 已经在这个文件夹里的、文件夹自己、它的上层文件夹：不动。
-            return url.deletingLastPathComponent().standardizedFileURL.path != target
-                && path != target && !target.hasPrefix(path + "/")
-        }
-        guard !list.isEmpty else { return }
-        guard !ShelfTransfer.shared.isRunning else {
-            store.showToast(String(localized: "还有文件在移动，请稍等"))
-            return
-        }
-        ShelfTransfer.shared.start(list, to: folder, copy: copy, store: store)
+        store.transferDropped(urls, into: URL(fileURLWithPath: summary.path, isDirectory: true), copy: copy)
     }
 }
 
