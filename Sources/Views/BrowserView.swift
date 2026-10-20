@@ -439,7 +439,9 @@ struct FileCollectionView: View {
                                 }
                             }
                         ),
-                        showsExtension: showExtensions, showsInfo: showItemInfo
+                        showsExtension: showExtensions, showsInfo: showItemInfo,
+                        renaming: store.inlineRenamePath == item.path,
+                        onRename: { store.commitInlineRename(item, to: $0) }
                     )
                         .contextMenu {
                             FileContextMenu(items: targets(for: item), preview: { preview($0) })
@@ -480,12 +482,15 @@ struct FileCollectionView: View {
         .focused($gridFocused)
         .focusEffectDisabled()
         .onKeyPress(.space) {
+            // 正在原地改名：空格留给输入框。
+            guard store.inlineRenamePath == nil else { return .ignored }
             quickLookSelection()
             return .handled
         }
         // ← → 前后一个，↑ ↓ 上下一行；带修饰键的（⌘↑ 上一层等）留给菜单快捷键。
         .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow]) { press in
-            guard press.modifiers.subtracting([.numericPad, .function]).isEmpty else { return .ignored }
+            guard store.inlineRenamePath == nil,
+                  press.modifiers.subtracting([.numericPad, .function]).isEmpty else { return .ignored }
             switch press.key {
             case .leftArrow: return step(-1)
             case .rightArrow: return step(1)
@@ -494,6 +499,7 @@ struct FileCollectionView: View {
             }
         }
         .onKeyPress(.escape) {
+            guard store.inlineRenamePath == nil else { return .ignored }
             // 框选拖到一半按 Esc：恢复成开始框选前的选中
             if marquee.cancel(store: store) { return .handled }
             guard previewURL != nil || liveItem != nil else { return .ignored }
@@ -503,12 +509,14 @@ struct FileCollectionView: View {
         }
         .onCommand(#selector(NSResponder.selectAll(_:))) { selectAll() }
         .onKeyPress(keys: ["a"]) { press in
-            guard press.modifiers.subtracting([.numericPad, .function]) == .command else { return .ignored }
+            guard store.inlineRenamePath == nil,
+                  press.modifiers.subtracting([.numericPad, .function]) == .command else { return .ignored }
             selectAll()
             return .handled
         }
         // 回车：重命名（和访达一样）
         .onKeyPress(.return) {
+            guard store.inlineRenamePath == nil else { return .ignored }
             guard NSEvent.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty else { return .ignored }
             return renameSelection()
         }
@@ -526,6 +534,7 @@ struct FileCollectionView: View {
 
     /// ⌘⌫：移到废纸篓，小提示上可以撤销。
     private func trashSelection() -> KeyPress.Result {
+        guard store.inlineRenamePath == nil else { return .ignored }
         let list = selectedInOrder
         guard !list.isEmpty else { return .ignored }
         store.moveToTrash(list)
@@ -534,6 +543,7 @@ struct FileCollectionView: View {
 
     /// ⌘O / ⌘↓：打开。
     private func openSelection() -> KeyPress.Result {
+        guard store.inlineRenamePath == nil else { return .ignored }
         let list = selectedInOrder
         guard !list.isEmpty else { return .ignored }
         if list.count == 1, let item = list.first {
@@ -544,10 +554,11 @@ struct FileCollectionView: View {
         return .handled
     }
 
+    /// 回车：重命名（网格和列表一样，和访达一致）。只选了一个就原地改名，选了几个文件打开批量重命名。
     private func renameSelection() -> KeyPress.Result {
-        let files = selectedInOrder.filter { !$0.isDirectory }
-        guard !files.isEmpty else { return .ignored }
-        store.renameItems = files
+        let list = selectedInOrder
+        guard !list.isEmpty, store.inlineRenamePath == nil else { return .ignored }
+        store.beginRename(list)
         return .handled
     }
 
@@ -621,9 +632,13 @@ struct FileCollectionView: View {
                 HStack(spacing: 6) {
                     ThumbnailView(url: item.url, size: 20, modified: item.modified)
                         .quickLookSource(item.url)
-                    Text(item.shownName(extensions: showExtensions))
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+                    if store.inlineRenamePath == item.path {
+                        InlineRenameField(item: item) { store.commitInlineRename(item, to: $0) }
+                    } else {
+                        Text(item.shownName(extensions: showExtensions))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
                 }
                 .help(item.path)
             }
@@ -652,6 +667,12 @@ struct FileCollectionView: View {
         .contextMenu(forSelectionType: String.self) { ids in
             FileContextMenu(items: resolve(ids), preview: { preview($0) })
         } primaryAction: { ids in
+            // 列表把回车也当成「主操作」：回车改成重命名（和网格、访达一致），双击仍然打开。
+            if let event = NSApp.currentEvent, event.type == .keyDown, event.keyCode == 36 || event.keyCode == 76 {
+                store.selectedIDs = ids
+                _ = renameSelection()
+                return
+            }
             let list = resolve(ids)
             if list.count == 1, let item = list.first {
                 store.open(item, in: sorted)
@@ -660,6 +681,8 @@ struct FileCollectionView: View {
             }
         }
         .onKeyPress(.space) {
+            // 正在原地改名：空格留给输入框。
+            guard store.inlineRenamePath == nil else { return .ignored }
             quickLookSelection()
             return .handled
         }
@@ -669,7 +692,11 @@ struct FileCollectionView: View {
             liveItem = nil
             return .handled
         }
-        // 列表自带 ⌘A 全选；回车由列表自己处理（打开）。
+        // 列表自带 ⌘A 全选；回车在上面的 primaryAction 里改成重命名。
+        .onKeyPress(.return) {
+            guard NSEvent.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty else { return .ignored }
+            return renameSelection()
+        }
         .modifier(FileKeyCommands(onTrash: trashSelection, onOpen: openSelection))
     }
 
@@ -723,6 +750,45 @@ struct FileCollectionView: View {
         } else {
             previewURL = item.url
         }
+    }
+}
+
+/// 原地改名的输入框（网格和列表共用）：回车确定，Esc 取消，点到别处也算确定（和访达一样）。
+struct InlineRenameField: View {
+    let item: FileItem
+    let onDone: (String?) -> Void
+    @State private var text: String
+    @State private var finished = false
+    @FocusState private var focused: Bool
+
+    init(item: FileItem, onDone: @escaping (String?) -> Void) {
+        self.item = item
+        self.onDone = onDone
+        _text = State(initialValue: item.name)
+    }
+
+    var body: some View {
+        TextField("名称", text: $text)
+            .labelsHidden()
+            .textFieldStyle(.roundedBorder)
+            .font(.callout)
+            .multilineTextAlignment(.center)
+            .focused($focused)
+            .onSubmit { finish(text) }
+            .onExitCommand { finish(nil) }
+            .onAppear {
+                DispatchQueue.main.async { focused = true }
+            }
+            .onChange(of: focused) {
+                if !focused { finish(text) }
+            }
+            .accessibilityLabel("新名称")
+    }
+
+    private func finish(_ value: String?) {
+        guard !finished else { return }
+        finished = true
+        onDone(value)
     }
 }
 
@@ -951,6 +1017,9 @@ struct FileGridCell: View {
     /// 「查看显示选项」：显示文件扩展名、在图标下显示大小。
     var showsExtension = true
     var showsInfo = true
+    /// 正在原地改名：名字换成输入框。
+    var renaming = false
+    var onRename: ((String?) -> Void)? = nil
 
     @State private var hovering = false
 
@@ -958,12 +1027,17 @@ struct FileGridCell: View {
         VStack(spacing: 6) {
             ThumbnailView(url: item.url, size: size, modified: item.modified)
                 .quickLookSource(item.url)
-            Text(item.shownName(extensions: showsExtension))
-                .font(.callout)
-                .lineLimit(2)
-                .truncationMode(.middle)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: size + 16)
+            if renaming, let onRename {
+                InlineRenameField(item: item, onDone: onRename)
+                    .frame(maxWidth: size + 16)
+            } else {
+                Text(item.shownName(extensions: showsExtension))
+                    .font(.callout)
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: size + 16)
+            }
             if showsInfo {
                 ItemSizeText(item: item)
                     .font(.caption)
@@ -1002,7 +1076,7 @@ struct FileGridCell: View {
                         }
                         .buttonStyle(.plain)
                         .padding(6)
-                        .help("识别并拷贝图中文字（⇧⌘C）")
+                        .help(AppShortcut.copyText.help)
                         .transition(.opacity)
                     }
                 }
@@ -1054,8 +1128,18 @@ struct FolderPathBar: View {
                     .frame(width: 22, height: 20)
             }
             .disabled(!store.canGoBack)
-            .keyboardShortcut("[", modifiers: .command)
-            .help("返回（⌘[）")
+            .help(AppShortcut.back.help)
+            .accessibilityLabel("返回")
+            Button {
+                store.goForward()
+            } label: {
+                Image(systemName: "chevron.right")
+                    .frame(width: 22, height: 20)
+            }
+            .disabled(!store.canGoForward)
+            .help(AppShortcut.forward.help)
+            .accessibilityLabel("前进")
+            // 快捷键在「前往」菜单里（AppShortcut），这里只是按钮。
             Button {
                 store.goUp()
             } label: {
@@ -1063,8 +1147,8 @@ struct FolderPathBar: View {
                     .frame(width: 22, height: 20)
             }
             .disabled(!store.canGoUp)
-            .keyboardShortcut(.upArrow, modifiers: .command)
-            .help("上一层文件夹（⌘↑）")
+            .help(AppShortcut.enclosingFolder.help)
+            .accessibilityLabel("上一层文件夹")
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 2) {

@@ -57,6 +57,8 @@ targets:
       - path: Sources/Model/PathLogic.swift
       - path: Sources/Model/FolderSizeLogic.swift
       - path: Sources/Model/ListTruncationLogic.swift
+      - path: Sources/Model/NavigationHistoryLogic.swift
+      - path: Sources/App/AppShortcuts.swift
       - path: Sources/Services/DuplicateSafety.swift
       - path: Sources/Services/OCRCacheKeys.swift
       - path: Sources/Pro/PhotoConcepts.swift

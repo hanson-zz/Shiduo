@@ -1695,22 +1695,6 @@
         }
       }
     },
-    "上一首（⌘←）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Previous (⌘←)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "上一首（⌘←）"
-          }
-        }
-      }
-    },
     "上个月": {
       "localizations": {
         "en": {
@@ -1787,22 +1771,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "上次校验"
-          }
-        }
-      }
-    },
-    "下一首（⌘→）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next (⌘→)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "下一首（⌘→）"
           }
         }
       }
@@ -4271,22 +4239,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "固定常用的文件夹，这里会变成一面卡片墙，一眼看到里面有什么。"
-          }
-        }
-      }
-    },
-    "固定所在文件夹": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pin Enclosing Folder"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "固定所在文件夹"
           }
         }
       }
@@ -7763,22 +7715,6 @@
         }
       }
     },
-    "播放 / 暂停（⌘空格）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play / Pause (⌘Space)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "播放 / 暂停（⌘空格）"
-          }
-        }
-      }
-    },
     "支付宝": {
       "localizations": {
         "en": {
@@ -10719,22 +10655,6 @@
         }
       }
     },
-    "移到废纸篓…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Move to Trash…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移到废纸篓…"
-          }
-        }
-      }
-    },
     "移到文件夹": {
       "localizations": {
         "en": {
@@ -11567,22 +11487,6 @@
         }
       }
     },
-    "识别并拷贝图中文字（⇧⌘C）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recognize and copy text in images (⇧⌘C)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "识别并拷贝图中文字（⇧⌘C）"
-          }
-        }
-      }
-    },
     "识别文字": {
       "localizations": {
         "en": {
@@ -12263,22 +12167,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "这些图片都已经识别过了"
-          }
-        }
-      }
-    },
-    "这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This Mac doesn’t support Live Text. Use Copy Text (⇧⌘C) instead."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）"
           }
         }
       }
@@ -14383,22 +14271,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "文件已不在"
-          }
-        }
-      }
-    },
-    "全部搬到…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Move All To…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全部搬到…"
           }
         }
       }
@@ -19023,22 +18895,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "原图不会改动，标注图存成新文件。"
-          }
-        }
-      }
-    },
-    "图片工具（拼图 · 美化 · 标注 · 抠图）…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Image Tools (Stitch · Beautify · Annotate · Cut Out)…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "图片工具（拼图 · 美化 · 标注 · 抠图）…"
           }
         }
       }
@@ -24139,38 +23995,6 @@
         }
       }
     },
-    "从暂存架移除（⌫）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove from Shelf (⌫)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "从暂存架移除（⌫）"
-          }
-        }
-      }
-    },
-    "移到废纸篓（⌘⌫）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Move to Trash (⌘⌫)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移到废纸篓（⌘⌫）"
-          }
-        }
-      }
-    },
     "⌫ 从暂存架移除（文件留在原处），⌘⌫ 移到废纸篓": {
       "localizations": {
         "en": {
@@ -24967,6 +24791,470 @@
           "stringUnit": {
             "state": "translated",
             "value": "添加到文件夹墙"
+          }
+        }
+      }
+    },
+    "已暂停：%@。点这里购买 Pro 或输入授权码。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused: %@. Click to buy Pro or enter a license key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已暂停：%@。点这里购买 Pro 或输入授权码。"
+          }
+        }
+      }
+    },
+    "新建文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建文件夹"
+          }
+        }
+      }
+    },
+    "添加到文件夹墙…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Folder Wall…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加到文件夹墙…"
+          }
+        }
+      }
+    },
+    "图片工具…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image Tools…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片工具…"
+          }
+        }
+      }
+    },
+    "放大图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bigger Icons"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放大图标"
+          }
+        }
+      }
+    },
+    "缩小图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smaller Icons"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缩小图标"
+          }
+        }
+      }
+    },
+    "返回": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回"
+          }
+        }
+      }
+    },
+    "前进": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前进"
+          }
+        }
+      }
+    },
+    "上一层文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enclosing Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一层文件夹"
+          }
+        }
+      }
+    },
+    "空格": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格"
+          }
+        }
+      }
+    },
+    "双击": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "double-click"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双击"
+          }
+        }
+      }
+    },
+    "名称里不能有「/」，也不能以「.」开头。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Names can't contain “/” or start with “.”."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名称里不能有「/」，也不能以「.」开头。"
+          }
+        }
+      }
+    },
+    "这里已经有一个叫「%@」的项目了。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There's already an item named “%@” here."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这里已经有一个叫「%@」的项目了。"
+          }
+        }
+      }
+    },
+    "未命名文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "untitled folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名文件夹"
+          }
+        }
+      }
+    },
+    "文件夹里已经有东西了，没有移到废纸篓": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder isn't empty anymore, so it wasn't moved to the Trash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹里已经有东西了，没有移到废纸篓"
+          }
+        }
+      }
+    },
+    "播放 / 暂停": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play / Pause"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "播放 / 暂停"
+          }
+        }
+      }
+    },
+    "上一首": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一首"
+          }
+        }
+      }
+    },
+    "下一首": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一首"
+          }
+        }
+      }
+    },
+    "新名称": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新名称"
+          }
+        }
+      }
+    },
+    "全部大文件搬家…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offload All to…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部大文件搬家…"
+          }
+        }
+      }
+    },
+    "大文件搬家…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offload to…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大文件搬家…"
+          }
+        }
+      }
+    },
+    "从文件夹墙移除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Folder Wall"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从文件夹墙移除"
+          }
+        }
+      }
+    },
+    "把 %lld 个文件夹添加到文件夹墙": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add %lld Folders to Folder Wall"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把 %lld 个文件夹添加到文件夹墙"
+          }
+        }
+      }
+    },
+    "将所在文件夹添加到文件夹墙": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Enclosing Folder to Folder Wall"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将所在文件夹添加到文件夹墙"
+          }
+        }
+      }
+    },
+    "这台 Mac 不支持实况文本，可以用“拷贝文字”（%@）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live Text isn't supported on this Mac. Use “Copy Text” (%@) instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 不支持实况文本，可以用“拷贝文字”（%@）"
+          }
+        }
+      }
+    },
+    "正在播放": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now Playing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在播放"
+          }
+        }
+      }
+    },
+    "%@（%@）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@（%2$@）"
+          }
+        }
+      }
+    },
+    "暂停播放": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停播放"
+          }
+        }
+      }
+    },
+    "继续播放": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续播放"
           }
         }
       }

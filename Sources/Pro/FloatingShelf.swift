@@ -428,19 +428,10 @@ struct FloatingShelfView: View {
                             .contentShape(Rectangle())
                             .onDrag { NSItemProvider(object: item.url as NSURL) }
                             .onTapGesture(count: 2) { LibraryStore.openFromOutside(item.url) }
+                            // 和主窗口同一套右键菜单（清理记录、⌘Z 撤销、音效都一样）。
                             .contextMenu {
-                                Button("打开") { LibraryStore.openFromOutside(item.url) }
-                                Button("在访达中显示") { FileActions.reveal([item]) }
-                                Divider()
-                                Button("压缩为 ZIP") { tools.startZip([item.url]) }
-                                if ImageConverter.canConvert(item.url) {
-                                    ShelfConvertMenu(urls: { [item.url] })
-                                }
-                                MediaToolsMenu(urls: { [item.url] }, toShelf: true)
-                                Divider()
-                                Button("从暂存架移除") { shelf.remove(paths: [item.path]) }
-                                // 和主窗口同一套：清理记录、⌘Z 撤销、音效；暂存架上会一起拿掉。
-                                Button("移到废纸篓") { LibraryStore.shared?.moveToTrash([item], origin: controller.window) }
+                                FileContextMenu(items: [item], context: FileMenuContext(
+                                    onShelf: true, outsideMainWindow: true, trashOrigin: controller.window))
                             }
                             .help(item.path)
                         }

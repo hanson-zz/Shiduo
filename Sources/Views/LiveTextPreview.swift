@@ -134,7 +134,7 @@ enum LiveTextStatus: Equatable {
         case .analyzing: return String(localized: "正在识别图中文字…")
         case .ready: return String(localized: "可以直接用鼠标划选文字，右键拷贝；电话、网址、邮箱可以点")
         case .noText: return String(localized: "这张图里没有识别到文字")
-        case .unsupported: return String(localized: "这台 Mac 不支持实况文本，可以用“拷贝文字”（⇧⌘C）")
+        case .unsupported: return String(localized: "这台 Mac 不支持实况文本，可以用“拷贝文字”（\(AppShortcut.copyText.display)）")
         }
     }
 

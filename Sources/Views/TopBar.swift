@@ -100,6 +100,7 @@ struct KeyCap: View {
 /// 工具栏里的小播放器。
 struct NowPlayingView: View {
     @EnvironmentObject private var player: MusicPlayer
+    @FocusState private var focused: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -111,16 +112,36 @@ struct NowPlayingView: View {
                 .truncationMode(.middle)
                 .frame(maxWidth: 160, alignment: .leading)
             Button { player.previous() } label: { Image(systemName: "backward.fill") }
-                .help("上一首（⌘←）")
+                .help("上一首")
+                .accessibilityLabel("上一首")
             Button { player.toggle() } label: { Image(systemName: player.isPlaying ? "pause.fill" : "play.fill") }
-                .help("播放 / 暂停（⌘空格）")
+                .help("播放 / 暂停")
+                .accessibilityLabel(player.isPlaying ? Text("暂停播放") : Text("继续播放"))
             Button { player.next() } label: { Image(systemName: "forward.fill") }
-                .help("下一首（⌘→）")
+                .help("下一首")
+                .accessibilityLabel("下一首")
             Button { player.stop() } label: { Image(systemName: "xmark") }
                 .help("停止")
+                .accessibilityLabel("停止")
         }
         .buttonStyle(.plain)
         .glassCapsule(tint: FileCategory.music.tint)
+        // 只在播放器获得焦点时（点一下它，或 Tab 过来）响应：空格播放 / 暂停，⌘← ⌘→ 或 ← → 切歌。
+        .focusable()
+        .focused($focused)
+        .onKeyPress(.space) {
+            player.toggle()
+            return .handled
+        }
+        .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
+            let mods = press.modifiers.subtracting([.numericPad, .function])
+            guard mods.isEmpty || mods == .command else { return .ignored }
+            if press.key == .leftArrow { player.previous() } else { player.next() }
+            return .handled
+        }
+        .onTapGesture { focused = true }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("正在播放")
     }
 }
 

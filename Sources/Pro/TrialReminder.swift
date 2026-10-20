@@ -181,9 +181,10 @@ final class TrialExpiryNotice: ObservableObject {
         guard granted else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "拾掇 Pro 试用已结束")
+        let names = stopped.map(Self.title).joined(separator: String(localized: "、"))
         content.body = stopped.isEmpty
             ? String(localized: "免费功能照常可用。点这里购买 Pro 或输入授权码。")
-            : String(localized: "已暂停：\(stopped.map(Self.title).joined(separator: "、"))。点这里购买 Pro 或输入授权码。")
+            : String(localized: "已暂停：\(names)。点这里购买 Pro 或输入授权码。")
         content.sound = .default
         let request = UNNotificationRequest(identifier: trialEndedNotificationID, content: content,
                                             trigger: UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false))

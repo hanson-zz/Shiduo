@@ -1,0 +1,167 @@
+import SwiftUI
+
+/// 拾掇主窗口里所有菜单快捷键，只在这里写一次：菜单、按钮的悬停提示、帮助和说明文字都从这里取。
+/// 原则：访达里有的组合键，要么做和访达一样的事，要么不用（⇧⌘D 桌面、⇧⌘O 文稿、⌥⌘L 下载……）。
+/// 拾掇自己的页面用 ⌃⌘ 加字母（⌃⌘ 加数字留给「数字键直达」，⌃⌘D 是系统的「查询」、⌃⌘F 全屏、⌃⌘Q 锁屏，都不用）。
+enum AppShortcut: String, CaseIterable, Identifiable {
+    // 文件
+    case newFolder
+    case addToFolderWall
+    case imageTools
+    // 编辑
+    case search
+    case copyText
+    case addToShelf
+    // 显示
+    case asIcons
+    case asList
+    case showInfo
+    case showPreview
+    case toggleToolbar
+    case togglePathBar
+    case toggleStatusBar
+    case viewOptions
+    case biggerIcons
+    case smallerIcons
+    case refresh
+    case toggleSidebar
+    // 前往
+    case back
+    case forward
+    case enclosingFolder
+    case openSelection
+    case home
+    case desktop
+    case documents
+    case downloads
+    case downloadSources
+    case duplicates
+    case cleanup
+
+    var id: String { rawValue }
+
+    var key: KeyEquivalent {
+        switch self {
+        case .newFolder: return "n"
+        case .addToFolderWall: return "t"
+        case .imageTools: return "i"
+        case .search: return "f"
+        case .copyText: return "c"
+        case .addToShelf: return "b"
+        case .asIcons: return "1"
+        case .asList: return "2"
+        case .showInfo: return "i"
+        case .showPreview: return "p"
+        case .toggleToolbar: return "t"
+        case .togglePathBar: return "p"
+        case .toggleStatusBar: return "/"
+        case .viewOptions: return "j"
+        case .biggerIcons: return "+"
+        case .smallerIcons: return "-"
+        case .refresh: return "r"
+        case .toggleSidebar: return "s"
+        case .back: return "["
+        case .forward: return "]"
+        case .enclosingFolder: return .upArrow
+        case .openSelection: return .downArrow
+        case .home: return "h"
+        case .desktop: return "d"
+        case .documents: return "o"
+        case .downloads: return "l"
+        case .downloadSources: return "j"
+        case .duplicates: return "u"
+        case .cleanup: return "k"
+        }
+    }
+
+    var modifiers: EventModifiers {
+        switch self {
+        case .search, .asIcons, .asList, .showInfo, .toggleStatusBar, .viewOptions, .biggerIcons, .smallerIcons,
+             .back, .forward, .enclosingFolder, .openSelection:
+            return .command
+        case .newFolder, .showPreview, .home, .desktop, .documents, .downloadSources:
+            return [.command, .shift]
+        case .toggleToolbar, .togglePathBar, .refresh, .downloads:
+            return [.command, .option]
+        case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .duplicates, .cleanup:
+            return [.command, .control]
+        }
+    }
+
+    /// 菜单里的名字（快捷键表、说明文字用）。
+    var title: String {
+        switch self {
+        case .newFolder: return String(localized: "新建文件夹")
+        case .addToFolderWall: return String(localized: "添加到文件夹墙…")
+        case .imageTools: return String(localized: "图片工具…")
+        case .search: return String(localized: "搜索")
+        case .copyText: return String(localized: "拷贝文字")
+        case .addToShelf: return String(localized: "加入暂存架")
+        case .asIcons: return String(localized: "为图标")
+        case .asList: return String(localized: "为列表")
+        case .showInfo: return String(localized: "显示简介")
+        case .showPreview: return String(localized: "显示预览")
+        case .toggleToolbar: return String(localized: "隐藏工具栏")
+        case .togglePathBar: return String(localized: "隐藏路径栏")
+        case .toggleStatusBar: return String(localized: "隐藏状态栏")
+        case .viewOptions: return String(localized: "查看显示选项")
+        case .biggerIcons: return String(localized: "放大图标")
+        case .smallerIcons: return String(localized: "缩小图标")
+        case .refresh: return String(localized: "刷新")
+        case .toggleSidebar: return String(localized: "隐藏侧边栏")
+        case .back: return String(localized: "返回")
+        case .forward: return String(localized: "前进")
+        case .enclosingFolder: return String(localized: "上一层文件夹")
+        case .openSelection: return String(localized: "打开")
+        case .home: return String(localized: "首页")
+        case .desktop: return String(localized: "桌面")
+        case .documents: return String(localized: "文稿")
+        case .downloads: return String(localized: "下载")
+        case .downloadSources: return String(localized: "下载来源")
+        case .duplicates: return String(localized: "重复与相似")
+        case .cleanup: return String(localized: "清理")
+        }
+    }
+
+    /// 「⇧⌘D」这种写法（修饰键按 ⌃⌥⇧⌘ 的顺序，和系统菜单一样）。
+    var display: String {
+        var text = ""
+        if modifiers.contains(.control) { text += "⌃" }
+        if modifiers.contains(.option) { text += "⌥" }
+        if modifiers.contains(.shift) { text += "⇧" }
+        if modifiers.contains(.command) { text += "⌘" }
+        return text + Self.keyName(key)
+    }
+
+    static func keyName(_ key: KeyEquivalent) -> String {
+        switch key {
+        case .upArrow: return "↑"
+        case .downArrow: return "↓"
+        case .leftArrow: return "←"
+        case .rightArrow: return "→"
+        case .return: return "↩"
+        case .delete: return "⌫"
+        case .space: return String(localized: "空格")
+        default: return String(key.character).uppercased()
+        }
+    }
+
+    /// 「返回（⌘[）」这种悬停提示。
+    var help: String { String(localized: "\(title)（\(display)）") }
+
+    /// 不在菜单里、由列表自己处理的按键（快捷键表里一起列出来）。
+    static let listKeys: [(title: String, keys: String)] = [
+        (String(localized: "重命名"), "↩"),
+        (String(localized: "打开"), "⌘↓ / ⌘O / " + String(localized: "双击")),
+        (String(localized: "快速查看"), String(localized: "空格") + " / ⌘Y"),
+        (String(localized: "移到废纸篓"), "⌘⌫"),
+        (String(localized: "立即删除…"), "⌥⌘⌫"),
+    ]
+}
+
+extension View {
+    /// 用 AppShortcut 里登记的快捷键。
+    func keyboardShortcut(_ shortcut: AppShortcut) -> some View {
+        keyboardShortcut(shortcut.key, modifiers: shortcut.modifiers)
+    }
+}

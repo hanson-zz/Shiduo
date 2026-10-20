@@ -41,35 +41,137 @@ struct ThumbnailView: View {
     }
 }
 
-/// 右键菜单，网格、列表、首页和检查器共用。
-struct FileContextMenu: View {
-    @EnvironmentObject private var store: LibraryStore
+/// 右键菜单在哪里弹出：决定少数几项的去留和回调，其余项目、顺序在所有地方都一样。
+struct FileMenuContext {
+    /// 快速查看（主窗口列表、暂存架页有自己的预览）。
+    var preview: ((FileItem) -> Void)? = nil
+    /// 在暂存架上（暂存架页、悬浮 / 刘海暂存架）：「加入暂存架」换成「从暂存架移除」。
+    var onShelf = false
+    /// 不在主窗口里（悬浮 / 刘海暂存架、菜单栏）：要弹面板的项目先把主窗口拿到前面。
+    var outsideMainWindow = false
+    /// 在哪个面板里移到废纸篓（带「撤销」的小提示显示在那里）。
+    var trashOrigin: NSWindow? = nil
+    /// 移到废纸篓之后（菜单栏的最近下载要从列表里拿掉）。
+    var afterTrash: ((Set<String>) -> Void)? = nil
+    /// 自己处理「重命名…」（文件夹墙的卡片）。
+    var rename: (() -> Void)? = nil
+    /// 在文件夹墙上：多一项「从文件夹墙移除」。
+    var removeFromWall: (() -> Void)? = nil
+}
+
+/// 右键菜单：主窗口的网格 / 列表 / 首页 / 简介、暂存架页、悬浮和刘海暂存架、菜单栏、文件夹墙全用这一个，
+/// 项目和顺序都一样。Pro 项目没解锁时标题后面带「Pro」和小锁。extra 放各处自己独有的几项（文件夹墙的颜色）。
+struct FileContextMenu<Extra: View>: View {
     let items: [FileItem]
-    var preview: ((FileItem) -> Void)?
+    var context: FileMenuContext
+    private let extra: Extra
+
+    init(items: [FileItem], context: FileMenuContext = FileMenuContext(), @ViewBuilder extra: () -> Extra) {
+        self.items = items
+        self.context = context
+        self.extra = extra()
+    }
 
     var body: some View {
-        Button("打开") { store.openItems(items) }
+        if let store = LibraryStore.shared, !items.isEmpty {
+            FileMenuItems(store: store, items: items, context: context) { extra }
+        }
+    }
+}
+
+extension FileContextMenu where Extra == EmptyView {
+    init(items: [FileItem], context: FileMenuContext = FileMenuContext()) {
+        self.init(items: items, context: context) { EmptyView() }
+    }
+
+    /// 只带快速查看的老写法（主窗口列表）。
+    init(items: [FileItem], preview: ((FileItem) -> Void)?) {
+        self.init(items: items, context: FileMenuContext(preview: preview)) { EmptyView() }
+    }
+}
+
+private struct FileMenuItems<Extra: View>: View {
+    let store: LibraryStore
+    let items: [FileItem]
+    let context: FileMenuContext
+    @ViewBuilder let extra: () -> Extra
+
+    private var isPro: Bool { LicenseManager.shared.isPro }
+    private var urls: [URL] { items.map(\.url) }
+    private var folders: [FileItem] { items.filter(\.isDirectory) }
+    private var files: [FileItem] { items.filter { !$0.isDirectory } }
+
+    /// 要在主窗口里弹面板的操作：不在主窗口时先把主窗口拿到前面。
+    private func inMain(_ action: @escaping @MainActor () -> Void) {
+        if context.outsideMainWindow { MainWindow.show(then: action) } else { action() }
+    }
+
+    var body: some View {
+        // 1. 打开、查看
+        Button("打开") {
+            if context.outsideMainWindow, items.count == 1, let item = items.first {
+                LibraryStore.openFromOutside(item.url)
+            } else {
+                store.openItems(items)
+            }
+        }
         Button("在访达中显示") { FileActions.reveal(items) }
-        if let first = items.first, let preview {
+        if let first = items.first, let preview = context.preview {
             Button("快速查看") { preview(first) }
         }
         Button("显示简介") {
-            store.remember(items)
-            store.selectedIDs = Set(items.map(\.id))
-            store.showInspector = true
-        }
-        TagMenu(items: items)
-        Button("加入暂存架") { store.addToShelf(items) }
-        Button("提醒我处理…") {
-            if LicenseManager.shared.isPro {
-                ReminderStore.shared.composing = items
-            } else {
-                LicenseManager.shared.showPaywall = true
+            let list = items
+            inMain {
+                store.remember(list)
+                store.selectedIDs = Set(list.map(\.id))
+                store.inspectorMode = .info
+                store.showInspector = true
             }
         }
-        if items.allSatisfy(\.isDirectory) {
-            Button("文件夹上色…") { FolderIconService.shared.openEditor(items.map(\.url)) }
-            let colored = items.map(\.url).filter { FolderIconService.shared.hasRecord($0) }
+        Divider()
+
+        // 2. 整理
+        TagMenu(items: items)
+            .environmentObject(store)
+        if context.onShelf {
+            Button("从暂存架移除") { ShelfStore.shared.remove(paths: Set(items.map(\.path))) }
+        } else {
+            Button("加入暂存架") { store.addToShelf(items) }
+        }
+        Button {
+            let list = items
+            if isPro { inMain { ReminderStore.shared.composing = list } } else { showPaywall() }
+        } label: {
+            proLabel(String(localized: "提醒我处理…"))
+        }
+        if let removeFromWall = context.removeFromWall {
+            Button("从文件夹墙移除") { removeFromWall() }
+        } else if !folders.isEmpty {
+            Button(folders.count > 1 ? String(localized: "把 \(folders.count) 个文件夹添加到文件夹墙") : String(localized: "添加到文件夹墙")) {
+                for folder in folders { store.pin(folder.path) }
+            }
+        } else if items.count == 1, let item = items.first {
+            Button("将所在文件夹添加到文件夹墙") { store.pin(item.url.deletingLastPathComponent().path) }
+        }
+        Divider()
+
+        // 3. 名字和外观
+        if let rename = context.rename {
+            Button("重命名…") { rename() }
+        } else if items.count == 1 || !files.isEmpty {
+            Button(files.count > 1 ? String(localized: "批量重命名 \(files.count) 个文件…") : String(localized: "重命名…")) {
+                let list = items
+                inMain { store.beginRename(list) }
+            }
+        }
+        if !folders.isEmpty, folders.count == items.count {
+            Button {
+                let list = folders.map(\.url)
+                inMain { FolderIconService.shared.openEditor(list) }
+            } label: {
+                proLabel(String(localized: "文件夹上色…"))
+            }
+            let colored = folders.map(\.url).filter { FolderIconService.shared.hasRecord($0) }
             if !colored.isEmpty {
                 Button("还原文件夹图标") {
                     let outcome = FolderIconService.shared.restore(colored)
@@ -80,43 +182,94 @@ struct FileContextMenu: View {
                 }
             }
         }
-        if items.contains(where: { !$0.isDirectory }) {
-            Button(items.count > 1 ? String(localized: "批量重命名 \(items.count) 个文件…") : String(localized: "重命名…")) { store.renameItems = items }
-        }
+        extra()
+        Divider()
+
+        // 4. 转换
         if items.contains(where: ImageConverter.canConvert) {
-            Button("转换为 JPG / 压缩…") { store.convertItems = items.filter(ImageConverter.canConvert) }
+            Button("转换为 JPG / 压缩…") {
+                let list = items.filter(ImageConverter.canConvert)
+                inMain { store.convertItems = list }
+            }
         }
         MediaToolsMenu(urls: {
-            items.map(\.url).sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
-        }, toShelf: false)
+            urls.sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+        }, toShelf: context.onShelf)
+        Button("压缩为 ZIP") {
+            let list = urls
+            Task { await ShelfTools.shared.zip(list) }
+        }
         Divider()
+
+        // 5. 拷贝、分享
         Button(items.count > 1 ? String(localized: "拷贝 \(items.count) 个路径") : String(localized: "拷贝路径")) { FileActions.copyPaths(items) }
         if items.contains(where: TextExtractor.canExtract) {
             Button("拷贝文字") { store.copyText(items) }
         }
-        if items.count == 1, let item = items.first {
-            if item.isImage {
-                Button("识别图中文字…") { store.ocrItem = item }
+        if items.count == 1, let item = items.first, item.isImage {
+            Button("识别图中文字…") { inMain { store.ocrItem = item } }
+        }
+        Button("共享…") { ShelfActions.share(urls) }
+        Button("隔空投送") { AirDropShare.sendIfPossible(urls, store: store) }
+        Divider()
+
+        // 6. 移动、拷贝到别处
+        Button("移动到…") { transfer(copy: false) }
+        Button("拷贝到…") { transfer(copy: true) }
+        Divider()
+
+        // 7. 腾空间（和「移动到…」分开：会留替身、跨盘校验、记进清理记录）
+        Button {
+            let list = items
+            if isPro { inMain { store.requestMoveOut(list) } } else { showPaywall() }
+        } label: {
+            proLabel(String(localized: "大文件搬家…"))
+        }
+        if items.count == 1, let app = items.first, app.ext == "app" {
+            Button {
+                let url = app.url
+                if isPro { inMain { AppUninstaller.shared.open(url) } } else { showPaywall() }
+            } label: {
+                proLabel(String(localized: "卸载（连残留一起）…"))
             }
-            Button("固定所在文件夹") { store.pin(item.url.deletingLastPathComponent().path) }
         }
         Divider()
-        if items.count == 1, let app = items.first, app.ext == "app" {
-            Button("卸载（连残留一起）…") { AppUninstaller.shared.open(app.url) }
+
+        // 8. 和访达一样不弹确认：直接移到废纸篓，小提示上可以撤销（⌘Z 也行）。
+        Button("移到废纸篓", role: .destructive) {
+            store.moveToTrash(items, origin: context.trashOrigin) { moved in context.afterTrash?(moved) }
         }
-        Button("移动到…") {
-            // 在后台移动（同名自动加编号、不覆盖），记进「清理记录」；⌘Z 可以撤销，⌘⇧Z 重做。
-            guard !ShelfTransfer.shared.isRunning else {
-                store.showToast(String(localized: "还有文件在移动，请稍等"))
-                return
-            }
-            if let folder = ShelfActions.chooseFolder(prompt: String(localized: "移动到这里")) {
-                ShelfTransfer.shared.start(items.map(\.url), to: folder, copy: false, store: store)
+    }
+
+    /// 在后台移动 / 拷贝（同名自动加编号、不覆盖），移动记进「清理记录」；⌘Z 可以撤销。
+    private func transfer(copy: Bool) {
+        guard !ShelfTransfer.shared.isRunning else {
+            store.showToast(String(localized: "还有文件在移动，请稍等"))
+            return
+        }
+        let prompt = copy ? String(localized: "拷贝到这里") : String(localized: "移动到这里")
+        if let folder = ShelfActions.chooseFolder(prompt: prompt) {
+            ShelfTransfer.shared.start(urls, to: folder, copy: copy, store: store)
+        }
+    }
+
+    private func showPaywall() {
+        NSApp.activate(ignoringOtherApps: true)
+        LicenseManager.shared.showPaywall = true
+    }
+
+    /// Pro 项目没解锁时：标题后面加「Pro」和小锁。
+    @ViewBuilder
+    private func proLabel(_ title: String) -> some View {
+        if isPro {
+            Text(title)
+        } else {
+            Label {
+                Text(title) + Text(verbatim: "  · Pro")
+            } icon: {
+                Image(systemName: "lock.fill")
             }
         }
-        Button("搬到…") { store.requestMoveOut(items) }
-        // 和访达一样不再弹确认：直接移到废纸篓，小提示上可以撤销（⌘Z 也行）。
-        Button("移到废纸篓", role: .destructive) { store.moveToTrash(items) }
     }
 }
 
@@ -290,5 +443,16 @@ struct MediaTaskBar: View {
         let text = media.status ?? String(localized: "正在处理…")
         guard let progress = media.progress else { return text }
         return text + " · " + "\(Int((min(max(progress, 0), 1) * 100).rounded()))%"
+    }
+}
+
+extension AirDropShare {
+    /// 右键「隔空投送」：这台 Mac 现在不能投送时说一声。
+    @MainActor static func sendIfPossible(_ urls: [URL], store: LibraryStore) {
+        guard let service = NSSharingService(named: .sendViaAirDrop), service.canPerform(withItems: urls) else {
+            store.alertMessage = String(localized: "这台 Mac 现在不能使用隔空投送。")
+            return
+        }
+        send(urls)
     }
 }

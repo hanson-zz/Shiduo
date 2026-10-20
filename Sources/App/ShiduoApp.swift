@@ -31,85 +31,120 @@ struct ShiduoApp: App {
                 .environmentObject(store.organizer)
                 .environmentObject(store.volumes)
                 .environmentObject(store.photos)
-                .frame(minWidth: 960, minHeight: 600)
+                .frame(minWidth: 760, minHeight: 560)
         }
         .commands {
+            // 快捷键都登记在 AppShortcut 里（AppShortcuts.swift），这里只用名字引用。
             SupportCommands()
             CommandGroup(after: .newItem) {
-                // ⇧⌘P 让给「显示预览」（和访达一样），固定文件夹改成 ⇧⌘O。
-                Button("固定文件夹…") { store.choosePinnedFolder() }
-                    .keyboardShortcut("o", modifiers: [.command, .shift])
+                Button("新建文件夹") { store.newFolderInCurrent() }
+                    .keyboardShortcut(.newFolder)
+                    .disabled(store.currentFolder == nil || store.activeQuery != nil)
+                // 和访达的「添加到边栏」（⌃⌘T）一个意思：选中了文件夹就直接放上墙，否则选一个。
+                Button("添加到文件夹墙…") { store.addSelectionToFolderWall() }
+                    .keyboardShortcut(.addToFolderWall)
             }
             // 和访达一样：「文件」菜单里的「移到废纸篓 ⌘⌫」，不管焦点在侧边栏、搜索结果还是简介栏都能用。
             TrashCommands(center: trash)
             CommandGroup(after: .textEditing) {
                 Button("搜索") { store.focusSearch() }
-                    .keyboardShortcut("f", modifiers: .command)
+                    .keyboardShortcut(.search)
                 Button("拷贝文字") { store.copyText(store.selectedItems) }
-                    .keyboardShortcut("c", modifiers: [.command, .shift])
+                    .keyboardShortcut(.copyText)
                 Button("加入暂存架") { store.addToShelf(store.selectedItems) }
+                    .keyboardShortcut(.addToShelf)
                     .disabled(store.selectedItems.isEmpty)
             }
             // 「显示」菜单：系统的「显示 / 隐藏工具栏」换成我们自己的（能记住状态）；
             // 「进入全屏幕」「显示标签页栏」仍由系统自动加在菜单最后。
             CommandGroup(replacing: .toolbar) {
                 Toggle("为图标", isOn: Binding(get: { viewMode == .grid }, set: { if $0 { viewMode = .grid } }))
-                    .keyboardShortcut("1", modifiers: .command)
+                    .keyboardShortcut(.asIcons)
                 Toggle("为列表", isOn: Binding(get: { viewMode == .list }, set: { if $0 { viewMode = .list } }))
-                    .keyboardShortcut("2", modifiers: .command)
+                    .keyboardShortcut(.asList)
                 Divider()
                 Button(store.isShowingInspector(.info) ? String(localized: "隐藏简介") : String(localized: "显示简介")) {
                     store.toggleInspector(.info)
                 }
-                .keyboardShortcut("i", modifiers: .command)
+                .keyboardShortcut(.showInfo)
                 Button(store.isShowingInspector(.preview) ? String(localized: "隐藏预览") : String(localized: "显示预览")) {
                     store.toggleInspector(.preview)
                 }
-                .keyboardShortcut("p", modifiers: [.command, .shift])
+                .keyboardShortcut(.showPreview)
                 Divider()
                 Button(showToolbar ? String(localized: "隐藏工具栏") : String(localized: "显示工具栏")) { showToolbar.toggle() }
-                    .keyboardShortcut("t", modifiers: [.command, .option])
+                    .keyboardShortcut(.toggleToolbar)
                 Button(showPathBar ? String(localized: "隐藏路径栏") : String(localized: "显示路径栏")) { showPathBar.toggle() }
-                    .keyboardShortcut("p", modifiers: [.command, .option])
+                    .keyboardShortcut(.togglePathBar)
                 Button(showStatusBar ? String(localized: "隐藏状态栏") : String(localized: "显示状态栏")) { showStatusBar.toggle() }
-                    .keyboardShortcut("/", modifiers: .command)
+                    .keyboardShortcut(.toggleStatusBar)
                 Divider()
                 Button("查看显示选项") { ViewOptionsPanel.shared.toggle(store: store) }
-                    .keyboardShortcut("j", modifiers: .command)
+                    .keyboardShortcut(.viewOptions)
                 Button(showHiddenFiles ? String(localized: "不显示隐藏文件") : String(localized: "显示隐藏文件")) {
                     showHiddenFiles.toggle()
                     if store.currentFolder != nil && store.activeQuery == nil { store.reload() }
                 }
                 Divider()
+                Button("放大图标") { store.iconSizeStep(1) }
+                    .keyboardShortcut(.biggerIcons)
+                Button("缩小图标") { store.iconSizeStep(-1) }
+                    .keyboardShortcut(.smallerIcons)
+                Divider()
                 // 全局快捷键可在设置里换（默认 ⌃⌥S），这里不再固定占用 ⌥⌘S。
                 Button("显示 / 隐藏悬浮暂存架（\(FloatingShelfHotKey.current.title)）") { FloatingShelfController.shared.toggle() }
                 Divider()
+                // ⌘R 在访达里是「显示原身」，刷新改用 ⌥⌘R。
                 Button("刷新") { store.reload() }
-                    .keyboardShortcut("r", modifiers: .command)
+                    .keyboardShortcut(.refresh)
             }
             CommandGroup(replacing: .sidebar) {
                 Button(store.sidebarVisible ? String(localized: "隐藏侧边栏") : String(localized: "显示侧边栏")) {
                     withAnimation { store.sidebarVisible.toggle() }
                 }
-                .keyboardShortcut("s", modifiers: [.command, .control])
+                .keyboardShortcut(.toggleSidebar)
             }
             CommandMenu("前往") {
-                Button("快速搜索浮窗（\(QuickSearchHotKey.current.title)）") { QuickSearchController.shared.show() }
+                Button("返回") { store.goBack() }
+                    .keyboardShortcut(.back)
+                    .disabled(!store.canGoBack)
+                Button("前进") { store.goForward() }
+                    .keyboardShortcut(.forward)
+                    .disabled(!store.canGoForward)
+                Button("上一层文件夹") { store.goUp() }
+                    .keyboardShortcut(.enclosingFolder)
+                    .disabled(!store.canGoUp)
                 Divider()
                 Button("首页") { store.selection = .home }
-                    .keyboardShortcut("h", modifiers: [.command, .shift])
+                    .keyboardShortcut(.home)
                 Button("暂存架") { store.selection = .shelf }
+                Button("文件夹墙") { store.selection = .folderWall }
+                Divider()
+                // 这三个和访达的「前往」菜单一样。
+                Button("桌面") { store.goToFolder(.desktop) }
+                    .keyboardShortcut(.desktop)
+                Button("文稿") { store.goToFolder(.documents) }
+                    .keyboardShortcut(.documents)
+                Button("下载") { store.goToFolder(.downloads) }
+                    .keyboardShortcut(.downloads)
+                Divider()
                 Button("下载来源") { store.selection = .downloads }
-                    .keyboardShortcut("j", modifiers: [.command, .shift])
-                Button("重复文件") { store.selection = .duplicates }
-                    .keyboardShortcut("d", modifiers: [.command, .shift])
+                    .keyboardShortcut(.downloadSources)
+                Button("重复与相似") { store.selection = .duplicates }
+                    .keyboardShortcut(.duplicates)
                 Button("清理") { store.openCleanup(nil) }
-                    .keyboardShortcut("k", modifiers: [.command, .shift])
+                    .keyboardShortcut(.cleanup)
+                Divider()
+                Button("快速搜索浮窗（\(QuickSearchHotKey.current.title)）") { QuickSearchController.shared.show() }
             }
+            // 播放器只在有歌时有用；不再占用 ⌘空格（系统聚焦）和全局的 ⌘← ⌘→（只在播放器获得焦点时响应）。
             CommandMenu("播放") {
-                Button("播放 / 暂停（⌘空格）") { store.player.toggle() }
-                Button("上一首（⌘←）") { store.player.previous() }
-                Button("下一首（⌘→）") { store.player.next() }
+                Button("播放 / 暂停") { store.player.toggle() }
+                    .disabled(store.player.current == nil)
+                Button("上一首") { store.player.previous() }
+                    .disabled(store.player.current == nil)
+                Button("下一首") { store.player.next() }
+                    .disabled(store.player.current == nil)
             }
         }
 
@@ -160,8 +195,9 @@ struct SupportCommands: Commands {
             Button("支持拾掇…") { openWindow(id: SponsorView.windowID) }
         }
         CommandGroup(after: .newItem) {
-            Button("图片工具（拼图 · 美化 · 标注 · 抠图）…") { ImageStudio.shared.open([], mode: .stitch, toShelf: false) }
-                .keyboardShortcut("i", modifiers: [.command, .option])
+            // ⌥⌘I 在访达里是「检查器」，改用 ⌃⌘I。
+            Button("图片工具…") { ImageStudio.shared.open([], mode: .stitch, toShelf: false) }
+                .keyboardShortcut(.imageTools)
         }
         CommandGroup(replacing: .help) {
             Button("发送反馈…") { openWindow(id: FeedbackView.windowID) }

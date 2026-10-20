@@ -152,6 +152,8 @@ final class NotchShelfController: NSObject, ObservableObject {
     var previewing = false
 
     var isVisible: Bool { panel?.isVisible == true }
+    /// 刘海暂存架的面板（在这里移到废纸篓时，带「撤销」的小提示显示在这里）。
+    var window: NSWindow? { panel }
 
     private var panel: NotchShelfPanel?
     private var screen: NSScreen?
@@ -771,25 +773,21 @@ struct NotchShelfView: View {
         }
         .onTapGesture { controller.selectedIndex = index }
         .contextMenu {
-            Button("打开") { LibraryStore.openFromOutside(item.url) }
-            Button("在访达中显示") { FileActions.reveal([item]) }
-            Divider()
             switch controller.tab {
             case .shelf:
-                Button("投进篮筐（隔空投送）") { AirDropHoop.shared.swish([item.url]) }
-                Button("压缩为 ZIP") { ShelfTools.shared.startZip([item.url]) }
-                if ImageConverter.canConvert(item.url) {
-                    ShelfConvertMenu(urls: { [item.url] })
+                // 和主窗口同一套右键菜单，刘海里多一项「投进篮筐」。
+                FileContextMenu(items: [item], context: FileMenuContext(
+                    onShelf: true, outsideMainWindow: true, trashOrigin: controller.window)) {
+                    Button("投进篮筐（隔空投送）") { AirDropHoop.shared.swish([item.url]) }
                 }
-                MediaToolsMenu(urls: { [item.url] }, toShelf: true)
-                Divider()
-                Button("从暂存架移除（⌫）") { shelf.remove(paths: [item.path]) }
-                Button("移到废纸篓（⌘⌫）") { controller.trashSelected([item]) }
             case .downloads:
-                Button("加入暂存架") { shelf.add([item.url]) }
-                Divider()
-                Button("移到废纸篓（⌘⌫）") { controller.trashSelected([item]) }
+                FileContextMenu(items: [item], context: FileMenuContext(
+                    outsideMainWindow: true, trashOrigin: controller.window,
+                    afterTrash: { moved in controller.downloads.removeAll { moved.contains($0.path) } }))
             case .reminders:
+                Button("打开") { LibraryStore.openFromOutside(item.url) }
+                Button("在访达中显示") { FileActions.reveal([item]) }
+                Divider()
                 Button("加入暂存架") { shelf.add([item.url]) }
                 if let reminder = reminders.reminder(for: item.path) {
                     Button("1 小时后再提醒") { reminders.snooze(reminder.id) }

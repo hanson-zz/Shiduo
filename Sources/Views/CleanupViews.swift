@@ -214,7 +214,7 @@ struct CleanupReviewPage: View {
                     store.requestMoveOut(selected.isEmpty ? items : selectedItems)
                 } label: {
                     HStack(spacing: 4) {
-                        Text(selected.isEmpty ? String(localized: "全部搬到…") : String(localized: "搬到…"))
+                        Text(selected.isEmpty ? String(localized: "全部大文件搬家…") : String(localized: "大文件搬家…"))
                         ProBadge()
                     }
                 }

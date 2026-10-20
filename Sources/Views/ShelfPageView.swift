@@ -270,27 +270,10 @@ struct ShelfPageView: View {
     /// 选中的（没选中时为空，不像 targets 那样退回到全部）。
     private var selectedItems: [FileItem] { shelf.items.filter { selection.contains($0.id) } }
 
-    @ViewBuilder
+    /// 右键菜单：和主窗口同一套（FileContextMenu），只是「加入暂存架」换成「从暂存架移除」。
     private func menu(for item: FileItem) -> some View {
         let list = selection.contains(item.id) ? targets : [item]
-        Button("打开") { store.openItems(list) }
-        Button("快速查看") { previewURL = item.url }
-        Button("在访达中显示") { FileActions.reveal(list) }
-        Divider()
-        Button("移动到…") { move(list) }
-        Button("拷贝到…") { copy(list) }
-        Button("压缩为 ZIP") { zip(list) }
-        if !ShelfTools.images(in: list.map(\.url)).isEmpty {
-            ShelfConvertMenu(urls: { list.map(\.url) })
-        }
-        MediaToolsMenu(urls: { list.map(\.url) }, toShelf: true)
-        Button("共享…") { ShelfActions.share(list.map(\.url)) }
-        Button("隔空投送") { airDrop(list) }
-        Divider()
-        Button(list.count > 1 ? String(localized: "拷贝 \(list.count) 个路径") : String(localized: "拷贝路径")) { FileActions.copyPaths(list) }
-        Divider()
-        Button("从暂存架移除（⌫）") { shelf.remove(paths: Set(list.map(\.path))) }
-        Button("移到废纸篓（⌘⌫）", role: .destructive) { store.moveToTrash(list) }
+        return FileContextMenu(items: list, context: FileMenuContext(preview: { previewURL = $0.url }, onShelf: true))
     }
 
     /// 拖动选中的格子时带上全部选中的文件，拖动没选中的格子时只带它自己。

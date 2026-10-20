@@ -2,7 +2,8 @@ import AppKit
 import AVFoundation
 import Foundation
 
-/// 工具栏里的小播放器：双击歌曲直接播放，⌘空格 暂停，⌘← ⌘→ 切歌。
+/// 工具栏里的小播放器：双击歌曲直接播放。不占用全局按键：⌘空格 是系统的聚焦，
+/// ⌘← ⌘→ 只在播放器获得键盘焦点时切歌（见 NowPlayingView），别的地方照常是移到行首 / 行尾。
 @MainActor
 final class MusicPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published private(set) var current: FileItem?
@@ -10,29 +11,6 @@ final class MusicPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
 
     private var queue: [FileItem] = []
     private var player: AVAudioPlayer?
-    private var monitor: Any?
-
-    override init() {
-        super.init()
-        // 有歌在播时：⌘空格 暂停/继续，⌘← ⌘→ 切歌（正在输入文字时不拦截）。
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command else { return event }
-            let code = event.keyCode
-            let handled = MainActor.assumeIsolated { () -> Bool in
-                guard let self, self.current != nil,
-                      !(NSApp.keyWindow?.firstResponder is NSTextView)
-                else { return false }
-                switch code {
-                case 49: self.toggle()
-                case 123: self.previous()
-                case 124: self.next()
-                default: return false
-                }
-                return true
-            }
-            return handled ? nil : event
-        }
-    }
 
     func play(_ item: FileItem, in list: [FileItem]) {
         let songs = list.filter { $0.category == .music }

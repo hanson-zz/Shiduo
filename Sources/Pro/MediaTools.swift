@@ -617,7 +617,7 @@ struct MediaToolsMenu: View {
         let videos = list.filter(MediaToolsLogic.isVideo)
         let images = list.filter(MediaToolsLogic.isImage)
         if !videos.isEmpty || !images.isEmpty || MediaToolsLogic.canMergePDF(list) {
-            Menu("更多工具") {
+            Menu {
                 if !videos.isEmpty {
                     Button(videos.count > 1 ? String(localized: "压缩 \(videos.count) 个视频") : String(localized: "压缩视频")) {
                         MediaTools.shared.compressVideos(videos, toShelf: toShelf)
@@ -639,6 +639,17 @@ struct MediaToolsMenu: View {
                     }
                     Button("标注、打码…") {
                         ImageStudio.shared.open(images, mode: .annotate, toShelf: toShelf)
+                    }
+                }
+            } label: {
+                // 里面都是 Pro 功能：没解锁时标题后面带「Pro」和小锁。
+                if LicenseManager.shared.isPro {
+                    Text("更多工具")
+                } else {
+                    Label {
+                        Text("更多工具") + Text(verbatim: "  · Pro")
+                    } icon: {
+                        Image(systemName: "lock.fill")
                     }
                 }
             }

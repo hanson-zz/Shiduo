@@ -288,18 +288,19 @@ struct StorageMapView: View {
                 Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([node.url]) }
                 Button("拷贝路径") { FileActions.copy(node.url.path) }
                 Divider()
-                Button("搬到…") {
+                Button("大文件搬家…") {
                     if let item = FileItem(url: node.url) {
                         var copy = item
                         copy.size = node.size
                         store.requestMoveOut([copy])
                     }
                 }
-                Button("移到废纸篓…", role: .destructive) {
+                // 和其他地方一样不弹确认：小提示上可以撤销（⌘Z 也行）。
+                Button("移到废纸篓", role: .destructive) {
                     if let item = FileItem(url: node.url) {
                         var copy = item
                         copy.size = node.size
-                        store.requestTrash([copy])
+                        store.moveToTrash([copy]) { moved in model.removed(moved) }
                     }
                 }
             }

@@ -96,7 +96,7 @@ final class LibraryStore: ObservableObject {
             if selection == .similarPhotos { duplicatesTab = .similar }
             if selection == .duplicates { duplicatesTab = .exact }
             browsePath = nil
-            if !navigating { backStack = [] }
+            if !navigating { history.reset() }
             reload()
         }
     }
@@ -105,8 +105,8 @@ final class LibraryStore: ObservableObject {
 
     /// 固定文件夹 / 外接磁盘 / 任意文件夹里，当前进到了哪一层子文件夹（nil = 根目录）。
     @Published private(set) var browsePath: String?
-    /// 「返回」用的历史：之前的页面和子文件夹。
-    @Published private(set) var backStack: [BrowseLocation] = []
+    /// 「返回 ⌘[ / 前进 ⌘]」用的历史：之前的页面和子文件夹。
+    @Published private(set) var history = NavigationHistory<BrowseLocation>()
     private var navigating = false
 
     struct BrowseLocation: Equatable {
@@ -125,7 +125,9 @@ final class LibraryStore: ObservableObject {
     /// 正在看的文件夹。
     var currentFolder: String? { browseRoot.map { browsePath ?? $0 } }
 
-    var canGoBack: Bool { !backStack.isEmpty }
+    var canGoBack: Bool { history.canGoBack }
+    var canGoForward: Bool { history.canGoForward }
+    private var here: BrowseLocation { BrowseLocation(selection: selection, browsePath: browsePath) }
 
     var canGoUp: Bool {
         guard let current = currentFolder, current != "/" else { return false }
@@ -151,7 +153,7 @@ final class LibraryStore: ObservableObject {
         // 1. 就在当前这个根目录里：进子文件夹
         if let root = browseRoot, inside(root) {
             let target = path == root ? nil : path
-            if target != browsePath { backStack.append(here) }
+            if target != browsePath { history.visit(from: here) }
             browsePath = target
             reload()
             return
@@ -166,7 +168,7 @@ final class LibraryStore: ObservableObject {
         let best = roots.filter { inside($0.root) }.max { $0.root.count < $1.root.count }
 
         navigating = true
-        backStack.append(here)
+        history.visit(from: here)
         selection = best?.item ?? .folder(path)
         navigating = false
         // 3. 其他地方的文件夹：当「任意文件夹」打开（上面那行已经切过去了）
@@ -184,7 +186,7 @@ final class LibraryStore: ObservableObject {
         }
         guard browsePath != nil || activeQuery != nil else { return }
         if browsePath != nil {
-            backStack.append(BrowseLocation(selection: selection, browsePath: browsePath))
+            history.visit(from: here)
         }
         activeQuery = nil
         searchText = ""
@@ -212,7 +214,7 @@ final class LibraryStore: ObservableObject {
         guard canGoUp, let root = browseRoot, let current = currentFolder else { return }
         let parent = (current as NSString).deletingLastPathComponent
         if browsePath != nil {
-            backStack.append(BrowseLocation(selection: selection, browsePath: browsePath))
+            history.visit(from: here)
             browsePath = parent == root || !parent.hasPrefix(root + "/") ? nil : parent
             reload()
         } else {
@@ -222,7 +224,17 @@ final class LibraryStore: ObservableObject {
 
     /// 返回上一个位置（⌘[）。
     func goBack() {
-        guard let last = backStack.popLast() else { return }
+        guard let last = history.goBack(from: here) else { return }
+        go(to: last)
+    }
+
+    /// 前进到「返回」之前的位置（⌘]）。
+    func goForward() {
+        guard let next = history.goForward(from: here) else { return }
+        go(to: next)
+    }
+
+    private func go(to last: BrowseLocation) {
         navigating = true
         if selection != last.selection { selection = last.selection }
         navigating = false
@@ -1031,7 +1043,7 @@ final class LibraryStore: ObservableObject {
 
     // MARK: - 拷贝文字
 
-    /// 拷贝一张或多张图片、PDF 里的文字（⇧⌘C）。
+    /// 拷贝一张或多张图片、PDF 里的文字（⌃⌘C）。
     func copyText(_ list: [FileItem]) {
         let targets = list.filter(TextExtractor.canExtract)
         guard !targets.isEmpty else {
@@ -1072,10 +1084,166 @@ final class LibraryStore: ObservableObject {
     // MARK: - 暂存架
 
     /// 放上暂存架（只记住位置，不拷贝文件）。
+    // MARK: - 重命名、新建文件夹
+
+    /// 正在原地改名的文件（网格 / 列表里名字变成输入框）。
+    @Published var inlineRenamePath: String?
+
+    /// 回车 / 右键「重命名…」：列表里只选了一个就原地改名（文件夹也行，和访达一样），选了几个文件就打开批量重命名。
+    func beginRename(_ list: [FileItem]) {
+        if list.count == 1, let item = list.first, items.contains(where: { $0.id == item.id }) {
+            selectedIDs = [item.id]
+            inlineRenamePath = item.path
+            return
+        }
+        let files = list.filter { !$0.isDirectory }
+        if !files.isEmpty { renameItems = files }
+    }
+
+    /// 原地改名完成（name 为 nil 表示取消）。⌘Z 可以撤销。
+    func commitInlineRename(_ item: FileItem, to name: String?) {
+        guard inlineRenamePath == item.path else { return }
+        inlineRenamePath = nil
+        guard let name else { return }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != item.name else { return }
+        guard !trimmed.contains("/"), !trimmed.hasPrefix(".") || item.name.hasPrefix(".") else {
+            alertMessage = String(localized: "名称里不能有「/」，也不能以「.」开头。")
+            return
+        }
+        let src = item.url
+        let dst = src.deletingLastPathComponent().appendingPathComponent(trimmed)
+        guard !FileManager.default.fileExists(atPath: dst.path) || dst.path.lowercased() == src.path.lowercased() else {
+            alertMessage = String(localized: "这里已经有一个叫「\(trimmed)」的项目了。")
+            return
+        }
+        do {
+            try FileManager.default.moveItem(at: src, to: dst)
+        } catch {
+            alertMessage = error.localizedDescription
+            return
+        }
+        FileUndoCenter.shared.relocate([FileUndoLogic.PathPair(from: src.path, to: dst.path)])
+        ShelfStore.shared.relocate(from: src.path, to: dst)
+        FolderIconService.shared.movePath(src.path, to: dst.path)
+        if let index = pinnedFolders.firstIndex(of: src.path) { pinnedFolders[index] = dst.path }
+        FileUndoCenter.shared.registerRename([(old: src, new: dst)], toast: String(localized: "已重命名为「\(trimmed)」"))
+        if let renamed = FileItem(url: dst), let index = items.firstIndex(where: { $0.id == item.id }) {
+            remember([renamed])
+            items[index] = renamed
+            selectedIDs = [renamed.id]
+        }
+        filesWritten([dst])
+    }
+
+    /// ⇧⌘N：在正在看的文件夹里新建「未命名文件夹」，马上原地改名；⌘Z 撤销（文件夹还是空的就移到废纸篓）。
+    func newFolderInCurrent() {
+        guard let folder = currentFolder, activeQuery == nil else { return }
+        let base = String(localized: "未命名文件夹")
+        let parent = URL(fileURLWithPath: folder, isDirectory: true)
+        var url = parent.appendingPathComponent(base)
+        var n = 2
+        while FileManager.default.fileExists(atPath: url.path) {
+            url = parent.appendingPathComponent("\(base) \(n)")
+            n += 1
+        }
+        do {
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
+        } catch {
+            alertMessage = error.localizedDescription
+            return
+        }
+        registerNewFolderUndo(url)
+        if let item = FileItem(url: url) {
+            remember([item])
+            items.append(item)
+            selectedIDs = [item.id]
+            inlineRenamePath = item.path
+        }
+    }
+
+    private func registerNewFolderUndo(_ url: URL) {
+        guard let manager = FileUndoCenter.shared.undoManager else { return }
+        manager.registerUndo(withTarget: self) { store in
+            MainActor.assumeIsolated {
+                let contents = (try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? ["?"]
+                if contents.isEmpty {
+                    try? FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                    store.forget(paths: [url.path])
+                    store.refreshQuietly()
+                } else {
+                    store.showToast(String(localized: "文件夹里已经有东西了，没有移到废纸篓"))
+                }
+                // 重做：重新建出来。
+                FileUndoCenter.shared.undoManager?.registerUndo(withTarget: store) { store in
+                    MainActor.assumeIsolated {
+                        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
+                        store.registerNewFolderUndo(url)
+                        store.refreshQuietly()
+                    }
+                }
+            }
+        }
+        manager.setActionName(String(localized: "新建文件夹"))
+    }
+
+    // MARK: - 文件夹墙、前往
+
+    /// ⌃⌘T「添加到文件夹墙…」：选中了文件夹就直接放上墙（和访达的「添加到边栏」一样），否则选一个。
+    func addSelectionToFolderWall() {
+        let folders = selectedItems.filter(\.isDirectory)
+        if folders.isEmpty {
+            choosePinnedFolder()
+        } else {
+            for folder in folders { pin(folder.path) }
+        }
+    }
+
+    enum StandardFolder {
+        case desktop, documents, downloads
+        var path: String {
+            let home = FileManager.default.homeDirectoryForCurrentUser.path
+            switch self {
+            case .desktop: return home + "/Desktop"
+            case .documents: return home + "/Documents"
+            case .downloads: return home + "/Downloads"
+            }
+        }
+    }
+
+    /// 「前往」菜单的桌面 / 文稿 / 下载（⇧⌘D / ⇧⌘O / ⌥⌘L，和访达一样），记进返回历史。
+    func goToFolder(_ folder: StandardFolder) {
+        let target = SidebarItem.pinned(folder.path)
+        if selection == target {
+            reselect(target)
+            return
+        }
+        history.visit(from: here)
+        navigating = true
+        selection = target
+        navigating = false
+    }
+
+    nonisolated static let wallTileSizeKey = "folderWall.tileSize"
+    nonisolated static let wallTileSizeRange: ClosedRange<Double> = 48...160
+
+    /// ⌘+ / ⌘-：文件夹墙里调卡片大小，其他列表调缩略图大小。
+    func iconSizeStep(_ direction: Int) {
+        let defaults = UserDefaults.standard
+        if selection == .folderWall && activeQuery == nil {
+            let range = Self.wallTileSizeRange
+            let current = defaults.object(forKey: Self.wallTileSizeKey) as? Double ?? 112
+            defaults.set(min(max(current + Double(direction) * 16, range.lowerBound), range.upperBound), forKey: Self.wallTileSizeKey)
+        } else {
+            let current = defaults.object(forKey: "thumbnailSize") as? Double ?? 120
+            defaults.set(min(max(current + Double(direction) * 16, 64), 256), forKey: "thumbnailSize")
+        }
+    }
+
     func addToShelf(_ list: [FileItem]) {
         let added = ShelfStore.shared.add(list.map(\.url))
         if added > 0 {
-            showToast(String(localized: "已放上暂存架：\(added) 个"))
+            showToast(String(localized: "已加入暂存架：\(added) 个"))
         } else {
             showToast(String(localized: "已经在暂存架上了"))
         }
