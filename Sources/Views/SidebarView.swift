@@ -94,10 +94,7 @@ struct SidebarView: View {
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
-                if ProFeature.folderWall.requiresPro {
-                    ProBadge()
-                        .opacity(license.isPro ? 0.55 : 1)
-                }
+
             }
             .tag(SidebarItem.folderWall)
             .help("常用的文件夹放在一面卡片墙上，一眼看到里面有什么")

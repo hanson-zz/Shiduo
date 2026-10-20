@@ -32,11 +32,12 @@ The app is in English and Simplified Chinese. It follows your system language, a
 
 <p align="center"><img src="docs/screenshots/en/shelf.png" alt="Shelf" width="880"></p>
 
+- **Folder Wall** (free): your go-to folders as glossy cards, with the newest photos and papers peeking out.
 - **Handy tools**: text recognition in images (on-device), storage map, batch rename, convert to JPG, Finder tags, and a global quick-search panel (⌥Space).
 
 ## Shiduo Pro
 
-Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, 7-day free trial, payments by Creem) adds auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, a floating shelf that opens under the notch or at the screen edge, file reminders (on time or when you open WeChat, DingTalk, Feishu or Mail), ⌃⌘1–0 number keys that copy your 10 most recent files, and a **Folder Wall** that turns pinned folders into glossy cards with the newest photos and papers peeking out, drop-to-convert tools (compress videos, make GIFs, trim clips, merge files into a PDF), an app uninstaller that also trashes the app’s leftovers in Library (restorable for 30 days), on-device background removal plus screenshot styling, and image stitching (long screenshots joined with overlaps removed, grids, masonry, watermarks). Enter your license key in **Settings › License**.
+Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, 7-day free trial, payments by Creem) adds auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, a floating shelf that opens under the notch or at the screen edge, file reminders (on time or when you open WeChat, DingTalk, Feishu or Mail), ⌃⌘1–0 number keys that copy your 10 most recent files, drop-to-convert tools (compress videos, make GIFs, trim clips, merge files into a PDF), an app uninstaller that also trashes the app’s leftovers in Library (restorable for 30 days), on-device background removal plus screenshot styling, and image stitching (long screenshots joined with overlaps removed, grids, masonry, watermarks). Enter your license key in **Settings › License**.
 
 <p align="center"><img src="docs/screenshots/en/folderwall.png" alt="Folder Wall" width="880"></p>
 

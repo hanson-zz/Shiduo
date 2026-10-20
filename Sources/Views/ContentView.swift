@@ -225,8 +225,8 @@ struct DetailView: View {
                 RemindersPageView()
                     .proGated(.fileReminder)
             case .folderWall:
+                // 文件夹墙免费（以前侧边栏的「固定文件夹」并进来了）。
                 FolderWallView()
-                    .proGated(.folderWall)
             case .category(let category):
                 BrowserView(title: category.libraryTitle, showsOCRTools: category == .images)
             case .largeFiles:
