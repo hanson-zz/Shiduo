@@ -115,7 +115,7 @@ struct SavedSearchesSidebarSection: View {
 
     var body: some View {
         if !saved.searches.isEmpty {
-            Section {
+            CollapsibleSection("savedSearches") {
                 ForEach(saved.searches) { search in
                     HStack {
                         Label(search.displayName, systemImage: "folder.badge.gearshape")
@@ -124,7 +124,8 @@ struct SavedSearchesSidebarSection: View {
                         if !license.isPro {
                             ProBadge().opacity(0.8)
                         } else if let count = saved.counts[search.id] {
-                            Text(count >= 3000 ? "3000+" : "\(count)")
+                            // 和列表顶部「共 N 项」用同一个总数（列表只显示前 3000 项时会有提示）。
+                            Text("\(count)")
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
                         }

@@ -23,6 +23,13 @@ struct ProBadge: View {
     }
 }
 
+/// 哪些功能真的要 Pro：集中在这一处，以后想把某个功能改成免费只改这里。
+enum ProGating {
+    /// 文件夹墙（以前侧边栏的「固定文件夹」并进来了，那一组原来是免费的）。现在仍然要 Pro，和 beta.6 一样；
+    /// 改成 false 就对所有人免费（侧边栏的 Pro 角标、上锁页、付费页清单都跟着变）。
+    static let folderWallRequiresPro = true
+}
+
 /// Pro 功能清单，付费页和设置页共用。
 enum ProFeature: CaseIterable, Identifiable {
     case autoOrganize
@@ -42,6 +49,17 @@ enum ProFeature: CaseIterable, Identifiable {
     case imageTools
 
     var id: Self { self }
+
+    /// 这个功能要不要 Pro（见 ProGating）。
+    var requiresPro: Bool {
+        switch self {
+        case .folderWall: return ProGating.folderWallRequiresPro
+        default: return true
+        }
+    }
+
+    /// 付费页列出的功能（改成免费的不再列）。
+    static var paid: [ProFeature] { allCases.filter(\.requiresPro) }
 
     var title: String {
         switch self {
@@ -73,7 +91,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .floatingShelf: return String(localized: "拖着文件碰到刘海或屏幕边缘，就有地方先放一下")
         case .fileReminder: return String(localized: "右键「提醒我处理…」，到点或打开微信时提醒你")
         case .quickPick: return String(localized: "⌃⌘1–0 拷贝最近 10 个文件，到哪都能 ⌘V 粘贴")
-        case .folderWall: return String(localized: "固定的文件夹变成卡片墙，照片和文稿从文件夹里探出来")
+        case .folderWall: return String(localized: "常用的文件夹放上卡片墙，照片和文稿从文件夹里探出来")
         case .moveOut: return String(localized: "大文件一键搬到移动硬盘、NAS 或网盘，原处留替身，双击照样打开")
         case .savedSearch: return String(localized: "把「上周超过 5MB 的 PDF」这样的搜索存到侧边栏，自动更新")
         case .folderIcon: return String(localized: "给文件夹换颜色，盖上图标或 emoji，访达里直接看得到")
@@ -154,7 +172,7 @@ struct PaywallView: View {
 
             ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                ForEach(ProFeature.allCases) { feature in
+                ForEach(ProFeature.paid) { feature in
                     HStack(spacing: 12) {
                         TintedIcon(symbol: feature.symbol, tint: feature.tint, size: 32)
                         VStack(alignment: .leading, spacing: 1) {
@@ -387,7 +405,7 @@ struct ProGate<Content: View>: View {
     }
 
     var body: some View {
-        if license.isPro {
+        if license.isPro || !feature.requiresPro {
             content
         } else {
             ProLockedView(feature: feature)

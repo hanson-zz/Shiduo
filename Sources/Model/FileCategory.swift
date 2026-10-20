@@ -27,6 +27,18 @@ enum FileCategory: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// 侧边栏「资料库」和列表标题用的名字：「全部图片」这种，和「位置」里的「图片」文件夹区分开
+    /// （资料库是整台 Mac 里按类型搜出来的，文件夹只是 ~/Pictures 这一个地方）。
+    var libraryTitle: String {
+        switch self {
+        case .images: return String(localized: "全部图片")
+        case .videos: return String(localized: "全部视频")
+        case .music: return String(localized: "全部音乐")
+        case .documents: return String(localized: "全部文稿")
+        default: return title
+        }
+    }
+
     var symbol: String {
         switch self {
         case .recents: return "clock"

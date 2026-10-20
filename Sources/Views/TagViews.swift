@@ -462,6 +462,7 @@ private struct TagMenuContent: View {
     }
 
     private func finish(_ result: FinderTag.WriteResult, name: String, added: Bool) {
+        if added, result.changed > 0 { store.usedTags.insert(name) }
         if added {
             store.showToast(String(localized: "已给 \(result.changed) 个项目加上“\(name)”标签"))
         } else {

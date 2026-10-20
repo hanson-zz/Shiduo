@@ -263,6 +263,32 @@ final class LibraryStore: ObservableObject {
     /// 每次改变都让顶部搜索框获得焦点（⌘F）。
     @Published var searchFocusRequest = 0
     @Published var largeFileCount = 0
+    /// 至少有一个文件打着的颜色标签（侧边栏只列出这些，其余收在「所有标签…」里）。
+    @Published var usedTags: Set<String> = []
+    /// 列表到了上限被截断时：一共有多少个（nil = 没截断）。
+    @Published private(set) var listTotal: Int?
+    /// 这一页列表的上限（3000 / 2000 / 5000）。
+    @Published private(set) var listCap: Int?
+    /// 截断时是按什么顺序取的前 N 个。
+    @Published private(set) var listOrder: ListTruncation.Order = .recent
+
+    /// 列表被截断时顶部那一条提示（没截断为 nil）。
+    var truncationBanner: String? {
+        guard let cap = listCap,
+              let total = ListTruncation.hiddenTotal(shown: items.count, total: listTotal, cap: cap) else { return nil }
+        return ListTruncation.bannerText(cap: cap, total: total, order: listOrder)
+    }
+
+    /// 截断时的总数（副标题写「3000 / 12480 个项目」）。
+    var truncatedTotal: Int? {
+        ListTruncation.hiddenTotal(shown: items.count, total: listTotal, cap: listCap)
+    }
+
+    private func applyTruncation(_ page: ListPage) {
+        if listTotal != page.total { listTotal = page.total }
+        if listCap != page.cap { listCap = page.cap }
+        if listOrder != page.order { listOrder = page.order }
+    }
 
     @Published var items: [FileItem] = []
     @Published var isLoading = false
@@ -449,9 +475,11 @@ final class LibraryStore: ObservableObject {
         let folder = currentFolder
         quietTask?.cancel()
         quietTask = Task {
-            let result = await fetch(target)
+            let page = await fetch(target)
+            let result = page.items
             guard !Task.isCancelled, selection == target, currentFolder == folder,
                   activeQuery == nil, !isLoading else { return }
+            applyTruncation(page)
             let signature: ([FileItem]) -> [String] = { $0.map { "\($0.path)|\($0.size)|\($0.modified?.timeIntervalSince1970 ?? 0)" } }
             guard Set(signature(result)) != Set(signature(items)) else { return }
             remember(result)
@@ -575,33 +603,35 @@ final class LibraryStore: ObservableObject {
             break
         }
         items = []
+        applyTruncation(ListPage([]))
         isLoading = true
-        let result = await fetch(target)
+        let page = await fetch(target)
         if case .chat = target { cleanup.updateChatCard() }
         guard !Task.isCancelled else { return }
-        remember(result)
-        items = result
+        remember(page.items)
+        items = page.items
+        applyTruncation(page)
         isLoading = false
     }
 
     /// 读出一个页面的文件列表（不改界面状态）。
-    private func fetch(_ target: SidebarItem) async -> [FileItem] {
+    private func fetch(_ target: SidebarItem) async -> ListPage {
         switch target {
-        case .category(let c): return await Queries.category(c)
-        case .largeFiles: return await Queries.largeFiles()
-        case .screenshots: return await Queries.screenshots()
-        case .downloads: return await Queries.downloaded()
-        case .pinned(let path), .folder(let path), .volume(let path): return await Queries.folder(browsePath ?? path)
-        case .tag(let name): return await Queries.tagged(name)
+        case .category(let c): return await Queries.categoryPage(c)
+        case .largeFiles: return await Queries.largeFilesPage()
+        case .screenshots: return await Queries.screenshotsPage()
+        case .downloads: return ListPage(await Queries.downloaded())
+        case .pinned(let path), .folder(let path), .volume(let path): return ListPage(await Queries.folder(browsePath ?? path))
+        case .tag(let name): return await Queries.taggedPage(name)
         case .savedSearch(let id):
             if let saved = SavedSearchStore.shared.search(id), license.isPro {
-                return await Queries.search(saved.query())
+                return await Queries.searchPage(saved.query())
             }
-            return []
+            return ListPage([])
         case .chat(let app):
-            return await chat.items(for: app)
+            return ListPage(await chat.items(for: app))
         default:
-            return []
+            return ListPage([])
         }
     }
 
@@ -651,6 +681,9 @@ final class LibraryStore: ObservableObject {
         let large = await Self.countLargeFiles()
         if stale { return }
         largeFileCount = large
+        let tags = await Self.usedColorTags()
+        if stale { return }
+        if tags != usedTags { usedTags = tags }
         // 后台识别截图和近期照片里的文字。
         let recentPhotos = await Queries.recentImages(limit: 200)
         let allShots = await Queries.screenshots(limit: 300)
@@ -675,6 +708,19 @@ final class LibraryStore: ObservableObject {
             let images = await Queries.recentImages(limit: PhotoContentStore.limit)
             photos.autoClassify(images)
         }
+    }
+
+    /// 哪些系统颜色标签至少打在一个文件上（只数数量，不列文件）。
+    private static func usedColorTags() async -> Set<String> {
+        var used = Set<String>()
+        for tag in FinderTag.colorTags {
+            let count = await SpotlightSearch.run(
+                predicate: NSPredicate(format: "kMDItemUserTags == %@", tag.name),
+                scopes: Scopes.home + Queries.mountedVolumes, maxItems: 0
+            ).totalCount
+            if count > 0 { used.insert(tag.name) }
+        }
+        return used
     }
 
     private static func countLargeFiles() async -> Int {
@@ -760,6 +806,7 @@ final class LibraryStore: ObservableObject {
         guard let query = activeQuery else { return }
         selectedIDs = []
         items = []
+        applyTruncation(ListPage([]))
         isLoading = true
         // 画面内容（Pro）：「猫」「海边的照片」。
         let concept = photoConceptRemoved ? nil : PhotoConcepts.match(query.text)
@@ -767,7 +814,8 @@ final class LibraryStore: ObservableObject {
         lockedPhotoConcept = license.isPro ? nil : concept
         let activeConcept = photoConcept
         loadTask = Task {
-            var result = await Queries.search(query)
+            let page = await Queries.searchPage(query)
+            var result = page.items
             // 截图里识别出的文字也能搜到。
             if !query.text.isEmpty {
                 let existing = Set(result.map(\.path))
@@ -789,6 +837,7 @@ final class LibraryStore: ObservableObject {
             guard !Task.isCancelled else { return }
             remember(result)
             items = result
+            applyTruncation(page)
             isLoading = false
         }
     }
@@ -1038,15 +1087,16 @@ final class LibraryStore: ObservableObject {
         return ["Desktop", "Documents", "Downloads", "Pictures", "Movies", "Music"].map { home + "/" + $0 }
     }
 
+    /// 添加到文件夹墙（以前叫「固定文件夹」，数据还是同一份 pinnedFolders，升级上来的都在墙上）。
+    /// 侧边栏不再单独列出这些文件夹，所以桌面、下载这些也可以放上墙。
     func pin(_ path: String) {
         let path = URL(fileURLWithPath: path).standardizedFileURL.path
-        // 桌面、下载等已经在「位置」里了，再固定一次会出现两个同样的行。
-        if Self.builtInLocationPaths.contains(path) {
-            showToast(String(localized: "这个文件夹已经在侧边栏的「位置」里了"))
+        guard !pinnedFolders.contains(path) else {
+            showToast(String(localized: "已经在文件夹墙上了"))
             return
         }
-        guard !pinnedFolders.contains(path) else { return }
         pinnedFolders.append(path)
+        showToast(String(localized: "已添加到文件夹墙：\((path as NSString).lastPathComponent)"))
     }
 
     func unpin(_ path: String) {
@@ -1059,7 +1109,7 @@ final class LibraryStore: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = true
-        panel.prompt = String(localized: "固定")
+        panel.prompt = String(localized: "添加到文件夹墙")
         if panel.runModal() == .OK {
             for url in panel.urls { pin(url.path) }
         }

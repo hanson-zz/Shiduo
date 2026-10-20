@@ -1204,9 +1204,6 @@
         }
       }
     },
-    "999+": {
-      "shouldTranslate": false
-    },
     "Apple 芯片": {
       "localizations": {
         "en": {
@@ -1397,22 +1394,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "截图"
-          }
-        }
-      }
-    },
-    "sidebar.movies": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Movies"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "影片"
           }
         }
       }
@@ -4278,22 +4259,6 @@
         }
       }
     },
-    "固定一个文件夹": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pin a folder"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "固定一个文件夹"
-          }
-        }
-      }
-    },
     "固定常用的文件夹，这里会变成一面卡片墙，一眼看到里面有什么。": {
       "localizations": {
         "en": {
@@ -4354,38 +4319,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "固定文件夹…"
-          }
-        }
-      }
-    },
-    "固定的文件夹变成卡片墙": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pinned folders as a wall of cards"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "固定的文件夹变成卡片墙"
-          }
-        }
-      }
-    },
-    "固定的文件夹变成卡片墙，照片和文稿从文件夹里探出来": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pinned folders become a wall of cards, with photos and documents peeking out"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "固定的文件夹变成卡片墙，照片和文稿从文件夹里探出来"
           }
         }
       }
@@ -14870,22 +14803,6 @@
         }
       }
     },
-    "这个文件夹已经在侧边栏的「位置」里了": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This folder is already in Locations in the sidebar"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这个文件夹已经在侧边栏的「位置」里了"
-          }
-        }
-      }
-    },
     "已保存到侧边栏：%@": {
       "localizations": {
         "en": {
@@ -24730,6 +24647,358 @@
           "stringUnit": {
             "state": "translated",
             "value": "免费功能（浏览、搜索、清理、暂存架）照常可用。"
+          }
+        }
+      }
+    },
+    "全部图片": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Images"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部图片"
+          }
+        }
+      }
+    },
+    "全部视频": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Videos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部视频"
+          }
+        }
+      }
+    },
+    "全部音乐": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Music"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部音乐"
+          }
+        }
+      }
+    },
+    "全部文稿": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Documents"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部文稿"
+          }
+        }
+      }
+    },
+    "只显示最近 %lld 项，共 %lld 项 · 用搜索缩小范围": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing the %1$lld most recent of %2$lld items · Search to narrow it down"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只显示最近 %1$lld 项，共 %2$lld 项 · 用搜索缩小范围"
+          }
+        }
+      }
+    },
+    "只显示最大的 %lld 项，共 %lld 项 · 用搜索缩小范围": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing the %1$lld largest of %2$lld items · Search to narrow it down"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只显示最大的 %1$lld 项，共 %2$lld 项 · 用搜索缩小范围"
+          }
+        }
+      }
+    },
+    "只显示前 %lld 项，共 %lld 项 · 用搜索缩小范围": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing the first %1$lld of %2$lld items · Search to narrow it down"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只显示前 %1$lld 项，共 %2$lld 项 · 用搜索缩小范围"
+          }
+        }
+      }
+    },
+    "%lld / %lld 个项目 · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld items · %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld / %2$lld 个项目 · %3$@"
+          }
+        }
+      }
+    },
+    "用搜索或筛选条件缩小范围（⌘F）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Narrow it down with search or filters (⌘F)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用搜索或筛选条件缩小范围（⌘F）"
+          }
+        }
+      }
+    },
+    "%lld / %lld 个结果": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld results"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld / %2$lld 个结果"
+          }
+        }
+      }
+    },
+    "已加入暂存架：%lld 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to Shelf: %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已加入暂存架：%lld 个"
+          }
+        }
+      }
+    },
+    "整台 Mac 里所有的%@（按类型搜出来的，不只是某个文件夹）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All %@ on this Mac, found by type, not just one folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "整台 Mac 里所有的%@（按类型搜出来的，不只是某个文件夹）"
+          }
+        }
+      }
+    },
+    "重复与相似": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicates & Similar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重复与相似"
+          }
+        }
+      }
+    },
+    "完全相同的副本，以及看起来差不多的照片": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact copies, plus photos that look almost the same"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全相同的副本，以及看起来差不多的照片"
+          }
+        }
+      }
+    },
+    "只显示用过的标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Only Tags in Use"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只显示用过的标签"
+          }
+        }
+      }
+    },
+    "所有标签…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Tags…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有标签…"
+          }
+        }
+      }
+    },
+    "没打在任何文件上的颜色标签收在这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color tags that aren't on any file are tucked away here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没打在任何文件上的颜色标签收在这里"
+          }
+        }
+      }
+    },
+    "常用的文件夹放在一面卡片墙上，一眼看到里面有什么": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your go-to folders on one wall of cards, so you can see what's inside at a glance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "常用的文件夹放在一面卡片墙上，一眼看到里面有什么"
+          }
+        }
+      }
+    },
+    "常用的文件夹放上卡片墙，照片和文稿从文件夹里探出来": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your go-to folders on a wall of cards, with photos and papers peeking out"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "常用的文件夹放上卡片墙，照片和文稿从文件夹里探出来"
+          }
+        }
+      }
+    },
+    "已经在文件夹墙上了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already on the Folder Wall"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经在文件夹墙上了"
+          }
+        }
+      }
+    },
+    "已添加到文件夹墙：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to Folder Wall: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已添加到文件夹墙：%@"
+          }
+        }
+      }
+    },
+    "添加到文件夹墙": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Folder Wall"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加到文件夹墙"
           }
         }
       }

@@ -58,7 +58,7 @@ enum TodayLocation: Hashable {
         case .desktop: return String(localized: "桌面")
         case .documents: return String(localized: "文稿")
         case .pictures: return String(localized: "图片")
-        case .movies: return String(localized: "影片")
+        case .movies: return String(localized: "视频")
         case .music: return String(localized: "音乐")
         case .applications: return String(localized: "应用程序")
         case .home: return String(localized: "个人文件夹")

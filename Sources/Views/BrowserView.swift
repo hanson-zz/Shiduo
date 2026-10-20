@@ -62,6 +62,10 @@ struct BrowserView: View {
                 .padding(.vertical, 8)
                 Divider()
             }
+            if let banner = store.truncationBanner, !store.isLoading {
+                TruncationBanner(text: banner)
+                Divider()
+            }
             content
             BrowserBottomBar(itemCount: visibleCount, selected: firstSelected, selectedCount: store.selectedIDs.count)
         }
@@ -86,6 +90,10 @@ struct BrowserView: View {
 
     private var subtitle: String {
         let bytes = visible.reduce(Int64(0)) { $0 + $1.size }
+        // 列表被截断：写成「3000 / 12480 个项目」，和侧边栏的总数对得上。
+        if let total = store.truncatedTotal, visible.count == store.items.count {
+            return String(localized: "\(visible.count) / \(total) 个项目 · \(bytes.byteText)")
+        }
         return String(localized: "\(visible.count) 个项目 · \(bytes.byteText)")
     }
 
@@ -165,6 +173,32 @@ struct BrowserView: View {
                 .help("在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索")
             }
         }
+    }
+}
+
+/// 列表到了上限被截断时，顶部的一条细提示：「只显示最近 3000 项，共 12480 项 · 用搜索缩小范围」。
+struct TruncationBanner: View {
+    @EnvironmentObject private var store: LibraryStore
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "info.circle")
+                .foregroundStyle(.secondary)
+            Text(text)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            Spacer(minLength: 8)
+            Button("搜索") { store.focusSearch() }
+                .buttonStyle(.link)
+                .help("用搜索或筛选条件缩小范围（⌘F）")
+        }
+        .font(.callout)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 5)
+        .background(Color.accentColor.opacity(0.07))
+        .accessibilityElement(children: .combine)
     }
 }
 

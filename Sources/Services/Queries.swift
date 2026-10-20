@@ -112,31 +112,67 @@ extension SearchQuery {
     }
 }
 
+/// 一页列表：列出来的文件，以及（有上限的列表）一共有多少个、上限是多少，用来提示「只显示了前 3000 个」。
+struct ListPage {
+    var items: [FileItem]
+    var total: Int? = nil
+    var cap: Int? = nil
+    /// 按什么顺序取的前 N 个（提示文字里用）。
+    var order: ListTruncation.Order = .recent
+
+    init(_ items: [FileItem]) { self.items = items }
+
+    init(_ result: SpotlightResult, cap: Int, order: ListTruncation.Order = .recent) {
+        items = result.items
+        total = result.totalCount
+        self.cap = cap
+        self.order = order
+    }
+}
+
 /// 应用里用到的各种 Spotlight 查询。
 @MainActor
 enum Queries {
+    static let categoryLimit = 3000
+    static let largeFileLimit = 2000
+    static let searchLimit = 3000
+    static let tagLimit = 5000
+
     static func category(_ c: FileCategory) async -> [FileItem] {
+        await categoryPage(c).items
+    }
+
+    static func categoryPage(_ c: FileCategory) async -> ListPage {
         let result = await SpotlightSearch.run(
-            predicate: c.predicate(), scopes: c.scopes, maxItems: 3000,
+            predicate: c.predicate(), scopes: c.scopes, maxItems: categoryLimit,
             sortKey: c.sortKey, ascending: c == .apps
         )
+        var page = ListPage(result, cap: categoryLimit, order: c == .apps ? .name : .recent)
         if c == .recents {
-            return result.items.sorted { $0.recentDate > $1.recentDate }
+            page.items = result.items.sorted { $0.recentDate > $1.recentDate }
         }
-        return result.items
+        return page
     }
 
     static func largeFiles(minBytes: Int64 = 200_000_000) async -> [FileItem] {
-        await SpotlightSearch.run(
+        await largeFilesPage(minBytes: minBytes).items
+    }
+
+    static func largeFilesPage(minBytes: Int64 = 200_000_000) async -> ListPage {
+        ListPage(await SpotlightSearch.run(
             predicate: P.all([P.sizeAtLeast(minBytes), P.notFolder]),
-            scopes: Scopes.home, maxItems: 2000, sortKey: "kMDItemFSSize"
-        ).items
+            scopes: Scopes.home, maxItems: largeFileLimit, sortKey: "kMDItemFSSize"
+        ), cap: largeFileLimit, order: .largest)
     }
 
     static func screenshots(limit: Int = 3000) async -> [FileItem] {
-        await SpotlightSearch.run(
+        await screenshotsPage(limit: limit).items
+    }
+
+    static func screenshotsPage(limit: Int = 3000) async -> ListPage {
+        ListPage(await SpotlightSearch.run(
             predicate: P.screenshot, scopes: Scopes.home, maxItems: limit, sortKey: "kMDItemFSCreationDate"
-        ).items
+        ), cap: limit)
     }
 
     /// 有下载来源记录的文件。
@@ -172,13 +208,29 @@ enum Queries {
     }
 
     static func search(_ q: SearchQuery) async -> [FileItem] {
+        await searchPage(q).items
+    }
+
+    /// 搜索结果；第一次查询到了上限时带上总数（只看下载来的、今天新增要逐个过滤，总数不准，不带）。
+    static func searchPage(_ q: SearchQuery) async -> ListPage {
         var filter: (@Sendable (FileItem) -> Bool)? = nil
         if q.downloadedOnly {
             filter = { (file: FileItem) -> Bool in !file.whereFroms.isEmpty }
         }
-        var items = await SpotlightSearch.run(
-            predicate: q.predicate, scopes: q.scopes, maxItems: 3000, accept: filter
-        ).items
+        let first = await SpotlightSearch.run(
+            predicate: q.predicate, scopes: q.scopes, maxItems: searchLimit, accept: filter
+        )
+        var page = ListPage(first.items)
+        if filter == nil, q.date?.addedOnly != true {
+            page.total = first.totalCount
+            page.cap = searchLimit
+        }
+        page.items = await supplement(q, items: first.items, filter: filter)
+        return page
+    }
+
+    private static func supplement(_ q: SearchQuery, items: [FileItem], filter: (@Sendable (FileItem) -> Bool)?) async -> [FileItem] {
+        var items = items
         if Task.isCancelled { return items }
         // 今天新增：和首页的小标签用同一套规则（隐藏文件、缓存、包里面的文件、工程里的零碎文件不算）。
         if q.date?.addedOnly == true {
@@ -226,9 +278,13 @@ enum Queries {
 
     /// 打了某个标签的文件：个人文件夹 + 已挂载的外接磁盘（访达里外接盘上的文件也能打标签）。
     static func tagged(_ name: String) async -> [FileItem] {
-        await SpotlightSearch.run(
-            predicate: NSPredicate(format: "kMDItemUserTags == %@", name), scopes: Scopes.home + mountedVolumes, maxItems: 5000
-        ).items
+        await taggedPage(name).items
+    }
+
+    static func taggedPage(_ name: String) async -> ListPage {
+        ListPage(await SpotlightSearch.run(
+            predicate: NSPredicate(format: "kMDItemUserTags == %@", name), scopes: Scopes.home + mountedVolumes, maxItems: tagLimit
+        ), cap: tagLimit)
     }
 
     /// 打了任意标签的文件（导入访达标签用）：个人文件夹 + 已挂载的外接磁盘。

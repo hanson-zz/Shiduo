@@ -192,7 +192,9 @@ struct ChipBar: View {
         }
             SaveSearchButton()
                 .padding(.trailing, 10)
-            Text(store.isLoading ? String(localized: "正在搜索…") : String(localized: "\(store.items.count) 个结果"))
+            Text(store.isLoading ? String(localized: "正在搜索…")
+                 : store.truncatedTotal.map { String(localized: "\(store.items.count) / \($0) 个结果") }
+                 ?? String(localized: "\(store.items.count) 个结果"))
                 .font(.callout.weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(.secondary)

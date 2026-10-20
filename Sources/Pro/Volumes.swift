@@ -84,7 +84,7 @@ struct VolumesSidebarSection: View {
 
     var body: some View {
         if !monitor.volumes.isEmpty {
-            Section {
+            CollapsibleSection("volumes") {
                 ForEach(monitor.volumes) { volume in
                     HStack {
                         Label {

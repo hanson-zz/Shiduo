@@ -35,11 +35,26 @@ struct SidebarView: View {
                      colors: [Self.rgb(0.40, 0.86, 0.50), Self.rgb(0.13, 0.66, 0.33)]),
             Location(name: String(localized: "sidebar.pictures", defaultValue: "图片"), symbol: "photo.fill", path: home + "/Pictures",
                      colors: [Self.rgb(1.00, 0.52, 0.66), Self.rgb(0.93, 0.27, 0.45)]),
-            Location(name: String(localized: "sidebar.movies", defaultValue: "影片"), symbol: "film.fill", path: home + "/Movies",
+            // 和资料库里的「全部视频」一样叫「视频」（不再「视频」「影片」两种写法）。
+            Location(name: String(localized: "视频"), symbol: "film.fill", path: home + "/Movies",
                      colors: [Self.rgb(0.70, 0.55, 1.00), Self.rgb(0.47, 0.31, 0.92)]),
             Location(name: String(localized: "音乐"), symbol: "music.note", path: home + "/Music",
                      colors: [Self.rgb(1.00, 0.45, 0.45), Self.rgb(0.90, 0.20, 0.30)]),
         ]
+    }
+
+    /// 「所有标签…」展开时也列出没用过的颜色标签。
+    @AppStorage("sidebar.showAllTags") private var showAllTags = false
+
+    /// 侧边栏里列出的颜色标签：用过的、正在看的；展开「所有标签…」时列出全部。
+    private var shownColorTags: [FinderTag] {
+        FinderTag.colorTags.filter { tag in
+            showAllTags || store.usedTags.contains(tag.name) || store.selection == .tag(tag.name)
+        }
+    }
+
+    private var hiddenColorTagCount: Int {
+        FinderTag.colorTags.count - shownColorTags.count
     }
 
     var body: some View {
@@ -54,7 +69,7 @@ struct SidebarView: View {
                 .onDrop(of: [.fileURL], isTargeted: $shelfTargeted) { providers in
                     FileDrop.load(providers) { urls in
                         let added = shelf.add(urls)
-                        if added > 0 { store.showToast(String(localized: "已放上暂存架：\(added) 个")) }
+                        if added > 0 { store.showToast(String(localized: "已加入暂存架：\(added) 个")) }
                     }
                 }
 
@@ -79,41 +94,34 @@ struct SidebarView: View {
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
-                ProBadge()
-                    .opacity(license.isPro ? 0.55 : 1)
+                if ProFeature.folderWall.requiresPro {
+                    ProBadge()
+                        .opacity(license.isPro ? 0.55 : 1)
+                }
             }
             .tag(SidebarItem.folderWall)
-            .help("固定的文件夹变成卡片墙")
+            .help("常用的文件夹放在一面卡片墙上，一眼看到里面有什么")
 
-            Section("资料库") {
+            CollapsibleSection("library", title: "资料库") {
                 ForEach(FileCategory.allCases) { category in
                     Label {
-                        Text(category.title)
+                        Text(category.libraryTitle)
                     } icon: {
                         Image(systemName: category.symbol)
                             .foregroundStyle(category.tint)
                     }
                     .badge(store.totals[category].map { Text("\($0.count)") })
                     .tag(SidebarItem.category(category))
+                    .help(category == .recents ? "" : String(localized: "整台 Mac 里所有的\(category.title)（按类型搜出来的，不只是某个文件夹）"))
                 }
             }
 
-            Section("智能文件夹") {
-                HStack {
-                    Label("大文件", systemImage: "externaldrive")
-                    Spacer()
-                    if store.largeFileCount > 0 {
-                        Text(store.largeFileCount > 999 ? "999+" : "\(store.largeFileCount)")
-                            .font(.caption.weight(.bold))
-                            .monospacedDigit()
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 1)
-                            .background(Capsule().fill(Color.red))
-                            .help("200 MB 以上的文件")
-                    }
-                }
-                .tag(SidebarItem.largeFiles)
+            CollapsibleSection("smart", title: "智能文件夹") {
+                // 和其他行一样用灰色计数（以前是红底白字，看起来像报错）。
+                Label("大文件", systemImage: "externaldrive")
+                    .badge(store.largeFileCount > 0 ? Text("\(store.largeFileCount)") : nil)
+                    .tag(SidebarItem.largeFiles)
+                    .help("200 MB 以上的文件")
                 Label("截图", systemImage: "camera.viewfinder")
                     .tag(SidebarItem.screenshots)
                 Label("下载来源", systemImage: "arrow.down.circle")
@@ -123,15 +131,15 @@ struct SidebarView: View {
 
             SavedSearchesSidebarSection()
 
-            Section("整理") {
+            CollapsibleSection("organize", title: "整理") {
                 Label("清理", systemImage: "sparkles")
                     .badge(cleanup.totalBytes > 0 ? Text(cleanup.totalBytes.byteText).foregroundColor(.green) : nil)
                     .tag(SidebarItem.cleanup)
-                Label("重复文件", systemImage: "doc.on.doc")
+                // 重复文件和相似照片是同一个页面（页内切换），侧边栏只占一行。
+                Label("重复与相似", systemImage: "doc.on.doc")
                     .badge(duplicates.hasScanned && duplicates.reclaimable > 0 ? Text(duplicates.reclaimable.byteText).foregroundColor(.green) : nil)
-                    .tag(SidebarItem.duplicates)
-                Label("相似照片", systemImage: "photo.stack")
-                    .tag(SidebarItem.similarPhotos)
+                    .tag(duplicatesRow)
+                    .help("完全相同的副本，以及看起来差不多的照片")
                 Label("空间占用图", systemImage: "square.grid.3x3.square")
                     .tag(SidebarItem.storageMap)
                 Label("清理记录", systemImage: "clock.arrow.circlepath")
@@ -147,7 +155,7 @@ struct SidebarView: View {
             }
 
             if !chat.installedApps.isEmpty {
-                Section("聊天文件") {
+                CollapsibleSection("chat", title: "聊天文件") {
                     ForEach(chat.installedApps) { app in
                         Label {
                             Text(app.name)
@@ -161,7 +169,7 @@ struct SidebarView: View {
                 }
             }
 
-            Section("位置") {
+            CollapsibleSection("locations", title: "位置") {
                 ForEach(locations) { location in
                     Label {
                         Text(location.name)
@@ -177,16 +185,12 @@ struct SidebarView: View {
 
             VolumesSidebarSection()
 
-            Section {
-                ForEach(FinderTag.colorTags) { tag in
+            CollapsibleSection("tags") {
+                ForEach(shownColorTags) { tag in
                     Label {
                         Text(tag.name)
                     } icon: {
-                        Circle()
-                            .fill(tag.color)
-                            .frame(width: 11, height: 11)
-                            .overlay(Circle().strokeBorder(Color.white.opacity(0.7), lineWidth: 1))
-                            .frame(width: 20)
+                        tagDot(tag.color)
                     }
                     .tag(SidebarItem.tag(tag.name))
                 }
@@ -194,11 +198,7 @@ struct SidebarView: View {
                     Label {
                         Text(tag.name)
                     } icon: {
-                        Circle()
-                            .fill(FinderTag.color(tag.color))
-                            .frame(width: 11, height: 11)
-                            .overlay(Circle().strokeBorder(Color.white.opacity(0.7), lineWidth: 1))
-                            .frame(width: 20)
+                        tagDot(FinderTag.color(tag.color))
                     }
                     .tag(SidebarItem.tag(tag.name))
                     .contextMenu {
@@ -212,6 +212,17 @@ struct SidebarView: View {
                         Divider()
                         importFinderTagsButton
                     }
+                }
+                if showAllTags || hiddenColorTagCount > 0 {
+                    Button {
+                        showAllTags.toggle()
+                    } label: {
+                        Label(showAllTags ? String(localized: "只显示用过的标签") : String(localized: "所有标签…"),
+                              systemImage: showAllTags ? "chevron.up.circle" : "ellipsis.circle")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("没打在任何文件上的颜色标签收在这里")
                 }
                 Button {
                     switch CustomTagStore.promptNewOrImport() {
@@ -233,44 +244,58 @@ struct SidebarView: View {
                     .contextMenu { importFinderTagsButton }
             }
 
-            Section {
-                // 和「位置」重复的固定（旧版本固定过桌面等）不再显示第二行。
-                ForEach(store.pinnedFolders.filter { !LibraryStore.builtInLocationPaths.contains($0) }, id: \.self) { path in
-                    Label {
-                        Text((path as NSString).lastPathComponent)
-                    } icon: {
-                        BadgeIcon(symbol: "folder.fill", colors: [Self.rgb(0.55, 0.70, 0.95), Self.rgb(0.35, 0.50, 0.85)])
-                    }
-                        .help(path)
-                        .tag(SidebarItem.pinned(path))
-                        .simultaneousGesture(TapGesture().onEnded { store.reselect(.pinned(path)) })
-                        .contextMenu {
-                            Button("在访达中显示") {
-                                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
-                            }
-                            Button("取消固定") { store.unpin(path) }
-                        }
-                }
-            } header: {
-                HStack {
-                    Text("固定文件夹")
-                    Spacer()
-                    Button {
-                        store.choosePinnedFolder()
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .buttonStyle(.borderless)
-                    .help("固定一个文件夹")
-                }
-            }
+            // 以前这里还有一组「固定文件夹」：和「文件夹墙」是同一份数据，现在只留文件夹墙这一个入口。
         }
         .listStyle(.sidebar)
         .modifier(SavedSearchRenameAlert())
     }
 
+    /// 正在看相似照片时，侧边栏也选中「重复与相似」这一行。
+    private var duplicatesRow: SidebarItem {
+        store.selection == .similarPhotos ? .similarPhotos : .duplicates
+    }
+
+    private func tagDot(_ color: Color) -> some View {
+        Circle()
+            .fill(color)
+            .frame(width: 11, height: 11)
+            .overlay(Circle().strokeBorder(Color.white.opacity(0.7), lineWidth: 1))
+            .frame(width: 20)
+    }
+
     /// 「导入访达标签…」：把文件上已经有的标签（访达里建的）加进侧边栏。
     private var importFinderTagsButton: some View {
         Button("导入访达标签…") { Task { await TagSync.importFinderTags(store: store) } }
+    }
+}
+
+// MARK: - 可折叠的小节
+
+/// 侧边栏的小节都能折叠（点小标题右边的箭头），每个小节的折叠状态单独记在 UserDefaults 里。
+struct CollapsibleSection<Content: View, Header: View>: View {
+    private let content: Content
+    private let header: Header
+    @AppStorage private var collapsed: Bool
+
+    init(_ id: String, @ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header) {
+        self.content = content()
+        self.header = header()
+        _collapsed = AppStorage(wrappedValue: false, CollapsibleSection.key(id))
+    }
+
+    static func key(_ id: String) -> String { "sidebar.collapsed." + id }
+
+    var body: some View {
+        Section(isExpanded: Binding(get: { !collapsed }, set: { collapsed = !$0 })) {
+            content
+        } header: {
+            header
+        }
+    }
+}
+
+extension CollapsibleSection where Header == Text {
+    init(_ id: String, title: LocalizedStringKey, @ViewBuilder content: () -> Content) {
+        self.init(id, content: content) { Text(title) }
     }
 }

@@ -228,7 +228,7 @@ struct DetailView: View {
                 FolderWallView()
                     .proGated(.folderWall)
             case .category(let category):
-                BrowserView(title: category.title, showsOCRTools: category == .images)
+                BrowserView(title: category.libraryTitle, showsOCRTools: category == .images)
             case .largeFiles:
                 BrowserView(title: String(localized: "大文件"), showsOCRTools: false)
             case .screenshots:

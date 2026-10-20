@@ -66,7 +66,7 @@ struct DuplicatesView: View {
             .padding(.vertical, 24)
         }
         .scrollContentBackground(.hidden)
-        .navigationTitle("重复文件")
+        .navigationTitle(tab == .exact ? String(localized: "重复文件") : String(localized: "相似照片"))
         .task(id: tab) { startIfNeeded() }
         .confirmationDialog(
             "将 \(allExtras.count) 个多余的副本移到废纸篓？",
