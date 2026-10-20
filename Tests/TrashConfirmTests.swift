@@ -13,4 +13,9 @@ final class TrashConfirmTests: XCTestCase {
         XCTAssertTrue(TrashConfirm.needsConfirm(count: 3, bytes: 5_000_000_000))
         XCTAssertTrue(TrashConfirm.needsConfirm(count: 500, bytes: 50_000_000_000))
     }
+
+    func testUnknownFolderSizeConfirms() {
+        XCTAssertTrue(TrashConfirm.needsConfirm(count: 1, bytes: 0, unknownFolderSize: true))
+        XCTAssertFalse(TrashConfirm.needsConfirm(count: 1, bytes: 0, unknownFolderSize: false))
+    }
 }

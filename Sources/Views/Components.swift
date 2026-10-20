@@ -57,6 +57,8 @@ struct FileMenuContext {
     var rename: (() -> Void)? = nil
     /// 在文件夹墙上：多一项「从文件夹墙移除」。
     var removeFromWall: (() -> Void)? = nil
+    /// 主窗口的文件列表（网格 / 列表）：单个项目「重命名…」原地改名；其他地方弹重命名对话框。
+    var inBrowser = false
 }
 
 /// 右键菜单：主窗口的网格 / 列表 / 首页 / 简介、暂存架页、悬浮和刘海暂存架、菜单栏、文件夹墙全用这一个，
@@ -86,7 +88,7 @@ extension FileContextMenu where Extra == EmptyView {
 
     /// 只带快速查看的老写法（主窗口列表）。
     init(items: [FileItem], preview: ((FileItem) -> Void)?) {
-        self.init(items: items, context: FileMenuContext(preview: preview)) { EmptyView() }
+        self.init(items: items, context: FileMenuContext(preview: preview, inBrowser: true)) { EmptyView() }
     }
 }
 
@@ -161,7 +163,13 @@ private struct FileMenuItems<Extra: View>: View {
         } else if items.count == 1 || !files.isEmpty {
             Button(files.count > 1 ? String(localized: "批量重命名 \(files.count) 个文件…") : String(localized: "重命名…")) {
                 let list = items
-                inMain { store.beginRename(list) }
+                if list.count == 1 {
+                    // 单个：主窗口列表里原地改名，其他地方（首页、快速搜索、暂存架、简介……）弹重命名对话框，不用先切到主窗口。
+                    let inline = context.inBrowser
+                    DispatchQueue.main.async { store.beginRename(list, inline: inline) }
+                } else {
+                    inMain { store.beginRename(list) }
+                }
             }
         }
         if !folders.isEmpty, folders.count == items.count {

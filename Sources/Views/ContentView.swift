@@ -118,7 +118,11 @@ struct ContentView: View {
             }
             Button("取消", role: .cancel) { store.pendingTrash = [] }
         } message: {
-            Text("一次移动的比较多，先确认一下。随时可以从废纸篓里恢复，只在 iCloud 云端的文件会被跳过。")
+            if let note = store.pendingTrashNote {
+                Text(note)
+            } else {
+                Text("一次移动的比较多，先确认一下。随时可以从废纸篓里恢复，只在 iCloud 云端的文件会被跳过。")
+            }
         }
         .alert(
             "提示",

@@ -283,23 +283,26 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var listCap: Int?
     /// 截断时是按什么顺序取的前 N 个。
     @Published private(set) var listOrder: ListTruncation.Order = .recent
+    /// 读这一页时取回来的个数：之后移到废纸篓几个（变成 2999）横幅也不消失，列表仍然是截断的。
+    @Published private(set) var listLoadedCount = 0
 
     /// 列表被截断时顶部那一条提示（没截断为 nil）。
     var truncationBanner: String? {
         guard let cap = listCap,
-              let total = ListTruncation.hiddenTotal(shown: items.count, total: listTotal, cap: cap) else { return nil }
+              let total = ListTruncation.hiddenTotal(shown: listLoadedCount, total: listTotal, cap: cap) else { return nil }
         return ListTruncation.bannerText(cap: cap, total: total, order: listOrder)
     }
 
     /// 截断时的总数（副标题写「3000 / 12480 个项目」）。
     var truncatedTotal: Int? {
-        ListTruncation.hiddenTotal(shown: items.count, total: listTotal, cap: listCap)
+        ListTruncation.hiddenTotal(shown: listLoadedCount, total: listTotal, cap: listCap)
     }
 
     private func applyTruncation(_ page: ListPage) {
         if listTotal != page.total { listTotal = page.total }
         if listCap != page.cap { listCap = page.cap }
         if listOrder != page.order { listOrder = page.order }
+        if listLoadedCount != page.items.count { listLoadedCount = page.items.count }
     }
 
     @Published var items: [FileItem] = []
@@ -587,6 +590,8 @@ final class LibraryStore: ObservableObject {
     func reload() {
         loadTask?.cancel()
         selectedIDs = []
+        // 换页 / 进出文件夹 / 刷新：不再处在原地改名里（输入框消失时会把已输入的名字提交，和访达一样）。
+        inlineRenamePath = nil
         if skipNextReload { return }
         quietTask?.cancel()
         updateFolderWatch()
@@ -935,6 +940,24 @@ final class LibraryStore: ObservableObject {
         cleanupReview = kind
     }
 
+    /// 侧边栏「清理」再点一次：回到清理概览（从空间占用 / 清理记录 / 自动整理标签页，或正在审阅的卡片）。
+    func reselectCleanup() {
+        if selection != .cleanup {
+            selection = .cleanup
+        } else if cleanupReview != nil {
+            cleanupReview = nil
+        }
+    }
+
+    /// 侧边栏「重复与相似」再点一次：回到「重复文件」标签。
+    func reselectDuplicates() {
+        if selection != .duplicates {
+            selection = .duplicates
+        } else if duplicatesTab != .exact {
+            duplicatesTab = .exact
+        }
+    }
+
     func showCopied(_ preview: CopiedPreview) {
         copiedPreview = preview
         Task {
@@ -1089,28 +1112,79 @@ final class LibraryStore: ObservableObject {
     /// 正在原地改名的文件（网格 / 列表里名字变成输入框）。
     @Published var inlineRenamePath: String?
 
-    /// 回车 / 右键「重命名…」：列表里只选了一个就原地改名（文件夹也行，和访达一样），选了几个文件就打开批量重命名。
-    func beginRename(_ list: [FileItem]) {
-        if list.count == 1, let item = list.first, items.contains(where: { $0.id == item.id }) {
-            selectedIDs = [item.id]
-            inlineRenamePath = item.path
+    /// 真的在原地改名：路径还在当前列表里（文件被外部删掉 / 改名、列表刷新后就不算，键盘和菜单不再被锁住）。
+    var isInlineRenaming: Bool {
+        guard let path = inlineRenamePath else { return false }
+        return items.contains { $0.path == path }
+    }
+
+    /// 回车 / 右键「重命名…」：主窗口列表里只选了一个就原地改名（文件夹也行，和访达一样），选了几个文件就打开批量重命名。
+    /// 不在主窗口列表里（首页、快速搜索、暂存架、简介……）的单个项目弹一个重命名对话框，走同一套改名逻辑。
+    func beginRename(_ list: [FileItem], inline: Bool = false) {
+        if list.count == 1, let item = list.first {
+            if refuseProtected([item.path]) { return }
+            if inline, items.contains(where: { $0.id == item.id }) {
+                selectedIDs = [item.id]
+                inlineRenamePath = item.path
+            } else {
+                renameWithDialog(item)
+            }
             return
         }
         let files = list.filter { !$0.isDirectory }
-        if !files.isEmpty { renameItems = files }
+        if files.isEmpty {
+            showToast(String(localized: "批量重命名只支持文件"))
+            return
+        }
+        renameItems = files
     }
 
     /// 原地改名完成（name 为 nil 表示取消）。⌘Z 可以撤销。
+    /// 输入框被换页 / 刷新拿掉时也会调到这里（这时 inlineRenamePath 已经清掉了）：照样提交，和访达「离开就算确定」一样。
     func commitInlineRename(_ item: FileItem, to name: String?) {
-        guard inlineRenamePath == item.path else { return }
-        inlineRenamePath = nil
+        if inlineRenamePath == item.path { inlineRenamePath = nil }
         guard let name else { return }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, trimmed != item.name else { return }
+        // 改名可能发生在视图更新当中（输入框消失时），弹窗、改列表都放到下一轮。
+        DispatchQueue.main.async { [weak self] in
+            self?.performRename(item, to: trimmed)
+        }
+    }
+
+    /// 改名的公共部分：检查名字、受保护的文件夹、扩展名变化（和访达一样先问），然后改名、登记 ⌘Z。
+    func performRename(_ item: FileItem, to name: String) {
+        var trimmed = name
+        // 文件已经被别处删掉 / 改名了：不再动它。
+        guard FileManager.default.fileExists(atPath: item.path) else { return }
+        if refuseProtected([item.path]) { return }
         guard !trimmed.contains("/"), !trimmed.hasPrefix(".") || item.name.hasPrefix(".") else {
             alertMessage = String(localized: "名称里不能有「/」，也不能以「.」开头。")
             return
         }
+        // 扩展名被删掉 / 改掉：问一下保留原来的还是用新的（普通文件夹不问；App 这类包也问，和访达一样）。
+        let oldExt = (item.name as NSString).pathExtension
+        let newExt = (trimmed as NSString).pathExtension
+        let plainFolder = item.isDirectory
+        if !plainFolder, !oldExt.isEmpty, oldExt.lowercased() != newExt.lowercased() {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            if newExt.isEmpty {
+                alert.messageText = String(localized: "要移除扩展名「.\(oldExt)」吗？")
+                alert.informativeText = String(localized: "没有扩展名，文件可能会用别的 App 打开，或者打不开。")
+                alert.addButton(withTitle: String(localized: "保留 .\(oldExt)"))
+                alert.addButton(withTitle: String(localized: "移除"))
+            } else {
+                alert.messageText = String(localized: "要把扩展名从「.\(oldExt)」改成「.\(newExt)」吗？")
+                alert.informativeText = String(localized: "改了扩展名，文件可能会用别的 App 打开，或者打不开。")
+                alert.addButton(withTitle: String(localized: "保留 .\(oldExt)"))
+                alert.addButton(withTitle: String(localized: "使用 .\(newExt)"))
+            }
+            if alert.runModal() == .alertFirstButtonReturn {
+                trimmed += "." + oldExt
+            }
+        }
+        guard trimmed != item.name else { return }
         let src = item.url
         let dst = src.deletingLastPathComponent().appendingPathComponent(trimmed)
         guard !FileManager.default.fileExists(atPath: dst.path) || dst.path.lowercased() == src.path.lowercased() else {
@@ -1132,8 +1206,59 @@ final class LibraryStore: ObservableObject {
             remember([renamed])
             items[index] = renamed
             selectedIDs = [renamed.id]
+        } else {
+            // 不在当前列表里（首页、快速搜索、暂存架……）：旧路径从各处的列表里拿掉，首页下次刷新会显示新名字。
+            forget(paths: [src.path])
         }
         filesWritten([dst])
+    }
+
+    /// 不在主窗口列表里的单个项目：弹一个重命名对话框（主名部分预先选中，和访达一样）。
+    func renameWithDialog(_ item: FileItem) {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = item.isDirectory ? String(localized: "重命名文件夹") : String(localized: "重命名")
+        alert.informativeText = item.name
+        alert.addButton(withTitle: String(localized: "重命名"))
+        alert.addButton(withTitle: String(localized: "取消"))
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 24))
+        field.stringValue = item.name
+        field.setAccessibilityLabel(String(localized: "新名称"))
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+        let stem = Self.renameStemLength(item)
+        // 对话框弹出后（模态循环里）再选中主名。
+        DispatchQueue.main.async {
+            field.currentEditor()?.selectedRange = NSRange(location: 0, length: stem)
+        }
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let trimmed = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != item.name else { return }
+        performRename(item, to: trimmed)
+    }
+
+    /// 改名时预先选中的长度（UTF-16）：文件只选主名，不选「.pdf」；没有扩展名的文件夹选全部。
+    nonisolated static func renameStemLength(_ item: FileItem) -> Int {
+        let name = item.name as NSString
+        let ext = name.pathExtension
+        guard !item.isDirectory, !ext.isEmpty, name.length > ext.utf16.count + 1 else { return name.length }
+        return name.deletingPathExtension.utf16.count
+    }
+
+    // MARK: 受保护的文件夹
+
+    /// 个人文件夹、桌面、文稿、下载、资源库、应用程序、磁盘根……（访达也不让动）。
+    nonisolated static func isProtectedPath(_ path: String) -> Bool {
+        PathLogic.isProtected(URL(fileURLWithPath: path).standardizedFileURL.path, home: NSHomeDirectory())
+    }
+
+    /// 里面有受保护的文件夹：整批都不做，弹提示，返回 true。
+    @discardableResult
+    func refuseProtected(_ paths: [String]) -> Bool {
+        guard let path = paths.first(where: Self.isProtectedPath) else { return false }
+        let name = FileManager.default.displayName(atPath: path)
+        alertMessage = String(localized: "「\(name)」是 macOS 需要的文件夹，不能移到废纸篓、移动或改名。")
+        return true
     }
 
     /// ⇧⌘N：在正在看的文件夹里新建「未命名文件夹」，马上原地改名；⌘Z 撤销（文件夹还是空的就移到废纸篓）。
@@ -1192,12 +1317,15 @@ final class LibraryStore: ObservableObject {
     /// 把文件拖进拾掇里的某个文件夹（浏览视图的文件夹格子 / 行、当前文件夹的空白处、路径栏、文件夹墙的卡片）：
     /// 移动，按住 ⌥ 拷贝。走和「移动到…」同一条路（后台进行、同名自动加编号、不覆盖、记进清理记录），⌘Z / 小提示上的「撤销」可以放回。
     func transferDropped(_ urls: [URL], into folder: URL, copy: Bool) {
-        let target = folder.standardizedFileURL.path
+        // 都解析掉符号链接再比（/tmp ↔ /private/tmp），不然从访达拖进同一个文件夹会原地变成「xxx 2」。
+        func real(_ url: URL) -> String { url.resolvingSymlinksInPath().standardizedFileURL.path }
+        let target = real(folder)
         let list = urls.filter { url in
-            let path = url.standardizedFileURL.path
+            let parent = real(url.deletingLastPathComponent())
+            let path = (parent as NSString).appendingPathComponent(url.lastPathComponent)
             // 文件夹自己、它的上层文件夹：不动；移动时已经在这个文件夹里的也不动。
             guard path != target, !target.hasPrefix(path + "/") else { return false }
-            return copy || url.deletingLastPathComponent().standardizedFileURL.path != target
+            return copy || parent != target
         }
         guard !list.isEmpty else { return }
         guard !ShelfTransfer.shared.isRunning else {
@@ -1312,14 +1440,35 @@ final class LibraryStore: ObservableObject {
     // MARK: - 废纸篓
 
     /// 「移到废纸篓」按钮：少量的直接移（小提示上可以撤销），大批量（≥100 个或 ≥5 GB）先确认。
-    func requestTrash(_ list: [FileItem]) {
-        guard !list.isEmpty else { return }
-        if TrashConfirm.needsConfirm(count: list.count, bytes: list.reduce(0) { $0 + $1.size }) {
+    /// 文件夹按已经算好的大小算；还没算出大小的文件夹也先确认（不在主线程现算）。alwaysConfirm：总是先问（暂存架的「全部」）。
+    func requestTrash(_ list: [FileItem], alwaysConfirm: Bool = false, note: String? = nil) {
+        guard !list.isEmpty, !refuseProtected(list.map(\.path)) else { return }
+        let size = Self.trashSize(list)
+        if alwaysConfirm || TrashConfirm.needsConfirm(count: list.count, bytes: size.bytes, unknownFolderSize: size.unknownFolder) {
+            pendingTrashNote = note ?? (size.unknownFolder && list.count < TrashConfirm.countThreshold
+                ? String(localized: "里面有文件夹，大小还没算出来，先确认一下。随时可以从废纸篓里恢复。") : nil)
             pendingTrash = list
         } else {
             moveToTrash(list)
         }
     }
+
+    /// 一批要移到废纸篓的东西有多大：文件用自己的大小，文件夹用 FolderSizeStore 里已经算好的（没有就记 unknownFolder）。
+    static func trashSize(_ list: [FileItem]) -> (bytes: Int64, unknownFolder: Bool) {
+        var bytes: Int64 = 0
+        var unknown = false
+        for item in list {
+            if item.isDirectory {
+                if let known = FolderSizeStore.shared.knownSize(item.path) { bytes += known } else { unknown = true }
+            } else {
+                bytes += item.size
+            }
+        }
+        return (bytes, unknown)
+    }
+
+    /// 确认框里的说明（nil 用默认的「一次移动的比较多」）。
+    @Published var pendingTrashNote: String?
 
     /// 正在移到废纸篓的文件数（大批量时界面上显示进度）。
     @Published private(set) var trashingCount = 0
@@ -1345,7 +1494,7 @@ final class LibraryStore: ObservableObject {
     /// origin：在主窗口以外的哪块面板里操作的（nil 时按前台窗口判断），带「撤销」的小提示也显示在那里。
     func moveToTrash(_ list: [FileItem], origin: NSWindow? = nil,
                      completion: (@MainActor (Set<String>) -> Void)? = nil) {
-        guard !list.isEmpty else {
+        guard !list.isEmpty, !refuseProtected(list.map(\.path)) else {
             completion?([])
             return
         }

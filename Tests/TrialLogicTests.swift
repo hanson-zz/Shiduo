@@ -53,12 +53,43 @@ final class TrialLogicTests: XCTestCase {
 
     func testExpiryAnnouncedOncePerTrial() {
         let start = Date(timeIntervalSince1970: 1_800_000_000)
-        XCTAssertTrue(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: false, trialStart: start, announced: nil))
+        let after = start.addingTimeInterval(Double(LicenseConfig.trialDays + 1) * day)
+        XCTAssertTrue(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: false, trialStart: start, announced: nil, now: after))
         XCTAssertFalse(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: false, trialStart: start,
-                                                  announced: TrialExpiry.marker(for: start)))
+                                                  announced: TrialExpiry.marker(for: start), now: after))
         XCTAssertFalse(TrialExpiry.shouldAnnounce(state: .trial(daysLeft: 1), activated: false, trialStart: start, announced: nil))
         XCTAssertFalse(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: true, trialStart: start, announced: nil))
         XCTAssertFalse(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: false, trialStart: nil, announced: nil))
+    }
+
+    /// 付费用户离线太久 / 时钟异常：要联网校验，不是「试用结束」，也不能开始试用；解绑 / 失效的不说「试用已结束」。
+    func testPaidUsersNeverToldTrialEnded() {
+        XCTAssertEqual(ProAccess.of(.free, needsCheck: true), .needsCheck)
+        XCTAssertEqual(ProAccess.of(.expiredTrial, needsCheck: true), .needsCheck)
+        XCTAssertEqual(ProAccess.of(.expiredTrial, everActivated: true), .licenseInactive)
+        XCTAssertEqual(ProAccess.of(.free, everActivated: true), .licenseInactive)
+        XCTAssertEqual(ProAccess.of(.pro, needsCheck: true), .unlocked)
+        XCTAssertTrue(ProAccess.needsCheck.isLockedOut)
+        XCTAssertTrue(ProAccess.licenseInactive.isLockedOut)
+        XCTAssertTrue(ProAccess.trialEnded.isLockedOut)
+        XCTAssertFalse(ProAccess.offerTrial.isLockedOut)
+        XCTAssertFalse(TrialStartRule.canStart(state: .free, trialStart: nil, activated: true))
+        XCTAssertFalse(TrialStartRule.canStart(state: .free, trialStart: nil, everActivated: true))
+    }
+
+    func testExpiryNotAnnouncedForWrongReasons() {
+        let start = Date(timeIntervalSince1970: 1_800_000_000)
+        let after = start.addingTimeInterval(Double(LicenseConfig.trialDays + 1) * day)
+        XCTAssertTrue(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: false, trialStart: start, announced: nil, now: after))
+        // 激活过（解绑 / 授权码失效）
+        XCTAssertFalse(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: false, trialStart: start, announced: nil,
+                                                  everActivated: true, now: after))
+        // 时钟往回调
+        XCTAssertFalse(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: false, trialStart: start, announced: nil,
+                                                  clockRolledBack: true, now: after))
+        // 试用其实还没到期
+        XCTAssertFalse(TrialExpiry.shouldAnnounce(state: .expiredTrial, activated: false, trialStart: start, announced: nil,
+                                                  now: start.addingTimeInterval(day)))
     }
 
     func testStoppedFeaturesList() {

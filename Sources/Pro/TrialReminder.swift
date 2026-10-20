@@ -149,7 +149,9 @@ final class TrialExpiryNotice: ObservableObject {
         let start = LicenseKeychain.date(.trialStart)
         let announced = UserDefaults.standard.string(forKey: Self.announcedKey)
         guard TrialExpiry.shouldAnnounce(state: license.state, activated: license.isActivated,
-                                         trialStart: start, announced: announced),
+                                         trialStart: start, announced: announced,
+                                         everActivated: license.everActivated,
+                                         clockRolledBack: license.clockRolledBack),
               let start else {
             if license.isPro { showSheet = false }
             return
@@ -158,6 +160,18 @@ final class TrialExpiryNotice: ObservableObject {
         stopped = TrialExpiry.stopped(Self.currentUsage())
         showSheet = true
         await notify()
+    }
+
+    /// 点「试用已结束」通知：再弹一次面板（已经激活了就改开 Pro 页）。
+    func reopen() {
+        let license = LicenseManager.shared
+        guard !license.isPro else { return }
+        if license.state == .expiredTrial && license.access == .trialEnded {
+            if stopped.isEmpty { stopped = TrialExpiry.stopped(Self.currentUsage()) }
+            showSheet = true
+        } else {
+            license.showPaywall = true
+        }
     }
 
     /// 试用期间打开过的 Pro 功能（开关还开着、规则还在）。

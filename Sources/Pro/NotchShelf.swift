@@ -206,7 +206,8 @@ final class NotchShelfController: NSObject, ObservableObject {
 
     /// 鼠标移动时调用：停在刘海处一小会儿就展开。
     func mouseMoved(to point: NSPoint) {
-        guard NotchShelfPrefs.hoverToOpen, !isVisible,
+        // 上锁时悬停不弹卡片（鼠标经过刘海、菜单栏图标就弹很烦）；只认拖文件、点刘海和快捷键。
+        guard NotchShelfPrefs.hoverToOpen, !isVisible, !FloatingShelfController.shared.isLocked,
               let screen = NSScreen.screens.first(where: { NSMouseInRect(point, $0.frame, false) }),
               ShelfStyle.usesNotch(on: screen) else {
             cancelHover()
@@ -510,6 +511,18 @@ struct NotchShelfView: View {
         }
     }
 
+    /// 上锁的原因：试用结束 / 需要联网校验 / 授权失效（付费用户不说「试用已结束」）。
+    private var lockedReason: String {
+        switch license.access {
+        case .needsCheck:
+            return String(localized: "这台 Mac 已激活 Pro，但离线太久或系统时间不对，需要联网校验一次授权。")
+        case .licenseInactive:
+            return String(localized: "这台 Mac 的 Pro 授权已失效（已解绑或授权码不可用）。暂存架里的文件还在，可以在主窗口的「暂存架」里继续用。")
+        default:
+            return String(localized: "拾掇 Pro 试用已结束。暂存架里的文件还在，可以在主窗口的「暂存架」里继续用。")
+        }
+    }
+
     /// 试用结束后：碰到刘海不再悄悄没反应，而是展开这张上锁卡片，说明原因，可以购买、输入授权码或关掉这个功能。
     private var lockedBody: some View {
         VStack(spacing: 10) {
@@ -521,27 +534,44 @@ struct NotchShelfView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("刘海暂存架已暂停")
                         .font(.headline)
-                    Text("拾掇 Pro 试用已结束。暂存架里的文件还在，可以在主窗口的「暂存架」里继续用。")
+                    Text(lockedReason)
                         .font(.callout)
                         .foregroundStyle(.white.opacity(0.7))
                         .fixedSize(horizontal: false, vertical: true)
+                    if license.access == .needsCheck, let message = license.errorMessage {
+                        Text(message)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 Spacer(minLength: 8)
                 VStack(spacing: 6) {
-                    Button {
-                        controller.hide()
-                        NSWorkspace.shared.open(LicenseConfig.buyURL)
-                    } label: {
-                        Text("购买 Pro · \(ProPricing.price)")
-                            .frame(minWidth: 150)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    Button {
-                        controller.hide()
-                        MainWindow.show { LicenseManager.shared.showPaywall = true }
-                    } label: {
-                        Text("输入授权码…")
-                            .frame(minWidth: 150)
+                    if license.access == .needsCheck {
+                        Button {
+                            Task { await license.verifyNow() }
+                        } label: {
+                            Text("立即校验")
+                                .frame(minWidth: 150)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(license.isWorking)
+                    } else {
+                        Button {
+                            controller.hide()
+                            NSWorkspace.shared.open(LicenseConfig.buyURL)
+                        } label: {
+                            Text("购买 Pro · \(ProPricing.price)")
+                                .frame(minWidth: 150)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        Button {
+                            controller.hide()
+                            MainWindow.show { LicenseManager.shared.showPaywall = true }
+                        } label: {
+                            Text("输入授权码…")
+                                .frame(minWidth: 150)
+                        }
                     }
                 }
                 .controlSize(.regular)

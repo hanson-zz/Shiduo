@@ -33,7 +33,7 @@ final class MediaTools: ObservableObject {
         }
     }
 
-    /// 不是 Pro 时打开付费页，返回 false。第一次用 Pro 功能时自动开始试用。
+    /// 不是 Pro 时打开付费页，返回 false。试用不会自动开始，要在付费页点「开始 7 天免费试用」。
     static func requirePro() -> Bool {
         ShelfTools.requirePro()
     }

@@ -124,6 +124,11 @@ final class CleanupReminderDelegate: NSObject, UNUserNotificationCenterDelegate 
             Task { @MainActor in
                 TrialReminder.shared.enterLicense()
             }
+        } else if id == trialEndedNotificationID {
+            // 「试用已结束」通知：打开主窗口，弹出试用结束面板（可以购买或输入授权码）。
+            Task { @MainActor in
+                MainWindow.show { TrialExpiryNotice.shared.reopen() }
+            }
         }
         completionHandler()
     }

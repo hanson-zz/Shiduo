@@ -134,11 +134,14 @@ struct SidebarView: View {
                     .badge(cleanup.totalBytes > 0 ? Text(cleanup.totalBytes.byteText).foregroundColor(.green) : nil)
                     .tag(cleanupRow)
                     .help("可以清理的文件、空间占用图、清理记录和自动整理")
+                    // 在空间占用 / 清理记录 / 自动整理标签页时，这一行的 tag 就是当前页，List 不会触发变化：再点一次回到概览。
+                    .simultaneousGesture(TapGesture().onEnded { store.reselectCleanup() })
                 // 重复文件和相似照片是同一个页面（页内切换），侧边栏只占一行。
                 Label("重复与相似", systemImage: "doc.on.doc")
                     .badge(duplicates.hasScanned && duplicates.reclaimable > 0 ? Text(duplicates.reclaimable.byteText).foregroundColor(.green) : nil)
                     .tag(duplicatesRow)
                     .help("完全相同的副本，以及看起来差不多的照片")
+                    .simultaneousGesture(TapGesture().onEnded { store.reselectDuplicates() })
             }
 
             if !chat.installedApps.isEmpty {

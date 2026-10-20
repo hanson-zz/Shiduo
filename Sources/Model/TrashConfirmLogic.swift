@@ -7,7 +7,8 @@ enum TrashConfirm {
     static let countThreshold = 100
     static let bytesThreshold: Int64 = 5 * 1_000_000_000
 
-    static func needsConfirm(count: Int, bytes: Int64) -> Bool {
-        count >= countThreshold || bytes >= bytesThreshold
+    /// unknownFolderSize：里面有还没算出大小的文件夹（文件夹的 size 是 0，可能有几十 GB）——也先确认，不在主线程现算。
+    static func needsConfirm(count: Int, bytes: Int64, unknownFolderSize: Bool = false) -> Bool {
+        count >= countThreshold || bytes >= bytesThreshold || unknownFolderSize
     }
 }

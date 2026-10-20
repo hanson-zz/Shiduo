@@ -44,6 +44,8 @@ enum LicenseKeychain {
         case trialStart
         /// 见过的最晚时间（防止把系统时间往回调来重置试用、跳过校验）。
         case maxSeen
+        /// 这台 Mac 激活过授权码（解绑 / 授权码失效后不再说「试用已结束」，也不能再开始试用）。
+        case everActivated
     }
 
     static func get(_ account: Account) -> String? {
@@ -330,6 +332,8 @@ final class LicenseManager: ObservableObject {
     @Published private(set) var lastValidated: Date?
     /// 已激活，但需要联网校验才能继续用 Pro。
     @Published private(set) var needsOnlineCheck = false
+    /// 这台 Mac 激活过授权码（现在可能已解绑或被判无效）。
+    @Published private(set) var everActivated = false
 
     /// 这次运行里上次联网校验成功的单调时间（ProcessInfo.systemUptime）。
     private var validatedUptime: TimeInterval?
@@ -344,19 +348,29 @@ final class LicenseManager: ObservableObject {
 
     /// 还没开始过试用，也没有激活。
     var canStartTrial: Bool {
-        TrialStartRule.canStart(state: state, trialStart: LicenseKeychain.date(.trialStart))
+        TrialStartRule.canStart(state: state, trialStart: LicenseKeychain.date(.trialStart),
+                                activated: isActivated, everActivated: everActivated)
     }
 
     /// 碰到 Pro 功能时该显示什么（试用从不自动开始）。
-    var access: ProAccess { ProAccess.of(state) }
+    var access: ProAccess { ProAccess.of(state, needsCheck: isActivated && needsOnlineCheck, everActivated: everActivated) }
+
+    /// 本机时间被往回调过（试用结束的提醒先不发，也不记成已提醒）。
+    var clockRolledBack: Bool {
+        LicenseEvaluator.clockRolledBack(now: Date(), maxSeen: LicenseKeychain.date(.maxSeen))
+    }
 
     var statusText: String {
+        switch access {
+        case .needsCheck: return String(localized: "需要联网校验授权")
+        case .licenseInactive: return String(localized: "这台 Mac 未激活 Pro")
+        case .unlocked, .offerTrial, .trialEnded: break
+        }
         switch state {
-        case .free: return needsOnlineCheck ? String(localized: "需要联网校验授权") : String(localized: "免费版")
+        case .free: return String(localized: "免费版")
         case .trial(let days): return String(localized: "Pro 试用中，还剩 \(days) 天")
         case .pro: return String(localized: "拾掇 Pro 已激活")
-        case .expiredTrial:
-            return needsOnlineCheck ? String(localized: "需要联网校验授权") : String(localized: "试用已结束")
+        case .expiredTrial: return String(localized: "试用已结束")
         }
     }
 
@@ -373,6 +387,14 @@ final class LicenseManager: ObservableObject {
         let now = Date()
         let key = LicenseKeychain.get(.licenseKey)
         isActivated = key != nil && LicenseKeychain.get(.instanceID) != nil
+        var ever = LicenseKeychain.get(.everActivated) != nil
+        if isActivated && !ever {
+            LicenseKeychain.set("1", for: .everActivated)
+            ever = true
+        }
+        // 授权码还在、只是没有激活实例：服务器判过不可用（以前的版本没有 everActivated 标记）。
+        ever = ever || key != nil
+        if everActivated != ever { everActivated = ever }
         maskedKey = key.map(Self.mask)
         lastValidated = LicenseKeychain.date(.lastValidated)
         var maxSeen = LicenseKeychain.date(.maxSeen)

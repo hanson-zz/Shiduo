@@ -370,7 +370,8 @@ struct SettingsView: View {
         Section {
             ProHintRow()
             Toggle("在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）", isOn: $menuBarEnabled)
-                .disabled(!license.isPro)
+                // 上锁后仍然可以关掉（和悬浮暂存架一样），只是不能再打开。
+                .disabled(!license.isPro && !menuBarEnabled)
             Toggle("在菜单栏图标旁显示可腾出的空间", isOn: $menuBarShowsReclaimable)
                 .disabled(!license.isPro || !menuBarEnabled)
             Toggle("每周提醒我清理", isOn: $reminderEnabled)
@@ -438,15 +439,27 @@ struct SettingsView: View {
 struct ProHintRow: View {
     @EnvironmentObject private var license: LicenseManager
 
+    private var hint: String {
+        switch license.access {
+        case .needsCheck: return String(localized: "需要联网校验一次授权，这些 Pro 设置暂时不能改")
+        case .licenseInactive: return String(localized: "这台 Mac 未激活 Pro，这些 Pro 设置暂时不能改")
+        case .trialEnded: return String(localized: "试用已结束，这些 Pro 设置暂时不能改")
+        case .unlocked, .offerTrial: return String(localized: "这些是 Pro 功能")
+        }
+    }
+
     var body: some View {
         if !license.isPro {
             HStack(spacing: 8) {
                 ProBadge()
-                Text(license.state == .expiredTrial ? String(localized: "试用已结束，这些 Pro 设置暂时不能改") : String(localized: "这些是 Pro 功能"))
+                Text(hint)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                 Spacer()
-                if license.canStartTrial {
+                if license.access == .needsCheck {
+                    Button("立即校验") { Task { await license.verifyNow() } }
+                        .disabled(license.isWorking)
+                } else if license.canStartTrial {
                     Button("开始 \(LicenseConfig.trialDays) 天免费试用") { license.startTrial() }
                 } else {
                     Button("了解 Pro") { MainWindow.show { license.showPaywall = true } }

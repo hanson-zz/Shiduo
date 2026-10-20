@@ -25,11 +25,12 @@ enum FullDiskAccess {
 /// 资源库里的 Containers 这些文件夹读不到，算出来的会偏小。切回拾掇时重新检查，授权后自动消失。
 struct FullDiskAccessNote: View {
     var compact = false
-    @State private var granted = FullDiskAccess.isGranted
+    /// 用全局的监视器（切回拾掇时它会重新检查），不在每次重绘时都在主线程读一次权限。
+    @ObservedObject private var monitor = FullDiskAccessMonitor.shared
 
     var body: some View {
         Group {
-            if !granted {
+            if !monitor.granted {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.shield")
                         .foregroundStyle(.orange)
@@ -47,9 +48,6 @@ struct FullDiskAccessNote: View {
                 .background(compact ? Color.clear : Color.orange.opacity(0.07))
                 .accessibilityElement(children: .combine)
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            granted = FullDiskAccess.isGranted
         }
     }
 }

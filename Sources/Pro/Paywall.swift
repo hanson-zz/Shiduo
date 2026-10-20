@@ -414,6 +414,25 @@ struct ProLockedView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             switch license.access {
+            case .needsCheck:
+                // 已激活的付费用户离线太久 / 系统时间不对：要联网校验，不是试用结束，也不提供开始试用。
+                NeedsOnlineCheckActions()
+            case .licenseInactive:
+                Text("这台 Mac 的 Pro 授权已失效（已解绑，或授权码不可用）。重新输入授权码就能继续使用。")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                HStack(spacing: 10) {
+                    Button {
+                        license.showPaywall = true
+                    } label: {
+                        Text("输入授权码…")
+                            .frame(minWidth: 140)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button("购买 Pro · \(ProPricing.price)") { NSWorkspace.shared.open(LicenseConfig.buyURL) }
+                }
+                .controlSize(.large)
             case .trialEnded:
                 Text("\(LicenseConfig.trialDays) 天试用已经结束。升级到拾掇 Pro 就能继续使用。")
                     .font(.callout)
@@ -429,7 +448,7 @@ struct ProLockedView: View {
                     Button("输入授权码…") { license.showPaywall = true }
                 }
                 .controlSize(.large)
-            default:
+            case .unlocked, .offerTrial:
                 Text("这是拾掇 Pro 的功能，可以先免费试用 \(LicenseConfig.trialDays) 天，不用注册。")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -457,5 +476,43 @@ struct ProLockedView: View {
         .padding(40)
         .glassCard(tint: feature.tint, radius: 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// 已激活、需要联网校验时的说明和「立即校验」按钮（上锁页、菜单栏卡片、刘海卡片共用）。
+struct NeedsOnlineCheckActions: View {
+    @ObservedObject private var license = LicenseManager.shared
+    var compact = false
+
+    init(compact: Bool = false) {
+        self.compact = compact
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("这台 Mac 已经激活拾掇 Pro，但离线太久或系统时间不对，需要联网校验一次授权。")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(compact ? .leading : .center)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                Button {
+                    Task { await license.verifyNow() }
+                } label: {
+                    Text("立即校验")
+                        .frame(minWidth: compact ? 0 : 140, maxWidth: compact ? .infinity : nil)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(license.isWorking)
+                if license.isWorking { ProgressView().controlSize(.small) }
+            }
+            .controlSize(compact ? .regular : .large)
+            if let message = license.errorMessage {
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }

@@ -371,7 +371,8 @@ struct CleanupReviewPage: View {
     /// 少量的直接移到废纸篓（小提示上可以撤销）；大批量（≥100 个或 ≥5 GB）先确认。
     private func trash(_ list: [FileItem]) {
         guard !list.isEmpty else { return }
-        if TrashConfirm.needsConfirm(count: list.count, bytes: list.reduce(0) { $0 + $1.size }) {
+        let size = LibraryStore.trashSize(list)
+        if TrashConfirm.needsConfirm(count: list.count, bytes: size.bytes, unknownFolderSize: size.unknownFolder) {
             confirm = list
         } else {
             store.moveToTrash(list)

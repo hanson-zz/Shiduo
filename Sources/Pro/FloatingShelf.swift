@@ -21,9 +21,9 @@ final class FloatingShelfController: NSObject {
         UserDefaults.standard.bool(forKey: Self.enabledKey) && (LicenseManager.shared.isPro || isLocked)
     }
 
-    /// 试用结束、开关还开着：触发时只显示上锁卡片（购买 / 输入授权码 / 关掉这个功能）。
+    /// 试用结束 / 付费用户需要联网校验 / 授权失效、开关还开着：触发时只显示上锁卡片（购买 / 输入授权码 / 立即校验 / 关掉这个功能）。
     var isLocked: Bool {
-        LicenseManager.shared.state == .expiredTrial
+        LicenseManager.shared.access.isLockedOut
     }
 
     /// 上锁卡片上的「关掉刘海暂存架」：关开关，拿掉监听。

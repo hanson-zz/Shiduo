@@ -25582,6 +25582,354 @@
           }
         }
       }
+    },
+    "批量重命名只支持文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batch rename works on files only"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批量重命名只支持文件"
+          }
+        }
+      }
+    },
+    "要移除扩展名「.%@」吗？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the extension “.%@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要移除扩展名「.%@」吗？"
+          }
+        }
+      }
+    },
+    "没有扩展名，文件可能会用别的 App 打开，或者打不开。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without an extension, the file may open in a different app, or not open at all."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有扩展名，文件可能会用别的 App 打开，或者打不开。"
+          }
+        }
+      }
+    },
+    "保留 .%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep .%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留 .%@"
+          }
+        }
+      }
+    },
+    "要把扩展名从「.%@」改成「.%@」吗？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the extension from “.%1$@” to “.%2$@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要把扩展名从「.%1$@」改成「.%2$@」吗？"
+          }
+        }
+      }
+    },
+    "改了扩展名，文件可能会用别的 App 打开，或者打不开。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you change the extension, the file may open in a different app, or not open at all."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改了扩展名，文件可能会用别的 App 打开，或者打不开。"
+          }
+        }
+      }
+    },
+    "使用 .%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use .%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用 .%@"
+          }
+        }
+      }
+    },
+    "「%@」是 macOS 需要的文件夹，不能移到废纸篓、移动或改名。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is required by macOS and can’t be moved to the Trash, moved, or renamed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」是 macOS 需要的文件夹，不能移到废纸篓、移动或改名。"
+          }
+        }
+      }
+    },
+    "里面有文件夹，大小还没算出来，先确认一下。随时可以从废纸篓里恢复。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This includes folders whose size isn’t known yet, so please confirm. You can restore them from the Trash at any time."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "里面有文件夹，大小还没算出来，先确认一下。随时可以从废纸篓里恢复。"
+          }
+        }
+      }
+    },
+    "这台 Mac 未激活 Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro isn’t activated on this Mac"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 未激活 Pro"
+          }
+        }
+      }
+    },
+    "菜单栏小助手是拾掇 Pro 的功能，这台 Mac 的授权已失效（已解绑或授权码不可用）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The menu bar helper is a Shiduo Pro feature, and the license on this Mac is no longer active (deactivated, or the key can’t be used)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "菜单栏小助手是拾掇 Pro 的功能，这台 Mac 的授权已失效（已解绑或授权码不可用）。"
+          }
+        }
+      }
+    },
+    "拾掇（Pro 已上锁）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo (Pro locked)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇（Pro 已上锁）"
+          }
+        }
+      }
+    },
+    "这台 Mac 已激活 Pro，但离线太久或系统时间不对，需要联网校验一次授权。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro is activated on this Mac, but it’s been offline too long or the system clock is off. Go online once to verify your license."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 已激活 Pro，但离线太久或系统时间不对，需要联网校验一次授权。"
+          }
+        }
+      }
+    },
+    "这台 Mac 的 Pro 授权已失效（已解绑或授权码不可用）。暂存架里的文件还在，可以在主窗口的「暂存架」里继续用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Pro license on this Mac is no longer active (deactivated, or the key can’t be used). Your shelf items are still there; keep using them in Shelf in the main window."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 的 Pro 授权已失效（已解绑或授权码不可用）。暂存架里的文件还在，可以在主窗口的「暂存架」里继续用。"
+          }
+        }
+      }
+    },
+    "这台 Mac 的 Pro 授权已失效（已解绑，或授权码不可用）。重新输入授权码就能继续使用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Pro license on this Mac is no longer active (deactivated, or the key can’t be used). Enter your license key again to keep using it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 的 Pro 授权已失效（已解绑，或授权码不可用）。重新输入授权码就能继续使用。"
+          }
+        }
+      }
+    },
+    "这台 Mac 已经激活拾掇 Pro，但离线太久或系统时间不对，需要联网校验一次授权。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo Pro is activated on this Mac, but it’s been offline too long or the system clock is off. Go online once to verify your license."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 已经激活拾掇 Pro，但离线太久或系统时间不对，需要联网校验一次授权。"
+          }
+        }
+      }
+    },
+    "需要联网校验一次授权，这些 Pro 设置暂时不能改": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify your license online to change these Pro settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要联网校验一次授权，这些 Pro 设置暂时不能改"
+          }
+        }
+      }
+    },
+    "这台 Mac 未激活 Pro，这些 Pro 设置暂时不能改": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro isn’t activated on this Mac, so these Pro settings can’t be changed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 未激活 Pro，这些 Pro 设置暂时不能改"
+          }
+        }
+      }
+    },
+    "移到废纸篓…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Trash…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到废纸篓…"
+          }
+        }
+      }
+    },
+    "暂存架只记位置，这些是原文件，会从原来的位置移到废纸篓。随时可以从废纸篓里恢复。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Shelf only remembers locations. These are the original files and will be moved to the Trash from where they are. You can restore them from the Trash at any time."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂存架只记位置，这些是原文件，会从原来的位置移到废纸篓。随时可以从废纸篓里恢复。"
+          }
+        }
+      }
+    },
+    "把全部 %lld 项移到废纸篓…": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Move %lld Item to Trash…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Move All %lld Items to Trash…"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把全部 %lld 项移到废纸篓…"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

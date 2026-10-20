@@ -32,27 +32,34 @@ struct MenuBarContent: View {
                 Image(systemName: "lock.fill")
                     .foregroundStyle(.secondary)
             }
-            Text("菜单栏小助手是拾掇 Pro 的功能，试用已经结束。")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            ProPriceLine()
-            HStack(spacing: 8) {
-                Button {
-                    NSWorkspace.shared.open(LicenseConfig.buyURL)
-                } label: {
-                    Text("购买 Pro · \(ProPricing.price)")
-                        .frame(maxWidth: .infinity)
+            switch license.access {
+            case .needsCheck:
+                NeedsOnlineCheckActions(compact: true)
+            default:
+                Text(license.access == .licenseInactive
+                     ? String(localized: "菜单栏小助手是拾掇 Pro 的功能，这台 Mac 的授权已失效（已解绑或授权码不可用）。")
+                     : String(localized: "菜单栏小助手是拾掇 Pro 的功能，试用已经结束。"))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                ProPriceLine()
+                HStack(spacing: 8) {
+                    Button {
+                        NSWorkspace.shared.open(LicenseConfig.buyURL)
+                    } label: {
+                        Text("购买 Pro · \(ProPricing.price)")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button {
+                        MainWindow.show { license.showPaywall = true }
+                    } label: {
+                        Text("输入授权码…")
+                            .frame(maxWidth: .infinity)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                Button {
-                    MainWindow.show { license.showPaywall = true }
-                } label: {
-                    Text("输入授权码…")
-                        .frame(maxWidth: .infinity)
-                }
+                .controlSize(.large)
             }
-            .controlSize(.large)
             Button("不再在菜单栏显示") { UserDefaults.standard.set(false, forKey: "menuBarEnabled") }
                 .buttonStyle(.link)
                 .font(.caption)
@@ -234,11 +241,20 @@ struct MenuBarLabel: View {
 
     @ObservedObject var cleanup: CleanupScanner
     @ObservedObject var duplicates: DuplicateScanner
+    @ObservedObject private var license = LicenseManager.shared
     @AppStorage(MenuBarLabel.showReclaimableKey) private var showReclaimable = true
 
     var body: some View {
         let bytes = Reclaimable.bytes(cleanup: cleanup, duplicates: duplicates)
-        if showReclaimable && bytes > 0 {
+        if !license.isPro {
+            // 上锁（试用结束 / 需要联网校验 / 授权失效）：只留图标和一把小锁，不再实时显示可腾出空间（那是 Pro 功能）。
+            HStack(spacing: 2) {
+                Image(systemName: "tray.full")
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 8, weight: .bold))
+            }
+            .accessibilityLabel(Text("拾掇（Pro 已上锁）"))
+        } else if showReclaimable && bytes > 0 {
             HStack(spacing: 4) {
                 Image(systemName: "tray.full")
                 Text(bytes.byteText)

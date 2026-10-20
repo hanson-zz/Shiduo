@@ -139,7 +139,14 @@ struct ShelfPageView: View {
                     shelf.clear()
                 }
                 Divider()
-                Button("移到废纸篓", role: .destructive) { store.requestTrash(targets) }
+                // 暂存架只记位置：这里扔的是散在各处的原文件，所以总是先确认；没选中时写明是「全部」。
+                Button(selection.isEmpty || shelf.items.allSatisfy({ !selection.contains($0.id) })
+                       ? String(localized: "把全部 \(shelf.items.count) 项移到废纸篓…")
+                       : String(localized: "移到废纸篓…"), role: .destructive) {
+                    store.requestTrash(targets, alwaysConfirm: true,
+                                       note: String(localized: "暂存架只记位置，这些是原文件，会从原来的位置移到废纸篓。随时可以从废纸篓里恢复。"))
+                }
+                .disabled(shelf.items.isEmpty)
             } label: {
                 Label("更多", systemImage: "ellipsis.circle")
             }
@@ -372,6 +379,8 @@ final class ShelfTransfer: ObservableObject {
 
     func start(_ urls: [URL], to folder: URL, copy: Bool, store: LibraryStore) {
         guard !isRunning, !urls.isEmpty else { return }
+        // 移动：桌面、下载、个人文件夹这些 macOS 需要的文件夹不能搬走（拷贝可以）。
+        if !copy, store.refuseProtected(urls.map(\.path)) { return }
         let cancel = MoveOutCancelFlag()
         flag = cancel
         isCopy = copy
@@ -398,6 +407,16 @@ final class ShelfTransfer: ObservableObject {
         if copy {
             if !result.moved.isEmpty {
                 store.showToast(String(localized: "已拷贝 \(result.moved.count) 个项目"))
+                // 和访达一样，⌘Z 撤销拷贝 = 把拷出来的副本移到废纸篓（废纸篓里还能找回，小提示上也能再撤销）。
+                if let manager = FileUndoCenter.shared.undoManager {
+                    let copies = result.moved.map { URL(fileURLWithPath: $0.to) }
+                    manager.registerUndo(withTarget: store) { store in
+                        MainActor.assumeIsolated {
+                            store.moveToTrash(copies.compactMap { FileItem(url: $0) })
+                        }
+                    }
+                    manager.setActionName(String(localized: "拷贝"))
+                }
             }
         } else if !result.moved.isEmpty {
             for file in result.moved {
@@ -565,8 +584,9 @@ class MultiFileDragNSView: NSView, NSDraggingSource {
     }
 
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-        // 一律拷贝，原文件留在原处；要移动请用「移动到…」。
-        .copy
+        // 拖到别的 App（访达、邮件……）一律拷贝，原文件留在原处；要移动请用「移动到…」。
+        // 拖到拾掇自己的文件夹格子 / 路径栏 / 文件夹墙卡片上：移动（⌥ 拷贝），光标跟着变。
+        context == .withinApplication ? [.move, .copy] : .copy
     }
 }
 

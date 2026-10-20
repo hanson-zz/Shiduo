@@ -649,11 +649,11 @@ struct FolderCard: View {
         // 拖动卡片：在墙上换位置（拖到另一张卡片上，排到它前面）。
         .onDrag { FolderWallDrop.tileProvider(summary.path) }
         // 把文件拖到卡片上：移进这个文件夹（按住 ⌥ 拷贝），⌘Z 可以撤销移动。
-        .onDrop(of: [.fileURL, .plainText], isTargeted: $dropTargeted) { providers in
-            if FolderWallDrop.loadTile(providers, completion: { onDropTile($0) }) { return true }
-            let copy = NSEvent.modifierFlags.contains(.option)
-            return FileDrop.load(providers) { urls in moveIn(urls, copy: copy) }
-        }
+        // 光标：按 ⌥ 显示拷贝，不按显示移动（和实际一致）。
+        .onDrop(of: [.fileURL, .plainText], delegate: FileMoveDropDelegate(
+            enabled: true, targeted: $dropTargeted, types: [.fileURL, .plainText],
+            other: { providers in FolderWallDrop.loadTile(providers, completion: { onDropTile($0) }) },
+            perform: { urls, copy in moveIn(urls, copy: copy) }))
         .help(summary.path)
         .contextMenu { menu }
         .onChange(of: renamingPath) {
@@ -662,7 +662,9 @@ struct FolderCard: View {
             startRename()
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: "\(summary.name)，\(subtitle)"))
+        // 名字和副标题分开读，不在英文界面里读出写死的全角逗号。
+        .accessibilityLabel(Text(verbatim: summary.name))
+        .accessibilityValue(Text(verbatim: subtitle))
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction { openFolder() }
         .accessibilityAction(named: Text("重命名")) { startRename() }
@@ -965,6 +967,8 @@ struct FolderCard: View {
     }
 
     private func moveFolder() {
+        // 桌面、下载、个人文件夹这些 macOS 需要的文件夹不能搬走（访达也不让）。
+        if store.refuseProtected([summary.path]) { return }
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -990,6 +994,7 @@ struct FolderCard: View {
     }
 
     private func startRename() {
+        if store.refuseProtected([summary.path]) { return }
         newName = summary.name
         renaming = true
     }

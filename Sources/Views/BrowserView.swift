@@ -295,8 +295,7 @@ struct FileCollectionView: View {
     }
 
     /// 拖到文件夹格子 / 行上：移进那个文件夹；拖到普通文件上：放进当前文件夹。按住 ⌥ 拷贝。
-    private func drop(_ urls: [URL], onto item: FileItem?) {
-        let copy = NSEvent.modifierFlags.contains(.option)
+    private func drop(_ urls: [URL], onto item: FileItem?, copy: Bool) {
         if let item, item.isDirectory {
             store.transferDropped(urls, into: item.url, copy: copy)
         } else if let folder = dropFolder {
@@ -449,6 +448,7 @@ struct FileCollectionView: View {
     // MARK: 网格
 
     private var grid: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: thumbnailSize + 28), spacing: 8)], spacing: 10) {
                 ForEach(sorted) { item in
@@ -477,7 +477,7 @@ struct FileCollectionView: View {
                         .help(item.path)
                         // 把文件拖到文件夹格子上：移进去（⌥ 拷贝），⌘Z 可以撤销。
                         .modifier(FolderDropTarget(enabled: item.isDirectory,
-                                                   targeted: dropTargeted(item)) { drop($0, onto: item) })
+                                                   targeted: dropTargeted(item)) { drop($0, onto: item, copy: $1) })
                         .background(GeometryReader { proxy in
                             Color.clear.preference(key: GridCellFramesKey.self,
                                                    value: [item.id: proxy.frame(in: .named(Self.gridSpace))])
@@ -505,7 +505,7 @@ struct FileCollectionView: View {
             .onPreferenceChange(GridCellFramesKey.self) { frames in cellFrames.frames.merge(frames) { $1 } }
         }
         // 拖到空白处：放进正在浏览的文件夹（⌥ 拷贝）。
-        .modifier(FolderDropTarget(enabled: dropFolder != nil, targeted: $dropOnBackground, highlight: .background) { drop($0, onto: nil) })
+        .modifier(FolderDropTarget(enabled: dropFolder != nil, targeted: $dropOnBackground, highlight: .background) { drop($0, onto: nil, copy: $1) })
         .background(GeometryReader { proxy in
             Color.clear
                 .onAppear { viewportHeight = proxy.size.height }
@@ -516,13 +516,13 @@ struct FileCollectionView: View {
         .focusEffectDisabled()
         .onKeyPress(.space) {
             // 正在原地改名：空格留给输入框。
-            guard store.inlineRenamePath == nil else { return .ignored }
+            guard !store.isInlineRenaming else { return .ignored }
             quickLookSelection()
             return .handled
         }
         // ← → 前后一个，↑ ↓ 上下一行；带修饰键的（⌘↑ 上一层等）留给菜单快捷键。
         .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow]) { press in
-            guard store.inlineRenamePath == nil,
+            guard !store.isInlineRenaming,
                   press.modifiers.subtracting([.numericPad, .function]).isEmpty else { return .ignored }
             switch press.key {
             case .leftArrow: return step(-1)
@@ -532,7 +532,7 @@ struct FileCollectionView: View {
             }
         }
         .onKeyPress(.escape) {
-            guard store.inlineRenamePath == nil else { return .ignored }
+            guard !store.isInlineRenaming else { return .ignored }
             // 框选拖到一半按 Esc：恢复成开始框选前的选中
             if marquee.cancel(store: store) { return .handled }
             guard previewURL != nil || liveItem != nil else { return .ignored }
@@ -542,18 +542,31 @@ struct FileCollectionView: View {
         }
         .onCommand(#selector(NSResponder.selectAll(_:))) { selectAll() }
         .onKeyPress(keys: ["a"]) { press in
-            guard store.inlineRenamePath == nil,
+            guard !store.isInlineRenaming,
                   press.modifiers.subtracting([.numericPad, .function]) == .command else { return .ignored }
             selectAll()
             return .handled
         }
         // 回车：重命名（和访达一样）
         .onKeyPress(.return) {
-            guard store.inlineRenamePath == nil else { return .ignored }
+            guard !store.isInlineRenaming else { return .ignored }
             guard NSEvent.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty else { return .ignored }
             return renameSelection()
         }
         .modifier(FileKeyCommands(onTrash: trashSelection, onOpen: openSelection))
+        // ⇧⌘N / 回车开始改名：滚到那个格子（LazyVGrid 不在屏幕上的格子没有输入框，打字没地方去）。
+        .onChange(of: store.inlineRenamePath) { scrollToRenaming(proxy) }
+        }
+    }
+
+    /// 开始原地改名时把那一项滚到看得见的地方（网格和列表共用）。
+    private func scrollToRenaming(_ proxy: ScrollViewProxy) {
+        guard let path = store.inlineRenamePath else { return }
+        // 等新建的文件夹排进列表后再滚。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            guard store.inlineRenamePath == path else { return }
+            withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo(path, anchor: .center) }
+        }
     }
 
     // MARK: 键盘命令（网格和列表共用）
@@ -567,7 +580,7 @@ struct FileCollectionView: View {
 
     /// ⌘⌫：移到废纸篓，小提示上可以撤销。
     private func trashSelection() -> KeyPress.Result {
-        guard store.inlineRenamePath == nil else { return .ignored }
+        guard !store.isInlineRenaming else { return .ignored }
         let list = selectedInOrder
         guard !list.isEmpty else { return .ignored }
         store.moveToTrash(list)
@@ -576,7 +589,7 @@ struct FileCollectionView: View {
 
     /// ⌘O / ⌘↓：打开。
     private func openSelection() -> KeyPress.Result {
-        guard store.inlineRenamePath == nil else { return .ignored }
+        guard !store.isInlineRenaming else { return .ignored }
         let list = selectedInOrder
         guard !list.isEmpty else { return .ignored }
         if list.count == 1, let item = list.first {
@@ -590,8 +603,8 @@ struct FileCollectionView: View {
     /// 回车：重命名（网格和列表一样，和访达一致）。只选了一个就原地改名，选了几个文件打开批量重命名。
     private func renameSelection() -> KeyPress.Result {
         let list = selectedInOrder
-        guard !list.isEmpty, store.inlineRenamePath == nil else { return .ignored }
-        store.beginRename(list)
+        guard !list.isEmpty, !store.isInlineRenaming else { return .ignored }
+        store.beginRename(list, inline: true)
         return .handled
     }
 
@@ -660,6 +673,7 @@ struct FileCollectionView: View {
     // MARK: 列表
 
     private var table: some View {
+        ScrollViewReader { proxy in
         Table(of: FileItem.self, selection: $store.selectedIDs, sortOrder: sortBinding) {
             TableColumn("名称", value: \FileItem.name) { item in
                 HStack(spacing: 6) {
@@ -695,7 +709,9 @@ struct FileCollectionView: View {
                 TableRow(item)
                     .itemProvider { NSItemProvider(object: item.url as NSURL) }
                     // 拖到文件夹那一行：移进去；拖到文件那一行：放进当前文件夹。按住 ⌥ 拷贝，⌘Z 可以撤销。
-                    .dropDestination(for: URL.self) { urls in drop(urls.filter(\.isFileURL), onto: item) }
+                    .dropDestination(for: URL.self) { urls in
+                        drop(urls.filter(\.isFileURL), onto: item, copy: NSEvent.modifierFlags.contains(.option))
+                    }
             }
         }
         .scrollContentBackground(.hidden)
@@ -717,7 +733,7 @@ struct FileCollectionView: View {
         }
         .onKeyPress(.space) {
             // 正在原地改名：空格留给输入框。
-            guard store.inlineRenamePath == nil else { return .ignored }
+            guard !store.isInlineRenaming else { return .ignored }
             quickLookSelection()
             return .handled
         }
@@ -733,6 +749,8 @@ struct FileCollectionView: View {
             return renameSelection()
         }
         .modifier(FileKeyCommands(onTrash: trashSelection, onOpen: openSelection))
+        .onChange(of: store.inlineRenamePath) { scrollToRenaming(proxy) }
+        }
     }
 
     // MARK: 选择
@@ -790,6 +808,7 @@ struct FileCollectionView: View {
 
 /// 原地改名的输入框（网格和列表共用）：回车确定，Esc 取消，点到别处也算确定（和访达一样）。
 struct InlineRenameField: View {
+    @EnvironmentObject private var store: LibraryStore
     let item: FileItem
     let onDone: (String?) -> Void
     @State private var text: String
@@ -812,12 +831,28 @@ struct InlineRenameField: View {
             .onSubmit { finish(text) }
             .onExitCommand { finish(nil) }
             .onAppear {
-                DispatchQueue.main.async { focused = true }
+                DispatchQueue.main.async {
+                    focused = true
+                    // 和访达一样只选中主名，不选扩展名（「报告.pdf」选中「报告」）。
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { selectStem() }
+                }
             }
             .onChange(of: focused) {
                 if !focused { finish(text) }
             }
+            // 换页、⌘[ / ⌘↑、刷新等把输入框拿掉时 onChange 不会再跑：在这里提交已输入的名字（reload 已先清掉 inlineRenamePath）。
+            // 还在改这一项、只是格子被 LazyVGrid / 列表回收重建时不提交，新的输入框会接着出现。
+            .onDisappear {
+                if store.inlineRenamePath != item.path { finish(text) }
+            }
             .accessibilityLabel("新名称")
+    }
+
+    /// 输入框拿到焦点后，字段编辑器（NSTextView）就是窗口的第一响应者：把选区设成主名部分。
+    private func selectStem() {
+        guard let editor = NSApp.keyWindow?.firstResponder as? NSTextView, editor.string == text,
+              text == item.name else { return }
+        editor.selectedRange = NSRange(location: 0, length: LibraryStore.renameStemLength(item))
     }
 
     private func finish(_ value: String?) {
@@ -1094,7 +1129,8 @@ struct FileGridCell: View {
                 .strokeBorder(selected ? Color.accentColor.opacity(0.8) : Color.clear, lineWidth: 1.5)
         )
         .contentShape(Rectangle())
-        .overlay { mouseArea }
+        // 改名时不盖 AppKit 鼠标层：点 / 双击 / 拖选输入框里的文字交给输入框，不会提交改名或打开文件。
+        .overlay { if !renaming { mouseArea } }
         .overlay(alignment: .top) {
             // 和缩略图一样大、一样位置的透明框，按钮贴在它右下角。
             Color.clear
@@ -1221,9 +1257,8 @@ struct FolderPathBar: View {
                         .disabled(index == list.count - 1)
                         .help(crumb.path)
                         // 把文件拖到路径上的某一层：移进那个文件夹（⌥ 拷贝），⌘Z 可以撤销。
-                        .modifier(FolderDropTarget(enabled: index < list.count - 1, targeted: crumbTargeted(crumb.path)) { urls in
-                            store.transferDropped(urls, into: URL(fileURLWithPath: crumb.path, isDirectory: true),
-                                                  copy: NSEvent.modifierFlags.contains(.option))
+                        .modifier(FolderDropTarget(enabled: index < list.count - 1, targeted: crumbTargeted(crumb.path)) { urls, copy in
+                            store.transferDropped(urls, into: URL(fileURLWithPath: crumb.path, isDirectory: true), copy: copy)
                         })
                     }
                 }
@@ -1252,9 +1287,10 @@ struct FolderDropTarget: ViewModifier {
     let enabled: Bool
     @Binding var targeted: Bool
     var highlight: Highlight = .outline
-    let perform: ([URL]) -> Void
+    /// 拖进来的文件、是不是拷贝（⌥ 在松手那一刻同步读好，不等异步读完地址）。
+    let perform: ([URL], Bool) -> Void
 
-    init(enabled: Bool, targeted: Binding<Bool>, highlight: Highlight = .outline, perform: @escaping ([URL]) -> Void) {
+    init(enabled: Bool, targeted: Binding<Bool>, highlight: Highlight = .outline, perform: @escaping ([URL], Bool) -> Void) {
         self.enabled = enabled
         _targeted = targeted
         self.highlight = highlight
@@ -1264,10 +1300,7 @@ struct FolderDropTarget: ViewModifier {
     func body(content: Content) -> some View {
         // 不能放的时候不接受任何类型（不高亮），但保持同一个视图结构，切换时不会重建内容。
         content
-            .onDrop(of: enabled ? [.fileURL] : [], isTargeted: $targeted) { providers in
-                guard enabled else { return false }
-                return FileDrop.load(providers) { urls in perform(urls) }
-            }
+            .onDrop(of: enabled ? [.fileURL] : [], delegate: FileMoveDropDelegate(enabled: enabled, targeted: $targeted, perform: perform))
             .overlay {
                 if enabled && targeted {
                     switch highlight {
@@ -1283,5 +1316,39 @@ struct FolderDropTarget: ViewModifier {
                     }
                 }
             }
+    }
+}
+
+/// 拖文件到拾掇里的文件夹上：光标按 ⌥ 显示「拷贝」，不按显示「移动」（和实际一致）；⌥ 在松手时同步读。
+/// other：先处理别的内容（文件夹墙卡片排序），返回 true 表示已经处理。
+struct FileMoveDropDelegate: DropDelegate {
+    let enabled: Bool
+    @Binding var targeted: Bool
+    var types: [UTType] = [.fileURL]
+    var other: (([NSItemProvider]) -> Bool)? = nil
+    let perform: ([URL], Bool) -> Void
+
+    func validateDrop(info: DropInfo) -> Bool {
+        enabled && info.hasItemsConforming(to: types)
+    }
+
+    func dropEntered(info: DropInfo) { targeted = true }
+
+    func dropExited(info: DropInfo) { targeted = false }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        guard enabled else { return DropProposal(operation: .forbidden) }
+        // 不是文件（文件夹墙卡片排序）：保持原来的样子。
+        guard info.hasItemsConforming(to: [.fileURL]) else { return DropProposal(operation: .copy) }
+        return DropProposal(operation: NSEvent.modifierFlags.contains(.option) ? .copy : .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        targeted = false
+        guard enabled else { return false }
+        let copy = NSEvent.modifierFlags.contains(.option)
+        let providers = info.itemProviders(for: types)
+        if let other, other(providers) { return true }
+        return FileDrop.load(providers) { urls in perform(urls, copy) }
     }
 }

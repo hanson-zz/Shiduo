@@ -39,7 +39,7 @@ struct ShiduoApp: App {
             CommandGroup(after: .newItem) {
                 Button("新建文件夹") { store.newFolderInCurrent() }
                     .keyboardShortcut(.newFolder)
-                    .disabled(store.currentFolder == nil || store.activeQuery != nil)
+                    .disabled(store.currentFolder == nil || store.activeQuery != nil || renaming)
                 // 和访达的「添加到边栏」（⌃⌘T）一个意思：选中了文件夹就直接放上墙，否则选一个。
                 Button("添加到文件夹墙…") { store.addSelectionToFolderWall() }
                     .keyboardShortcut(.addToFolderWall)
@@ -104,36 +104,46 @@ struct ShiduoApp: App {
                 }
                 .keyboardShortcut(.toggleSidebar)
             }
+            // 正在原地改名时这些都不可用：⌘↑ / ⌘← 这类按键还给输入框（单行文本框里是移到开头 / 行首），也不会把改名冲掉。
             CommandMenu("前往") {
                 Button("返回") { store.goBack() }
                     .keyboardShortcut(.back)
-                    .disabled(!store.canGoBack)
+                    .disabled(!store.canGoBack || renaming)
                 Button("前进") { store.goForward() }
                     .keyboardShortcut(.forward)
-                    .disabled(!store.canGoForward)
+                    .disabled(!store.canGoForward || renaming)
                 Button("上一层文件夹") { store.goUp() }
                     .keyboardShortcut(.enclosingFolder)
-                    .disabled(!store.canGoUp)
+                    .disabled(!store.canGoUp || renaming)
                 Divider()
                 Button("首页") { store.selection = .home }
                     .keyboardShortcut(.home)
+                    .disabled(renaming)
                 Button("暂存架") { store.selection = .shelf }
+                    .disabled(renaming)
                 Button("文件夹墙") { store.selection = .folderWall }
+                    .disabled(renaming)
                 Divider()
                 // 这三个和访达的「前往」菜单一样。
                 Button("桌面") { store.goToFolder(.desktop) }
                     .keyboardShortcut(.desktop)
+                    .disabled(renaming)
                 Button("文稿") { store.goToFolder(.documents) }
                     .keyboardShortcut(.documents)
+                    .disabled(renaming)
                 Button("下载") { store.goToFolder(.downloads) }
                     .keyboardShortcut(.downloads)
+                    .disabled(renaming)
                 Divider()
                 Button("下载来源") { store.selection = .downloads }
                     .keyboardShortcut(.downloadSources)
+                    .disabled(renaming)
                 Button("重复与相似") { store.selection = .duplicates }
                     .keyboardShortcut(.duplicates)
+                    .disabled(renaming)
                 Button("清理") { store.openCleanup(nil) }
                     .keyboardShortcut(.cleanup)
+                    .disabled(renaming)
                 Divider()
                 Button("快速搜索浮窗（\(QuickSearchHotKey.current.title)）") { QuickSearchController.shared.show() }
             }
@@ -177,10 +187,12 @@ struct ShiduoApp: App {
         .menuBarExtraStyle(.window)
     }
 
-    /// 打开了开关、并且是 Pro（含试用）时显示在菜单栏。试用结束后图标仍然留着（点开是上锁卡片），不悄悄消失。
+    private var renaming: Bool { store.isInlineRenaming }
+
+    /// 打开了开关、并且是 Pro（含试用）时显示在菜单栏。试用结束 / 需要联网校验 / 授权失效后图标仍然留着（点开是上锁卡片），不悄悄消失。
     private var menuBarInserted: Binding<Bool> {
         Binding(
-            get: { menuBarEnabled && (license.isPro || license.state == .expiredTrial) },
+            get: { menuBarEnabled && (license.isPro || license.access.isLockedOut) },
             set: { menuBarEnabled = $0 }
         )
     }

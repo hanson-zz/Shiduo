@@ -83,3 +83,28 @@ enum OrganizeIgnoreList {
         return result
     }
 }
+
+extension PathLogic {
+    /// 不让移到废纸篓 / 移动 / 改名的文件夹（访达也会拒绝，说「macOS 需要它」）：
+    /// 磁盘根、个人文件夹和它下面的标准文件夹、资源库、应用程序、系统目录，以及外接磁盘的根（/Volumes/名字）。
+    /// 只看路径本身，不看里面的东西：~/Downloads 不能扔，~/Downloads/a.zip 可以；/Applications 不能扔，里面的 App 可以。
+    static func isProtected(_ path: String, home: String) -> Bool {
+        var p = path
+        while p.count > 1 && p.hasSuffix("/") { p.removeLast() }
+        var home = home
+        while home.count > 1 && home.hasSuffix("/") { home.removeLast() }
+        if p.isEmpty || p == "/" { return true }
+        let system: Set<String> = ["/Applications", "/Library", "/System", "/Users", "/Users/Shared", "/Volumes",
+                                   "/usr", "/bin", "/sbin", "/private", "/etc", "/var", "/tmp", "/opt", "/cores", "/dev", "/Network"]
+        if system.contains(p) { return true }
+        if p.hasPrefix("/System/") { return true }
+        // 外接磁盘 / 分区的根：/Volumes/名字
+        if p.hasPrefix("/Volumes/"), !p.dropFirst("/Volumes/".count).contains("/") { return true }
+        if home.count > 1 {
+            if p == home { return true }
+            let standard = ["Desktop", "Documents", "Downloads", "Library", "Pictures", "Movies", "Music", "Public", "Applications"]
+            if standard.contains(where: { p == home + "/" + $0 }) { return true }
+        }
+        return false
+    }
+}
