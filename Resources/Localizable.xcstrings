@@ -24523,22 +24523,6 @@
         }
       }
     },
-    "已暂停：%@。点这里购买 Pro 或输入授权码。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paused: %@. Click to buy Pro or enter a license key."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已暂停：%@。点这里购买 Pro 或输入授权码。"
-          }
-        }
-      }
-    },
     "%lld 条自动整理规则": {
       "localizations": {
         "en": {
@@ -24935,22 +24919,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "常用的文件夹放在一面卡片墙上，一眼看到里面有什么"
-          }
-        }
-      }
-    },
-    "常用的文件夹放上卡片墙，照片和文稿从文件夹里探出来": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your go-to folders on a wall of cards, with photos and papers peeking out"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "常用的文件夹放上卡片墙，照片和文稿从文件夹里探出来"
           }
         }
       }
