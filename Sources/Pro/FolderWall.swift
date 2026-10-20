@@ -613,7 +613,8 @@ struct FolderCard: View {
     /// 小卡片上字也小一点。
     private var nameSize: CGFloat { width < 120 ? 12 : 14 }
 
-    var body: some View {
+    /// 卡片本身（拆开写：整串修饰符太长，编译器类型检查会超时）。
+    private var face: some View {
         VStack(spacing: 6) {
             folder
                 .frame(width: width, height: height)
@@ -641,36 +642,45 @@ struct FolderCard: View {
                 .strokeBorder(selected ? Color.accentColor.opacity(0.7) : .clear, lineWidth: 1.5)
         )
         .contentShape(RoundedRectangle(cornerRadius: 22))
-        .onHover { h in guard !Demo.isOn else { return }; withAnimation(.spring(response: 0.32, dampingFraction: 0.7)) { hovering = h } }
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: dropTargeted)
-        // 和访达一样：点一下选中，双击打开。
-        .onTapGesture(count: 2) { openFolder() }
-        .onTapGesture { onSelect() }
-        // 拖动卡片：在墙上换位置（拖到另一张卡片上，排到它前面）。
-        .onDrag { FolderWallDrop.tileProvider(summary.path) }
-        // 把文件拖到卡片上：移进这个文件夹（按住 ⌥ 拷贝），⌘Z 可以撤销移动。
-        // 光标：按 ⌥ 显示拷贝，不按显示移动（和实际一致）。
-        .onDrop(of: [.fileURL, .plainText], delegate: dropDelegate)
-        .help(summary.path)
-        .contextMenu { menu }
-        .onChange(of: renamingPath) {
-            guard renamingPath == summary.path else { return }
-            renamingPath = nil
-            startRename()
-        }
-        .accessibilityElement(children: .ignore)
-        // 名字和副标题分开读，不在英文界面里读出写死的全角逗号。
-        .accessibilityLabel(Text(verbatim: summary.name))
-        .accessibilityValue(Text(verbatim: subtitle))
-        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
-        .accessibilityAction { openFolder() }
-        .accessibilityAction(named: Text("重命名")) { startRename() }
-        .accessibilityAction(named: Text("从文件夹墙移除")) { store.unpin(summary.path) }
-        .alert("重命名文件夹", isPresented: $renaming) {
-            TextField("名称", text: $newName)
-            Button("重命名") { rename(to: newName) }
-            Button("取消", role: .cancel) {}
-        }
+    }
+
+    /// 点按、拖放、右键菜单。
+    private var interactive: some View {
+        face
+            .onHover { h in guard !Demo.isOn else { return }; withAnimation(.spring(response: 0.32, dampingFraction: 0.7)) { hovering = h } }
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: dropTargeted)
+            // 和访达一样：点一下选中，双击打开。
+            .onTapGesture(count: 2) { openFolder() }
+            .onTapGesture { onSelect() }
+            // 拖动卡片：在墙上换位置（拖到另一张卡片上，排到它前面）。
+            .onDrag { FolderWallDrop.tileProvider(summary.path) }
+            // 把文件拖到卡片上：移进这个文件夹（按住 ⌥ 拷贝），⌘Z 可以撤销移动。
+            // 光标：按 ⌥ 显示拷贝，不按显示移动（和实际一致）。
+            .onDrop(of: [.fileURL, .plainText], delegate: dropDelegate)
+            .help(summary.path)
+            .contextMenu { menu }
+            .onChange(of: renamingPath) {
+                guard renamingPath == summary.path else { return }
+                renamingPath = nil
+                startRename()
+            }
+    }
+
+    var body: some View {
+        interactive
+            .accessibilityElement(children: .ignore)
+            // 名字和副标题分开读，不在英文界面里读出写死的全角逗号。
+            .accessibilityLabel(Text(verbatim: summary.name))
+            .accessibilityValue(Text(verbatim: subtitle))
+            .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+            .accessibilityAction { openFolder() }
+            .accessibilityAction(named: Text("重命名")) { startRename() }
+            .accessibilityAction(named: Text("从文件夹墙移除")) { store.unpin(summary.path) }
+            .alert("重命名文件夹", isPresented: $renaming) {
+                TextField("名称", text: $newName)
+                Button("重命名") { rename(to: newName) }
+                Button("取消", role: .cancel) {}
+            }
     }
 
     /// 拖到卡片上：卡片排序（私有文字）或者把文件移进来（⌥ 拷贝）。
