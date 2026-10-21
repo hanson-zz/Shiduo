@@ -75,6 +75,7 @@ struct InspectorView: View {
     var mode: InspectorMode = .info
     @State private var media = MediaInfo()
     @State private var tags: [String] = []
+    @AppStorage(FolderWallIconStyle.key) private var folderIconStyle: FolderWallIconStyle = .shiduo
 
     var body: some View {
         if selectionCount > 1, !selection.isEmpty {
@@ -82,13 +83,14 @@ struct InspectorView: View {
         } else if let item {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    if mode == .preview {
+                    // 拾掇风格下文件夹不用快速查看（那里是访达图标），显示拾掇文件夹。
+                    if mode == .preview && !(item.isDirectory && folderIconStyle == .shiduo) {
                         FilePreviewView(url: item.url)
                             .frame(maxWidth: .infinity)
                             .frame(height: 300)
                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     } else {
-                        ThumbnailView(url: item.url, size: 220, modified: item.modified)
+                        ThumbnailView(url: item.url, size: 220, modified: item.modified, isFolder: item.isDirectory)
                             .frame(maxWidth: .infinity)
                     }
                     Text(item.name)
@@ -223,7 +225,7 @@ private struct SelectionSummaryView: View {
                 let shown = Array(items.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }.prefix(9))
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], spacing: 8) {
                     ForEach(shown) { item in
-                        ThumbnailView(url: item.url, size: mode == .preview ? 80 : 64, modified: item.modified)
+                        ThumbnailView(url: item.url, size: mode == .preview ? 80 : 64, modified: item.modified, isFolder: item.isDirectory)
                             .help(item.name)
                     }
                 }
@@ -316,7 +318,7 @@ struct OCRSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 16) {
-                ThumbnailView(url: item.url, size: 200, modified: item.modified)
+                ThumbnailView(url: item.url, size: 200, modified: item.modified, isFolder: item.isDirectory)
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.name)
                         .font(.headline)

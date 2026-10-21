@@ -136,7 +136,7 @@ private struct QuickPickHUD: View {
                 .background(Circle().fill(Color.accentColor))
                 .foregroundStyle(.white)
             if let item {
-                ThumbnailView(url: item.url, size: 34)
+                ThumbnailView(url: item.url, size: 34, isFolder: item.isDirectory)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .font(.callout.weight(.semibold))

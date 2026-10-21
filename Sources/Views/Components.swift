@@ -7,11 +7,28 @@ struct ThumbnailView: View {
     var fill = false
     /// 文件的修改时间（传 item.modified）：列表刷新后同一路径的文件变了，格子会重新取图。
     var modified: Date? = nil
+    /// 是不是普通文件夹（传 item.isDirectory；.app 这类包不算）。nil = 不知道，后台查一次并缓存。
+    var isFolder: Bool? = nil
+    /// 设置 › 通用 › 文件夹图标：拾掇风格 / 系统图标。
+    @AppStorage(FolderWallIconStyle.key) private var folderIconStyle: FolderWallIconStyle = .shiduo
     @State private var image: NSImage?
     /// 缓存被清掉（比如文件夹刚上色）时加一，触发重新取图
     @State private var version = 0
+    @State private var checkedFolder: Bool?
+
+    private var folder: Bool {
+        isFolder ?? checkedFolder ?? ShiduoFolderArtCache.shared.cachedIsFolder(url.standardizedFileURL.path) ?? false
+    }
 
     var body: some View {
+        if folderIconStyle == .shiduo && folder {
+            ShiduoFolderIcon(path: url.standardizedFileURL.path, side: size)
+        } else {
+            systemImage
+        }
+    }
+
+    private var systemImage: some View {
         Group {
             if let image {
                 Image(nsImage: image)
@@ -31,7 +48,14 @@ struct ThumbnailView: View {
             image = nil
             version += 1
         }
-        .task(id: "\(url.path)#\(Int(size))#\(version)#\(modified?.timeIntervalSince1970 ?? 0)") {
+        .task(id: "\(url.path)#\(Int(size))#\(version)#\(modified?.timeIntervalSince1970 ?? 0)#\(folderIconStyle.rawValue)") {
+            // 拾掇风格下先弄清是不是文件夹：是的话换成拾掇文件夹，不再取系统图标。
+            if folderIconStyle == .shiduo && isFolder == nil && checkedFolder == nil {
+                let result = await ShiduoFolderArtCache.shared.isFolder(url)
+                checkedFolder = result
+                if result { return }
+            }
+            if folderIconStyle == .shiduo && folder { return }
             if let cached = ThumbnailService.shared.cached(for: url, size: size) {
                 image = cached
                 return

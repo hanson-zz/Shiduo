@@ -163,7 +163,7 @@ struct StackedThumbnails: View {
     var body: some View {
         HStack(spacing: -size * 0.32) {
             ForEach(items.prefix(3)) { item in
-                ThumbnailView(url: item.url, size: size, fill: true)
+                ThumbnailView(url: item.url, size: size, fill: true, isFolder: item.isDirectory)
                     .clipShape(Circle())
                     .overlay(Circle().strokeBorder(Color.white, lineWidth: 1.5))
                     .shadow(color: .black.opacity(0.08), radius: 2, y: 1)

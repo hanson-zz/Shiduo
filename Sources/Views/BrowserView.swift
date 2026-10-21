@@ -779,7 +779,7 @@ struct FileCollectionView: View {
         Table(of: FileItem.self, selection: $store.selectedIDs, sortOrder: sortBinding) {
             TableColumn("名称", value: \FileItem.name) { item in
                 HStack(spacing: 6) {
-                    ThumbnailView(url: item.url, size: 20, modified: item.modified)
+                    ThumbnailView(url: item.url, size: 20, modified: item.modified, isFolder: item.isDirectory)
                         .quickLookSource(item.url)
                     if store.inlineRenamePath == item.path {
                         InlineRenameField(item: item) { store.commitInlineRename(item, to: $0) }
@@ -1199,7 +1199,7 @@ struct FileGridCell: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            ThumbnailView(url: item.url, size: size, modified: item.modified)
+            ThumbnailView(url: item.url, size: size, modified: item.modified, isFolder: item.isDirectory)
                 .quickLookSource(item.url)
             if renaming, let onRename {
                 InlineRenameField(item: item, onDone: onRename)

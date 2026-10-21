@@ -856,7 +856,7 @@ struct NotchShelfView: View {
     private func card(_ item: FileItem, index: Int) -> some View {
         let selected = index == controller.selectedIndex
         return VStack(spacing: 4) {
-            ThumbnailView(url: item.url, size: cardSize)
+            ThumbnailView(url: item.url, size: cardSize, isFolder: item.isDirectory)
                 .quickLookSource(item.url)
                 .overlay(alignment: .topTrailing) {
                     if reminders.paths.contains(item.path) {

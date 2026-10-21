@@ -455,7 +455,7 @@ struct FloatingShelfView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 8)], spacing: 8) {
                         ForEach(shelf.items) { item in
                             VStack(spacing: 3) {
-                                ThumbnailView(url: item.url, size: 52)
+                                ThumbnailView(url: item.url, size: 52, isFolder: item.isDirectory)
                                 Text(item.name)
                                     .font(.caption2)
                                     .lineLimit(1)

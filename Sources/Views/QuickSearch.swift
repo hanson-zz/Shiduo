@@ -340,7 +340,7 @@ struct QuickSearchRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ThumbnailView(url: item.url, size: 32)
+            ThumbnailView(url: item.url, size: 32, isFolder: item.isDirectory)
                 .frame(width: 34, height: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)

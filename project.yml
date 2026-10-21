@@ -81,6 +81,7 @@ targets:
       - path: Sources/Model/TodayAddedLogic.swift
       - path: Sources/Model/TrashConfirmLogic.swift
       - path: Sources/Pro/UnlockCelebrationLogic.swift
+      - path: Sources/Model/FolderArtLogic.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests

@@ -165,7 +165,7 @@ private struct RecentDownloadRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            ThumbnailView(url: item.url, size: 24)
+            ThumbnailView(url: item.url, size: 24, isFolder: item.isDirectory)
             VStack(alignment: .leading, spacing: 0) {
                 Text(item.name)
                     .lineLimit(1)

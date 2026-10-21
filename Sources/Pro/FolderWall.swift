@@ -14,9 +14,10 @@ enum FolderLook: Equatable {
     case plain
 }
 
-/// 文件夹墙上卡片的图标样式（视图选项和设置里都能改，存在 UserDefaults）。
+/// 文件夹图标：拾掇风格 / 系统图标。全局设置（设置 › 通用 › 文件夹图标、文件夹墙右下角都能改，存在 UserDefaults），
+/// 主窗口网格 / 列表、简介、搜索、暂存架、文件夹墙里所有文件夹都跟着它。键名沿用以前文件夹墙的，旧的选择保留。
 enum FolderWallIconStyle: String, CaseIterable, Identifiable {
-    /// 拾掇自己画的文件夹（探出照片、文稿……）。
+    /// 拾掇自己画的文件夹（文件夹墙上探出照片、文稿……，别处是不探出内容的同款文件夹）。
     case shiduo
     /// 访达里的系统图标（自定义图标、「文件夹上色」的结果都会显示）。
     case system
@@ -512,7 +513,7 @@ struct FolderWallView: View {
     /// 图标样式：拾掇风格 / 系统图标。放在大小滑块左边，同一个胶囊里。
     private var iconStyleMenu: some View {
         Menu {
-            Picker("图标样式", selection: $iconStyle) {
+            Picker("文件夹图标", selection: $iconStyle) {
                 ForEach(FolderWallIconStyle.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.inline)
@@ -525,8 +526,8 @@ struct FolderWallView: View {
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
         .fixedSize()
-        .help("图标样式")
-        .accessibilityLabel("图标样式")
+        .help("文件夹图标")
+        .accessibilityLabel("文件夹图标")
     }
 
     private var header: some View {
@@ -697,6 +698,9 @@ struct FolderCard: View {
     @State private var dropTargeted = false
     @State private var renaming = false
     @State private var newName = ""
+    /// 「文件夹上色」的颜色和叠加层、别处设置的自定义图标、系统文件夹符号（后台查，缓存）。
+    @State private var artVariant: ShiduoFolderVariant?
+    @State private var artVersion = 0
 
     private var height: CGFloat { width * 0.80 }
     /// 小卡片上字也小一点。
@@ -752,6 +756,15 @@ struct FolderCard: View {
                 guard renamingPath == summary.path else { return }
                 renamingPath = nil
                 startRename()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: ThumbnailService.invalidated)) { note in
+                guard let paths = note.userInfo?["paths"] as? Set<String>, paths.contains(summary.path) else { return }
+                artVersion += 1
+            }
+            .task(id: "\(summary.path)#\(artVersion)#\(iconStyle.rawValue)") {
+                guard iconStyle == .shiduo else { return }
+                let resolved = await ShiduoFolderArtCache.shared.variant(summary.path)
+                if artVariant != resolved { artVariant = resolved }
             }
     }
 
@@ -839,16 +852,36 @@ struct FolderCard: View {
 
     /// 拾掇风格 · Liquid Glass：玻璃前片透出后片和探出的真实文件（GlassFolderArt，见 FolderWallGlass.swift）。
     private var folder: some View {
-        let m = GlassFolderMetrics(width: width, tint: tint, dark: scheme == .dark)
+        let m = GlassFolderMetrics(width: width, tint: shownTint, dark: scheme == .dark)
         let ink = m.dark || !m.paleTint ? Color.white : Color.black.opacity(0.62)
         return ZStack(alignment: .topLeading) {
             GlassFolderArt(summary: summary, m: m, hovering: hovering)
+            artBadge(m)
             overlays(ink: ink, light: m.paleTint, top: m.ph * 0.075 + 10, bottom: 32,
                      glass: true, showBadge: !m.small && !summary.isEmpty)
                 .frame(width: width, height: m.ph)
                 .offset(y: m.py)
         }
         .frame(width: width, height: height, alignment: .topLeading)
+    }
+
+    /// 卡片颜色：墙上手动选过颜色就用它；否则文件夹在「文件夹上色」里上过色，用那个颜色（和主窗口里一样）。
+    private var shownTint: NSColor {
+        guard model.customColors[summary.path] == nil, model.manualColors[summary.path] == nil,
+              let v = artVariant, v.styled, let color = FolderPalette.color(hex: v.hex) else { return tint }
+        return color
+    }
+
+    /// 前片左侧的叠加层（上色的 emoji / 图片、自定义图标、系统文件夹符号），和主窗口里的拾掇文件夹一致。
+    /// 空文件夹（虚线框）和带压印图标的归档 / 云盘卡片不画，免得挤在一起。
+    @ViewBuilder
+    private func artBadge(_ m: GlassFolderMetrics) -> some View {
+        if let v = artVariant, v.badge != .none, !summary.isEmpty, summary.look != .archive, summary.look != .cloud {
+            let box = min(m.ph * (m.small ? 0.40 : 0.44), 44)
+            ShiduoFolderBadge(variant: v, image: ShiduoFolderArtCache.shared.badgeImage(summary.path), box: box,
+                              center: CGPoint(x: (m.small ? 8 : 14) + box / 2, y: m.py + m.ph * 0.52),
+                              canvas: CGSize(width: m.width, height: m.height), dark: m.dark)
+        }
     }
 
     /// 悬停按钮、提醒角标和更新角标。glass = 拾掇风格的磨砂玻璃角标（系统图标模式照旧）。

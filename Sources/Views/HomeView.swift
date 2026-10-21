@@ -380,7 +380,7 @@ struct ShelfView: View {
                 LazyHStack(alignment: .top, spacing: 14) {
                     ForEach(shelf.items) { item in
                         VStack(spacing: 8) {
-                            ThumbnailView(url: item.url, size: 104, modified: item.modified)
+                            ThumbnailView(url: item.url, size: 104, modified: item.modified, isFolder: item.isDirectory)
                                 .frame(width: 120, height: 112)
                             Text(item.name)
                                 .font(.caption)
@@ -420,7 +420,7 @@ struct RecentTile: View {
 
     var body: some View {
         VStack(spacing: 7) {
-            ThumbnailView(url: item.url, size: 132, fill: true, modified: item.modified)
+            ThumbnailView(url: item.url, size: 132, fill: true, modified: item.modified, isFolder: item.isDirectory)
                 .frame(width: 132, height: 76)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .overlay(
@@ -450,7 +450,7 @@ struct FannedThumbnails: View {
         ZStack(alignment: .bottomTrailing) {
             ZStack {
                 ForEach(Array(shown.enumerated()), id: \.element.id) { index, item in
-                    ThumbnailView(url: item.url, size: size, fill: true, modified: item.modified)
+                    ThumbnailView(url: item.url, size: size, fill: true, modified: item.modified, isFolder: item.isDirectory)
                         .frame(width: size, height: size)
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                         .padding(2)

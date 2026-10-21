@@ -392,7 +392,7 @@ struct ReviewCell: View {
     var body: some View {
         VStack(spacing: 6) {
             ZStack(alignment: .topTrailing) {
-                ThumbnailView(url: item.url, size: 120, modified: item.modified)
+                ThumbnailView(url: item.url, size: 120, modified: item.modified, isFolder: item.isDirectory)
                     .frame(width: 130, height: 120)
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))

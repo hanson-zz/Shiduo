@@ -26011,38 +26011,6 @@
         }
       }
     },
-    "图标样式": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Icon style"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "图标样式"
-          }
-        }
-      }
-    },
-    "「系统图标」显示访达里看到的图标，包括自定义图标和「文件夹上色」的结果。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "“System icons” shows the icons you see in Finder, including custom icons and folders colored with Color Folder."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「系统图标」显示访达里看到的图标，包括自定义图标和「文件夹上色」的结果。"
-          }
-        }
-      }
-    },
     "外观": {
       "localizations": {
         "en": {
@@ -26493,6 +26461,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "隐藏小图标"
+          }
+        }
+      }
+    },
+    "文件夹图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder Icons"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹图标"
+          }
+        }
+      }
+    },
+    "「拾掇风格」：拾掇里看到的文件夹都是拾掇文件夹，上过色的保留颜色和图案，有自定义图标的把它放在文件夹上。「系统图标」：和访达里一样。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Shiduo style”: every folder you see in Shiduo is a Shiduo folder. Folders you colored keep their color and artwork; folders with a custom icon show it on the folder. “System icons”: the same as in Finder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「拾掇风格」：拾掇里看到的文件夹都是拾掇文件夹，上过色的保留颜色和图案，有自定义图标的把它放在文件夹上。「系统图标」：和访达里一样。"
           }
         }
       }

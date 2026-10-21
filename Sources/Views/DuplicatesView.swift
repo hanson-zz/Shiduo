@@ -367,7 +367,7 @@ struct DuplicateItemCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topLeading) {
-                ThumbnailView(url: item.url, size: 180, fill: true, modified: item.modified)
+                ThumbnailView(url: item.url, size: 180, fill: true, modified: item.modified, isFolder: item.isDirectory)
                     .frame(width: 180, height: 128)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .opacity(isKept ? 1 : 0.75)

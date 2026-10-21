@@ -88,6 +88,16 @@ struct SettingsView: View {
                 .foregroundStyle(loginItemMessage == nil ? Color.secondary : Color.orange)
         }
 
+        // 全局的文件夹图标（以前只管文件夹墙，键名沿用，旧的选择保留）。
+        Section("文件夹图标") {
+            Picker("文件夹图标", selection: $folderWallIconStyle) {
+                ForEach(FolderWallIconStyle.allCases) { Text($0.title).tag($0) }
+            }
+            Text("「拾掇风格」：拾掇里看到的文件夹都是拾掇文件夹，上过色的保留颜色和图案，有自定义图标的把它放在文件夹上。「系统图标」：和访达里一样。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+
         // 以前叫「固定文件夹」，和文件夹墙是同一份数据。
         Section("文件夹墙") {
             if store.pinnedFolders.isEmpty {
@@ -105,12 +115,6 @@ struct SettingsView: View {
                 }
             }
             Button("添加到文件夹墙…") { store.choosePinnedFolder() }
-            Picker("图标样式", selection: $folderWallIconStyle) {
-                ForEach(FolderWallIconStyle.allCases) { Text($0.title).tag($0) }
-            }
-            Text("「系统图标」显示访达里看到的图标，包括自定义图标和「文件夹上色」的结果。")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
 
         Section("关于") {

@@ -133,7 +133,7 @@ struct TodayAddedPopover: View {
 
     private func row(_ item: FileItem, home: String) -> some View {
         HStack(spacing: 10) {
-            ThumbnailView(url: item.url, size: 36, fill: true, modified: item.modified)
+            ThumbnailView(url: item.url, size: 36, fill: true, modified: item.modified, isFolder: item.isDirectory)
                 .frame(width: 36, height: 36)
                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Color.primary.opacity(0.08)))

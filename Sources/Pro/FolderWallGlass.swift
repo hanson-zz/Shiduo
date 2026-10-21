@@ -108,7 +108,7 @@ struct GlassFolderArt: View {
 }
 
 /// 中性色的贴地接触阴影（替代以前的同色光晕）：用径向渐变画，不做模糊滤镜。
-private struct GlassContactShadow: View {
+struct GlassContactShadow: View {
     let m: GlassFolderMetrics
 
     var body: some View {
@@ -173,7 +173,7 @@ private struct GlassFront: View {
 }
 
 /// 左上镜面高光、底部内发光、沿边的内折射亮边、顶部内阴影（都裁在前片里面）。
-private struct GlassSheen: View {
+struct GlassSheen: View {
     let m: GlassFolderMetrics
 
     var body: some View {
@@ -212,7 +212,7 @@ private struct GlassSheen: View {
 }
 
 /// 渐变玻璃描边（深色约 18% 白）+ 顶沿高光。
-private struct GlassRim: View {
+struct GlassRim: View {
     let m: GlassFolderMetrics
 
     var body: some View {
@@ -239,7 +239,7 @@ private struct GlassRim: View {
 }
 
 /// 两道白线：两端渐隐，下面各有一条 1pt 暗线，像刻在玻璃上。
-private struct GlassLines: View {
+struct GlassLines: View {
     let m: GlassFolderMetrics
 
     var body: some View {
