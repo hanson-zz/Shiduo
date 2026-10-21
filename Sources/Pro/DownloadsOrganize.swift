@@ -344,7 +344,7 @@ struct DownloadsOrganizeSheet: View {
                 }
                 Spacer()
                 if !license.isPro, model.mode == .preview {
-                    Text("按类型分组；自动整理规则是 Pro 功能")
+                    Text("免费可预览，开始整理需要 Pro")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -550,9 +550,20 @@ struct DownloadsOrganizeSheet: View {
                 Button("取消") { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 if model.mode == .preview {
-                    Button("确认整理") { model.confirm(store: store) }
+                    if license.isPro {
+                        Button("确认整理") { model.confirm(store: store) }
+                            .keyboardShortcut(.defaultAction)
+                            .disabled(isBusy || model.checkedItems.isEmpty)
+                    } else {
+                        // 免费版：预览和「只分组显示」照常用；真正移动文件是 Pro，按钮带小锁，点了弹拾掇 Pro 介绍页。
+                        Button {
+                            license.showPaywall = true
+                        } label: {
+                            Label("开始整理 · Pro", systemImage: "lock.fill")
+                        }
                         .keyboardShortcut(.defaultAction)
                         .disabled(isBusy || model.checkedItems.isEmpty)
+                    }
                 }
             }
         }

@@ -26,6 +26,7 @@ struct ProBadge: View {
 /// Pro 功能清单，付费页和设置页共用。
 enum ProFeature: CaseIterable, Identifiable {
     case autoOrganize
+    case organizeDownloads
     case cleanupReminder
     case photoSearch
     case volumes
@@ -45,6 +46,7 @@ enum ProFeature: CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .autoOrganize: return String(localized: "自动整理规则")
+        case .organizeDownloads: return String(localized: "一键整理下载")
         case .cleanupReminder: return String(localized: "定时清理提醒")
         case .photoSearch: return String(localized: "按画面内容搜索照片")
         case .volumes: return String(localized: "外接磁盘")
@@ -64,6 +66,7 @@ enum ProFeature: CaseIterable, Identifiable {
     var detail: String {
         switch self {
         case .autoOrganize: return String(localized: "下载文件夹里的安装包、截图、发票自动归位")
+        case .organizeDownloads: return String(localized: "先看每个文件会去哪儿，确认后一次按类型归好，可撤销")
         case .cleanupReminder: return String(localized: "每周提醒一次：本周可以腾出多少空间")
         case .photoSearch: return String(localized: "搜「猫」「海边」「收据」，在本机识别照片画面")
         case .volumes: return String(localized: "在侧边栏里直接浏览移动硬盘、U 盘")
@@ -83,6 +86,7 @@ enum ProFeature: CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .autoOrganize: return "wand.and.stars"
+        case .organizeDownloads: return "arrow.down.doc"
         case .cleanupReminder: return "bell.badge"
         case .photoSearch: return "eye"
         case .volumes: return "externaldrive"
@@ -102,6 +106,7 @@ enum ProFeature: CaseIterable, Identifiable {
     var tint: Color {
         switch self {
         case .autoOrganize: return .purple
+        case .organizeDownloads: return .blue
         case .cleanupReminder: return .orange
         case .photoSearch: return .pink
         case .volumes: return .blue

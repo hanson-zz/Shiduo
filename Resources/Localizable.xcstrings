@@ -22275,22 +22275,6 @@
         }
       }
     },
-    "按类型分组；自动整理规则是 Pro 功能": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grouped by type; auto-organize rules are a Pro feature"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "按类型分组；自动整理规则是 Pro 功能"
-          }
-        }
-      }
-    },
     "没有需要整理的文件": {
       "localizations": {
         "en": {
@@ -22527,6 +22511,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "将移动 %lld 个文件"
+          }
+        }
+      }
+    },
+    "免费可预览，开始整理需要 Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview is free; tidying up needs Pro"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费可预览，开始整理需要 Pro"
+          }
+        }
+      }
+    },
+    "开始整理 · Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidy Now · Pro"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始整理 · Pro"
+          }
+        }
+      }
+    },
+    "一键整理下载": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-click Organize Downloads"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一键整理下载"
+          }
+        }
+      }
+    },
+    "先看每个文件会去哪儿，确认后一次按类型归好，可撤销": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See where each file will go, then sort them all by type in one go, with undo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先看每个文件会去哪儿，确认后一次按类型归好，可撤销"
           }
         }
       }
