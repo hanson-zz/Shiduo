@@ -26,18 +26,19 @@ The app is in English and Simplified Chinese. It follows your system language, a
 - **Visual library**: images, videos, music, documents, archives and apps, with big thumbnails, grid or list view, and Quick Look.
 - **Plain-language search**: try `pdfs over 5MB last week`, `images from wechat`, `large videos from youtube.com this month`. The sentence becomes filters you can remove one by one.
 - **Downloaded from**: recognizes Gmail, Google Drive, ChatGPT, WeChat, GitHub, Figma, browser extensions and 30+ other sources, and groups the rest by website.
-- **Safe cleanup**: used installers, forgotten downloads, old screenshots, big old videos and rarely used apps. Files only go to the Trash, and iCloud-only files are skipped.
+- **Safe cleanup**: used installers, forgotten downloads, old screenshots, big old videos and rarely used apps. Files only go to the Trash, iCloud-only files are skipped, and folders macOS needs (your home folder, Desktop, Documents, Downloads, Library, Applications) can’t be moved, renamed or trashed.
 - **Duplicates and similar photos**: exact copies by size and SHA-256, look-alike photos with Vision.
 - **Shelf**: drop files from anywhere onto the Shelf in the sidebar to park them for a moment (only their locations are saved, nothing is copied), then drag them all out together, or move, copy, zip or AirDrop them in one go.
 
 <p align="center"><img src="docs/screenshots/en/shelf.png" alt="Shelf" width="880"></p>
 
-- **Folder Wall** (free): your go-to folders as glossy cards, with the newest photos and papers peeking out.
+- **Folder Wall** (free): your go-to folders as cards, in two icon styles. **Shiduo style** (default) shows translucent Liquid Glass folders with real previews of the photos and documents inside; **System icons** shows the icons you see in Finder, including custom icons and colored folders.
+- **Appearance**: follow the system, or always Light or Dark (**Settings › General**).
 - **Handy tools**: text recognition in images (on-device), storage map, batch rename, convert to JPG, Finder tags, and a global quick-search panel (⌥Space).
 
 ## Shiduo Pro
 
-Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, 7-day free trial, payments by Creem) adds one-click Organize Downloads (previewing where each file would go and grouping stay free), auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, a floating shelf that opens under the notch or at the screen edge, file reminders (on time or when you open WeChat, DingTalk, Feishu or Mail), ⌃⌘1–0 number keys that copy your 10 most recent files, drop-to-convert tools (compress videos, make GIFs, trim clips, merge files into a PDF), an app uninstaller that also trashes the app’s leftovers in Library (restorable for 30 days), on-device background removal plus screenshot styling, and image stitching (long screenshots joined with overlaps removed, grids, masonry, watermarks). Enter your license key in **Settings › Pro**.
+Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, payments by Creem) adds Organize Downloads with **Tidy Now** to actually move the files (previewing where each file would go and **Group Only** stay free), folder colors, auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, a floating shelf that opens under the notch or at the screen edge, file reminders (on time or when you open WeChat, DingTalk, Feishu or Mail), ⌃⌘1–0 number keys that copy your 10 most recent files, drop-to-convert tools (compress videos, make GIFs, trim clips, merge files into a PDF), an app uninstaller that also trashes the app’s leftovers in Library (restorable for 30 days), on-device background removal plus screenshot styling, and image stitching (long screenshots joined with overlaps removed, grids, masonry, watermarks). The 7-day free trial starts only when you click **Start 7-Day Free Trial** (in **Settings › Pro** or on a Pro feature); no sign-up, no payment details. Enter your license key in **Settings › Pro**.
 
 <p align="center"><img src="docs/screenshots/en/folderwall.png" alt="Folder Wall" width="880"></p>
 
