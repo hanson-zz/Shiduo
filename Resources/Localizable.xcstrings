@@ -26090,6 +26090,22 @@
           }
         }
       }
+    },
+    "已经在系统设置里打开了？重新打开拾掇后生效。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already turned on in System Settings? Reopen Shiduo for it to take effect."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经在系统设置里打开了？重新打开拾掇后生效。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

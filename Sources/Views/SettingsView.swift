@@ -6,6 +6,8 @@ struct SettingsView: View {
     @EnvironmentObject private var updater: Updater
     @EnvironmentObject private var license: LicenseManager
     @EnvironmentObject private var photos: PhotoContentStore
+    /// 完全磁盘访问权限状态：切回拾掇时自动重新检查，设置页跟着刷新。
+    @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
     @AppStorage("checkUpdates") private var checkUpdates = true
     @AppStorage("autoInstallUpdates") private var autoInstall = true
     @AppStorage("autoOCR") private var autoOCR = true
@@ -222,15 +224,23 @@ struct SettingsView: View {
             PrivacyBadges()
             LabeledContent("完全磁盘访问权限") {
                 HStack {
-                    Text(FullDiskAccess.isGranted ? String(localized: "已开启") : String(localized: "未开启"))
-                        .foregroundStyle(FullDiskAccess.isGranted ? .green : .orange)
+                    Text(fullDiskAccess.granted ? String(localized: "已开启") : String(localized: "未开启"))
+                        .foregroundStyle(fullDiskAccess.granted ? .green : .orange)
                     Button("打开系统设置") { FullDiskAccess.openSettings() }
                 }
             }
-            if !FullDiskAccess.isGranted {
+            .onAppear { fullDiskAccess.recheck() }
+            if !fullDiskAccess.granted {
                 Text("未授予完全磁盘访问，统计可能偏小")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                HStack {
+                    Text("已经在系统设置里打开了？重新打开拾掇后生效。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button("立即重新打开") { AppLanguage.relaunch() }
+                        .controlSize(.small)
+                }
             }
             Button("重新查看欢迎引导") { store.showOnboarding = true }
         }
