@@ -15,12 +15,15 @@ enum MainWindow {
     private static var openAction: OpenWindowAction?
     /// 正在等新窗口出现时要做的事。
     private static var pending: [@MainActor () -> Void] = []
+    /// 每登记一个新主窗口加一：用来判断 openWindow 有没有真的开出窗口。
+    private static var registrations = 0
 
     /// 主窗口出现时由 MainWindowTagger 调用。
     static func register(_ window: NSWindow, open: OpenWindowAction) {
         openAction = open
         guard !windows.contains(window) else { return }
         windows.add(window)
+        registrations += 1
         flushPending()
     }
 
@@ -44,14 +47,48 @@ enum MainWindow {
             return
         }
         if let action { pending.append(action) }
+        let before = registrations
         if let openAction {
             openAction(id: sceneID)
         } else {
-            // 还没有拿到 openWindow（理论上不会发生）：走「文件 › 新建窗口」。
-            NSApp.sendAction(#selector(NSResponder.newWindowForTab(_:)), to: nil, from: nil)
+            // 还没有拿到 openWindow（比如启动时主窗口没恢复、一次都没开过）：走「文件 › 新建窗口」。
+            openViaMenu()
+        }
+        // 兜底：记下的 openWindow 失效了（主窗口早就关掉释放）时，过一会儿还没有新窗口登记，就再走菜单开一次。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            if registrations == before, current == nil { openViaMenu() }
         }
         // 新窗口一般马上就注册了；万一没有，过一会儿也把要做的事做掉（状态在共用的 store 上，窗口出来后照样显示）。
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { flushPending() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { flushPending() }
+    }
+
+    /// 触发「文件 › 新建窗口」（WindowGroup 自动加的那一项，⌘N）。找不到就发 newWindowForTab。
+    private static func openViaMenu() {
+        if let menu = NSApp.mainMenu {
+            for top in menu.items {
+                guard let sub = top.submenu else { continue }
+                if let index = sub.items.firstIndex(where: {
+                    $0.keyEquivalent == "n" && $0.keyEquivalentModifierMask == .command
+                }) {
+                    sub.performActionForItem(at: index)
+                    return
+                }
+            }
+        }
+        NSApp.sendAction(#selector(NSResponder.newWindowForTab(_:)), to: nil, from: nil)
+    }
+
+    /// 点程序坞图标（或在访达里再次打开拾掇）时调用。
+    /// 刘海 / 悬浮暂存架、专注计时、菜单栏浮窗、藏起来的付费页和工具窗口都算「可见窗口」，
+    /// 系统会以为拾掇还有窗口开着，SwiftUI 就不再新建主窗口，点程序坞没反应。所以这里自己判断主窗口在不在。
+    static func reopenFromDock() {
+        if let window = current {
+            NSApp.activate(ignoringOtherApps: true)
+            if window.isMiniaturized { window.deminiaturize(nil) }
+            window.makeKeyAndOrderFront(nil)
+        } else {
+            show()
+        }
     }
 
     private static func flushPending() {

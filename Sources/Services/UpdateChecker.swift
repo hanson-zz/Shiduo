@@ -166,6 +166,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // 点程序坞图标：只要主窗口不在（被关掉了），就重新开一个；在的话拿到前面。
+    // 不能交给系统默认处理：暂存架、计时器、菜单栏浮窗等窗口开着时 hasVisibleWindows 为 true，系统什么都不做。
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        MainActor.assumeIsolated {
+            MainWindow.reopenFromDock()
+        }
+        return false
+    }
+
+    // 关掉最后一个窗口后不退出：暂存架、菜单栏小助手还要接着用。
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated {
             AppDelegate.updater?.installIfReady()
