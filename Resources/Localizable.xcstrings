@@ -26058,6 +26058,38 @@
           }
         }
       }
+    },
+    "拖入文件开始整理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop files here to start"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖入文件开始整理"
+          }
+        }
+      }
+    },
+    "空 · 拖入文件即可整理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty · Drop files to organize"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空 · 拖入文件即可整理"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

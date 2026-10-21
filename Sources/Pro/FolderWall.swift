@@ -44,6 +44,8 @@ struct FolderSummary: Equatable {
     var look: FolderLook = .plain
     /// 访达标签颜色编号（0 = 没有）。
     var label = 0
+    /// 已经读过文件夹内容（没读到之前不当成空文件夹）。
+    var loaded = false
 
     static func load(_ path: String) -> FolderSummary {
         let url = URL(fileURLWithPath: path)
@@ -53,9 +55,14 @@ struct FolderSummary: Equatable {
         guard let children = try? FileManager.default.contentsOfDirectory(
             at: url, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles]
         ) else { return s }
+        s.loaded = true
 
         var images: [(URL, Date)] = []
         var docs: [(URL, Date)] = []
+        /// 设计稿、压缩包、其他文件（探出真实文件图标用）。
+        var designFiles: [(URL, Date)] = []
+        var archiveFiles: [(URL, Date)] = []
+        var others: [(URL, Date)] = []
         var archives = 0, design = 0
         for child in children {
             guard let v = try? child.resourceValues(forKeys: Set(keys)) else { continue }
@@ -74,11 +81,15 @@ struct FolderSummary: Equatable {
             } else if type.conforms(to: .archive) || type.conforms(to: .diskImage) || ["dmg", "pkg", "zip", "rar", "7z"].contains(child.pathExtension.lowercased()) {
                 archives += 1
                 s.archiveBytes += size
+                archiveFiles.append((child, date))
             } else if type.conforms(to: .font) || ["sketch", "fig", "psd", "ai", "xd", "ttf", "otf"].contains(child.pathExtension.lowercased()) {
                 design += 1
+                designFiles.append((child, date))
             } else if type.conforms(to: .pdf) || type.conforms(to: .text) || type.conforms(to: .presentation)
                         || type.conforms(to: .spreadsheet) || ["doc", "docx", "pages", "key", "numbers", "xls", "xlsx", "ppt", "pptx", "md"].contains(child.pathExtension.lowercased()) {
                 docs.append((child, date))
+            } else {
+                others.append((child, date))
             }
         }
 
@@ -96,13 +107,34 @@ struct FolderSummary: Equatable {
         } else if !images.isEmpty {
             s.look = .photos
         }
+        func newest(_ list: [(URL, Date)], _ n: Int) -> [URL] { list.sorted { $0.1 > $1.1 }.prefix(n).map(\.0) }
         switch s.look {
-        case .photos: s.previews = images.sorted { $0.1 > $1.1 }.prefix(3).map(\.0)
-        case .papers, .cloud: s.previews = docs.sorted { $0.1 > $1.1 }.prefix(2).map(\.0)
-        default: break
+        case .photos: s.previews = newest(images, 3)
+        case .papers: s.previews = newest(docs, 2)
+        // 设计 / 云盘 / 归档：探出文件夹里真实文件的图标（图片用缩略图），最多 3 个。
+        case .tiles:
+            s.previews = Self.pick([newest(designFiles, 2), newest(images, 1), newest(docs + others + archiveFiles, 3)])
+        case .cloud:
+            s.previews = Self.pick([newest(docs, 2), newest(others + designFiles + archiveFiles, 3), newest(images, 3)])
+        case .archive:
+            s.previews = Self.pick([newest(archiveFiles, 2), newest(others + docs + designFiles, 3), newest(images, 3)])
+        case .plain: break
         }
         return s
     }
+
+    /// 按优先级依次取，凑够 3 个不重复的。
+    private static func pick(_ groups: [[URL]], limit: Int = 3) -> [URL] {
+        var out: [URL] = []
+        for url in groups.joined() where !out.contains(url) {
+            out.append(url)
+            if out.count == limit { break }
+        }
+        return out
+    }
+
+    /// 文件夹里一个文件、一个子文件夹都没有（空状态）。
+    var isEmpty: Bool { loaded && fileCount == 0 && folderCount == 0 }
 }
 
 @MainActor
@@ -660,6 +692,7 @@ struct FolderCard: View {
     /// 别的卡片拖到这张上面：排到它前面。
     var onDropTile: (String) -> Void = { _ in }
 
+    @Environment(\.colorScheme) private var scheme
     @State private var hovering = false
     @State private var dropTargeted = false
     @State private var renaming = false
@@ -749,6 +782,16 @@ struct FolderCard: View {
     }
 
     private var subtitle: String {
+        if iconStyle == .shiduo && summary.isEmpty { return String(localized: "空 · 拖入文件即可整理") }
+        // 拾掇风格的小卡片不画角标：更新时间（归档是可腾出的空间）收进副标题。
+        if iconStyle == .shiduo && width < 120 && reminderCount == 0 {
+            if summary.look == .archive && summary.archiveBytes > 0 {
+                return String(localized: "可腾出 \(summary.archiveBytes.byteText)")
+            }
+            if let relative = relativeUpdated {
+                return [String(localized: "\(summary.fileCount) 个文件"), relative].joined(separator: " · ")
+            }
+        }
         var parts = [String(localized: "\(summary.fileCount) 个文件")]
         if reminderCount > 0 {
             parts.append(String(localized: "\(reminderCount) 个提醒"))
@@ -762,10 +805,16 @@ struct FolderCard: View {
 
     private var badge: String? {
         if summary.look == .archive && summary.archiveBytes > 0 { return "ZIP · \(summary.archiveBytes.byteText)" }
+        guard let relative = relativeUpdated else { return nil }
+        return String(localized: "\(relative)更新")
+    }
+
+    /// 「2 小时前」这样的相对时间（系统按界面语言格式化）。
+    private var relativeUpdated: String? {
         guard let date = summary.updated, date > .distantPast else { return nil }
         let f = RelativeDateTimeFormatter()
         f.unitsStyle = .short
-        return String(localized: "\(f.localizedString(for: min(date, Date().addingTimeInterval(-1)), relativeTo: Date()))更新")
+        return f.localizedString(for: min(date, Date().addingTimeInterval(-1)), relativeTo: Date())
     }
 
     // MARK: 文件夹本体
@@ -788,172 +837,43 @@ struct FolderCard: View {
         .frame(width: width, height: height)
     }
 
+    /// 拾掇风格 · Liquid Glass：玻璃前片透出后片和探出的真实文件（GlassFolderArt，见 FolderWallGlass.swift）。
     private var folder: some View {
-        let light = tint.isLight
-        let back = Color(nsColor: tint.mixed(.black, light ? 0.10 : 0.16))
-        let backTop = Color(nsColor: tint.mixed(.white, 0.08).mixed(.black, light ? 0.06 : 0.12))
-        let frontTop = Color(nsColor: tint.mixed(.white, light ? 0.55 : 0.42))
-        let front = Color(nsColor: tint)
-        let ink = light ? Color.black.opacity(0.62) : Color.white
-        return ZStack(alignment: .top) {
-            // 同色光晕
-            RoundedRectangle(cornerRadius: 20)
-                .fill(front.opacity(0.55))
-                .frame(width: width - 50, height: height * 0.30)
-                .blur(radius: 18)
-                .offset(y: height * 0.78)
-
-            BackPanel()
-                .fill(LinearGradient(colors: [backTop, back], startPoint: .top, endPoint: .bottom))
-                .frame(width: width - 12, height: height * 0.86 - 26)
-                .offset(y: height * 0.14)
-
-            contents
-                .offset(y: hovering ? -10 : 0)
-
-            ZStack {
-                FrontPanel().fill(.ultraThinMaterial)
-                FrontPanel().fill(LinearGradient(colors: [frontTop.opacity(0.86), front.opacity(0.97)], startPoint: .top, endPoint: .bottom))
-                FrontPanel().stroke(LinearGradient(colors: [.white.opacity(0.85), .white.opacity(0.05)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
-                VStack(spacing: 6) {
-                    Spacer()
-                    ForEach(0..<2, id: \.self) { _ in
-                        Rectangle().fill(.white.opacity(0.32)).frame(height: 1)
-                    }
-                }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                frontGlyph(light: light)
-                overlays(ink: ink, light: light)
-            }
-            .frame(width: width, height: height * 0.54)
-            .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
-            .offset(y: height * 0.46)
+        let m = GlassFolderMetrics(width: width, tint: tint, dark: scheme == .dark)
+        let ink = m.dark || !m.paleTint ? Color.white : Color.black.opacity(0.62)
+        return ZStack(alignment: .topLeading) {
+            GlassFolderArt(summary: summary, m: m, hovering: hovering)
+            overlays(ink: ink, light: m.paleTint, top: m.ph * 0.075 + 10, bottom: 32,
+                     glass: true, showBadge: !m.small && !summary.isEmpty)
+                .frame(width: width, height: m.ph)
+                .offset(y: m.py)
         }
-        .frame(width: width, height: height, alignment: .top)
+        .frame(width: width, height: height, alignment: .topLeading)
     }
 
-    @ViewBuilder
-    private var contents: some View {
-        switch summary.look {
-        case .photos:
-            let slots: [(CGFloat, Double)] = [(-0.23, -9), (0.23, 9), (0, -1)]
-            ZStack {
-                ForEach(Array(summary.previews.prefix(3).enumerated().reversed()), id: \.offset) { i, url in
-                    let slot = slots[i == 0 ? 2 : i - 1]
-                    PhotoChip(url: url, size: CGSize(width: width * 0.46, height: width * 0.38))
-                        .rotationEffect(.degrees(slot.1 * (hovering ? 1.4 : 1)))
-                        .offset(x: width * slot.0 * (hovering ? 1.25 : 1), y: slot.0 == 0 ? -6 : 0)
-                }
-            }
-            .offset(y: height * 0.10)
-        case .papers:
-            ZStack {
-                ForEach(0..<max(1, min(2, summary.previews.count)), id: \.self) { i in
-                    PaperChip(url: summary.previews.indices.contains(i) ? summary.previews[i] : nil)
-                        .frame(width: width * 0.36, height: width * 0.40)
-                        .rotationEffect(.degrees((i == 0 ? -6.0 : 5.0) * (hovering ? 1.5 : 1)))
-                        .offset(x: (i == 0 ? -0.13 : 0.13) * width * (hovering ? 1.3 : 1))
-                }
-            }
-            .offset(y: height * 0.10)
-        case .tiles:
-            ZStack {
-                tileChip(Color(red: 0.98, green: 0.77, blue: 0.24), nil, size: width * 0.26)
-                    .rotationEffect(.degrees(-12)).offset(x: -width * 0.26 * (hovering ? 1.2 : 1), y: 6)
-                tileChip(Color(red: 0.93, green: 0.31, blue: 0.39), nil, size: width * 0.24)
-                    .rotationEffect(.degrees(10)).offset(x: width * 0.24 * (hovering ? 1.2 : 1), y: 8)
-                tileChip(Color(red: 0.98, green: 0.93, blue: 0.89), "Aa", size: width * 0.32)
-            }
-            .offset(y: height * 0.08)
-        case .cloud:
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color(white: 0.985))
-                .overlay(alignment: .topLeading) {
-                    VStack(alignment: .leading, spacing: 7) {
-                        ForEach(0..<3, id: \.self) { k in
-                            Capsule().fill(Color(red: 0.84, green: 0.86, blue: 0.91))
-                                .frame(width: width * (0.55 - CGFloat(k) * 0.12), height: 5)
-                        }
-                    }
-                    .padding(14)
-                }
-                .frame(width: width * 0.78, height: height * 0.5)
-                .offset(y: height * 0.20)
-        case .archive, .plain:
-            EmptyView()
-        }
-    }
-
-    private func tileChip(_ color: Color, _ label: String?, size: CGFloat) -> some View {
-        RoundedRectangle(cornerRadius: 10)
-            .fill(.white)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8).fill(color).padding(3)
-                    .overlay {
-                        if let label {
-                            Text(label).font(.system(size: size * 0.42, weight: .medium))
-                                .foregroundStyle(Color(red: 0.55, green: 0.27, blue: 0.16))
-                        }
-                    }
-            )
-            .frame(width: size, height: size)
-            .shadow(color: .black.opacity(0.15), radius: 3, y: 2)
-    }
-
-    @ViewBuilder
-    private func frontGlyph(light: Bool) -> some View {
-        let color = Color.white.opacity(light ? 0.95 : 0.55)
-        switch summary.look {
-        case .cloud:
-            Image(systemName: "cloud")
-                .font(.system(size: 30, weight: .light))
-                .foregroundStyle(Color(red: 0.42, green: 0.60, blue: 0.82))
-        case .tiles:
-            Text("a")
-                .font(.system(size: 44, weight: .semibold, design: .rounded))
-                .foregroundStyle(color)
-        case .archive:
-            HStack {
-                VStack(spacing: 3) {
-                    Capsule()
-                        .fill(Color(white: 0.90))
-                        .overlay(Capsule().strokeBorder(Color(white: 0.72)))
-                        .overlay(Circle().fill(Color(white: 0.45)).frame(width: 5, height: 5).offset(y: -5))
-                        .frame(width: 13, height: 26)
-                    ForEach(0..<7, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: 1).fill(Color(white: 0.72)).frame(width: 12, height: 2.5)
-                    }
-                }
-                .padding(.leading, 18)
-                .padding(.top, 16)
-                Spacer()
-            }
-            .frame(maxHeight: .infinity, alignment: .top)
-        default:
-            EmptyView()
-        }
-    }
-
-    private func overlays(ink: Color, light: Bool, top: CGFloat = 16, bottom: CGFloat = 24) -> some View {
-        ZStack {
+    /// 悬停按钮、提醒角标和更新角标。glass = 拾掇风格的磨砂玻璃角标（系统图标模式照旧）。
+    private func overlays(ink: Color, light: Bool, top: CGFloat = 16, bottom: CGFloat = 24,
+                          glass: Bool = false, showBadge: Bool = true) -> some View {
+        let darkGlass = glass && scheme == .dark
+        return ZStack {
             if hovering {
                 HStack(spacing: 4) {
-                    actionButton("pencil", help: String(localized: "重命名")) { startRename() }
-                    actionButton("folder", help: String(localized: "移动到…")) { moveFolder() }
+                    actionButton("pencil", help: String(localized: "重命名"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { startRename() }
+                    actionButton("folder", help: String(localized: "移动到…"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { moveFolder() }
                     if iconStyle == .system {
                         // 系统图标看不到卡片颜色：直接打开「文件夹上色」（Pro，不是 Pro 弹付费页）。
                         actionButton("paintpalette", help: String(localized: "文件夹上色…")) {
                             FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path, isDirectory: true)], color: tint)
                         }
                     } else {
-                        actionButton("paintpalette", help: String(localized: "自定义颜色…")) { model.openColorPanel(for: summary) }
+                        actionButton("paintpalette", help: String(localized: "自定义颜色…"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { model.openColorPanel(for: summary) }
                     }
                     actionButton("minus.circle", help: String(localized: "从文件夹墙移除"), tint: .red) { store.unpin(summary.path) }
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
-                .background(Capsule().fill(.white.opacity(0.92)))
+                .background(Capsule().fill(darkGlass ? Color(white: 0.17).opacity(0.94) : Color.white.opacity(0.92)))
+                .overlay(Capsule().strokeBorder(Color.white.opacity(darkGlass ? 0.14 : 0), lineWidth: 0.5))
                 .shadow(color: .black.opacity(0.15), radius: 5, y: 2)
                 .frame(maxHeight: .infinity, alignment: .top)
                 .padding(.top, top)
@@ -961,23 +881,36 @@ struct FolderCard: View {
             }
             HStack {
                 if reminderCount > 0 {
-                    Label("\(reminderCount)", systemImage: "alarm")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(ink)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(.white.opacity(light ? 0.9 : 0.22)))
-                        .overlay(Capsule().strokeBorder(.white.opacity(0.45)))
+                    if glass {
+                        Label("\(reminderCount)", systemImage: "alarm")
+                            .font(.system(size: 11, weight: .semibold))
+                            .modifier(GlassBadgeStyle(dark: scheme == .dark))
+                    } else {
+                        Label("\(reminderCount)", systemImage: "alarm")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(ink)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Capsule().fill(.white.opacity(light ? 0.9 : 0.22)))
+                            .overlay(Capsule().strokeBorder(.white.opacity(0.45)))
+                    }
                 }
                 Spacer()
-                if let badge, !hovering {
-                    Text(badge)
-                        .font(.system(size: 11, weight: summary.look == .archive ? .bold : .medium))
-                        .foregroundStyle(Color.black.opacity(0.68))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(.white.opacity(0.88)))
-                        .overlay(Capsule().strokeBorder(.white.opacity(0.5)))
+                if let badge, !hovering, showBadge {
+                    if glass {
+                        Text(badge)
+                            .font(.system(size: 11, weight: summary.look == .archive ? .bold : .medium))
+                            .lineLimit(1)
+                            .modifier(GlassBadgeStyle(dark: scheme == .dark))
+                    } else {
+                        Text(badge)
+                            .font(.system(size: 11, weight: summary.look == .archive ? .bold : .medium))
+                            .foregroundStyle(Color.black.opacity(0.68))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Capsule().fill(.white.opacity(0.88)))
+                            .overlay(Capsule().strokeBorder(.white.opacity(0.5)))
+                    }
                 }
             }
             .padding(.horizontal, 12)
@@ -1152,29 +1085,10 @@ private struct SystemFolderIcon: View {
     }
 }
 
-private struct PhotoChip: View {
-    let url: URL
-    let size: CGSize
-    @State private var image: NSImage?
-
-    var body: some View {
-        ZStack {
-            Color(white: 0.92)
-            if let image {
-                Image(nsImage: image).resizable().scaledToFill()
-            }
-        }
-        .frame(width: size.width - 6, height: size.height - 6)
-        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .padding(3)
-        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(.white))
-        .shadow(color: .black.opacity(0.22), radius: 4, y: 2)
-        .task(id: url) { image = await ThumbnailService.shared.thumbnail(for: url, size: 256) }
-    }
-}
-
-private struct PaperChip: View {
+/// 文稿纸：真实页面缩略图（没取到时画几行占位）。投影由外面加。
+struct PaperChip: View {
     let url: URL?
+    var small = false
     @State private var image: NSImage?
 
     var body: some View {
@@ -1185,19 +1099,18 @@ private struct PaperChip: View {
                     .clipShape(DogEar())
                     .opacity(0.95)
             } else {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: small ? 3 : 6) {
                     ForEach(0..<4, id: \.self) { k in
                         Capsule().fill(Color(red: 0.80, green: 0.80, blue: 0.87))
-                            .frame(height: 4)
-                            .padding(.trailing, k % 2 == 0 ? 14 : 24)
+                            .frame(height: small ? 2.5 : 4)
+                            .padding(.trailing, (k % 2 == 0 ? 14 : 24) * (small ? 0.5 : 1))
                     }
                 }
-                .padding(.leading, 12)
-                .padding(.top, 16)
+                .padding(.leading, small ? 6 : 12)
+                .padding(.top, small ? 9 : 16)
             }
             DogEarFold().fill(Color(red: 0.89, green: 0.89, blue: 0.93))
         }
-        .shadow(color: .black.opacity(0.15), radius: 3, y: 2)
         .task(id: url) {
             if let url { image = await ThumbnailService.shared.thumbnail(for: url, size: 128) }
         }
@@ -1234,13 +1147,16 @@ private struct DogEarFold: Shape {
     }
 }
 
-/// 后片：左上角是文件夹标签。
+/// 后片：左上角是文件夹标签。参数默认值是以前的样子；拾掇风格玻璃卡片见 GlassFolderMetrics.backShape。
 struct BackPanel: Shape {
+    var rad: CGFloat = 16
+    var stepRatio: CGFloat = 0.11
+    var splitRatio: CGFloat = 0.40
+    var slope: CGFloat = 26
+
     func path(in r: CGRect) -> Path {
-        let rad: CGFloat = 16
-        let step = r.height * 0.11
-        let split = r.width * 0.40
-        let slope: CGFloat = 26
+        let step = r.height * stepRatio
+        let split = r.width * splitRatio
         var p = Path()
         p.move(to: CGPoint(x: r.minX, y: r.minY + rad))
         p.addQuadCurve(to: CGPoint(x: r.minX + rad, y: r.minY), control: CGPoint(x: r.minX, y: r.minY))
@@ -1259,26 +1175,45 @@ struct BackPanel: Shape {
     }
 }
 
-/// 前片：右侧微微凸起，四角圆润。
+/// 前片：右侧微微凸起，四角圆润。continuous = 连续圆角（三次曲线，近似 .continuous），玻璃卡片用。
 struct FrontPanel: Shape {
+    var rad: CGFloat = 20
+    var stepRatio: CGFloat = 0.13
+    var splitRatio: CGFloat = 0.42
+    var slope: CGFloat = 30
+    var continuous = false
+
     func path(in r: CGRect) -> Path {
-        let rad: CGFloat = 20
-        let step = r.height * 0.13
-        let split = r.width * 0.42
-        let slope: CGFloat = 30
+        let step = r.height * stepRatio
+        let split = r.width * splitRatio
+        let k = continuous ? rad * 0.55 : 0
+        /// 一个圆角：continuous 用三次曲线，否则二次曲线（以前的样子）。
+        func corner(_ p: inout Path, to end: CGPoint, corner c: CGPoint, from start: CGPoint) {
+            if continuous {
+                let c1 = CGPoint(x: start.x + (c.x - start.x) * (k / rad), y: start.y + (c.y - start.y) * (k / rad))
+                let c2 = CGPoint(x: end.x + (c.x - end.x) * (k / rad), y: end.y + (c.y - end.y) * (k / rad))
+                p.addCurve(to: end, control1: c1, control2: c2)
+            } else {
+                p.addQuadCurve(to: end, control: c)
+            }
+        }
         var p = Path()
-        p.move(to: CGPoint(x: r.minX, y: r.minY + step + rad))
-        p.addQuadCurve(to: CGPoint(x: r.minX + rad, y: r.minY + step), control: CGPoint(x: r.minX, y: r.minY + step))
+        let a = CGPoint(x: r.minX, y: r.minY + step + rad)
+        p.move(to: a)
+        corner(&p, to: CGPoint(x: r.minX + rad, y: r.minY + step), corner: CGPoint(x: r.minX, y: r.minY + step), from: a)
         p.addLine(to: CGPoint(x: r.minX + split - slope / 2, y: r.minY + step))
         p.addCurve(to: CGPoint(x: r.minX + split + slope / 2, y: r.minY),
                    control1: CGPoint(x: r.minX + split, y: r.minY + step),
                    control2: CGPoint(x: r.minX + split, y: r.minY))
-        p.addLine(to: CGPoint(x: r.maxX - rad, y: r.minY))
-        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + rad), control: CGPoint(x: r.maxX, y: r.minY))
-        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY - rad))
-        p.addQuadCurve(to: CGPoint(x: r.maxX - rad, y: r.maxY), control: CGPoint(x: r.maxX, y: r.maxY))
-        p.addLine(to: CGPoint(x: r.minX + rad, y: r.maxY))
-        p.addQuadCurve(to: CGPoint(x: r.minX, y: r.maxY - rad), control: CGPoint(x: r.minX, y: r.maxY))
+        let b = CGPoint(x: r.maxX - rad, y: r.minY)
+        p.addLine(to: b)
+        corner(&p, to: CGPoint(x: r.maxX, y: r.minY + rad), corner: CGPoint(x: r.maxX, y: r.minY), from: b)
+        let c = CGPoint(x: r.maxX, y: r.maxY - rad)
+        p.addLine(to: c)
+        corner(&p, to: CGPoint(x: r.maxX - rad, y: r.maxY), corner: CGPoint(x: r.maxX, y: r.maxY), from: c)
+        let d = CGPoint(x: r.minX + rad, y: r.maxY)
+        p.addLine(to: d)
+        corner(&p, to: CGPoint(x: r.minX, y: r.maxY - rad), corner: CGPoint(x: r.minX, y: r.maxY), from: d)
         p.closeSubpath()
         return p
     }

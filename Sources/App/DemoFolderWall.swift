@@ -40,6 +40,8 @@ extension LibraryStore {
             DemoFolder(name: en ? "Shiduo Project" : "拾掇项目", parent: root,
                        files: [("README.md", 8_000), ("project.yml", 2_000)],
                        subfolders: ["Sources", "Resources", "Tests", "docs"], hoursAgo: 120),
+            // 空文件夹：拾掇风格显示虚线框空状态。
+            DemoFolder(name: en ? "New Folder" : "新建文件夹", parent: root, files: [], hoursAgo: 0),
         ]
 
         var paths: [String] = []
