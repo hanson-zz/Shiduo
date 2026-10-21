@@ -94,6 +94,11 @@ extension PathLogic {
         var home = home
         while home.count > 1 && home.hasSuffix("/") { home.removeLast() }
         if p.isEmpty || p == "/" { return true }
+        // 启动盘的数据卷：/System/Volumes/Data/Users/me/Desktop 和 /Users/me/Desktop 是同一个地方，按后者判断
+        // （不然数据卷下的普通文件夹会因为以 /System/ 开头被误拦）。
+        let dataVolume = "/System/Volumes/Data"
+        if p == dataVolume { return true }
+        if p.hasPrefix(dataVolume + "/") { p = String(p.dropFirst(dataVolume.count)) }
         let system: Set<String> = ["/Applications", "/Library", "/System", "/Users", "/Users/Shared", "/Volumes",
                                    "/usr", "/bin", "/sbin", "/private", "/etc", "/var", "/tmp", "/opt", "/cores", "/dev", "/Network"]
         if system.contains(p) { return true }

@@ -39,6 +39,8 @@ enum MainWindow {
 
     /// 把主窗口拿到前面（没有就新建一个），然后执行 then（比如打开某个文件夹、切到暂存架页）。
     static func show(then action: (@MainActor () -> Void)? = nil) {
+        // App 被隐藏（⌘H）时窗口都不算「可见」：先取消隐藏，免得把还在的主窗口当成没有、再开一个。
+        if NSApp.isHidden { NSApp.unhide(nil) }
         NSApp.activate(ignoringOtherApps: true)
         if let window = current {
             if window.isMiniaturized { window.deminiaturize(nil) }
@@ -56,10 +58,18 @@ enum MainWindow {
         }
         // 兜底：记下的 openWindow 失效了（主窗口早就关掉释放）时，过一会儿还没有新窗口登记，就再走菜单开一次。
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            if registrations == before, current == nil { openViaMenu() }
+            if registrations == before, current == nil, !hasSceneWindow { openViaMenu() }
         }
         // 新窗口一般马上就注册了；万一没有，过一会儿也把要做的事做掉（状态在共用的 store 上，窗口出来后照样显示）。
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { flushPending() }
+    }
+
+    /// 已经有 WindowGroup 开出来的主窗口（只是还没来得及登记）：兜底时不再开第二个。
+    /// SwiftUI 给 WindowGroup 窗口的 identifier 以场景 id 开头（如 main-AppWindow-1）；对不上时这项检查不起作用，不影响别的。
+    private static var hasSceneWindow: Bool {
+        NSApp.windows.contains { window in
+            (window.identifier?.rawValue.hasPrefix(sceneID + "-") ?? false) && (window.isVisible || window.isMiniaturized)
+        }
     }
 
     /// 触发「文件 › 新建窗口」（WindowGroup 自动加的那一项，⌘N）。找不到就发 newWindowForTab。
@@ -82,6 +92,7 @@ enum MainWindow {
     /// 刘海 / 悬浮暂存架、专注计时、菜单栏浮窗、藏起来的付费页和工具窗口都算「可见窗口」，
     /// 系统会以为拾掇还有窗口开着，SwiftUI 就不再新建主窗口，点程序坞没反应。所以这里自己判断主窗口在不在。
     static func reopenFromDock() {
+        if NSApp.isHidden { NSApp.unhide(nil) }
         if let window = current {
             NSApp.activate(ignoringOtherApps: true)
             if window.isMiniaturized { window.deminiaturize(nil) }

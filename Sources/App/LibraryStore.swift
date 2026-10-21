@@ -1657,6 +1657,8 @@ final class LibraryStore: ObservableObject {
         skipNextReload = false
         remember(list)
         items = list
+        // 标签页的列表不截断：清掉上一页留下的截断计数，免得横幅和「N / 总数」带到这一页。
+        applyTruncation(ListPage(list))
         isLoading = false
     }
 

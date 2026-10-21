@@ -278,6 +278,10 @@ struct DownloadsOrganizeSheet: View {
         .frame(width: 680, height: 580)
         .onAppear(perform: reload)
         .onChange(of: model.folder) { reload() }
+        // 在面板开着时开始试用 / 激活：重新算一遍去向（Pro 的自动整理规则生效），按钮变回「确认整理」。
+        .onChange(of: license.isPro) {
+            if case .ready = model.phase { reload() }
+        }
     }
 
     private func reload() {
