@@ -14,6 +14,23 @@ enum FolderLook: Equatable {
     case plain
 }
 
+/// 文件夹墙上卡片的图标样式（视图选项和设置里都能改，存在 UserDefaults）。
+enum FolderWallIconStyle: String, CaseIterable, Identifiable {
+    /// 拾掇自己画的文件夹（探出照片、文稿……）。
+    case shiduo
+    /// 访达里的系统图标（自定义图标、「文件夹上色」的结果都会显示）。
+    case system
+
+    static let key = "folderWallIconStyle"
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .shiduo: return String(localized: "拾掇风格")
+        case .system: return String(localized: "系统图标")
+        }
+    }
+}
+
 /// 一个固定文件夹的概况：只读第一层，不递归，打开页面很快。
 struct FolderSummary: Equatable {
     let path: String
@@ -139,12 +156,19 @@ final class FolderWallModel: ObservableObject {
         }
     }
 
+    /// 系统图标要重新读的时候加一（重新读概要、拾掇改了访达图标）。
+    @Published private(set) var iconRevision = 0
+
+    func refreshIcons() { iconRevision &+= 1 }
+
     func reload(_ paths: [String]) {
+        iconRevision &+= 1
         Task.detached(priority: .userInitiated) {
             var result: [String: FolderSummary] = [:]
             for path in paths { result[path] = FolderSummary.load(path) }
             await MainActor.run {
                 self.summaries = result
+                self.iconRevision &+= 1
                 for s in result.values where s.look == .photos { self.pickTint(s) }
             }
         }
@@ -276,6 +300,10 @@ struct FolderWallView: View {
     @AppStorage("folderWall.sort") private var sort: Sort = .recent
     /// 卡片大小（右下角的滑块、⌘+ / ⌘-），存在 UserDefaults。
     @AppStorage(LibraryStore.wallTileSizeKey) private var tileSize: Double = FolderWallView.defaultTileSize
+    /// 卡片图标：拾掇风格 / 系统图标（右下角滑块旁的小菜单、设置 › 通用 › 文件夹墙）。
+    @AppStorage(FolderWallIconStyle.key) private var iconStyle: FolderWallIconStyle = .shiduo
+    /// 「文件夹上色」改了访达图标：系统图标模式下重新读图标。
+    @ObservedObject private var folderIcons = FolderIconService.shared
     @FocusState private var searchFocused: Bool
     @FocusState private var gridFocused: Bool
     @State private var selectedPath: String?
@@ -343,6 +371,7 @@ struct FolderWallView: View {
                                        tint: model.tint(for: s),
                                        reminderCount: reminders.reminders.filter { $0.path.hasPrefix(s.path + "/") }.count,
                                        width: cardWidth,
+                                       iconStyle: iconStyle,
                                        selected: selectedPath == s.path,
                                        renamingPath: $renamingPath,
                                        onSelect: {
@@ -409,6 +438,7 @@ struct FolderWallView: View {
         }
         .onAppear { model.reload(store.pinnedFolders) }
         .onChange(of: store.pinnedFolders) { model.reload(store.pinnedFolders) }
+        .onChange(of: folderIcons.ledger) { model.refreshIcons() }
         // 拖进卡片的文件移动 / 拷贝完了：重新读一下数量和预览。
         .onChange(of: transfer.isRunning) { if !transfer.isRunning { model.reload(store.pinnedFolders) } }
         .background {
@@ -423,6 +453,10 @@ struct FolderWallView: View {
     /// 访达状态栏那样的图标大小滑块：左边小文件夹，右边大文件夹。
     private var sizeSlider: some View {
         HStack(spacing: 6) {
+            iconStyleMenu
+            Divider()
+                .frame(height: 12)
+                .padding(.horizontal, 2)
             Image(systemName: "folder.fill")
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
@@ -441,6 +475,26 @@ struct FolderWallView: View {
         .padding(.trailing, 16)
         .padding(.bottom, 12)
         .help("卡片大小（⌘+ / ⌘-）")
+    }
+
+    /// 图标样式：拾掇风格 / 系统图标。放在大小滑块左边，同一个胶囊里。
+    private var iconStyleMenu: some View {
+        Menu {
+            Picker("图标样式", selection: $iconStyle) {
+                ForEach(FolderWallIconStyle.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+        } label: {
+            Image(systemName: iconStyle == .system ? "folder" : "folder.badge.gearshape")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("图标样式")
+        .accessibilityLabel("图标样式")
     }
 
     private var header: some View {
@@ -597,6 +651,8 @@ struct FolderCard: View {
     let reminderCount: Int
     /// 文件夹本体的宽度（右下角滑块调）。
     var width: CGFloat = 196
+    /// 拾掇风格（自己画的文件夹）还是访达的系统图标。
+    var iconStyle: FolderWallIconStyle = .shiduo
     var selected = false
     /// 墙上按回车时设成这张卡片的路径：弹出重命名。
     @Binding var renamingPath: String?
@@ -616,7 +672,7 @@ struct FolderCard: View {
     /// 卡片本身（拆开写：整串修饰符太长，编译器类型检查会超时）。
     private var face: some View {
         VStack(spacing: 6) {
-            folder
+            folderArea
                 .frame(width: width, height: height)
                 .scaleEffect(dropTargeted ? 1.05 : 1)
             Text(summary.name)
@@ -713,6 +769,24 @@ struct FolderCard: View {
     }
 
     // MARK: 文件夹本体
+
+    @ViewBuilder
+    private var folderArea: some View {
+        if iconStyle == .system { systemFolder } else { folder }
+    }
+
+    /// 系统图标模式：访达里的图标（含自定义图标、「文件夹上色」），只保留悬停上浮、角标和悬停按钮。
+    private var systemFolder: some View {
+        ZStack {
+            SystemFolderIcon(path: summary.path, side: min(width, height * 1.12), revision: model.iconRevision)
+                .shadow(color: .black.opacity(hovering ? 0.20 : 0.10), radius: hovering ? 8 : 4, y: hovering ? 6 : 3)
+                .scaleEffect(hovering ? 1.04 : 1)
+                .offset(y: hovering ? -6 : 0)
+            overlays(ink: Color.black.opacity(0.62), light: true,
+                     top: max(2, height * 0.06), bottom: max(4, height * 0.16))
+        }
+        .frame(width: width, height: height)
+    }
 
     private var folder: some View {
         let light = tint.isLight
@@ -861,13 +935,20 @@ struct FolderCard: View {
         }
     }
 
-    private func overlays(ink: Color, light: Bool) -> some View {
+    private func overlays(ink: Color, light: Bool, top: CGFloat = 16, bottom: CGFloat = 24) -> some View {
         ZStack {
             if hovering {
                 HStack(spacing: 4) {
                     actionButton("pencil", help: String(localized: "重命名")) { startRename() }
                     actionButton("folder", help: String(localized: "移动到…")) { moveFolder() }
-                    actionButton("paintpalette", help: String(localized: "自定义颜色…")) { model.openColorPanel(for: summary) }
+                    if iconStyle == .system {
+                        // 系统图标看不到卡片颜色：直接打开「文件夹上色」（Pro，不是 Pro 弹付费页）。
+                        actionButton("paintpalette", help: String(localized: "文件夹上色…")) {
+                            FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path, isDirectory: true)], color: tint)
+                        }
+                    } else {
+                        actionButton("paintpalette", help: String(localized: "自定义颜色…")) { model.openColorPanel(for: summary) }
+                    }
                     actionButton("minus.circle", help: String(localized: "从文件夹墙移除"), tint: .red) { store.unpin(summary.path) }
                 }
                 .padding(.horizontal, 6)
@@ -875,7 +956,7 @@ struct FolderCard: View {
                 .background(Capsule().fill(.white.opacity(0.92)))
                 .shadow(color: .black.opacity(0.15), radius: 5, y: 2)
                 .frame(maxHeight: .infinity, alignment: .top)
-                .padding(.top, 16)
+                .padding(.top, top)
                 .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
             HStack {
@@ -900,7 +981,7 @@ struct FolderCard: View {
                 }
             }
             .padding(.horizontal, 12)
-            .padding(.bottom, 24)
+            .padding(.bottom, bottom)
             .frame(maxHeight: .infinity, alignment: .bottom)
         }
     }
@@ -928,7 +1009,7 @@ struct FolderCard: View {
                 rename: { startRename() },
                 removeFromWall: { store.unpin(summary.path) }
             )) {
-                colorMenu
+                if iconStyle == .shiduo { colorMenu }
             }
         } else {
             // 文件夹已经不在了（被移走、在没插上的硬盘里）：只能从墙上拿掉。
@@ -1023,6 +1104,53 @@ struct FolderCard: View {
 }
 
 // MARK: - 小部件
+
+/// 访达里的文件夹图标，按卡片大小和屏幕倍率取够大的图（大卡片不糊）。revision 变了重新读（上色、刷新）。
+private struct SystemFolderIcon: View {
+    let path: String
+    let side: CGFloat
+    let revision: Int
+    @Environment(\.displayScale) private var scale
+    @State private var image: CGImage?
+
+    private struct Key: Equatable {
+        let path: String
+        let pixels: Int
+        let revision: Int
+    }
+
+    /// 取图的像素边长：向上取到 128 的倍数，拖滑块时不用每一档都重画。
+    private var pixels: Int {
+        let need = Int((side * max(scale, 1)).rounded(.up))
+        return min(max((need + 127) / 128 * 128, 128), 1024)
+    }
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(decorative: image, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
+            } else {
+                Color.clear
+            }
+        }
+        .frame(width: side, height: side)
+        .task(id: Key(path: path, pixels: pixels, revision: revision)) {
+            image = await Self.render(path, pixels: pixels)
+        }
+    }
+
+    @MainActor
+    static func render(_ path: String, pixels: Int) -> CGImage? {
+        let icon = NSWorkspace.shared.icon(forFile: path)
+        // 图标的 size 默认是 32pt，先放大，取图时才会选上最大的那张（512@2x / 1024）。
+        icon.size = NSSize(width: pixels, height: pixels)
+        var rect = NSRect(x: 0, y: 0, width: pixels, height: pixels)
+        return icon.cgImage(forProposedRect: &rect, context: nil, hints: nil)
+    }
+}
 
 private struct PhotoChip: View {
     let url: URL

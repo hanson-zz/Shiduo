@@ -25978,6 +25978,70 @@
           }
         }
       }
+    },
+    "拾掇风格": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo style"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇风格"
+          }
+        }
+      }
+    },
+    "系统图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System icons"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统图标"
+          }
+        }
+      }
+    },
+    "图标样式": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon style"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图标样式"
+          }
+        }
+      }
+    },
+    "「系统图标」显示访达里看到的图标，包括自定义图标和「文件夹上色」的结果。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“System icons” shows the icons you see in Finder, including custom icons and folders colored with Color Folder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「系统图标」显示访达里看到的图标，包括自定义图标和「文件夹上色」的结果。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

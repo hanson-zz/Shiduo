@@ -20,6 +20,7 @@ struct SettingsView: View {
     @AppStorage(UnlockCelebrationWindow.soundKey) private var celebrationSound = true
     @State private var reminderDenied = false
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
+    @AppStorage(FolderWallIconStyle.key) private var folderWallIconStyle: FolderWallIconStyle = .shiduo
     @AppStorage(FloatingShelfController.enabledKey) private var floatingShelfEnabled = false
     @AppStorage(FloatingShelfHotKey.enabledKey) private var floatingShelfHotKey = true
     @AppStorage(FloatingShelfHotKey.choiceKey) private var floatingShelfHotKeyChoice: FloatingShelfHotKey = .controlOptionS
@@ -99,6 +100,12 @@ struct SettingsView: View {
                 }
             }
             Button("添加到文件夹墙…") { store.choosePinnedFolder() }
+            Picker("图标样式", selection: $folderWallIconStyle) {
+                ForEach(FolderWallIconStyle.allCases) { Text($0.title).tag($0) }
+            }
+            Text("「系统图标」显示访达里看到的图标，包括自定义图标和「文件夹上色」的结果。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
 
         Section("关于") {
