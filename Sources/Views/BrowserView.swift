@@ -19,6 +19,7 @@ struct BrowserView: View {
     @State private var chatKind: ChatFileKind = .all
     /// “来源”筛选：只看从某个来源下载的文件。
     @State private var sourceFilter: String?
+    @AppStorage("viewMode") private var viewMode: ViewMode = .grid
 
     private var sourceGroups: [SourceGroup] { SourceGroup.make(from: store.items) }
 
@@ -52,6 +53,10 @@ struct BrowserView: View {
                 FolderPathBar()
                 Divider()
             }
+            if let category = store.libraryCategory, store.subCounts != nil, !LibrarySub.subs(for: category).isEmpty {
+                LibrarySubChips(category: category)
+                Divider()
+            }
             // 设了来源筛选时菜单一直显示，免得列表里没有下载文件时没法清掉筛选。
             if showsOCRTools || !sourceGroups.isEmpty || sourceFilter != nil {
                 HStack(spacing: 12) {
@@ -68,6 +73,11 @@ struct BrowserView: View {
                 Divider()
             }
             content
+            // 列表模式：翻到底的提示放在列表下面（网格模式放在网格最后）。
+            if viewMode == .list, store.libraryCategory != nil, !visible.isEmpty {
+                Divider()
+                LibraryListFooter()
+            }
             BrowserBottomBar(itemCount: visibleCount, selected: firstSelected, selectedCount: store.selectedIDs.count)
         }
         .onChange(of: store.selection) { sourceFilter = nil }
@@ -93,6 +103,10 @@ struct BrowserView: View {
         let bytes = visible.reduce(Int64(0)) { $0 + $1.size }
         // 列表被截断：写成「3000 / 12480 个项目」，和侧边栏的总数对得上。
         if let total = store.truncatedTotal, visible.count == store.items.count {
+            return String(localized: "\(visible.count) / \(total) 个项目 · \(bytes.byteText)")
+        }
+        // 资料库类别还没翻完：「3000 / 12480 个项目」，翻到底会继续加载。
+        if let total = store.libraryTotal, visible.count == store.items.count, total > visible.count, store.canLoadMore {
             return String(localized: "\(visible.count) / \(total) 个项目 · \(bytes.byteText)")
         }
         return String(localized: "\(visible.count) 个项目 · \(bytes.byteText)")
@@ -172,6 +186,89 @@ struct BrowserView: View {
                     Label("识别文字", systemImage: "text.viewfinder")
                 }
                 .help("在本机识别这里所有图片中的文字（最多 500 张），之后就能按文字筛选和搜索")
+            }
+        }
+    }
+}
+
+/// 资料库类别顶部的小分类：全部 · 照片 · 截图 · 设计稿 · 其他，带数量。
+struct LibrarySubChips: View {
+    @EnvironmentObject private var store: LibraryStore
+    let category: FileCategory
+
+    var body: some View {
+        let counts = store.subCounts ?? [:]
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                chip(String(localized: "全部"), count: counts.values.reduce(0, +), selected: store.librarySub == nil) {
+                    store.selectSub(nil)
+                }
+                ForEach(LibrarySub.subs(for: category)) { sub in
+                    let n = counts[sub] ?? 0
+                    if n > 0 || store.librarySub == sub {
+                        chip(sub.title, count: n, selected: store.librarySub == sub) { store.selectSub(sub) }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 7)
+        }
+    }
+
+    private func chip(_ title: String, count: Int, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Text(title)
+                Text(count.formatted())
+                    .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                    .monospacedDigit()
+            }
+            .font(.callout)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(selected ? Color.accentColor.opacity(0.16) : Color.primary.opacity(0.06)))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// 资料库类别列表的最后：还有没取回来的就自动加载下一页；翻完了显示「已忽略 N 个应用和系统里的文件 · 设置」。
+struct LibraryListFooter: View {
+    @EnvironmentObject private var store: LibraryStore
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Group {
+            if store.libraryCategory == nil {
+                EmptyView()
+            } else if store.canLoadMore {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("正在加载更多…")
+                }
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                // 出现在屏幕上（翻到底）时加载下一页；加载完还在屏幕上就接着加载。
+                .task(id: store.items.count) { store.loadMore() }
+            } else if store.ignoredCount > 0 {
+                HStack(spacing: 4) {
+                    Text("已忽略 \(store.ignoredCount) 个应用和系统里的文件")
+                    Text("·")
+                    Button("设置") {
+                        UserDefaults.standard.set(SettingsView.Tab.general.rawValue, forKey: "settings.tab")
+                        openSettings()
+                    }
+                    .buttonStyle(.link)
+                    .help("设置 › 通用 › 资料库范围")
+                }
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
             }
         }
     }
@@ -451,6 +548,7 @@ struct FileCollectionView: View {
         ScrollViewReader { proxy in
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: thumbnailSize + 28), spacing: 8)], spacing: 10) {
+                Section {
                 ForEach(sorted) { item in
                     FileGridCell(
                         item: item, size: CGFloat(thumbnailSize), selected: store.selectedIDs.contains(item.id),
@@ -482,6 +580,10 @@ struct FileCollectionView: View {
                             Color.clear.preference(key: GridCellFramesKey.self,
                                                    value: [item.id: proxy.frame(in: .named(Self.gridSpace))])
                         })
+                }
+                } footer: {
+                    // 资料库类别：翻到底自动加载下一页 / 已忽略的文件数（其他页面什么也不显示）。
+                    LibraryListFooter()
                 }
             }
             // 量网格本身的宽度（不含边距和滚动条），↑ ↓ 的每行个数才和实际排版一致。
@@ -688,6 +790,8 @@ struct FileCollectionView: View {
                     }
                 }
                 .help(item.path)
+                // 资料库类别：最后一行出现时加载下一页。
+                .onAppear { if item.id == sortedItems.last?.id { store.loadMore() } }
             }
             .width(min: 180, ideal: 320)
             TableColumn("修改日期", value: \FileItem.sortDate) { item in

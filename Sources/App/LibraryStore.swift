@@ -96,6 +96,7 @@ final class LibraryStore: ObservableObject {
             if selection == .similarPhotos { duplicatesTab = .similar }
             if selection == .duplicates { duplicatesTab = .exact }
             browsePath = nil
+            librarySub = nil
             if !navigating { history.reset() }
             reload()
         }
@@ -307,6 +308,100 @@ final class LibraryStore: ObservableObject {
 
     @Published var items: [FileItem] = []
     @Published var isLoading = false
+
+    // MARK: 资料库类别：小分类、翻到底加载更多、被忽略的文件数
+
+    /// 选中的小分类（nil = 全部）。换页面时清掉。
+    @Published private(set) var librarySub: LibrarySub?
+    /// 各小分类的数量（nil = 这个页面没有小分类）。
+    @Published private(set) var subCounts: [LibrarySub: Int]?
+    /// 资料库类别：当前小分类一共有多少个（nil = 不是资料库类别）。
+    @Published private(set) var libraryTotal: Int?
+    /// 已经从 Spotlight 取到第几个（下一页从这里开始）。
+    private var libraryLoaded = 0
+    @Published private(set) var isLoadingMore = false
+    /// 「已忽略 N 个应用和系统里的文件」。
+    @Published private(set) var ignoredCount = 0
+    private var moreTask: Task<Void, Never>?
+    private var ignoredTask: Task<Void, Never>?
+
+    /// 当前页面是资料库类别（全部图片 / 视频 / 音乐 / 文稿 / 压缩包 / 最近使用），并且不在看搜索结果。
+    var libraryCategory: FileCategory? {
+        guard activeQuery == nil, case .category(let c) = selection, c.usesLibraryScope else { return nil }
+        return c
+    }
+
+    /// 还有没取回来的文件（翻到底时加载下一页）。
+    var canLoadMore: Bool {
+        guard libraryCategory != nil, let total = libraryTotal else { return false }
+        return libraryLoaded < total
+    }
+
+    /// 点小分类：重新查这个小分类（数量和翻页都在这个小分类里）。
+    func selectSub(_ sub: LibrarySub?) {
+        guard sub != librarySub else { return }
+        librarySub = sub
+        reload()
+    }
+
+    /// 翻到底：取下一页（每次 3000 个），直到取完。
+    func loadMore() {
+        guard canLoadMore, !isLoadingMore, !isLoading, !Demo.isOn, let c = libraryCategory else { return }
+        let target = selection
+        let sub = librarySub
+        let offset = libraryLoaded
+        isLoadingMore = true
+        moreTask = Task {
+            let page = await Queries.categoryPage(c, sub: sub, offset: offset)
+            defer { isLoadingMore = false }
+            guard !Task.isCancelled, selection == target, librarySub == sub, activeQuery == nil,
+                  libraryLoaded == offset else { return }
+            let seen = Set(items.map(\.id))
+            let fresh = page.items.filter { !seen.contains($0.id) }
+            remember(fresh)
+            libraryLoaded = offset + page.items.count
+            if page.items.isEmpty { libraryLoaded = page.total ?? libraryLoaded }
+            libraryTotal = page.total
+            if let counts = page.subCounts { subCounts = counts }
+            if !fresh.isEmpty { items += fresh }
+        }
+    }
+
+    /// 读完一页资料库类别后记下数量和翻页位置；不是资料库类别时清空。
+    private func applyLibrary(_ page: ListPage, for target: SidebarItem) {
+        moreTask?.cancel()
+        isLoadingMore = false
+        guard case .category(let c) = target, c.usesLibraryScope else {
+            libraryTotal = nil
+            subCounts = nil
+            libraryLoaded = 0
+            ignoredCount = 0
+            return
+        }
+        libraryTotal = page.total
+        libraryLoaded = page.offset + page.items.count
+        subCounts = page.subCounts
+    }
+
+    /// 后台数一下这个类别有多少文件被资料库范围挡在外面（底部那行提示）。
+    private func refreshIgnoredCount(_ target: SidebarItem) {
+        ignoredTask?.cancel()
+        guard !Demo.isOn, case .category(let c) = target, c.usesLibraryScope else {
+            ignoredCount = 0
+            return
+        }
+        ignoredTask = Task {
+            let n = await Queries.ignoredCount(c)
+            guard !Task.isCancelled, selection == target else { return }
+            ignoredCount = n
+        }
+    }
+
+    /// 资料库范围改了（设置、右键「不在资料库中显示」）：重新读当前的资料库类别，马上重新数各类别。
+    func libraryScopeChanged() {
+        if libraryCategory != nil { reload() }
+        scheduleCountsRefresh(delay: 0)
+    }
     @Published var totals: [FileCategory: CategoryTotal] = [:]
     @Published var shelves: [Shelf] = []
     @Published var previews: [FileCategory: [FileItem]] = [:]
@@ -489,12 +584,14 @@ final class LibraryStore: ObservableObject {
         guard Self.quietlyRefreshable(target) else { return }
         let folder = currentFolder
         quietTask?.cancel()
+        let sub = librarySub
         quietTask = Task {
-            let page = await fetch(target)
+            let page = await fetch(target, quiet: true)
             let result = page.items
             guard !Task.isCancelled, selection == target, currentFolder == folder,
-                  activeQuery == nil, !isLoading else { return }
+                  activeQuery == nil, !isLoading, librarySub == sub, !isLoadingMore else { return }
             applyTruncation(page)
+            applyLibrary(page, for: target)
             let signature: ([FileItem]) -> [String] = { $0.map { "\($0.path)|\($0.size)|\($0.modified?.timeIntervalSince1970 ?? 0)" } }
             guard Set(signature(result)) != Set(signature(items)) else { return }
             remember(result)
@@ -621,6 +718,7 @@ final class LibraryStore: ObservableObject {
         }
         items = []
         applyTruncation(ListPage([]))
+        applyLibrary(ListPage([]), for: .home)
         isLoading = true
         let page = await fetch(target)
         if case .chat = target { cleanup.updateChatCard() }
@@ -628,13 +726,18 @@ final class LibraryStore: ObservableObject {
         remember(page.items)
         items = page.items
         applyTruncation(page)
+        applyLibrary(page, for: target)
         isLoading = false
+        refreshIgnoredCount(target)
     }
 
     /// 读出一个页面的文件列表（不改界面状态）。
-    private func fetch(_ target: SidebarItem) async -> ListPage {
+    private func fetch(_ target: SidebarItem, quiet: Bool = false) async -> ListPage {
         switch target {
-        case .category(let c): return await Queries.categoryPage(c)
+        case .category(let c):
+            // 悄悄刷新时把已经翻出来的几页一起重新读，列表不会缩回第一页。
+            let limit = quiet ? max(Queries.categoryLimit, libraryLoaded) : Queries.categoryLimit
+            return await Queries.categoryPage(c, sub: librarySub, limit: limit)
         case .largeFiles: return await Queries.largeFilesPage()
         case .screenshots: return await Queries.screenshotsPage()
         case .downloads: return ListPage(await Queries.downloaded())
@@ -669,8 +772,9 @@ final class LibraryStore: ObservableObject {
         refreshTodayAdded()
         for category in FileCategory.dashboard {
             let r = await SpotlightSearch.run(
-                predicate: category.predicate(), scopes: category.scopes, maxItems: 3,
-                sortKey: category == .apps ? "kMDItemLastUsedDate" : category.sortKey
+                predicate: category.predicate(), scopes: Queries.libraryScopes(category), maxItems: 3,
+                sortKey: category == .apps ? "kMDItemLastUsedDate" : category.sortKey,
+                library: Queries.libraryFilter(category)
             )
             if stale { return }
             totals[category] = CategoryTotal(count: r.totalCount, bytes: r.totalBytes)
@@ -750,17 +854,17 @@ final class LibraryStore: ObservableObject {
 
     /// 文件被清理 / 搬走以后：过几秒（等 Spotlight 更新索引）重新数一下各分类和大文件的数量。
     /// 只数数量，不跑整个首页（预览、下载来源、清理扫描都不动）。
-    func scheduleCountsRefresh() {
+    func scheduleCountsRefresh(delay: Double = 5) {
         guard !Demo.isOn, dashboardLoaded else { return }
         countsTask?.cancel()
         countsTask = Task {
-            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if delay > 0 { try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000)) }
             if Task.isCancelled { return }
             var fresh: [FileCategory: CategoryTotal] = [:]
             for category in FileCategory.dashboard {
-                let r = await SpotlightSearch.run(predicate: category.predicate(), scopes: category.scopes, maxItems: 0)
+                let total = await Queries.categoryTotal(category)
                 if Task.isCancelled { return }
-                fresh[category] = CategoryTotal(count: r.totalCount, bytes: r.totalBytes)
+                fresh[category] = total
             }
             let large = await Self.countLargeFiles()
             if Task.isCancelled { return }

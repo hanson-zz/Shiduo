@@ -73,6 +73,8 @@ struct SettingsView: View {
     private var generalTab: some View {
         languageSection
 
+        LibraryScopeSection()
+
         Section("启动") {
             Toggle("登录时自动打开拾掇", isOn: $loginItem)
                 .onChange(of: loginItem) {
@@ -485,6 +487,76 @@ struct ProHintRow: View {
                     Button("开始 \(LicenseConfig.trialDays) 天免费试用") { license.startTrial() }
                 } else {
                     Button("了解 Pro") { MainWindow.show { license.showPaywall = true } }
+                }
+            }
+        }
+    }
+}
+
+/// 设置 › 通用 › 资料库范围：资料库（全部图片 / 视频 / 音乐 / 文稿 / 压缩包 / 最近使用）只算哪些文件夹里的文件。
+struct LibraryScopeSection: View {
+    @ObservedObject private var scopeStore = LibraryScopeStore.shared
+
+    var body: some View {
+        Section {
+            Text("资料库只显示你自己的文件：下面这些文件夹里的，不含应用、系统、缓存和素材库（照片图库、剪辑工程）里面的文件。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            ForEach(LibraryFolder.allCases) { folder in
+                Toggle(isOn: Binding(
+                    get: { scopeStore.isEnabled(folder) },
+                    set: { scopeStore.setEnabled(folder, $0) }
+                )) {
+                    Label(folder.title, systemImage: folder.symbol)
+                }
+            }
+            ForEach(scopeStore.scope.added, id: \.self) { path in
+                HStack {
+                    Label((path as NSString).lastPathComponent, systemImage: "folder")
+                        .help(path)
+                    Text(path)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer()
+                    Button("移除") { scopeStore.removeAdded(path) }
+                }
+            }
+            Button {
+                scopeStore.chooseFolders()
+            } label: {
+                Label("添加文件夹…", systemImage: "plus")
+            }
+            Toggle("隐藏小图标", isOn: Binding(
+                get: { scopeStore.hideSmallImages },
+                set: { scopeStore.hideSmallImages = $0 }
+            ))
+            Text("不显示宽和高都小于 100 像素的图片，比如网页小图和应用图标。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("资料库范围")
+        }
+        .id(LibraryScopeStore.settingsAnchor)
+
+        Section("不在资料库中显示") {
+            if scopeStore.scope.excluded.isEmpty {
+                Text("在文件夹上点右键，选「不在资料库中显示」，它里面的文件就不会出现在资料库里。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(scopeStore.scope.excluded, id: \.self) { path in
+                HStack {
+                    Label((path as NSString).lastPathComponent, systemImage: "eye.slash")
+                        .help(path)
+                    Text(path)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer()
+                    Button("恢复") { scopeStore.include(path) }
                 }
             }
         }

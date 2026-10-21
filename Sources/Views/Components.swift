@@ -108,6 +108,29 @@ private struct FileMenuItems<Extra: View>: View {
         if context.outsideMainWindow { MainWindow.show(then: action) } else { action() }
     }
 
+    /// 资料库范围：文件夹「不在资料库中显示 / 在资料库中显示」；资料库类别里的单个文件可以直接隐藏它所在的文件夹。
+    @ViewBuilder
+    private var libraryScopeItems: some View {
+        let scope = LibraryScopeStore.shared
+        if !folders.isEmpty, folders.count == items.count {
+            let paths = folders.map(\.path)
+            if paths.allSatisfy { scope.isExcluded($0) } {
+                Button("在资料库中显示") { for path in paths { scope.include(path) } }
+            } else {
+                Button("不在资料库中显示") {
+                    for path in paths { scope.exclude(path) }
+                    store.showToast(String(localized: "资料库里不再显示这里面的文件"))
+                }
+            }
+        } else if context.inBrowser, store.libraryCategory != nil, items.count == 1, let item = items.first {
+            let parent = item.url.deletingLastPathComponent().path
+            Button("不在资料库中显示所在文件夹") {
+                scope.exclude(parent)
+                store.showToast(String(localized: "资料库里不再显示「\((parent as NSString).lastPathComponent)」里的文件"))
+            }
+        }
+    }
+
     var body: some View {
         // 1. 打开、查看
         Button("打开") {
@@ -155,6 +178,7 @@ private struct FileMenuItems<Extra: View>: View {
         } else if items.count == 1, let item = items.first {
             Button("将所在文件夹添加到文件夹墙") { store.pin(item.url.deletingLastPathComponent().path) }
         }
+        libraryScopeItems
         Divider()
 
         // 3. 名字和外观

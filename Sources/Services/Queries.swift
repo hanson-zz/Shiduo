@@ -11,6 +11,9 @@ extension FileCategory {
                 P.any([P.after("kMDItemLastUsedDate", since), P.after("kMDItemDateAdded", since)]),
                 P.notFolder,
             ])
+        case .images:
+            // 设计稿（.sketch、.fig、.xd……）系统不一定认为是图片，按扩展名补上。
+            return P.any(contentTypes.map(P.type) + LibrarySub.designExtensions.map { P.nameLike("*.\($0)") })
         default:
             return P.any(contentTypes.map(P.type))
         }
@@ -19,6 +22,9 @@ extension FileCategory {
     var scopes: [Any] {
         self == .apps ? Scopes.apps : Scopes.home
     }
+
+    /// 资料库类别（全部图片 / 视频 / 音乐 / 文稿 / 压缩包 / 最近使用）：只算资料库范围里的文件。应用程序不受影响。
+    var usesLibraryScope: Bool { self != .apps }
 
     var sortKey: String {
         switch self {
@@ -117,6 +123,10 @@ struct ListPage {
     var items: [FileItem]
     var total: Int? = nil
     var cap: Int? = nil
+    /// 资料库类别：各小分类的数量（全量，不只是这一页）。
+    var subCounts: [LibrarySub: Int]? = nil
+    /// 资料库类别：这一页从第几个开始（翻到底加载更多时 > 0）。
+    var offset = 0
     /// 按什么顺序取的前 N 个（提示文字里用）。
     var order: ListTruncation.Order = .recent
 
@@ -142,7 +152,53 @@ enum Queries {
         await categoryPage(c).items
     }
 
-    static func categoryPage(_ c: FileCategory) async -> ListPage {
+    /// 资料库类别的规则（应用程序返回 nil）。
+    static func libraryFilter(_ c: FileCategory, sub: LibrarySub? = nil, countSubs: Bool = false) -> LibraryFilter? {
+        guard c.usesLibraryScope else { return nil }
+        return LibraryFilter(scope: LibraryScopeStore.snapshot, category: c, sub: sub, countSubs: countSubs)
+    }
+
+    /// 资料库类别的一页：从 offset 开始取 limit 个；total 是全部（或选中小分类）的总数，
+    /// 不设上限（翻到底自动加载下一页，不再停在 3000）。
+    static func categoryPage(_ c: FileCategory, sub: LibrarySub? = nil, offset: Int = 0, limit: Int = Queries.categoryLimit) async -> ListPage {
+        guard let library = libraryFilter(c, sub: sub, countSubs: true) else { return await legacyCategoryPage(c) }
+        let result = await SpotlightSearch.run(
+            predicate: c.predicate(), scopes: Scopes.library(library.scope), maxItems: limit,
+            sortKey: c.sortKey, offset: offset, library: library
+        )
+        var page = ListPage(result.items)
+        page.total = result.totalCount
+        page.offset = offset
+        page.subCounts = LibrarySub.subs(for: c).isEmpty ? nil : result.subCounts
+        if c == .recents {
+            page.items = result.items.sorted { $0.recentDate > $1.recentDate }
+        }
+        return page
+    }
+
+    /// 资料库类别的数量和总大小（首页卡片、侧边栏角标）。
+    static func categoryTotal(_ c: FileCategory) async -> CategoryTotal {
+        let r = await SpotlightSearch.run(
+            predicate: c.predicate(), scopes: libraryScopes(c), maxItems: 0, library: libraryFilter(c)
+        )
+        return CategoryTotal(count: r.totalCount, bytes: r.totalBytes)
+    }
+
+    /// 这个类别要查的文件夹：资料库类别用资料库范围，应用程序照旧。
+    static func libraryScopes(_ c: FileCategory) -> [Any] {
+        c.usesLibraryScope ? Scopes.library(LibraryScopeStore.snapshot) : c.scopes
+    }
+
+    /// 「已忽略 N 个应用和系统里的文件」：以前整个个人文件夹算进来、现在资料库范围不算的文件有多少个。
+    static func ignoredCount(_ c: FileCategory) async -> Int {
+        guard var library = libraryFilter(c) else { return 0 }
+        library.countIgnored = true
+        return await SpotlightSearch.run(
+            predicate: c.predicate(), scopes: Scopes.home, maxItems: 0, library: library
+        ).totalCount
+    }
+
+    private static func legacyCategoryPage(_ c: FileCategory) async -> ListPage {
         let result = await SpotlightSearch.run(
             predicate: c.predicate(), scopes: c.scopes, maxItems: categoryLimit,
             sortKey: c.sortKey, ascending: c == .apps
@@ -328,5 +384,15 @@ enum Queries {
             )) ?? []
             return urls.compactMap { FileItem(url: $0) }
         }.value
+    }
+}
+
+extension Scopes {
+    /// 资料库范围里实际存在的文件夹（Spotlight 的 searchScopes）。
+    static func library(_ scope: LibraryScope) -> [Any] {
+        scope.searchRoots { path in
+            var isDir: ObjCBool = false
+            return FileManager.default.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
+        }
     }
 }
