@@ -14,6 +14,7 @@ final class AppShortcutTests: XCTestCase {
     func testFinderCombosKeepFinderMeaning() {
         let byDisplay = Dictionary(uniqueKeysWithValues: AppShortcut.allCases.map { ($0.display, $0) })
         // 访达「前往」菜单里的这些，要么一样，要么不用。
+        XCTAssertEqual(byDisplay["⇧⌘H"], .homeFolder)
         XCTAssertEqual(byDisplay["⇧⌘D"], .desktop)
         XCTAssertEqual(byDisplay["⇧⌘O"], .documents)
         XCTAssertEqual(byDisplay["⌥⌘L"], .downloads)
@@ -22,11 +23,11 @@ final class AppShortcutTests: XCTestCase {
         XCTAssertEqual(byDisplay["⌘]"], .forward)
         XCTAssertEqual(byDisplay["⌘↑"], .enclosingFolder)
         XCTAssertEqual(byDisplay["⌃⌘T"], .addToFolderWall)   // 访达：添加到侧边栏
-        for finderOnly in ["⇧⌘K", "⇧⌘C", "⌘R", "⌥⌘I", "⇧⌘A", "⇧⌘G"] {
+        for finderOnly in ["⇧⌘K", "⇧⌘C", "⌘R", "⌥⌘I", "⌃⌘I", "⇧⌘A", "⇧⌘G", "⇧⌘U", "⇧⌘I", "⇧⌘F", "⇧⌘R", "⌘E"] {
             XCTAssertNil(byDisplay[finderOnly], "\(finderOnly) 在访达里是别的意思")
         }
         // 系统级的组合键不用。
-        for system in ["⌃⌘D", "⌃⌘F", "⌃⌘Q", "⌥⌘D"] {
+        for system in ["⌃⌘D", "⌃⌘F", "⌃⌘Q", "⌥⌘D", "⌃⌘空格"] {
             XCTAssertNil(byDisplay[system], system)
         }
     }
@@ -35,5 +36,8 @@ final class AppShortcutTests: XCTestCase {
         XCTAssertEqual(AppShortcut.addToShelf.display, "⌃⌘B")
         XCTAssertEqual(AppShortcut.refresh.display, "⌥⌘R")
         XCTAssertEqual(AppShortcut.openSelection.display, "⌘↓")
+        XCTAssertEqual(AppShortcut.imageTools.display, "⌃⌘E")
+        XCTAssertEqual(AppShortcut.home.display, "⌃⌘H")
+        XCTAssertEqual(AppShortcut.homeFolder.display, "⇧⌘H")
     }
 }

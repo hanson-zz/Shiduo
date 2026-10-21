@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// 拾掇主窗口里所有菜单快捷键，只在这里写一次：菜单、按钮的悬停提示、帮助和说明文字都从这里取。
-/// 原则：访达里有的组合键，要么做和访达一样的事，要么不用（⇧⌘D 桌面、⇧⌘O 文稿、⌥⌘L 下载……）。
-/// 拾掇自己的页面用 ⌃⌘ 加字母（⌃⌘ 加数字留给「数字键直达」，⌃⌘D 是系统的「查询」、⌃⌘F 全屏、⌃⌘Q 锁屏，都不用）。
+/// 原则：访达里有的组合键，要么做和访达一样的事，要么不用（⇧⌘H 个人文件夹、⇧⌘D 桌面、⇧⌘O 文稿、⌥⌘L 下载……）。
+/// 拾掇自己的页面用 ⌃⌘ 加字母（⌃⌘H 首页、⌃⌘E 图片工具……；⌃⌘ 加数字留给「数字键直达」，⌃⌘D 是系统的「查询」、⌃⌘F 全屏、⌃⌘Q 锁屏、⌃⌘空格 表情与符号，都不用）。
+/// ⌥⌘I 在访达里是「检查器」、⌃⌘I 是「显示摘要信息」，所以图片工具用 ⌃⌘E。
 enum AppShortcut: String, CaseIterable, Identifiable {
     // 文件
     case newFolder
@@ -31,6 +32,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
     case enclosingFolder
     case openSelection
     case home
+    case homeFolder
     case desktop
     case documents
     case downloads
@@ -44,7 +46,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         switch self {
         case .newFolder: return "n"
         case .addToFolderWall: return "t"
-        case .imageTools: return "i"
+        case .imageTools: return "e"
         case .search: return "f"
         case .copyText: return "c"
         case .addToShelf: return "b"
@@ -65,6 +67,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .enclosingFolder: return .upArrow
         case .openSelection: return .downArrow
         case .home: return "h"
+        case .homeFolder: return "h"
         case .desktop: return "d"
         case .documents: return "o"
         case .downloads: return "l"
@@ -79,11 +82,11 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .search, .asIcons, .asList, .showInfo, .toggleStatusBar, .viewOptions, .biggerIcons, .smallerIcons,
              .back, .forward, .enclosingFolder, .openSelection:
             return .command
-        case .newFolder, .showPreview, .home, .desktop, .documents, .downloadSources:
+        case .newFolder, .showPreview, .homeFolder, .desktop, .documents, .downloadSources:
             return [.command, .shift]
         case .toggleToolbar, .togglePathBar, .refresh, .downloads:
             return [.command, .option]
-        case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .duplicates, .cleanup:
+        case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .home, .duplicates, .cleanup:
             return [.command, .control]
         }
     }
@@ -114,6 +117,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .enclosingFolder: return String(localized: "上一层文件夹")
         case .openSelection: return String(localized: "打开")
         case .home: return String(localized: "首页")
+        case .homeFolder: return String(localized: "个人文件夹")
         case .desktop: return String(localized: "桌面")
         case .documents: return String(localized: "文稿")
         case .downloads: return String(localized: "下载")

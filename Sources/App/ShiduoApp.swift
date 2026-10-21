@@ -116,6 +116,7 @@ struct ShiduoApp: App {
                     .keyboardShortcut(.enclosingFolder)
                     .disabled(!store.canGoUp || renaming)
                 Divider()
+                // ⇧⌘H 在访达里是「个人文件夹」，留给下面那一项；首页用 ⌃⌘H。
                 Button("首页") { store.selection = .home }
                     .keyboardShortcut(.home)
                     .disabled(renaming)
@@ -124,7 +125,10 @@ struct ShiduoApp: App {
                 Button("文件夹墙") { store.selection = .folderWall }
                     .disabled(renaming)
                 Divider()
-                // 这三个和访达的「前往」菜单一样。
+                // 这四个和访达的「前往」菜单一样，都在拾掇里打开，不跳到访达。
+                Button("个人文件夹") { store.goToHomeFolder() }
+                    .keyboardShortcut(.homeFolder)
+                    .disabled(renaming)
                 Button("桌面") { store.goToFolder(.desktop) }
                     .keyboardShortcut(.desktop)
                     .disabled(renaming)
@@ -207,7 +211,7 @@ struct SupportCommands: Commands {
             Button("支持拾掇…") { openWindow(id: SponsorView.windowID) }
         }
         CommandGroup(after: .newItem) {
-            // ⌥⌘I 在访达里是「检查器」，改用 ⌃⌘I。
+            // ⌥⌘I 在访达里是「检查器」、⌃⌘I 是「显示摘要信息」，用 ⌃⌘E。
             Button("图片工具…") { ImageStudio.shared.open([], mode: .stitch, toShelf: false) }
                 .keyboardShortcut(.imageTools)
         }

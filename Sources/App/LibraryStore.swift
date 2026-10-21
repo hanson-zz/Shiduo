@@ -1365,6 +1365,11 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    /// 「前往」菜单的「个人文件夹」（⇧⌘H，和访达一样）：在拾掇里浏览 ~，不跳到访达；走 openFolder，记进返回历史。
+    func goToHomeFolder() {
+        openFolder(FileManager.default.homeDirectoryForCurrentUser)
+    }
+
     /// 「前往」菜单的桌面 / 文稿 / 下载（⇧⌘D / ⇧⌘O / ⌥⌘L，和访达一样），记进返回历史。
     func goToFolder(_ folder: StandardFolder) {
         let target = SidebarItem.pinned(folder.path)
