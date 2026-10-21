@@ -157,6 +157,13 @@ final class Updater: ObservableObject {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     static weak var updater: Updater?
 
+    // 窗口出现前就套上设置里的外观，避免先按系统外观画一帧再闪成另一种。
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        MainActor.assumeIsolated {
+            AppAppearance.current.apply()
+        }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         MainActor.assumeIsolated {
             // 拾掇 Pro 介绍页用独立窗口：主窗口关着也能弹出（见 PaywallWindow）。

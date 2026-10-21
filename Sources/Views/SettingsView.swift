@@ -20,6 +20,7 @@ struct SettingsView: View {
     @AppStorage(UnlockCelebrationWindow.soundKey) private var celebrationSound = true
     @State private var reminderDenied = false
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
+    @AppStorage(AppAppearance.key) private var appearance: AppAppearance = .system
     @AppStorage(FolderWallIconStyle.key) private var folderWallIconStyle: FolderWallIconStyle = .shiduo
     @AppStorage(FloatingShelfController.enabledKey) private var floatingShelfEnabled = false
     @AppStorage(FloatingShelfHotKey.enabledKey) private var floatingShelfHotKey = true
@@ -261,6 +262,10 @@ struct SettingsView: View {
                     Button("立即重新打开") { AppLanguage.relaunch() }
                 }
             }
+            Picker("外观", selection: $appearance) {
+                ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
+            }
+            .onChange(of: appearance) { appearance.apply() }
         }
     }
 
