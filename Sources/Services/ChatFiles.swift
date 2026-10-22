@@ -107,6 +107,87 @@ final class ChatFilesStore: ObservableObject {
 
     var allFiles: [FileItem] { ChatApp.allCases.flatMap { files[$0] ?? [] } }
 
+    // MARK: 侧边栏数字（聊天文件占用的空间）
+
+    /// 每个 App 聊天文件占用的空间：后台统计、存起来，最多每 5 分钟重新算一次。
+    /// 只在有完全磁盘访问权限时统计（没有权限时读别的 App 的容器会弹系统提示，也读不全）。
+    @Published private(set) var badgeBytes: [ChatApp: Int64] = ChatFilesStore.loadBadgeBytes()
+    private var badgeRefreshedAt = Date.distantPast
+    private var badgeTask: Task<Void, Never>?
+    private nonisolated static let badgeBytesKey = "chat.badgeBytes"
+    private static let badgeMinInterval: TimeInterval = 300
+
+    /// 侧边栏显示的占用空间：扫描过就用扫描结果，否则用后台统计的。0 = 不显示。
+    func sidebarBytes(_ app: ChatApp) -> Int64 {
+        hasScanned ? bytes(app) : (badgeBytes[app] ?? 0)
+    }
+
+    /// 后台重新统计（启动、切回拾掇、刚拿到权限时调用；5 分钟内重复调用直接跳过）。
+    func refreshBadges(force: Bool = false) {
+        guard FullDiskAccessMonitor.shared.granted, badgeTask == nil else { return }
+        guard force || Date().timeIntervalSince(badgeRefreshedAt) > Self.badgeMinInterval else { return }
+        badgeRefreshedAt = Date()
+        let apps = installedApps
+        badgeTask = Task { [weak self] in
+            let sizes = await Task.detached(priority: .background) { () -> [ChatApp: Int64] in
+                var out: [ChatApp: Int64] = [:]
+                for app in apps { out[app] = ChatFilesStore.totalBytes(app) }
+                return out
+            }.value
+            guard let self else { return }
+            self.badgeTask = nil
+            // 统计期间做完了完整扫描，以扫描结果为准。
+            if !self.hasScanned { self.setBadgeBytes(sizes) }
+        }
+    }
+
+    private func setBadgeBytes(_ sizes: [ChatApp: Int64]) {
+        if sizes != badgeBytes { badgeBytes = sizes }
+        let plain = Dictionary(uniqueKeysWithValues: sizes.map { ($0.key.rawValue, NSNumber(value: $0.value)) })
+        UserDefaults.standard.set(plain, forKey: Self.badgeBytesKey)
+    }
+
+    private nonisolated static func loadBadgeBytes() -> [ChatApp: Int64] {
+        guard let plain = UserDefaults.standard.dictionary(forKey: badgeBytesKey) else { return [:] }
+        var out: [ChatApp: Int64] = [:]
+        for (key, value) in plain {
+            if let app = ChatApp(rawValue: key), let n = value as? NSNumber { out[app] = n.int64Value }
+        }
+        return out
+    }
+
+    /// 只加大小，不建 FileItem、不读类型：和 collect 用同样的筛选规则，所以数字和聊天文件页一致。
+    nonisolated static func totalBytes(_ app: ChatApp) -> Int64 {
+        let fm = FileManager.default
+        let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey]
+        var total: Int64 = 0
+        var count = 0
+        var seen = Set<String>()
+        for root in app.roots where fm.fileExists(atPath: root) {
+            guard let enumerator = fm.enumerator(
+                at: URL(fileURLWithPath: root), includingPropertiesForKeys: keys,
+                options: [.skipsHiddenFiles, .skipsPackageDescendants]
+            ) else { continue }
+            for case let url as URL in enumerator {
+                let path = url.path
+                guard app.allowedSegments.contains(where: { path.contains($0) }),
+                      !path.lowercased().contains("thumb"),
+                      !skippedExtensions.contains(url.pathExtension.lowercased()),
+                      !seen.contains(path),
+                      let values = try? url.resourceValues(forKeys: Set(keys)),
+                      values.isRegularFile == true
+                else { continue }
+                let size = Int64(values.fileSize ?? 0)
+                guard size >= 8_000 else { continue }
+                seen.insert(path)
+                total += size
+                count += 1
+                if count >= 50_000 { return total }
+            }
+        }
+        return total
+    }
+
     func items(for app: ChatApp) async -> [FileItem] {
         if !hasScanned { await scan() }
         return files[app] ?? []
@@ -125,6 +206,7 @@ final class ChatFilesStore: ObservableObject {
         files = result
         isScanning = false
         hasScanned = true
+        setBadgeBytes(Dictionary(uniqueKeysWithValues: apps.map { ($0, bytes($0)) }))
     }
 
     func remove(paths: Set<String>) {

@@ -35,6 +35,35 @@ final class DuplicateScanner: ObservableObject {
         }
     }
 
+    // 侧边栏「重复与相似」的数字：上次扫描算出的可腾出空间，存起来，下次启动不用为了这个数字重新扫一遍。
+    // 超过 7 天的不再显示（文件可能早就变了）。
+    private nonisolated static let cachedBytesKey = "duplicates.lastReclaimable"
+    private nonisolated static let cachedDateKey = "duplicates.lastScanDate"
+    private nonisolated static let cacheMaxAge: TimeInterval = 7 * 86_400
+
+    @Published private(set) var cachedReclaimable: Int64 = DuplicateScanner.loadCachedReclaimable()
+
+    /// 侧边栏显示的可腾出空间：这次运行扫描过就用实时结果，否则用上次扫描存下的。0 = 不显示。
+    var sidebarBytes: Int64 {
+        hasScanned && !isRunning ? reclaimable : cachedReclaimable
+    }
+
+    private nonisolated static func loadCachedReclaimable() -> Int64 {
+        let defaults = UserDefaults.standard
+        guard let date = defaults.object(forKey: cachedDateKey) as? Date,
+              Date().timeIntervalSince(date) < cacheMaxAge
+        else { return 0 }
+        return Int64(defaults.integer(forKey: cachedBytesKey))
+    }
+
+    private func saveCache(scanned: Bool) {
+        let bytes = reclaimable
+        let defaults = UserDefaults.standard
+        defaults.set(Int(bytes), forKey: Self.cachedBytesKey)
+        if scanned { defaults.set(Date(), forKey: Self.cachedDateKey) }
+        if cachedReclaimable != bytes { cachedReclaimable = bytes }
+    }
+
     func start(minSize: Int64 = 1_000_000) {
         task?.cancel()
         mayBeStale = false
@@ -58,6 +87,7 @@ final class DuplicateScanner: ObservableObject {
             g.items.removeAll { gone($0.path) }
             return g.items.count > 1 ? g : nil
         }
+        if hasScanned && !isRunning { saveCache(scanned: false) }
     }
 
     private func run(minSize: Int64) async {
@@ -101,6 +131,7 @@ final class DuplicateScanner: ObservableObject {
         progress = 1
         isRunning = false
         hasScanned = true
+        saveCache(scanned: true)
     }
 
     nonisolated static func sha256(of url: URL, limit: Int?) -> String? {

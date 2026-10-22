@@ -10,6 +10,7 @@ struct SidebarView: View {
     @ObservedObject private var shelf = ShelfStore.shared
     @ObservedObject private var reminders = ReminderStore.shared
     @ObservedObject private var customTags = CustomTagStore.shared
+    @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
     @State private var shelfTargeted = false
 
     /// 常用位置，和访达侧边栏一样。
@@ -119,11 +120,15 @@ struct SidebarView: View {
                     .badge(store.largeFileCount > 0 ? Text("\(store.largeFileCount)") : nil)
                     .tag(SidebarItem.largeFiles)
                     .help("200 MB 以上的文件")
+                // 截图 / 下载来源：数字是今天新增的个数，没有就不显示。
                 Label("截图", systemImage: "camera.viewfinder")
+                    .badge(store.todayScreenshotCount > 0 ? Text("\(store.todayScreenshotCount)") : nil)
                     .tag(SidebarItem.screenshots)
+                    .help("所有截图；数字是今天新增的张数")
                 Label("下载来源", systemImage: "arrow.down.circle")
-                    .badge(store.sourceGroups.isEmpty ? nil : Text("\(store.sourceGroups.count)"))
+                    .badge(store.todayDownloadCount > 0 ? Text("\(store.todayDownloadCount)") : nil)
                     .tag(SidebarItem.downloads)
+                    .help("按网站和 App 分组的下载；数字是今天新增的个数")
             }
 
             SavedSearchesSidebarSection()
@@ -138,9 +143,9 @@ struct SidebarView: View {
                     .simultaneousGesture(TapGesture().onEnded { store.reselectCleanup() })
                 // 重复文件和相似照片是同一个页面（页内切换），侧边栏只占一行。
                 Label("重复与相似", systemImage: "doc.on.doc")
-                    .badge(duplicates.hasScanned && duplicates.reclaimable > 0 ? Text(duplicates.reclaimable.byteText).foregroundColor(.green) : nil)
+                    .badge(duplicates.sidebarBytes > 0 ? Text(duplicates.sidebarBytes.byteText).foregroundColor(.green) : nil)
                     .tag(duplicatesRow)
-                    .help("完全相同的副本，以及看起来差不多的照片")
+                    .help("完全相同的副本，以及看起来差不多的照片；数字是上次扫描找到的可腾出空间")
                     .simultaneousGesture(TapGesture().onEnded { store.reselectDuplicates() })
             }
 
@@ -153,8 +158,10 @@ struct SidebarView: View {
                             Image(systemName: app.symbol)
                                 .foregroundStyle(app == .wechat ? Color.green : Color.blue)
                         }
-                        .badge(chat.hasScanned && chat.bytes(app) > 0 ? Text(chat.bytes(app).byteText) : nil)
+                        // 聊天文件占用的空间；没有完全磁盘访问权限时读不全，不显示。
+                        .badge(fullDiskAccess.granted && chat.sidebarBytes(app) > 0 ? Text(chat.sidebarBytes(app).byteText) : nil)
                         .tag(SidebarItem.chat(app))
+                        .help("\(app.name)聊天里收到的文件；数字是它们占用的空间")
                     }
                 }
             }

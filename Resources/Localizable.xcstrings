@@ -26528,6 +26528,70 @@
           }
         }
       }
+    },
+    "所有截图；数字是今天新增的张数": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All screenshots; the number is how many were added today"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有截图；数字是今天新增的张数"
+          }
+        }
+      }
+    },
+    "按网站和 App 分组的下载；数字是今天新增的个数": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads grouped by website and app; the number is how many were added today"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按网站和 App 分组的下载；数字是今天新增的个数"
+          }
+        }
+      }
+    },
+    "完全相同的副本，以及看起来差不多的照片；数字是上次扫描找到的可腾出空间": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact copies and photos that look alike; the number is the space the last scan found you can free up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全相同的副本，以及看起来差不多的照片；数字是上次扫描找到的可腾出空间"
+          }
+        }
+      }
+    },
+    "%@聊天里收到的文件；数字是它们占用的空间": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files received in %@ chats; the number is the space they take up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@聊天里收到的文件；数字是它们占用的空间"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

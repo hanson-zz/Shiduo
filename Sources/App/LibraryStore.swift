@@ -470,7 +470,12 @@ final class LibraryStore: ObservableObject {
     @Published var previews: [FileCategory: [FileItem]] = [:]
     @Published var sourceGroups: [SourceGroup] = []
     /// 首页「今天新增」：今天（本地日历）加入的文件，新的在前。
-    @Published private(set) var todayAdded: [FileItem] = []
+    @Published private(set) var todayAdded: [FileItem] = [] {
+        didSet { updateTodayBadges() }
+    }
+    /// 侧边栏「截图」「下载来源」的数字：今天新增的个数（从「今天新增」里数，不另外查）。
+    @Published private(set) var todayScreenshotCount = 0
+    @Published private(set) var todayDownloadCount = 0
     /// 打开“下载来源”时默认选中的来源。
     @Published var downloadSourceFilter: String?
     /// 演示模式的示例文件。
@@ -585,6 +590,19 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    private func updateTodayBadges() {
+        // 和「下载来源」页一样：下载 / 桌面 / 文稿里带下载来源记录的文件。
+        let roots = [Folders.downloads, Folders.desktop, Folders.documents]
+            .map { URL(fileURLWithPath: $0).standardizedFileURL.path + "/" }
+        var shots = 0, downloads = 0
+        for item in todayAdded {
+            if item.isScreenshot { shots += 1 }
+            if !item.whereFroms.isEmpty, roots.contains(where: { item.path.hasPrefix($0) }) { downloads += 1 }
+        }
+        if shots != todayScreenshotCount { todayScreenshotCount = shots }
+        if downloads != todayDownloadCount { todayDownloadCount = downloads }
+    }
+
     /// 应用一直开着时，到 0 点也换一天（NSCalendarDayChanged 之外再保险一次）。
     private func scheduleMidnightRefresh() {
         midnightTask?.cancel()
@@ -629,6 +647,7 @@ final class LibraryStore: ObservableObject {
 
     private func appBecameActive() {
         refreshTodayAdded()
+        chat.refreshBadges()
         // Spotlight 类页面每次都要重新查，节流一下；文件夹页面直接读磁盘，很便宜。
         let isFolderPage = currentFolder != nil
         guard isFolderPage || Date().timeIntervalSince(lastActivationRefresh) > 30 else { return }
@@ -878,6 +897,8 @@ final class LibraryStore: ObservableObject {
         ocr.autoRecognize(allShots + recentPhotos)
         if chat.autoScan && !chat.hasScanned {
             await chat.scan()
+        } else if !chat.hasScanned {
+            chat.refreshBadges()
         }
         if !cleanup.hasScanned && !cleanup.isRunning {
             await cleanup.scan()

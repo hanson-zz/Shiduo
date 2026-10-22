@@ -61,7 +61,11 @@ final class FullDiskAccessMonitor: ObservableObject {
 
     private func apply(_ now: Bool) {
         let defaults = UserDefaults.standard
-        if granted != now { granted = now }
+        if granted != now {
+            granted = now
+            // 刚拿到权限：马上统计微信 / QQ 占用的空间，侧边栏数字出来。
+            if now { ChatFilesStore.shared.refreshBadges(force: true) }
+        }
         if now {
             defaults.set(true, forKey: Self.wasGrantedKey)
             defaults.removeObject(forKey: Self.snoozeCountKey)
