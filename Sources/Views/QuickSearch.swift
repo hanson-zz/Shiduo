@@ -298,7 +298,7 @@ struct QuickSearchView: View {
                                 .id(item.id)
                                 .onTapGesture(count: 2) { open(item) }
                                 .onTapGesture { model.selected = index }
-                                .onDrag { NSItemProvider(object: item.url as NSURL) }
+                                .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                                 // 和主窗口同一套右键菜单。搜索框一直在输入状态，⌘⌫ 留给它删到行首；这里用右键移到废纸篓。
                                 .contextMenu {
                                     FileContextMenu(items: [item], context: FileMenuContext(
@@ -340,7 +340,7 @@ struct QuickSearchRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ThumbnailView(url: item.url, size: 32, isFolder: item.isDirectory)
+            ThumbnailView(url: item.url, size: 32, isFolder: item.isPlainFolder)
                 .frame(width: 34, height: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)

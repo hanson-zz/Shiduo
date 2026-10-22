@@ -84,13 +84,13 @@ struct InspectorView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     // 拾掇风格下文件夹不用快速查看（那里是访达图标），显示拾掇文件夹。
-                    if mode == .preview && !(item.isDirectory && folderIconStyle == .shiduo) {
+                    if mode == .preview && !(item.isPlainFolder && folderIconStyle == .shiduo) {
                         FilePreviewView(url: item.url)
                             .frame(maxWidth: .infinity)
                             .frame(height: 300)
                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     } else {
-                        ThumbnailView(url: item.url, size: 220, modified: item.modified, isFolder: item.isDirectory)
+                        ThumbnailView(url: item.url, size: 220, modified: item.modified, isFolder: item.isPlainFolder)
                             .frame(maxWidth: .infinity)
                     }
                     Text(item.name)
@@ -225,7 +225,7 @@ private struct SelectionSummaryView: View {
                 let shown = Array(items.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }.prefix(9))
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], spacing: 8) {
                     ForEach(shown) { item in
-                        ThumbnailView(url: item.url, size: mode == .preview ? 80 : 64, modified: item.modified, isFolder: item.isDirectory)
+                        ThumbnailView(url: item.url, size: mode == .preview ? 80 : 64, modified: item.modified, isFolder: item.isPlainFolder)
                             .help(item.name)
                     }
                 }
@@ -318,7 +318,7 @@ struct OCRSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 16) {
-                ThumbnailView(url: item.url, size: 200, modified: item.modified, isFolder: item.isDirectory)
+                ThumbnailView(url: item.url, size: 200, modified: item.modified, isFolder: item.isPlainFolder)
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.name)
                         .font(.headline)

@@ -16,6 +16,24 @@ final class LibraryScopeStore: ObservableObject {
 
     /// 设置页打开时滚到「资料库范围」。
     static let settingsAnchor = "libraryScope"
+    /// 设置窗口已经开着时，叫它滚到「资料库范围」。
+    static let revealNotification = Notification.Name("LibraryScopeStore.revealInSettings")
+    /// 设置窗口还没开：打开后（onAppear）滚过去一次。
+    private var pendingReveal = false
+
+    /// 列表底部「已忽略 N 个… · 设置」：打开设置时滚到「资料库范围」。
+    func revealInSettings() {
+        pendingReveal = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            NotificationCenter.default.post(name: Self.revealNotification, object: nil)
+        }
+    }
+
+    /// 设置页出现 / 收到通知时调用：有待滚动的就返回 true（只滚一次）。
+    func consumeReveal() -> Bool {
+        defer { pendingReveal = false }
+        return pendingReveal
+    }
 
     @Published private(set) var scope: LibraryScope
 

@@ -223,6 +223,13 @@ extension FileItem {
 
     /// 大小要在后台算的：文件夹和包。
     var needsComputedSize: Bool { isDirectory || isPackage }
+
+    /// 普通文件夹（画成拾掇文件夹的）：Spotlight 给的 isDirectory 对 .rtfd、.photoslibrary、.xcodeproj 这类包也是真，
+    /// 它们在访达里是一个文件，图标照旧用系统图标。
+    var isPlainFolder: Bool {
+        isDirectory && !typeTree.contains("com.apple.package") && !typeTree.contains("com.apple.application-bundle")
+            && !typeTree.contains("com.apple.bundle")
+    }
 }
 
 /// 列表「大小」列和网格副标题：普通文件直接显示；文件夹和包在后台算，期间显示“计算中…”。

@@ -578,6 +578,7 @@ class MultiFileDragNSView: NSView, NSDraggingSource {
             item.setDraggingFrame(frame, contents: icon)
             return item
         }
+        InAppDrag.clearCopyOnly()
         let session = beginDraggingSession(with: items, event: event, source: self)
         session.animatesToStartingPositionsOnCancelOrFail = true
         session.draggingFormation = .pile

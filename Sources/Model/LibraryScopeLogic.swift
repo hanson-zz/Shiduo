@@ -32,6 +32,8 @@ enum LibraryFolder: String, CaseIterable, Identifiable, Hashable, Sendable {
 
     /// iCloud 云盘在磁盘上的位置（相对个人文件夹）。
     static let iCloudRelative = "Library/Mobile Documents/com~apple~CloudDocs"
+    /// 所有 iCloud 容器的上级（访达「iCloud 云盘」里的 Pages / Numbers / Keynote 等 App 文件夹在这里的 <容器>/Documents）。
+    static let mobileDocumentsRelative = "Library/Mobile Documents"
 
     /// 这个文件夹在磁盘上的位置。「桌面与文稿」存到 iCloud 时，文件实际在 iCloud 云盘里的 Desktop / Documents，两处都算。
     func paths(home: String) -> [String] {
@@ -44,7 +46,8 @@ enum LibraryFolder: String, CaseIterable, Identifiable, Hashable, Sendable {
         case .pictures: return [h + "/Pictures"]
         case .movies: return [h + "/Movies"]
         case .music: return [h + "/Music"]
-        case .iCloud: return [cloud]
+        // 整个 Mobile Documents：iCloud 云盘本身 + 各 App 容器的 Documents（容器里别的东西由 isNoise 排除）。
+        case .iCloud: return [h + "/" + Self.mobileDocumentsRelative]
         }
     }
 }
@@ -88,16 +91,35 @@ struct LibraryScope: Equatable, Sendable {
 
     var iCloudRoot: String { home + "/" + LibraryFolder.iCloudRelative }
 
-    /// 只看「自己的那一段」路径：iCloud 云盘里的文件去掉 ~/Library/Mobile Documents/com~apple~CloudDocs 再判断，
-    /// 不然路径里的「/Library/」会把整个 iCloud 云盘当成系统文件。
+    var mobileDocumentsRoot: String { home + "/" + LibraryFolder.mobileDocumentsRelative }
+
+    /// 只看「自己的那一段」路径再判断：
+    /// - iCloud 云盘里的文件去掉 ~/Library/Mobile Documents/com~apple~CloudDocs，
+    ///   App 容器（访达 iCloud 云盘里的 Pages、Numbers……）去掉 ~/Library/Mobile Documents/<容器>/Documents，
+    ///   不然路径里的「/Library/」会把整个 iCloud 云盘当成系统文件；容器里 Documents 以外的东西算系统文件。
+    /// - 自己加的文件夹里的文件从那个文件夹开始算（加了 ~/Library 里的某个文件夹也能看到里面的文件）。
     func isNoise(_ path: String) -> Bool {
-        var rest = path
-        let cloud = iCloudRoot
-        if PathLogic.isSameOrInside(path, cloud) {
-            rest = String(path.dropFirst(cloud.count))
-        } else if PathLogic.isSameOrInside(path, home) {
-            rest = String(path.dropFirst(home.count))
+        var base: String? = nil
+        for root in added where PathLogic.isSameOrInside(path, root) {
+            if base == nil || root.count > base!.count { base = root }
         }
+        let mobile = mobileDocumentsRoot
+        if PathLogic.isSameOrInside(path, mobile) {
+            let parts = path.dropFirst(mobile.count).split(separator: "/", omittingEmptySubsequences: true)
+            if let container = parts.first {
+                var containerBase: String? = nil
+                if container == "com~apple~CloudDocs" {
+                    containerBase = mobile + "/" + String(container)
+                } else if parts.count >= 2, parts[1] == "Documents" {
+                    containerBase = mobile + "/" + String(container) + "/Documents"
+                } else if base == nil {
+                    return true
+                }
+                if let containerBase, containerBase.count > (base?.count ?? 0) { base = containerBase }
+            }
+        }
+        if base == nil, PathLogic.isSameOrInside(path, home) { base = home }
+        let rest = base.map { String(path.dropFirst($0.count)) } ?? path
         return Self.noiseMarkers.contains { rest.contains($0) }
     }
 

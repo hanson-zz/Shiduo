@@ -344,7 +344,7 @@ struct DuplicateGroupCard: View {
                         DuplicateItemCard(item: item, isKept: kept.contains(item.id), showsName: isSimilar)
                             .onTapGesture { toggle(item) }
                             .contextMenu { FileContextMenu(items: [item]) }
-                            .onDrag { NSItemProvider(object: item.url as NSURL) }
+                            .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                             .help("点一下切换“保留 / 废纸篓”\n\(item.path)")
                     }
                 }
@@ -367,7 +367,7 @@ struct DuplicateItemCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topLeading) {
-                ThumbnailView(url: item.url, size: 180, fill: true, modified: item.modified, isFolder: item.isDirectory)
+                ThumbnailView(url: item.url, size: 180, fill: true, modified: item.modified, isFolder: item.isPlainFolder)
                     .frame(width: 180, height: 128)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .opacity(isKept ? 1 : 0.75)

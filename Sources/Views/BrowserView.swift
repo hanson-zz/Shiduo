@@ -76,7 +76,8 @@ struct BrowserView: View {
             // 列表模式：翻到底的提示放在列表下面（网格模式放在网格最后）。
             if viewMode == .list, store.libraryCategory != nil, !visible.isEmpty {
                 Divider()
-                LibraryListFooter()
+                // 列表下面这一行一直在屏幕上：不能靠它出现来加载（会一直把所有页都取完），由最后一行出现时加载。
+                LibraryListFooter(autoLoad: false)
             }
             BrowserBottomBar(itemCount: visibleCount, selected: firstSelected, selectedCount: store.selectedIDs.count)
         }
@@ -238,28 +239,35 @@ struct LibrarySubChips: View {
 struct LibraryListFooter: View {
     @EnvironmentObject private var store: LibraryStore
     @Environment(\.openSettings) private var openSettings
+    /// 网格：这一行出现（翻到底）就加载下一页。列表模式下它固定在表格下面，一直可见，只显示进度不触发加载。
+    var autoLoad = true
 
     var body: some View {
         Group {
             if store.libraryCategory == nil {
                 EmptyView()
             } else if store.canLoadMore {
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    Text("正在加载更多…")
+                if autoLoad || store.isLoadingMore {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text("正在加载更多…")
+                    }
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    // 出现在屏幕上（翻到底）时加载下一页；加载完还在屏幕上就接着加载（一页全是重复的也会接着取）。
+                    .task(id: "\(store.items.count)#\(store.libraryLoaded)#\(autoLoad)") {
+                        if autoLoad { store.loadMore() }
+                    }
                 }
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                // 出现在屏幕上（翻到底）时加载下一页；加载完还在屏幕上就接着加载。
-                .task(id: store.items.count) { store.loadMore() }
             } else if store.ignoredCount > 0 {
                 HStack(spacing: 4) {
                     Text("已忽略 \(store.ignoredCount) 个应用和系统里的文件")
                     Text("·")
                     Button("设置") {
                         UserDefaults.standard.set(SettingsView.Tab.general.rawValue, forKey: "settings.tab")
+                        LibraryScopeStore.shared.revealInSettings()
                         openSettings()
                     }
                     .buttonStyle(.link)
@@ -465,8 +473,9 @@ struct FileCollectionView: View {
         // 「文件」菜单的 ⌘⌫：焦点在侧边栏、搜索框旁边、简介栏，或者开着快速查看时也能把选中的移到废纸篓。
         .trashContext(ids: store.selectedIDs) { resolve(store.selectedIDs) }
         .onChange(of: items) { resort() }
-        .onChange(of: sortKey) { resort() }
-        .onChange(of: sortAscending) { resort() }
+        // 资料库类别还没取完时，排序改了要从头按新顺序取（store 里判断）。
+        .onChange(of: sortKey) { resort(); store.librarySortChanged() }
+        .onChange(of: sortAscending) { resort(); store.librarySortChanged() }
         // 按大小排序时：文件夹大小算出来以后重排（攒一小会儿才发一次）。
         .onReceive(FolderSizeStore.shared.sizesSettled) { if sortKey == .size { resort() } }
         .onAppear { if sortKey == .size { resort() } }
@@ -779,7 +788,7 @@ struct FileCollectionView: View {
         Table(of: FileItem.self, selection: $store.selectedIDs, sortOrder: sortBinding) {
             TableColumn("名称", value: \FileItem.name) { item in
                 HStack(spacing: 6) {
-                    ThumbnailView(url: item.url, size: 20, modified: item.modified, isFolder: item.isDirectory)
+                    ThumbnailView(url: item.url, size: 20, modified: item.modified, isFolder: item.isPlainFolder)
                         .quickLookSource(item.url)
                     if store.inlineRenamePath == item.path {
                         InlineRenameField(item: item) { store.commitInlineRename(item, to: $0) }
@@ -1199,7 +1208,7 @@ struct FileGridCell: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            ThumbnailView(url: item.url, size: size, modified: item.modified, isFolder: item.isDirectory)
+            ThumbnailView(url: item.url, size: size, modified: item.modified, isFolder: item.isPlainFolder)
                 .quickLookSource(item.url)
             if renaming, let onRename {
                 InlineRenameField(item: item, onDone: onRename)
@@ -1423,6 +1432,28 @@ struct FolderDropTarget: ViewModifier {
     }
 }
 
+/// 拾掇里只允许拷贝的拖拽源（SwiftUI .onDrag：首页、快速搜索、刘海 / 悬浮暂存架、清理、重复文件……）。
+/// 开始拖时记下拖拽剪贴板的 changeCount；放置时剪贴板还是这次拖动写的，就知道是这类拖动。
+/// 只在主线程用（拖拽回调都在主线程）。
+enum InAppDrag {
+    nonisolated(unsafe) private static var copyOnlyChangeCount: Int?
+
+    static func copyOnlyProvider(_ url: URL) -> NSItemProvider {
+        copyOnlyChangeCount = NSPasteboard(name: .drag).changeCount
+        return NSItemProvider(object: url as NSURL)
+    }
+
+    /// 网格 / 暂存架自己的多文件拖动（允许拾掇内移动）开始时调用。
+    static func clearCopyOnly() { copyOnlyChangeCount = nil }
+
+    static var isCopyOnlyDragActive: Bool {
+        guard let start = copyOnlyChangeCount else { return false }
+        // 开始拖以后剪贴板会被这次拖动写一两次；再多说明已经是别的拖动（比如从访达拖来）。
+        let delta = NSPasteboard(name: .drag).changeCount - start
+        return delta >= 0 && delta <= 3
+    }
+}
+
 /// 拖文件到拾掇里的文件夹上：光标按 ⌥ 显示「拷贝」，不按显示「移动」（和实际一致）；⌥ 在松手时同步读。
 /// other：先处理别的内容（文件夹墙卡片排序），返回 true 表示已经处理。
 struct FileMoveDropDelegate: DropDelegate {
@@ -1444,6 +1475,9 @@ struct FileMoveDropDelegate: DropDelegate {
         guard enabled else { return DropProposal(operation: .forbidden) }
         // 不是文件（文件夹墙卡片排序）：保持原来的样子。
         guard info.hasItemsConforming(to: [.fileURL]) else { return DropProposal(operation: .copy) }
+        // 从首页、快速搜索、暂存架这类只允许拷贝的拖拽源（SwiftUI .onDrag）拖来：提议 .copy，免得 AppKit 因为源不允许移动而拒绝放置。
+        // 真正做的仍按松手时 ⌥ 判断（和以前一样）。
+        if InAppDrag.isCopyOnlyDragActive { return DropProposal(operation: .copy) }
         return DropProposal(operation: NSEvent.modifierFlags.contains(.option) ? .copy : .move)
     }
 

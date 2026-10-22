@@ -43,7 +43,14 @@ struct SettingsView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            page { generalTab }
+            ScrollViewReader { proxy in
+                page { generalTab }
+                    // 从列表底部「已忽略 N 个… · 设置」打开时滚到「资料库范围」。
+                    .onAppear { revealLibraryScope(proxy) }
+                    .onReceive(NotificationCenter.default.publisher(for: LibraryScopeStore.revealNotification)) { _ in
+                        revealLibraryScope(proxy)
+                    }
+            }
                 .tabItem { Label("通用", systemImage: "gearshape") }
                 .tag(Tab.general)
             page { shelfTab }
@@ -60,6 +67,14 @@ struct SettingsView: View {
                 .tag(Tab.pro)
         }
         .frame(width: 600, height: 620)
+    }
+
+    private func revealLibraryScope(_ proxy: ScrollViewProxy) {
+        guard LibraryScopeStore.shared.consumeReveal() else { return }
+        tab = .general
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation { proxy.scrollTo(LibraryScopeStore.settingsAnchor, anchor: .top) }
+        }
     }
 
     private func page<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
@@ -506,6 +521,7 @@ struct LibraryScopeSection: View {
             Text("资料库只显示你自己的文件：下面这些文件夹里的，不含应用、系统、缓存和素材库（照片图库、剪辑工程）里面的文件。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .id(LibraryScopeStore.settingsAnchor)
             ForEach(LibraryFolder.allCases) { folder in
                 Toggle(isOn: Binding(
                     get: { scopeStore.isEnabled(folder) },
@@ -542,7 +558,6 @@ struct LibraryScopeSection: View {
         } header: {
             Text("资料库范围")
         }
-        .id(LibraryScopeStore.settingsAnchor)
 
         Section("不在资料库中显示") {
             if scopeStore.scope.excluded.isEmpty {

@@ -601,6 +601,6 @@ struct RemindersPageView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { openFile(reminder) }
-        .onDrag { NSItemProvider(object: reminder.url as NSURL) }
+        .onDrag { InAppDrag.copyOnlyProvider(reminder.url) }
     }
 }

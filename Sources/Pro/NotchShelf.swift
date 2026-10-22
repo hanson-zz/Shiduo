@@ -856,7 +856,7 @@ struct NotchShelfView: View {
     private func card(_ item: FileItem, index: Int) -> some View {
         let selected = index == controller.selectedIndex
         return VStack(spacing: 4) {
-            ThumbnailView(url: item.url, size: cardSize, isFolder: item.isDirectory)
+            ThumbnailView(url: item.url, size: cardSize, isFolder: item.isPlainFolder)
                 .quickLookSource(item.url)
                 .overlay(alignment: .topTrailing) {
                     if reminders.paths.contains(item.path) {
@@ -880,7 +880,7 @@ struct NotchShelfView: View {
                 .fill(selected ? Color.accentColor.opacity(0.45) : Color.white.opacity(0.06))
         )
         .contentShape(Rectangle())
-        .onDrag { NSItemProvider(object: item.url as NSURL) }
+        .onDrag { InAppDrag.copyOnlyProvider(item.url) }
         // 按住 ⌥ 拖动：不拖出文件，而是把它甩向左边的隔空投送篮筐。
         .modifier(HoopFlingModifier(url: item.url, enabled: controller.tab == .shelf))
         .onTapGesture(count: 2) {

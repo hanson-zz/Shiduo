@@ -301,7 +301,7 @@ struct CleanupReviewPage: View {
                                     .onTapGesture(count: 2) { store.openItems([item]) }
                                     .onTapGesture { toggle(item) }
                                     .contextMenu { FileContextMenu(items: [item]) }
-                                    .onDrag { NSItemProvider(object: item.url as NSURL) }
+                                    .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                                     .help(item.path)
                             }
                         }
@@ -392,7 +392,7 @@ struct ReviewCell: View {
     var body: some View {
         VStack(spacing: 6) {
             ZStack(alignment: .topTrailing) {
-                ThumbnailView(url: item.url, size: 120, modified: item.modified, isFolder: item.isDirectory)
+                ThumbnailView(url: item.url, size: 120, modified: item.modified, isFolder: item.isPlainFolder)
                     .frame(width: 130, height: 120)
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))

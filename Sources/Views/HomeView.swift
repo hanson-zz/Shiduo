@@ -155,7 +155,7 @@ struct HomeView: View {
                             .accessibilityAddTraits(store.selectedIDs.contains(item.id) ? [.isButton, .isSelected] : .isButton)
                             .accessibilityAction { store.openItems([item]) }
                             .contextMenu { FileContextMenu(items: [item]) }
-                            .onDrag { NSItemProvider(object: item.url as NSURL) }
+                            .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                             .help(item.path)
                     }
                 }
@@ -380,7 +380,7 @@ struct ShelfView: View {
                 LazyHStack(alignment: .top, spacing: 14) {
                     ForEach(shelf.items) { item in
                         VStack(spacing: 8) {
-                            ThumbnailView(url: item.url, size: 104, modified: item.modified, isFolder: item.isDirectory)
+                            ThumbnailView(url: item.url, size: 104, modified: item.modified, isFolder: item.isPlainFolder)
                                 .frame(width: 120, height: 112)
                             Text(item.name)
                                 .font(.caption)
@@ -402,7 +402,7 @@ struct ShelfView: View {
                         .accessibilityAddTraits(store.selectedIDs.contains(item.id) ? [.isButton, .isSelected] : .isButton)
                         .accessibilityAction { store.openItems([item]) }
                         .contextMenu { FileContextMenu(items: [item]) }
-                        .onDrag { NSItemProvider(object: item.url as NSURL) }
+                        .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                         .help(item.path)
                     }
                 }
@@ -420,7 +420,7 @@ struct RecentTile: View {
 
     var body: some View {
         VStack(spacing: 7) {
-            ThumbnailView(url: item.url, size: 132, fill: true, modified: item.modified, isFolder: item.isDirectory)
+            ThumbnailView(url: item.url, size: 132, fill: true, modified: item.modified, isFolder: item.isPlainFolder)
                 .frame(width: 132, height: 76)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .overlay(
@@ -450,7 +450,7 @@ struct FannedThumbnails: View {
         ZStack(alignment: .bottomTrailing) {
             ZStack {
                 ForEach(Array(shown.enumerated()), id: \.element.id) { index, item in
-                    ThumbnailView(url: item.url, size: size, fill: true, modified: item.modified, isFolder: item.isDirectory)
+                    ThumbnailView(url: item.url, size: size, fill: true, modified: item.modified, isFolder: item.isPlainFolder)
                         .frame(width: size, height: size)
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                         .padding(2)

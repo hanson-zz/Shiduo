@@ -317,9 +317,15 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var subCounts: [LibrarySub: Int]?
     /// 资料库类别：当前小分类一共有多少个（nil = 不是资料库类别）。
     @Published private(set) var libraryTotal: Int?
-    /// 已经从 Spotlight 取到第几个（下一页从这里开始）。
-    private var libraryLoaded = 0
+    /// 已经从 Spotlight 取到第几个（下一页从这里开始）。发布出来：底部「加载更多」据此在一页全是重复时也能接着取。
+    @Published private(set) var libraryLoaded = 0
     @Published private(set) var isLoadingMore = false
+    /// 当前这次「加载更多」的标记：被换页 / 重新读取作废的旧任务结束时不去动 isLoadingMore。
+    private var moreToken: UUID?
+    /// 已经取回的几页是按哪种排序从 Spotlight 取的（排序改了而还没取完时要从头按新顺序取）。
+    private var librarySortUsed: String?
+    /// 「已忽略 N」按类别 + 资料库范围缓存：点小分类不用重新扫一遍个人文件夹。
+    private var ignoredCache: (category: FileCategory, scope: LibraryScope, count: Int)?
     /// 「已忽略 N 个应用和系统里的文件」。
     @Published private(set) var ignoredCount = 0
     private var moreTask: Task<Void, Never>?
@@ -344,17 +350,48 @@ final class LibraryStore: ObservableObject {
         reload()
     }
 
+    /// 资料库类别分页时 Spotlight 用的排序（跟列表的排序方式一致，翻页时按名称 / 大小排也不会插到中间）。
+    static func librarySort(_ c: FileCategory) -> (key: String, ascending: Bool) {
+        let stored = FileSortKey.stored
+        switch stored.key {
+        case .date: return (c.sortKey, stored.ascending)
+        case .name: return ("kMDItemFSName", stored.ascending)
+        case .size: return ("kMDItemFSSize", stored.ascending)
+        case .kind: return ("kMDItemKind", stored.ascending)
+        }
+    }
+
+    private static func sortSignature(_ sort: (key: String, ascending: Bool)) -> String {
+        "\(sort.key)#\(sort.ascending)"
+    }
+
+    /// 列表的排序方式改了：资料库类别还没取完时，从头按新顺序取（不然按名称排时后面几页的会插到中间）。
+    func librarySortChanged() {
+        guard let c = libraryCategory, canLoadMore,
+              librarySortUsed != Self.sortSignature(Self.librarySort(c)) else { return }
+        reload()
+    }
+
     /// 翻到底：取下一页（每次 3000 个），直到取完。
     func loadMore() {
         guard canLoadMore, !isLoadingMore, !isLoading, !Demo.isOn, let c = libraryCategory else { return }
+        let sort = Self.librarySort(c)
+        if let used = librarySortUsed, used != Self.sortSignature(sort) {
+            reload()
+            return
+        }
         let target = selection
         let sub = librarySub
         let offset = libraryLoaded
+        let token = UUID()
+        moreToken = token
         isLoadingMore = true
+        // 悄悄刷新和加载更多不同时进行：刷新晚一步回来会把刚加载的几页冲掉。
+        quietTask?.cancel()
         moreTask = Task {
-            let page = await Queries.categoryPage(c, sub: sub, offset: offset)
-            defer { isLoadingMore = false }
-            guard !Task.isCancelled, selection == target, librarySub == sub, activeQuery == nil,
+            let page = await Queries.categoryPage(c, sub: sub, offset: offset, sort: sort)
+            defer { if moreToken == token { isLoadingMore = false; moreToken = nil } }
+            guard !Task.isCancelled, moreToken == token, selection == target, librarySub == sub, activeQuery == nil,
                   libraryLoaded == offset else { return }
             let seen = Set(items.map(\.id))
             let fresh = page.items.filter { !seen.contains($0.id) }
@@ -370,17 +407,20 @@ final class LibraryStore: ObservableObject {
     /// 读完一页资料库类别后记下数量和翻页位置；不是资料库类别时清空。
     private func applyLibrary(_ page: ListPage, for target: SidebarItem) {
         moreTask?.cancel()
+        moreToken = nil
         isLoadingMore = false
         guard case .category(let c) = target, c.usesLibraryScope else {
             libraryTotal = nil
             subCounts = nil
             libraryLoaded = 0
             ignoredCount = 0
+            librarySortUsed = nil
             return
         }
         libraryTotal = page.total
         libraryLoaded = page.offset + page.items.count
         subCounts = page.subCounts
+        librarySortUsed = page.sortSignature
     }
 
     /// 后台数一下这个类别有多少文件被资料库范围挡在外面（底部那行提示）。
@@ -390,17 +430,40 @@ final class LibraryStore: ObservableObject {
             ignoredCount = 0
             return
         }
+        let scope = LibraryScopeStore.snapshot
+        if let cached = ignoredCache, cached.category == c, cached.scope == scope {
+            ignoredCount = cached.count
+            return
+        }
         ignoredTask = Task {
             let n = await Queries.ignoredCount(c)
-            guard !Task.isCancelled, selection == target else { return }
+            guard !Task.isCancelled else { return }
+            ignoredCache = (c, scope, n)
+            guard selection == target else { return }
             ignoredCount = n
         }
     }
 
     /// 资料库范围改了（设置、右键「不在资料库中显示」）：重新读当前的资料库类别，马上重新数各类别。
     func libraryScopeChanged() {
+        ignoredCache = nil
         if libraryCategory != nil { reload() }
         scheduleCountsRefresh(delay: 0)
+        refreshLibraryImagesShelf()
+    }
+
+    /// 首页「最近的图片」跟着资料库范围（改了范围马上换掉，不用等回首页）。
+    private func refreshLibraryImagesShelf() {
+        guard !Demo.isOn, dashboardLoaded else { return }
+        Task {
+            let images = await Queries.recentLibraryImages(limit: 16)
+            remember(images)
+            var next = shelves.filter { $0.id != "images" }
+            if !images.isEmpty {
+                next.append(Shelf(id: "images", title: String(localized: "最近的图片"), symbol: "photo", items: images, target: .category(.images)))
+            }
+            shelves = next
+        }
     }
     @Published var totals: [FileCategory: CategoryTotal] = [:]
     @Published var shelves: [Shelf] = []
@@ -585,11 +648,13 @@ final class LibraryStore: ObservableObject {
         let folder = currentFolder
         quietTask?.cancel()
         let sub = librarySub
+        let loaded = libraryLoaded
         quietTask = Task {
             let page = await fetch(target, quiet: true)
             let result = page.items
             guard !Task.isCancelled, selection == target, currentFolder == folder,
-                  activeQuery == nil, !isLoading, librarySub == sub, !isLoadingMore else { return }
+                  activeQuery == nil, !isLoading, librarySub == sub, !isLoadingMore,
+                  libraryLoaded == loaded else { return }
             applyTruncation(page)
             applyLibrary(page, for: target)
             let signature: ([FileItem]) -> [String] = { $0.map { "\($0.path)|\($0.size)|\($0.modified?.timeIntervalSince1970 ?? 0)" } }
@@ -737,7 +802,7 @@ final class LibraryStore: ObservableObject {
         case .category(let c):
             // 悄悄刷新时把已经翻出来的几页一起重新读，列表不会缩回第一页。
             let limit = quiet ? max(Queries.categoryLimit, libraryLoaded) : Queries.categoryLimit
-            return await Queries.categoryPage(c, sub: librarySub, limit: limit)
+            return await Queries.categoryPage(c, sub: librarySub, limit: limit, sort: Self.librarySort(c))
         case .largeFiles: return await Queries.largeFilesPage()
         case .screenshots: return await Queries.screenshotsPage()
         case .downloads: return ListPage(await Queries.downloaded())
@@ -785,7 +850,8 @@ final class LibraryStore: ObservableObject {
         let downloads = await Queries.recentDownloads(limit: 16)
         let screenshots = await Queries.screenshots(limit: 16)
         let documents = await Queries.recentDocuments(limit: 16)
-        let images = await Queries.recentImages(limit: 16)
+        // 首页「最近的图片」只看资料库范围里的（和「全部图片」一致）。
+        let images = await Queries.recentLibraryImages(limit: 16)
         if stale { return }
         let all = downloads + screenshots + documents + images
         remember(all)
@@ -1361,7 +1427,20 @@ final class LibraryStore: ObservableObject {
     func refuseProtected(_ paths: [String]) -> Bool {
         guard let path = paths.first(where: Self.isProtectedPath) else { return false }
         let name = FileManager.default.displayName(atPath: path)
-        alertMessage = String(localized: "「\(name)」是 macOS 需要的文件夹，不能移到废纸篓、移动或改名。")
+        let message = String(localized: "「\(name)」是 macOS 需要的文件夹，不能移到废纸篓、移动或改名。")
+        // 主窗口没开（从刘海 / 菜单栏 / 快速搜索触发）：主窗口的提示框看不到，直接弹一个系统提示框。
+        if let window = MainWindow.current, window.isVisible, !window.isMiniaturized {
+            alertMessage = message
+        } else {
+            DispatchQueue.main.async {
+                NSApp.activate(ignoringOtherApps: true)
+                let alert = NSAlert()
+                alert.alertStyle = .warning
+                alert.messageText = message
+                alert.addButton(withTitle: String(localized: "好"))
+                alert.runModal()
+            }
+        }
         return true
     }
 

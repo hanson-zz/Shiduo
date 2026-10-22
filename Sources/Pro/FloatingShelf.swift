@@ -455,7 +455,7 @@ struct FloatingShelfView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 8)], spacing: 8) {
                         ForEach(shelf.items) { item in
                             VStack(spacing: 3) {
-                                ThumbnailView(url: item.url, size: 52, isFolder: item.isDirectory)
+                                ThumbnailView(url: item.url, size: 52, isFolder: item.isPlainFolder)
                                 Text(item.name)
                                     .font(.caption2)
                                     .lineLimit(1)
@@ -464,7 +464,7 @@ struct FloatingShelfView: View {
                             }
                             .padding(4)
                             .contentShape(Rectangle())
-                            .onDrag { NSItemProvider(object: item.url as NSURL) }
+                            .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                             .onTapGesture(count: 2) { LibraryStore.openFromOutside(item.url) }
                             // 和主窗口同一套右键菜单（清理记录、⌘Z 撤销、音效都一样）。
                             .contextMenu {

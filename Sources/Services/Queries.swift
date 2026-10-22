@@ -127,6 +127,8 @@ struct ListPage {
     var subCounts: [LibrarySub: Int]? = nil
     /// 资料库类别：这一页从第几个开始（翻到底加载更多时 > 0）。
     var offset = 0
+    /// 资料库类别：Spotlight 按哪种排序取的（「键#升序」）。
+    var sortSignature: String? = nil
     /// 按什么顺序取的前 N 个（提示文字里用）。
     var order: ListTruncation.Order = .recent
 
@@ -160,15 +162,19 @@ enum Queries {
 
     /// 资料库类别的一页：从 offset 开始取 limit 个；total 是全部（或选中小分类）的总数，
     /// 不设上限（翻到底自动加载下一页，不再停在 3000）。
-    static func categoryPage(_ c: FileCategory, sub: LibrarySub? = nil, offset: Int = 0, limit: Int = Queries.categoryLimit) async -> ListPage {
+    /// sort：Spotlight 的排序（跟列表的排序方式一致，翻页时后面几页不会插到前面；nil = 这个类别默认的按日期从新到旧）。
+    static func categoryPage(_ c: FileCategory, sub: LibrarySub? = nil, offset: Int = 0, limit: Int = Queries.categoryLimit,
+                             sort: (key: String, ascending: Bool)? = nil) async -> ListPage {
         guard let library = libraryFilter(c, sub: sub, countSubs: true) else { return await legacyCategoryPage(c) }
+        let order = sort ?? (c.sortKey, false)
         let result = await SpotlightSearch.run(
             predicate: c.predicate(), scopes: Scopes.library(library.scope), maxItems: limit,
-            sortKey: c.sortKey, offset: offset, library: library
+            sortKey: order.key, ascending: order.ascending, offset: offset, library: library
         )
         var page = ListPage(result.items)
         page.total = result.totalCount
         page.offset = offset
+        page.sortSignature = "\(order.key)#\(order.ascending)"
         page.subCounts = LibrarySub.subs(for: c).isEmpty ? nil : result.subCounts
         if c == .recents {
             page.items = result.items.sorted { $0.recentDate > $1.recentDate }
@@ -252,6 +258,16 @@ enum Queries {
         await SpotlightSearch.run(
             predicate: FileCategory.documents.predicate(), scopes: Scopes.home,
             maxItems: limit, sortKey: "kMDItemLastUsedDate"
+        ).items
+    }
+
+    /// 首页「最近的图片」：只看资料库范围里的（隐藏小图标也算上），不含截图。
+    static func recentLibraryImages(limit: Int) async -> [FileItem] {
+        guard let library = libraryFilter(.images) else { return await recentImages(limit: limit) }
+        return await SpotlightSearch.run(
+            predicate: FileCategory.images.predicate(), scopes: Scopes.library(library.scope),
+            maxItems: limit, sortKey: "kMDItemFSContentChangeDate",
+            accept: { !$0.isScreenshot }, library: library
         ).items
     }
 

@@ -2,6 +2,7 @@ import XCTest
 
 final class LibraryScopeTests: XCTestCase {
     let home = "/Users/me"
+    var mobile: String { home + "/Library/Mobile Documents" }
     var cloud: String { home + "/Library/Mobile Documents/com~apple~CloudDocs" }
 
     func testDefaultFoldersIncluded() {
@@ -21,8 +22,12 @@ final class LibraryScopeTests: XCTestCase {
         let scope = LibraryScope(home: home)
         XCTAssertTrue(scope.includes(cloud + "/设计/海报.psd"))
         XCTAssertTrue(scope.includes(cloud + "/Desktop/a.png"))
-        // 其他 App 的 iCloud 容器、真正的资源库不算。
-        XCTAssertFalse(scope.includes(home + "/Library/Mobile Documents/iCloud~com~foo/Documents/a.png"))
+        // App 的 iCloud 容器：访达 iCloud 云盘里看得到的 Documents 算，容器里别的东西、真正的资源库不算。
+        XCTAssertTrue(scope.includes(home + "/Library/Mobile Documents/com~apple~Pages/Documents/报告.pages"))
+        XCTAssertTrue(scope.includes(home + "/Library/Mobile Documents/iCloud~com~foo/Documents/a.png"))
+        XCTAssertFalse(scope.includes(home + "/Library/Mobile Documents/iCloud~com~foo/Library/a.png"))
+        XCTAssertFalse(scope.includes(home + "/Library/Mobile Documents/iCloud~com~foo/a.png"))
+        XCTAssertFalse(scope.includes(home + "/Library/Mobile Documents/iCloud~com~foo/Documents/.cache/a.png"))
         XCTAssertFalse(scope.includes(home + "/Library/Caches/a.png"))
         // iCloud 里的隐藏文件夹仍然不算。
         XCTAssertFalse(scope.includes(cloud + "/.Trash/a.png"))
@@ -74,6 +79,22 @@ final class LibraryScopeTests: XCTestCase {
         XCTAssertEqual(scope.added, ["/Users/me/Projects"])
     }
 
+    func testAddedFolderInsideLibraryIsNotNoise() {
+        var scope = LibraryScope(home: home)
+        scope.include("/Users/me/Library/Application Support/Foo/Exports")
+        XCTAssertTrue(scope.includes("/Users/me/Library/Application Support/Foo/Exports/a.png"))
+        XCTAssertFalse(scope.includes("/Users/me/Library/Application Support/Foo/Exports/.hidden/a.png"))
+        XCTAssertFalse(scope.includes("/Users/me/Library/Application Support/Foo/b.png"))
+    }
+
+    func testICloudDisabledKeepsDesktopInCloud() {
+        let scope = LibraryScope(home: home, disabled: [.iCloud])
+        XCTAssertFalse(scope.includes(cloud + "/设计/海报.psd"))
+        XCTAssertFalse(scope.includes(mobile + "/com~apple~Pages/Documents/a.pages"))
+        XCTAssertTrue(scope.includes(cloud + "/Desktop/a.png"))
+        XCTAssertTrue(scope.includes(cloud + "/Documents/b.pdf"))
+    }
+
     func testExcludeRemovesNestedExclusions() {
         var scope = LibraryScope(home: home)
         scope.exclude("/Users/me/Documents/A/B")
@@ -87,11 +108,12 @@ final class LibraryScopeTests: XCTestCase {
         scope.include("/Users/me/Documents/Sub") // 已包含，不会加
         let existing: Set<String> = [
             "/Users/me/Desktop", "/Users/me/Documents", "/Users/me/Downloads", "/Users/me/Pictures",
-            "/Users/me/Movies", "/Users/me/Music", cloud, cloud + "/Desktop", "/Users/me/Projects",
+            "/Users/me/Movies", "/Users/me/Music", mobile, cloud, cloud + "/Desktop", "/Users/me/Projects",
         ]
         let roots = scope.searchRoots { existing.contains($0) }
         XCTAssertFalse(roots.contains("/Users/me/Music"))
-        XCTAssertTrue(roots.contains(cloud))
+        XCTAssertTrue(roots.contains(mobile))
+        XCTAssertFalse(roots.contains(cloud)) // 被 Mobile Documents 包含
         XCTAssertFalse(roots.contains(cloud + "/Desktop")) // 被 iCloud 云盘包含
         XCTAssertTrue(roots.contains("/Users/me/Projects"))
         XCTAssertTrue(roots.contains("/Users/me/Desktop"))

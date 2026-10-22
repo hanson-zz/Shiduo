@@ -133,7 +133,7 @@ struct TodayAddedPopover: View {
 
     private func row(_ item: FileItem, home: String) -> some View {
         HStack(spacing: 10) {
-            ThumbnailView(url: item.url, size: 36, fill: true, modified: item.modified, isFolder: item.isDirectory)
+            ThumbnailView(url: item.url, size: 36, fill: true, modified: item.modified, isFolder: item.isPlainFolder)
                 .frame(width: 36, height: 36)
                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Color.primary.opacity(0.08)))
@@ -169,7 +169,7 @@ struct TodayAddedPopover: View {
             store.openItems([item])
         }
         .contextMenu { FileContextMenu(items: [item]) }
-        .onDrag { NSItemProvider(object: item.url as NSURL) }
+        .onDrag { InAppDrag.copyOnlyProvider(item.url) }
         .help(item.path)
     }
 }

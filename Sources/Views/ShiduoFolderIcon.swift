@@ -57,16 +57,21 @@ final class ShiduoFolderArtCache {
     private var bases: [String: CGImage] = [:]
     private var variants: [String: ShiduoFolderVariant] = [:]
     private var badgeImages: [String: CGImage] = [:]
-    private var resolving: [String: Task<ShiduoFolderVariant, Never>] = [:]
+    private var resolving: [String: (token: UUID, task: Task<ShiduoFolderVariant, Never>)] = [:]
     /// 路径 → 是不是普通文件夹（不是 .app 这类包）。
     private var folderKinds: [String: Bool] = [:]
     private var observer: NSObjectProtocol?
+    private var activeObserver: NSObjectProtocol?
 
     private init() {
         // 文件夹上色 / 还原后，这些路径重新查一次。
-        observer = NotificationCenter.default.addObserver(forName: ThumbnailService.invalidated, object: nil, queue: nil) { note in
+        observer = NotificationCenter.default.addObserver(forName: ThumbnailService.invalidated, object: nil, queue: .main) { note in
             guard let paths = note.userInfo?["paths"] as? Set<String> else { return }
             MainActor.assumeIsolated { ShiduoFolderArtCache.shared.forget(paths) }
+        }
+        // 切回拾掇时：在访达 / 别的 App 里换过的自定义图标、上色，下次显示时重新查（栅格化的文件夹本体不用重画）。
+        activeObserver = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { ShiduoFolderArtCache.shared.forgetVariants() }
         }
     }
 
@@ -74,10 +79,26 @@ final class ShiduoFolderArtCache {
         for path in paths {
             variants[path] = nil
             badgeImages[path] = nil
-            resolving[path]?.cancel()
+            resolving[path]?.task.cancel()
             resolving[path] = nil
             folderKinds[path] = nil
         }
+    }
+
+    /// 清掉所有文件夹的样子（下次显示时重新查）。不清角标图：屏幕上的图标还在用，重新查时会被覆盖。
+    func forgetVariants() {
+        variants.removeAll()
+    }
+
+    private func storeBadge(_ image: CGImage, for path: String) {
+        // 128 像素一张约 64 KB：攒到几百张整个清一次（只有上色选了图片 / 有自定义图标的文件夹才有）。
+        if badgeImages.count > 300 && badgeImages[path] == nil { badgeImages.removeAll() }
+        badgeImages[path] = image
+    }
+
+    /// 文件夹本体已经画好了就直接给（视图 body 里只读缓存，不在 body 里栅格化）。
+    func cachedBase(hex: String, pixels: Int, dark: Bool) -> CGImage? {
+        bases[FolderArtLogic.cacheKey(hex: hex, pixels: pixels, dark: dark)]
     }
 
     // MARK: 文件夹本体
@@ -109,14 +130,20 @@ final class ShiduoFolderArtCache {
     /// 系统文件夹 → 符号；其余默认样子。磁盘读取都在后台线程，结果缓存。
     func variant(_ path: String) async -> ShiduoFolderVariant {
         if let hit = variants[path] { return hit }
-        if let running = resolving[path] { return await running.value }
+        if let running = resolving[path] { return await running.task.value }
+        let token = UUID()
         let task = Task { @MainActor () -> ShiduoFolderVariant in
             let result = await self.resolve(path)
-            if !Task.isCancelled { self.variants[path] = result }
-            self.resolving[path] = nil
+            if !Task.isCancelled {
+                // 几千个文件夹以后整个清一次（每条很小）。
+                if self.variants.count > 5000 { self.forgetVariants() }
+                self.variants[path] = result
+            }
+            // 上色后被 forget 作废、又开了新的一次时，不要把新的那次的登记清掉。
+            if self.resolving[path]?.token == token { self.resolving[path] = nil }
             return result
         }
-        resolving[path] = task
+        resolving[path] = (token, task)
         return await task.value
     }
 
@@ -131,7 +158,7 @@ final class ShiduoFolderArtCache {
             case .emoji(let text): v.badge = .emoji(text)
             case .image(let file):
                 if let image = await Self.loadPicture(file) {
-                    badgeImages[path] = image
+                    if !Task.isCancelled { storeBadge(image, for: path) }
                     v.badge = .image(file)
                 }
             }
@@ -139,7 +166,7 @@ final class ShiduoFolderArtCache {
         }
         var v = ShiduoFolderVariant.placeholder(path)
         if let icon = await Self.customIcon(path) {
-            badgeImages[path] = icon
+            if !Task.isCancelled { storeBadge(icon, for: path) }
             v.badge = .customIcon
             v.badgeScale = 0.34
         }
@@ -201,14 +228,18 @@ struct ShiduoFolderIcon: View {
     @State private var variant: ShiduoFolderVariant?
     /// 上色 / 还原后加一，重新查。
     @State private var version = 0
+    /// 刚栅格化好的文件夹本体（缓存里还没有时在 .task 里画，不在 body 里画）。
+    @State private var renderedBase: CGImage?
 
     private var pixels: Int { FolderArtLogic.pixelBucket(side: Double(side), scale: Double(displayScale)) }
 
     var body: some View {
         let cache = ShiduoFolderArtCache.shared
         let v = variant ?? cache.cachedVariant(path) ?? ShiduoFolderVariant.placeholder(path)
+        let dark = scheme == .dark
+        let baseKey = FolderArtLogic.cacheKey(hex: v.hex, pixels: pixels, dark: dark)
         ZStack {
-            if let base = cache.base(hex: v.hex, pixels: pixels, dark: scheme == .dark) {
+            if let base = cache.cachedBase(hex: v.hex, pixels: pixels, dark: dark) ?? renderedBase {
                 Image(decorative: base, scale: 1)
                     .resizable()
                     .interpolation(.high)
@@ -226,6 +257,17 @@ struct ShiduoFolderIcon: View {
         .task(id: "\(path)#\(version)") {
             let resolved = await ShiduoFolderArtCache.shared.variant(path)
             if variant != resolved { variant = resolved }
+        }
+        // 这个颜色 / 档位 / 深浅色第一次出现：画一次放进缓存（浅色 ↔ 深色切换、上色换颜色时 key 变了会重画）。
+        // 自己也留一份：缓存满了整个清掉时，已经在屏幕上的图标不会变空。
+        .task(id: baseKey) {
+            if let hit = cache.cachedBase(hex: v.hex, pixels: pixels, dark: dark) {
+                renderedBase = hit
+                return
+            }
+            await Task.yield()
+            if Task.isCancelled { return }
+            renderedBase = cache.base(hex: v.hex, pixels: pixels, dark: dark)
         }
     }
 }
