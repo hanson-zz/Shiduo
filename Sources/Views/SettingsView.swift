@@ -564,6 +564,8 @@ struct LibraryScopeSection: View {
             Text("资料库范围")
         }
 
+        ScreenshotSourcesSection()
+
         Section("不在资料库中显示") {
             if scopeStore.scope.excluded.isEmpty {
                 Text("在文件夹上点右键，选「不在资料库中显示」，它里面的文件就不会出现在资料库里。")
@@ -584,5 +586,36 @@ struct LibraryScopeSection: View {
                 }
             }
         }
+    }
+}
+
+/// 设置 › 通用 › 截图：认出了哪些截图工具（只读，说明「截图」里包含什么）。
+struct ScreenshotSourcesSection: View {
+    @ObservedObject private var detector = ScreenshotSourceDetector.shared
+
+    var body: some View {
+        Section("截图") {
+            if detector.detected.isEmpty {
+                Text("还没有识别到第三方截图工具。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                let names = ListFormatter.localizedString(byJoining: detector.detected.map(ScreenshotSourceDetector.displayName))
+                Text("已识别的截图工具：\(names)")
+                    .font(.caption)
+                ForEach(detector.detected.flatMap(\.folders), id: \.self) { path in
+                    Text(path)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .help(path)
+                }
+            }
+            Text("「截图」里包括系统截图，以及微信、QQ、Snipaste、CleanShot 等工具按默认文件名存的截图；上面列出的文件夹里的图片也算截图。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .onAppear { detector.refreshIfNeeded() }
     }
 }

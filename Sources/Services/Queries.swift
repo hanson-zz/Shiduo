@@ -232,10 +232,26 @@ enum Queries {
     }
 
     static func screenshotsPage(limit: Int = 3000) async -> ListPage {
-        ListPage(await SpotlightSearch.run(
+        var result = await SpotlightSearch.run(
             predicate: P.screenshot, scopes: Scopes.home, maxItems: limit, sortKey: "kMDItemFSCreationDate",
             accept: { $0.isScreenshot }
-        ), cap: limit)
+        )
+        // 截图工具专用文件夹里的图片（Snapok 的 ~/Library/Application Support/Snapok 等）：直接列出来并进去，
+        // 只在「截图」里，不进「全部图片」。
+        let extra = await Task.detached(priority: .userInitiated) {
+            ScreenshotSourceDetector.folderImages(limit: limit)
+        }.value
+        if !extra.isEmpty {
+            let known = Set(result.items.map(\.path))
+            let added = extra.filter { !known.contains($0.path) }
+            if !added.isEmpty {
+                result.items = Array((result.items + added)
+                    .sorted { ($0.created ?? $0.modified ?? .distantPast) > ($1.created ?? $1.modified ?? .distantPast) }
+                    .prefix(limit))
+                result.totalCount += added.count
+            }
+        }
+        return ListPage(result, cap: limit)
     }
 
     /// 有下载来源记录的文件。

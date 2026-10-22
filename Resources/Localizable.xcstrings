@@ -26592,6 +26592,70 @@
           }
         }
       }
+    },
+    "系统截图": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS Screenshot"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统截图"
+          }
+        }
+      }
+    },
+    "还没有识别到第三方截图工具。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No third-party screenshot apps detected yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有识别到第三方截图工具。"
+          }
+        }
+      }
+    },
+    "已识别的截图工具：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detected screenshot apps: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已识别的截图工具：%@"
+          }
+        }
+      }
+    },
+    "「截图」里包括系统截图，以及微信、QQ、Snipaste、CleanShot 等工具按默认文件名存的截图；上面列出的文件夹里的图片也算截图。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshots includes macOS screenshots and those saved with their default names by WeChat, QQ, Snipaste, CleanShot and similar apps. Images in the folders listed above count too."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「截图」里包括系统截图，以及微信、QQ、Snipaste、CleanShot 等工具按默认文件名存的截图；上面列出的文件夹里的图片也算截图。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -87,7 +87,8 @@ extension FileItem {
         // 系统截图有标记；微信 / QQ / Snipaste 等第三方截图按文件名认。
         self.isScreenshot = ScreenshotNameRules.isScreenshot(
             name: name, typeTree: tree,
-            systemFlag: (m.value(forAttribute: "kMDItemIsScreenCapture") as? NSNumber)?.boolValue ?? false)
+            systemFlag: (m.value(forAttribute: "kMDItemIsScreenCapture") as? NSNumber)?.boolValue ?? false,
+            path: path, folders: ScreenshotFolders.current)
         self.bundleID = m.value(forAttribute: "kMDItemCFBundleIdentifier") as? String
         self.isDirectory = tree.contains("public.folder")
             || (tree.contains("public.directory") && !tree.contains("com.apple.application-bundle"))
@@ -126,7 +127,8 @@ extension FileItem {
         }
         self.lastUsed = lastUsed
         self.whereFroms = whereFroms
-        self.isScreenshot = ScreenshotNameRules.isScreenshot(name: url.lastPathComponent, typeTree: tree, systemFlag: isScreenshot)
+        self.isScreenshot = ScreenshotNameRules.isScreenshot(name: url.lastPathComponent, typeTree: tree, systemFlag: isScreenshot,
+                                                             path: url.path, folders: ScreenshotFolders.current)
         self.bundleID = bundleID
     }
 }

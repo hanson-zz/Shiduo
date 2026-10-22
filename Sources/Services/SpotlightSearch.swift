@@ -175,6 +175,11 @@ private final class QueryBox: @unchecked Sendable {
         switch category {
         case .images, .videos:
             f.isScreenCapture = (item.value(forAttribute: "kMDItemIsScreenCapture") as? NSNumber)?.boolValue ?? false
+            // 截图工具专用文件夹里的图片也算截图（见 ScreenshotSourceDetector）。
+            if category == .images, !f.isScreenCapture,
+               ScreenshotSourceLogic.isInScreenshotFolder(path, folders: ScreenshotFolders.current) {
+                f.isScreenCapture = true
+            }
             f.acquisitionMake = item.value(forAttribute: "kMDItemAcquisitionMake") as? String
             f.acquisitionModel = item.value(forAttribute: "kMDItemAcquisitionModel") as? String
         case .music:

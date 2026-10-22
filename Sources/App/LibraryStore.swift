@@ -475,6 +475,10 @@ final class LibraryStore: ObservableObject {
     }
     /// 侧边栏「截图」「下载来源」的数字：今天新增的个数（从「今天新增」里数，不另外查）。
     @Published private(set) var todayScreenshotCount = 0
+    /// 今天存进截图工具专用文件夹、但不在「今天新增」里的截图（比如 Snapok 存在 ~/Library 里的）。
+    private var todayFolderShotPaths: Set<String> = [] {
+        didSet { if oldValue != todayFolderShotPaths { updateTodayBadges() } }
+    }
     @Published private(set) var todayDownloadCount = 0
     /// 打开“下载来源”时默认选中的来源。
     @Published var downloadSourceFilter: String?
@@ -556,6 +560,8 @@ final class LibraryStore: ObservableObject {
         LibraryStore.shared = self
         // 清理记录里恢复的文件夹：上色记录跟着回到原路径
         CleanupHistory.shared.onMovedBack = { FolderIconService.shared.movePath($0, to: $1) }
+        // 启动时在后台认一次截图工具和它们的存放文件夹。
+        ScreenshotSourceDetector.shared.refreshIfNeeded(force: true)
         // 回到拾掇时：正在看的列表悄悄重新读一次（在访达里新建、改名、删除的文件跟着变）。
         NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
@@ -582,7 +588,12 @@ final class LibraryStore: ObservableObject {
         todayTask?.cancel()
         todayTask = Task {
             let result = await Queries.addedToday()
+            let since = TodayAddedLogic.dayRange(containing: Date()).start
+            let folderShots = await Task.detached(priority: .utility) {
+                ScreenshotSourceDetector.folderImages(limit: 500, since: since).map(\.path)
+            }.value
             guard !Task.isCancelled else { return }
+            todayFolderShotPaths = Set(folderShots)
             if result.map(\.id) != todayAdded.map(\.id) || result.map(\.size) != todayAdded.map(\.size) {
                 remember(result)
                 todayAdded = result
@@ -595,10 +606,12 @@ final class LibraryStore: ObservableObject {
         let roots = [Folders.downloads, Folders.desktop, Folders.documents]
             .map { URL(fileURLWithPath: $0).standardizedFileURL.path + "/" }
         var shots = 0, downloads = 0
+        let counted = todayFolderShotPaths
         for item in todayAdded {
-            if item.isScreenshot { shots += 1 }
+            if item.isScreenshot, !counted.contains(item.path) { shots += 1 }
             if !item.whereFroms.isEmpty, roots.contains(where: { item.path.hasPrefix($0) }) { downloads += 1 }
         }
+        shots += counted.count
         if shots != todayScreenshotCount { todayScreenshotCount = shots }
         if downloads != todayDownloadCount { todayDownloadCount = downloads }
     }
@@ -646,6 +659,8 @@ final class LibraryStore: ObservableObject {
     private var lastActivationRefresh = Date.distantPast
 
     private func appBecameActive() {
+        // 截图工具装了 / 卸了 / 改了存放位置（最多 5 分钟查一次）。
+        ScreenshotSourceDetector.shared.refreshIfNeeded()
         refreshTodayAdded()
         chat.refreshBadges()
         // Spotlight 类页面每次都要重新查，节流一下；文件夹页面直接读磁盘，很便宜。

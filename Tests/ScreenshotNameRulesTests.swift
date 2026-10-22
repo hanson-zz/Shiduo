@@ -25,6 +25,9 @@ final class ScreenshotNameRulesTests: XCTestCase {
             "ScreenShot_20241022.png",
             "Screen Shot 2019-01-01 at 3.00.00 PM.png",
             "quickshot-20241022.png",
+            "quickshot-2026-10-17_15-24-33-290-000.png",
+            "quickshot-2026-10-17_15-24-33-290-000.webp",
+            "Snapok-20261022-153000.png",
             "Capture_20241022_153000.png",
             "capture 2024-10-22.jpg",
             "Snip20241022_1.png",
@@ -55,6 +58,7 @@ final class ScreenshotNameRulesTests: XCTestCase {
             "QQ.png", "QQ音乐封面.png", "QQ_logo.png",
             "DingTalk.png", "DingTalk_logo.png",
             "Lark logo.png", "WeChat 二维码.png",
+            "quickshot-capture-1729580000-abc.png", "quickshot-ocr-x.png", "Snapok-zh.png",
             "IMG_1234.jpg", "照片 2024.png", "我的截图说明.png", "photo-screenshot.png",
         ]
         for name in names {
@@ -94,6 +98,8 @@ final class ScreenshotNameRulesTests: XCTestCase {
         XCTAssertTrue(patterns.contains("capture_20*"))
         XCTAssertTrue(patterns.contains("capture 20*"))
         XCTAssertTrue(patterns.contains("capture-20*"))
+        XCTAssertTrue(patterns.contains("quickshot-20*"))
+        XCTAssertTrue(patterns.contains("snapok-20*"))
         XCTAssertFalse(patterns.contains("capture*"))
         for p in patterns {
             XCTAssertTrue(p.hasSuffix("*"), p)

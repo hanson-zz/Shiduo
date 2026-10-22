@@ -31,7 +31,10 @@ enum ScreenshotNameRules {
         .prefix("屏幕快照"),
         .prefix("screenshot"),      // 也包括 ScreenShot_…
         .prefix("screen shot"),
-        .prefix("quickshot-"),
+        // QuickShot（cclank/quickshot）：quickshot-2026-10-17_15-24-33-290-000.png（它临时目录里的 quickshot-capture-… 不算）。
+        .prefixThenDate("quickshot"),
+        // Snapok（thinkany-ai/snapok）导出时的默认名：Snapok-20261022-153000.png。
+        .prefixThenDate("snapok"),
         .prefixThenDate("capture"),
         .prefixThenDate("snip"),
         .prefix("飞书截图"),
@@ -51,11 +54,14 @@ enum ScreenshotNameRules {
         return rules.contains { matches(lower, $0) }
     }
 
-    /// 是截图：系统标记过，或者是图片且文件名像第三方截图。
-    static func isScreenshot(name: String, typeTree: [String], systemFlag: Bool) -> Bool {
+    /// 是截图：系统标记过，或者是图片且文件名像第三方截图，或者是图片且在识别到的截图工具专用文件夹里。
+    static func isScreenshot(name: String, typeTree: [String], systemFlag: Bool,
+                             path: String? = nil, folders: [ScreenshotSourceLogic.Folder] = []) -> Bool {
         if systemFlag { return true }
         guard isImage(name: name, typeTree: typeTree) else { return false }
-        return nameMatches(name)
+        if nameMatches(name) { return true }
+        if let path, !folders.isEmpty { return ScreenshotSourceLogic.isInScreenshotFolder(path, folders: folders) }
+        return false
     }
 
     static func isImage(name: String, typeTree: [String]) -> Bool {
