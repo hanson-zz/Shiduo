@@ -14,6 +14,7 @@ final class FullDiskAccessMonitor: ObservableObject {
     /// 用户点了几次「稍后」。点满 3 次就不再主动弹出（可能是有意关掉的），设置页里仍能看到状态。
     static let snoozeCountKey = "fda.lostSnoozeCount"
 
+    /// 第一次读取时同步查一次（几次系统调用，很便宜），之后都在后台查、回主线程发布。
     @Published private(set) var granted = FullDiskAccess.isGranted
     @Published var showLostSheet = false
     /// 从旧版本（还没有记录 fda.wasGranted）升级上来，不确定以前开没开过，只提醒这一次。
@@ -36,10 +37,31 @@ final class FullDiskAccessMonitor: ObservableObject {
         }
     }
 
+    /// 正在后台检查时又被叫到，就等这次查完再查一次，不并发堆积。
+    private var checking = false
+    private var recheckAgain = false
+
+    /// 在后台重新检查（不卡主线程），查完回主线程更新状态。
     func recheck() {
+        if checking { recheckAgain = true; return }
+        checking = true
+        Task.detached(priority: .userInitiated) {
+            let now = FullDiskAccess.isGranted
+            await MainActor.run {
+                let monitor = FullDiskAccessMonitor.shared
+                monitor.checking = false
+                monitor.apply(now)
+                if monitor.recheckAgain {
+                    monitor.recheckAgain = false
+                    monitor.recheck()
+                }
+            }
+        }
+    }
+
+    private func apply(_ now: Bool) {
         let defaults = UserDefaults.standard
-        let now = FullDiskAccess.isGranted
-        granted = now
+        if granted != now { granted = now }
         if now {
             defaults.set(true, forKey: Self.wasGrantedKey)
             defaults.removeObject(forKey: Self.snoozeCountKey)

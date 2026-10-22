@@ -259,9 +259,14 @@ struct SettingsView: View {
                     Text("已经在系统设置里打开了？重新打开拾掇后生效。")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Button("立即重新打开") { AppLanguage.relaunch() }
+                    Spacer(minLength: 6)
+                    Button("重新打开拾掇") { AppLanguage.relaunch() }
                         .controlSize(.small)
                 }
+                Text("如果系统设置里已经打开还显示未开启：先退出拾掇，在列表里选中拾掇点「−」删掉，再点「+」重新添加并打开开关，然后重新打开拾掇。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Button("重新查看欢迎引导") { store.showOnboarding = true }
         }

@@ -3,11 +3,10 @@ import SwiftUI
 
 /// 完全磁盘访问权限：微信 / QQ 专区、空间占用图、部分下载来源都需要。
 enum FullDiskAccess {
-    /// 只有拿到完全磁盘访问权限的应用才能读 TCC 数据库，用它来判断。
+    /// 碰几处只有拿到完全磁盘访问权限才能读的地方，任何一处读得到就算已授权（见 FullDiskAccessLogic）。
+    /// 只是几次系统调用，很便宜；界面上请用 FullDiskAccessMonitor.shared.granted（后台检查、缓存）。
     static var isGranted: Bool {
-        let path = NSHomeDirectory() + "/Library/Application Support/com.apple.TCC/TCC.db"
-        return FileManager.default.isReadableFile(atPath: path)
-            && (try? FileHandle(forReadingFrom: URL(fileURLWithPath: path)))?.readData(ofLength: 1).isEmpty == false
+        FullDiskAccessLogic.check().isGranted
     }
 
     static func openSettings() {
@@ -82,7 +81,8 @@ struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("onboardingDone") private var done = false
     @State private var page = 0
-    @State private var granted = FullDiskAccess.isGranted
+    @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
+    private var granted: Bool { fullDiskAccess.granted }
     var onSearch: (String) -> Void = { _ in }
 
     var body: some View {
@@ -125,7 +125,7 @@ struct OnboardingView: View {
         .background(GlassBackdrop())
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: page)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            granted = FullDiskAccess.isGranted
+            fullDiskAccess.recheck()
         }
     }
 

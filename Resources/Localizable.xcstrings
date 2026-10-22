@@ -26496,6 +26496,38 @@
           }
         }
       }
+    },
+    "重新打开拾掇": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新打开拾掇"
+          }
+        }
+      }
+    },
+    "如果系统设置里已经打开还显示未开启：先退出拾掇，在列表里选中拾掇点「−」删掉，再点「+」重新添加并打开开关，然后重新打开拾掇。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If it's already on in System Settings but still shows Off: quit Shiduo, select Shiduo in the list and click “−” to remove it, click “+” to add it again and turn the switch on, then reopen Shiduo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果系统设置里已经打开还显示未开启：先退出拾掇，在列表里选中拾掇点「−」删掉，再点「+」重新添加并打开开关，然后重新打开拾掇。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

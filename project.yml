@@ -57,6 +57,7 @@ targets:
       - path: Sources/Model/PathLogic.swift
       - path: Sources/Model/LibraryScopeLogic.swift
       - path: Sources/Model/FolderSizeLogic.swift
+      - path: Sources/Model/FullDiskAccessLogic.swift
       - path: Sources/Model/ListTruncationLogic.swift
       - path: Sources/Model/NavigationHistoryLogic.swift
       - path: Sources/App/AppShortcuts.swift
