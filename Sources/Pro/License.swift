@@ -1,7 +1,6 @@
 import Combine
 import Foundation
 import OSLog
-import Security
 
 /// 授权相关的系统日志（只记录错误种类，不记录授权码）。
 private let licenseLog = Logger(subsystem: "io.github.hansonzz.shiduo", category: "license")
@@ -31,60 +30,7 @@ enum LicenseConfig {
     static let revalidateInterval: TimeInterval = 86_400
 }
 
-// MARK: - 钥匙串
-
-/// 授权信息存在钥匙串里（kSecClassGenericPassword），重装拾掇也不会丢，试用期也不会被重置。
-enum LicenseKeychain {
-    static let service = "io.github.hansonzz.shiduo.license"
-
-    enum Account: String {
-        case licenseKey
-        case instanceID
-        case lastValidated
-        case trialStart
-        /// 见过的最晚时间（防止把系统时间往回调来重置试用、跳过校验）。
-        case maxSeen
-        /// 这台 Mac 激活过授权码（解绑 / 授权码失效后不再说「试用已结束」，也不能再开始试用）。
-        case everActivated
-    }
-
-    static func get(_ account: Account) -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account.rawValue,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-        ]
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess, let data = result as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
-    }
-
-    static func set(_ value: String?, for account: Account) {
-        let base: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account.rawValue,
-        ]
-        SecItemDelete(base as CFDictionary)
-        guard let value, let data = value.data(using: .utf8) else { return }
-        var item = base
-        item[kSecValueData as String] = data
-        item[kSecAttrLabel as String] = "拾掇授权"
-        SecItemAdd(item as CFDictionary, nil)
-    }
-
-    static func date(_ account: Account) -> Date? {
-        guard let text = get(account), let seconds = Double(text) else { return nil }
-        return Date(timeIntervalSince1970: seconds)
-    }
-
-    static func setDate(_ date: Date?, for account: Account) {
-        set(date.map { String($0.timeIntervalSince1970) }, for: account)
-    }
-}
+// 授权信息存在哪里见 LicenseStore.swift（以前在钥匙串里，现在是 Application Support 里带签名的文件）。
 
 // MARK: - 授权 API（经 Cloudflare Worker 中转到 Creem）
 
@@ -231,7 +177,7 @@ enum LicenseState: Equatable {
     case expiredTrial
 }
 
-/// 根据钥匙串里的时间算授权状态（纯逻辑，单元测试覆盖）。
+/// 根据保存的时间算授权状态（纯逻辑，单元测试覆盖）。
 /// 防时钟篡改：
 /// - maxSeen 记着见过的最晚时间。本机时间比它早一天以上，说明时钟被往回调了：试用按已结束算，
 ///   已激活的也不给离线宽限，必须联网校验（校验成功时用服务器时间纠正 maxSeen）。
@@ -325,7 +271,7 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    /// 这台 Mac 已经用授权码激活（refreshState 时从钥匙串读出，避免每次刷新界面都读钥匙串）。
+    /// 这台 Mac 已经用授权码激活（refreshState 时从授权文件读出，避免每次刷新界面都读）。
     @Published private(set) var isActivated = false
     /// 授权码只显示前 4 位和后 4 位。
     @Published private(set) var maskedKey: String?
@@ -343,12 +289,12 @@ final class LicenseManager: ObservableObject {
 
     /// 试用结束的时间；没开始试用时为 nil。
     var trialEndDate: Date? {
-        LicenseKeychain.date(.trialStart).map { $0.addingTimeInterval(TimeInterval(LicenseConfig.trialDays) * 86_400) }
+        LicenseStore.date(.trialStart).map { $0.addingTimeInterval(TimeInterval(LicenseConfig.trialDays) * 86_400) }
     }
 
     /// 还没开始过试用，也没有激活。
     var canStartTrial: Bool {
-        TrialStartRule.canStart(state: state, trialStart: LicenseKeychain.date(.trialStart),
+        TrialStartRule.canStart(state: state, trialStart: LicenseStore.date(.trialStart),
                                 activated: isActivated, everActivated: everActivated)
     }
 
@@ -357,7 +303,7 @@ final class LicenseManager: ObservableObject {
 
     /// 本机时间被往回调过（试用结束的提醒先不发，也不记成已提醒）。
     var clockRolledBack: Bool {
-        LicenseEvaluator.clockRolledBack(now: Date(), maxSeen: LicenseKeychain.date(.maxSeen))
+        LicenseEvaluator.clockRolledBack(now: Date(), maxSeen: LicenseStore.date(.maxSeen))
     }
 
     var statusText: String {
@@ -382,31 +328,31 @@ final class LicenseManager: ObservableObject {
         refreshState()
     }
 
-    /// 根据钥匙串里的信息重新计算状态（不联网）。
+    /// 根据保存的授权信息重新计算状态（不联网）。
     func refreshState() {
         let now = Date()
-        let key = LicenseKeychain.get(.licenseKey)
-        isActivated = key != nil && LicenseKeychain.get(.instanceID) != nil
-        var ever = LicenseKeychain.get(.everActivated) != nil
+        let key = LicenseStore.get(.licenseKey)
+        isActivated = key != nil && LicenseStore.get(.instanceID) != nil
+        var ever = LicenseStore.get(.everActivated) != nil
         if isActivated && !ever {
-            LicenseKeychain.set("1", for: .everActivated)
+            LicenseStore.set("1", for: .everActivated)
             ever = true
         }
         // 授权码还在、只是没有激活实例：服务器判过不可用（以前的版本没有 everActivated 标记）。
         ever = ever || key != nil
         if everActivated != ever { everActivated = ever }
         maskedKey = key.map(Self.mask)
-        lastValidated = LicenseKeychain.date(.lastValidated)
-        var maxSeen = LicenseKeychain.date(.maxSeen)
-        // 记下见过的最晚时间（最多每小时写一次钥匙串）。
+        lastValidated = LicenseStore.date(.lastValidated)
+        var maxSeen = LicenseStore.date(.maxSeen)
+        // 记下见过的最晚时间（最多每小时写一次）。
         if maxSeen == nil || now > maxSeen!.addingTimeInterval(3600) {
-            LicenseKeychain.setDate(now, for: .maxSeen)
+            LicenseStore.setDate(now, for: .maxSeen)
             maxSeen = now
         }
         let output = LicenseEvaluator.evaluate(.init(
             activated: isActivated,
             lastValidated: lastValidated,
-            trialStart: LicenseKeychain.date(.trialStart),
+            trialStart: LicenseStore.date(.trialStart),
             maxSeen: maxSeen,
             now: now,
             sessionValidatedAgo: validatedUptime.map { ProcessInfo.processInfo.systemUptime - $0 }
@@ -418,7 +364,7 @@ final class LicenseManager: ObservableObject {
     /// 用户点了「开始 7 天免费试用」才开始试用（打开 Pro 页面、右键点 Pro 项都不会自动开始）。开始过就不会再重置。
     func startTrial() {
         guard canStartTrial else { return }
-        LicenseKeychain.setDate(Date(), for: .trialStart)
+        LicenseStore.setDate(Date(), for: .trialStart)
         refreshState()
     }
 
@@ -427,10 +373,10 @@ final class LicenseManager: ObservableObject {
     /// 只有服务器明确说不可用时才解绑；Creem 故障、限流、网络错误都保持现状并退避重试。
     func revalidateIfNeeded(force: Bool = false) async {
         defer { refreshState() }
-        guard let key = LicenseKeychain.get(.licenseKey),
-              let instance = LicenseKeychain.get(.instanceID) else { return }
-        if !force, !LicenseEvaluator.shouldRevalidate(lastValidated: LicenseKeychain.date(.lastValidated), now: Date(),
-                                                        maxSeen: LicenseKeychain.date(.maxSeen)) {
+        guard let key = LicenseStore.get(.licenseKey),
+              let instance = LicenseStore.get(.instanceID) else { return }
+        if !force, !LicenseEvaluator.shouldRevalidate(lastValidated: LicenseStore.date(.lastValidated), now: Date(),
+                                                        maxSeen: LicenseStore.date(.maxSeen)) {
             return
         }
         if force { isWorking = true }
@@ -449,8 +395,8 @@ final class LicenseManager: ObservableObject {
         case .invalid:
             // 服务器明确说不可用（已停用、已过期、在后台被解绑……）。
             cancelRetry()
-            LicenseKeychain.set(nil, for: .instanceID)
-            LicenseKeychain.set(nil, for: .lastValidated)
+            LicenseStore.set(nil, for: .instanceID)
+            LicenseStore.set(nil, for: .lastValidated)
             validatedUptime = nil
             errorMessage = Self.message(for: response.error, status: response.status)
             licenseLog.error("License revalidation rejected, status: \(response.status ?? "-", privacy: .public)")
@@ -475,9 +421,9 @@ final class LicenseManager: ObservableObject {
     private func markValidated(serverDate: Date?) {
         cancelRetry()
         let trusted = serverDate ?? Date()
-        LicenseKeychain.setDate(trusted, for: .lastValidated)
+        LicenseStore.setDate(trusted, for: .lastValidated)
         // 服务器时间可信：用它纠正「见过的最晚时间」（时钟曾被调到未来又调回来的情况）。
-        if let serverDate { LicenseKeychain.setDate(serverDate, for: .maxSeen) }
+        if let serverDate { LicenseStore.setDate(serverDate, for: .maxSeen) }
         validatedUptime = ProcessInfo.processInfo.systemUptime
         errorMessage = nil
     }
@@ -526,8 +472,8 @@ final class LicenseManager: ObservableObject {
                 errorMessage = String(localized: "这个授权码不属于拾掇 Pro。")
                 return false
             }
-            LicenseKeychain.set(key, for: .licenseKey)
-            LicenseKeychain.set(instance, for: .instanceID)
+            LicenseStore.set(key, for: .licenseKey)
+            LicenseStore.set(instance, for: .instanceID)
             markValidated(serverDate: response.serverDate)
             refreshState()
             NotificationCenter.default.post(name: .licenseDidActivate, object: nil)
@@ -540,8 +486,8 @@ final class LicenseManager: ObservableObject {
 
     /// 解绑这台 Mac，把激活名额留给别的 Mac。
     func deactivate() async {
-        guard let key = LicenseKeychain.get(.licenseKey) else { return }
-        guard let instance = LicenseKeychain.get(.instanceID) else {
+        guard let key = LicenseStore.get(.licenseKey) else { return }
+        guard let instance = LicenseStore.get(.instanceID) else {
             clearActivation(keepKey: false)
             return
         }
@@ -564,9 +510,9 @@ final class LicenseManager: ObservableObject {
     }
 
     private func clearActivation(keepKey: Bool) {
-        if !keepKey { LicenseKeychain.set(nil, for: .licenseKey) }
-        LicenseKeychain.set(nil, for: .instanceID)
-        LicenseKeychain.set(nil, for: .lastValidated)
+        if !keepKey { LicenseStore.set(nil, for: .licenseKey) }
+        LicenseStore.set(nil, for: .instanceID)
+        LicenseStore.set(nil, for: .lastValidated)
         validatedUptime = nil
         cancelRetry()
         refreshState()

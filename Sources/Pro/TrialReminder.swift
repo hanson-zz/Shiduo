@@ -146,7 +146,7 @@ final class TrialExpiryNotice: ObservableObject {
     /// 授权状态变化时、启动时调用。
     func check() async {
         let license = LicenseManager.shared
-        let start = LicenseKeychain.date(.trialStart)
+        let start = LicenseStore.date(.trialStart)
         let announced = UserDefaults.standard.string(forKey: Self.announcedKey)
         guard TrialExpiry.shouldAnnounce(state: license.state, activated: license.isActivated,
                                          trialStart: start, announced: announced,

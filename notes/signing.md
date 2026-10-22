@@ -10,7 +10,7 @@ designated => cdhash H"…"   # 每次构建都不一样
 ```
 
 macOS 的隐私权限（TCC，例如“完全磁盘访问权限”）和钥匙串的访问控制都是按 DR 认 App 的。
-所以每次更新，新版本都被当成另一个 App：完全磁盘访问权限悄悄失效，钥匙串里的授权信息也可能弹窗询问。
+所以每次更新，新版本都被当成另一个 App：完全磁盘访问权限悄悄失效，钥匙串里的授权信息也会弹窗询问（所以授权信息已改存文件，见下）。
 
 ## 解决办法
 
@@ -54,7 +54,7 @@ designated => identifier "io.github.hanson-zz.shiduo" and certificate leaf = H"a
 
 - **Gatekeeper 不变**：自签名证书不受 Apple 信任，App 仍然没有公证，第一次打开的步骤和以前一样（右键 › 打开，或“隐私与安全性 › 仍要打开”）。
 - **从 ad-hoc 版本升级到第一个自签名版本时，还需要最后一次重新授权**完全磁盘访问权限（DR 从 cdhash 变成证书）。App 里会自动弹出「更新后需要重新授权一次」的指引（`Sources/Views/FullDiskAccessLost.swift`）。之后的更新不用再弄。
-- 钥匙串（`Sources/Pro/License.swift`）：授权信息存成普通的 generic password，没有自定义访问控制；默认的 ACL 信任创建它的 App（按 DR）。证书固定后，以后更新不会再弹钥匙串询问。第一次升级时如果系统问“拾掇想使用钥匙串里的…”，点“始终允许”即可。
+- 钥匙串：从 v0.14.0-beta.7 起授权信息不再存钥匙串。自签名、没有 Team ID 的 App，钥匙串访问控制实际按每个版本的 cdhash 认人，证书固定也没用，每次更新都弹「想要访问你的钥匙串中的密钥“拾掇授权”」。现在存在 `~/Library/Application Support/Shiduo/license.json`（0600，HMAC 密钥由 bundle id + 本机 IOPlatformUUID 派生，手改视为没有；试用开始时间和「激活过」另在 UserDefaults 备份，取最早 / 任一为真）。新版本第一次启动从旧钥匙串搬一次（最多读两项、可能最后弹一次），成功后删掉旧项，`license.migratedFromKeychain` 标记后再不碰钥匙串。代码见 `Sources/Pro/LicenseStore.swift`、`LicenseStoreLogic.swift`。
 
 ## 在 Mac 上检查
 
