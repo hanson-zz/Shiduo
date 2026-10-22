@@ -292,7 +292,7 @@ enum LibrarySub: String, CaseIterable, Identifiable, Hashable, Sendable {
         switch category {
         case .images:
             if designExtensions.contains(ext) { return .design }
-            if f.isScreenCapture { return .screenshot }
+            if f.isScreenCapture || ScreenshotNameRules.nameMatches(f.name) { return .screenshot }
             if f.hasCamera || rawExtensions.contains(ext) { return .photo }
             return .other
         case .videos:

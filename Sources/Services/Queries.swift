@@ -233,7 +233,8 @@ enum Queries {
 
     static func screenshotsPage(limit: Int = 3000) async -> ListPage {
         ListPage(await SpotlightSearch.run(
-            predicate: P.screenshot, scopes: Scopes.home, maxItems: limit, sortKey: "kMDItemFSCreationDate"
+            predicate: P.screenshot, scopes: Scopes.home, maxItems: limit, sortKey: "kMDItemFSCreationDate",
+            accept: { $0.isScreenshot }
         ), cap: limit)
     }
 

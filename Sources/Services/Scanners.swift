@@ -494,7 +494,7 @@ final class CleanupScanner: ObservableObject {
         // 旧截图
         let oldScreenshots = await SpotlightSearch.run(
             predicate: P.screenshot, scopes: Scopes.home, maxItems: 5000, sortKey: "kMDItemFSCreationDate"
-        ).items.filter { ($0.created ?? $0.modified ?? now) < daysAgo(30) }
+        ).items.filter { $0.isScreenshot && ($0.created ?? $0.modified ?? now) < daysAgo(30) }
 
         // 很久没看的大视频
         let bigVideos = await SpotlightSearch.run(

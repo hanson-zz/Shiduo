@@ -52,6 +52,7 @@ targets:
       - path: Sources/Search/SavedSearch.swift
       - path: Sources/Search/Pinyin.swift
       - path: Sources/Model/FileCategory.swift
+      - path: Sources/Model/ScreenshotNameRules.swift
       - path: Sources/Model/SourceCatalog.swift
       - path: Sources/Model/FileStamp.swift
       - path: Sources/Model/PathLogic.swift

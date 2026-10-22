@@ -238,8 +238,15 @@ enum P {
         NSPredicate(format: "kMDItemFSName LIKE %@", "*")
     }
 
+    /// 系统截图（有标记），或者文件名像第三方截图的图片（微信、QQ、Snipaste……见 ScreenshotNameRules）。
+    /// 日期类规则在这里只能粗筛，结果要再用 FileItem.isScreenshot 过滤。
     static var screenshot: NSPredicate {
-        NSPredicate(format: "kMDItemIsScreenCapture == 1")
+        any([
+            NSPredicate(format: "kMDItemIsScreenCapture == 1"),
+            all([FileCategory.images.predicate(), any(ScreenshotNameRules.spotlightPatterns.map {
+                NSPredicate(format: "kMDItemFSName LIKE[c] %@", $0)
+            })]),
+        ])
     }
 
     static func sizeAtLeast(_ bytes: Int64) -> NSPredicate {
