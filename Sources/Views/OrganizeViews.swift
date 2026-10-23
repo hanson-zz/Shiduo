@@ -6,15 +6,29 @@ struct DownloadSourcesView: View {
     @EnvironmentObject private var store: LibraryStore
     @State private var selectedSource: String? = "__all__"
 
-    private var groups: [SourceGroup] { SourceGroup.make(from: store.items) }
+    /// 含「未记录来源」（下载文件夹里认不出来源的文件，排在最后）。
+    private var groups: [SourceGroup] { SourceGroup.make(from: store.items, includeUnrecorded: true) }
 
     private var visible: [FileItem] {
         guard let id = selectedSource, id != "__all__" else { return store.items }
-        return store.items.filter { $0.downloadSource?.id == id }
+        return store.items.filter { SourceGroup.groupID(of: $0) == id }
     }
 
-    private var knownGroups: [SourceGroup] { groups.filter { !$0.source.id.hasPrefix("site:") } }
-    private var siteGroups: [SourceGroup] { groups.filter { $0.source.id.hasPrefix("site:") } }
+    private var knownGroups: [SourceGroup] { groups.filter { DownloadSourceLogic.groupRank($0.source.id) == 0 } }
+    private var siteGroups: [SourceGroup] { groups.filter { DownloadSourceLogic.groupRank($0.source.id) == 1 } }
+    private var unrecordedGroup: SourceGroup? { groups.first { $0.source.id == DownloadSourceLogic.unrecordedID } }
+    /// 顶部气泡：按文件数排，「未记录来源」放最后，最多 14 个。
+    private var bubbleGroups: [SourceGroup] {
+        let unrecorded = DownloadSourceLogic.unrecordedID
+        let sorted = groups.sorted { l, r in
+            let lu = l.source.id == unrecorded, ru = r.source.id == unrecorded
+            if lu != ru { return ru }
+            return l.items.count > r.items.count
+        }
+        return Array(sorted.prefix(14))
+    }
+    /// 「N 个来源」不把「未记录来源」算成一个来源。
+    private var sourceCount: Int { DownloadSourceLogic.sourceCount(groups.map(\.source.id)) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,7 +46,7 @@ struct DownloadSourcesView: View {
             split
         }
         .navigationTitle("下载来源")
-        .navigationSubtitle("\(groups.count) 个来源 · \(store.items.count) 个文件")
+        .navigationSubtitle("\(sourceCount) 个来源 · \(store.items.count) 个文件")
         .onAppear {
             if let id = store.downloadSourceFilter {
                 selectedSource = id
@@ -57,12 +71,17 @@ struct DownloadSourcesView: View {
                     Text("个文件")
                         .font(.title3.weight(.medium))
                 }
-                Text("来自 \(groups.count) 个来源")
+                Text("来自 \(sourceCount) 个来源")
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(Color.accentColor)
+                if let unrecordedGroup {
+                    Text("另有 \(unrecordedGroup.items.count) 个未记录来源")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
             }
             FlowLayout(spacing: 8) {
-                ForEach(groups.sorted { $0.items.count > $1.items.count }.prefix(14)) { group in
+                ForEach(bubbleGroups) { group in
                     Button {
                         selectedSource = group.source.id
                     } label: {
@@ -102,6 +121,15 @@ struct DownloadSourcesView: View {
                 if !siteGroups.isEmpty {
                     Section("其他网站") {
                         ForEach(siteGroups) { row($0) }
+                    }
+                }
+                if let unrecordedGroup {
+                    Section {
+                        row(unrecordedGroup)
+                    } footer: {
+                        Text("下载文件夹里没有记下来源的文件（例如用 App 自带的下载、解压出来、或从别处拷进来的）。")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }

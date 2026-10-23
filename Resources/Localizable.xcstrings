@@ -26656,6 +26656,214 @@
           }
         }
       }
+    },
+    "QQ 浏览器": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QQ Browser"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QQ 浏览器"
+          }
+        }
+      }
+    },
+    "未记录来源": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Source Recorded"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未记录来源"
+          }
+        }
+      }
+    },
+    "%lld 个文件夹不移动：整理只看第一层的文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld folders stay put: tidying only looks at files on the top level."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件夹不移动：整理只看第一层的文件。"
+          }
+        }
+      }
+    },
+    "%lld 个文件只在 iCloud 云端、还没下载到这台 Mac，这次跳过。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld files are only in iCloud and not downloaded to this Mac, so they were skipped this time."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件只在 iCloud 云端、还没下载到这台 Mac，这次跳过。"
+          }
+        }
+      }
+    },
+    "这个文件夹是空的。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder is empty."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件夹是空的。"
+          }
+        }
+      }
+    },
+    "下载第一层只有文件夹，之前整理过的文件在这些子文件夹里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The top level of Downloads only has folders. Files you tidied before are inside these subfolders."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载第一层只有文件夹，之前整理过的文件在这些子文件夹里"
+          }
+        }
+      }
+    },
+    "整理只看第一层的文件，文件夹本身不移动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidying only looks at files on the top level; folders themselves are not moved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "整理只看第一层的文件，文件夹本身不移动。"
+          }
+        }
+      }
+    },
+    "%lld 个文件还在下载（.download、.crdownload、.part 等），这次跳过。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld files are still downloading (.download, .crdownload, .part, etc.), so they were skipped this time."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件还在下载（.download、.crdownload、.part 等），这次跳过。"
+          }
+        }
+      }
+    },
+    "%lld 个文件几秒内刚改动过，可能还在写入，这次跳过。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld files changed in the last few seconds and may still be writing, so they were skipped this time."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件几秒内刚改动过，可能还在写入，这次跳过。"
+          }
+        }
+      }
+    },
+    "%lld 个文件读不到信息（可能没有权限），这次跳过。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld files could not be read (possibly no permission), so they were skipped this time."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件读不到信息（可能没有权限），这次跳过。"
+          }
+        }
+      }
+    },
+    "在拾掇中打开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Shiduo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在拾掇中打开"
+          }
+        }
+      }
+    },
+    "另有 %lld 个未记录来源": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus %lld with no source recorded"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另有 %lld 个未记录来源"
+          }
+        }
+      }
+    },
+    "下载文件夹里没有记下来源的文件（例如用 App 自带的下载、解压出来、或从别处拷进来的）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files in Downloads with no recorded source (for example, saved by an app's own downloader, unzipped, or copied in from elsewhere)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载文件夹里没有记下来源的文件（例如用 App 自带的下载、解压出来、或从别处拷进来的）。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

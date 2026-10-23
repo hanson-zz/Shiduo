@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 extension FileItem: TodayAddable {}
 
@@ -106,7 +107,7 @@ extension SearchQuery {
             let hit = name == source || item.whereFroms.contains { $0.localizedCaseInsensitiveContains(source) }
             if !hit { return false }
         }
-        if downloadedOnly && item.whereFroms.isEmpty { return false }
+        if downloadedOnly && !item.hasDownloadSource { return false }
         return true
     }
 
@@ -254,14 +255,28 @@ enum Queries {
         return ListPage(result, cap: limit)
     }
 
-    /// 有下载来源记录的文件。
+    /// 「下载来源」页的文件：
+    /// - 下载文件夹：直接读磁盘（含子文件夹，例如整理后的「图片」「文稿」），不依赖 Spotlight 索引；
+    ///   有没有来源记录都列出来，认不出来源的归到「未记录来源」。按加入时间取最新的 limit 个。
+    /// - 桌面、文稿：Spotlight 查，只要有来源记录的（下载地址，或认得出的下载 App）。
+    /// 两份按路径去重合并，按加入时间从新到旧。
     static func downloaded(limit: Int = 5000) async -> [FileItem] {
-        await SpotlightSearch.run(
+        let root = Folders.downloads
+        let walked = await Task.detached(priority: .userInitiated) {
+            DownloadsWalker.files(in: root, limit: limit)
+        }.value
+        let spotlight = await SpotlightSearch.run(
             predicate: P.all([P.everything, P.notFolder]),
-            scopes: [Folders.downloads, Folders.desktop, Folders.documents],
+            scopes: [Folders.desktop, Folders.documents],
             maxItems: limit, sortKey: "kMDItemDateAdded",
-            accept: { !$0.whereFroms.isEmpty }
+            accept: { $0.hasDownloadSource }
         ).items
+        let merged = DownloadSourceLogic.merge(walked, spotlight, path: \.path)
+        let result = DownloadSourceLogic.newest(merged, limit: limit) { $0.added ?? $0.modified }
+        let withURL = walked.filter { !$0.whereFroms.isEmpty }.count
+        let byApp = walked.filter { $0.whereFroms.isEmpty && $0.downloadSource != nil }.count
+        AppLog.files.info("downloaded: downloads walked \(walked.count, privacy: .public) (whereFroms \(withURL, privacy: .public), app only \(byApp, privacy: .public), none \(walked.count - withURL - byApp, privacy: .public)), desktop+documents spotlight \(spotlight.count, privacy: .public), total \(result.count, privacy: .public)")
+        return result
     }
 
     static func recentDownloads(limit: Int) async -> [FileItem] {
@@ -304,7 +319,7 @@ enum Queries {
     static func searchPage(_ q: SearchQuery) async -> ListPage {
         var filter: (@Sendable (FileItem) -> Bool)? = nil
         if q.downloadedOnly {
-            filter = { (file: FileItem) -> Bool in !file.whereFroms.isEmpty }
+            filter = { (file: FileItem) -> Bool in file.hasDownloadSource }
         }
         let first = await SpotlightSearch.run(
             predicate: q.predicate, scopes: q.scopes, maxItems: searchLimit, accept: filter
@@ -417,6 +432,42 @@ enum Queries {
             )) ?? []
             return urls.compactMap { FileItem(url: $0) }
         }.value
+    }
+}
+
+/// 直接遍历下载文件夹（「下载来源」页用）。会阻塞，不要在主线程调用。
+enum DownloadsWalker {
+    /// 最多看这么多个条目（防止下载文件夹里解压了巨大的工程时一直遍历下去）。
+    static let visitLimit = 60_000
+
+    /// 下载文件夹里的文件（含子文件夹；跳过隐藏文件、不进 .app 这类文件包、不进 node_modules 之类的杂项目录），
+    /// 按加入时间取最新的 limit 个。
+    static func files(in root: String, limit: Int) -> [FileItem] {
+        let keys: [URLResourceKey] = [.isDirectoryKey, .isPackageKey, .addedToDirectoryDateKey, .contentModificationDateKey]
+        guard let enumerator = FileManager.default.enumerator(
+            at: URL(fileURLWithPath: root, isDirectory: true), includingPropertiesForKeys: keys,
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        ) else {
+            AppLog.files.error("downloaded: cannot enumerate Downloads")
+            return []
+        }
+        var entries: [(url: URL, date: Date?)] = []
+        var visited = 0
+        for case let url as URL in enumerator {
+            visited += 1
+            if visited > visitLimit { break }
+            guard let values = try? url.resourceValues(forKeys: Set(keys)) else { continue }
+            let isDir = values.isDirectory ?? false
+            let isPackage = values.isPackage ?? false
+            if isDir && !isPackage {
+                if SpotlightSearch.isNoise(url.path + "/") { enumerator.skipDescendants() }
+                continue
+            }
+            if url.pathExtension == "icloud" { continue }
+            entries.append((url, values.addedToDirectoryDate ?? values.contentModificationDate))
+        }
+        let newest = DownloadSourceLogic.newest(entries, limit: limit) { $0.date }
+        return newest.compactMap { FileItem(url: $0.url) }
     }
 }
 

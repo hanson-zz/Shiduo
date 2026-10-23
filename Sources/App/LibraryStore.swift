@@ -50,20 +50,22 @@ struct SourceGroup: Identifiable {
     var id: String { source.id }
     var bytes: Int64 { items.reduce(0) { $0 + $1.size } }
 
-    static func make(from items: [FileItem]) -> [SourceGroup] {
+    /// 按来源分组。includeUnrecorded：下载文件夹里认不出来源的文件归到「未记录来源」（排在最后）；
+    /// 首页卡片、列表的来源筛选不带这一组。
+    static func make(from items: [FileItem], includeUnrecorded: Bool = false) -> [SourceGroup] {
         var buckets: [String: (DownloadSource, [FileItem])] = [:]
         for item in items {
-            guard let source = item.downloadSource else { continue }
+            guard let source = item.downloadSource ?? (includeUnrecorded ? SourceCatalog.unrecorded : nil) else { continue }
             buckets[source.id, default: (source, [])].1.append(item)
         }
-        return buckets.values
-            .map { SourceGroup(source: $0.0, items: $0.1) }
-            .sorted { lhs, rhs in
-                // 认识的来源排在单纯的网站前面，同类按文件数。
-                let lk = !lhs.source.id.hasPrefix("site:"), rk = !rhs.source.id.hasPrefix("site:")
-                if lk != rk { return lk }
-                return lhs.items.count > rhs.items.count
-            }
+        // 认识的来源排在单纯的网站前面，「未记录来源」最后；同类按文件数。
+        let order = DownloadSourceLogic.sortGroups(buckets.map { (id: $0.key, count: $0.value.1.count) })
+        return order.compactMap { id in buckets[id].map { SourceGroup(source: $0.0, items: $0.1) } }
+    }
+
+    /// 文件在「下载来源」页属于哪一组。
+    static func groupID(of item: FileItem) -> String {
+        item.downloadSource?.id ?? DownloadSourceLogic.unrecordedID
     }
 }
 
@@ -602,14 +604,15 @@ final class LibraryStore: ObservableObject {
     }
 
     private func updateTodayBadges() {
-        // 和「下载来源」页一样：下载 / 桌面 / 文稿里带下载来源记录的文件。
+        // 下载 / 桌面 / 文稿里有真正来源记录的文件（下载地址，或认得出的下载 App）。
+        // 「下载来源」页还会列出下载文件夹里没有来源记录的文件（「未记录来源」），那些不算进这个数字。
         let roots = [Folders.downloads, Folders.desktop, Folders.documents]
             .map { URL(fileURLWithPath: $0).standardizedFileURL.path + "/" }
         var shots = 0, downloads = 0
         let counted = todayFolderShotPaths
         for item in todayAdded {
             if item.isScreenshot, !counted.contains(item.path) { shots += 1 }
-            if !item.whereFroms.isEmpty, roots.contains(where: { item.path.hasPrefix($0) }) { downloads += 1 }
+            if item.hasDownloadSource, roots.contains(where: { item.path.hasPrefix($0) }) { downloads += 1 }
         }
         shots += counted.count
         if shots != todayScreenshotCount { todayScreenshotCount = shots }
@@ -955,7 +958,7 @@ final class LibraryStore: ObservableObject {
     private var countsTask: Task<Void, Never>?
 
     /// 文件被清理 / 搬走以后：过几秒（等 Spotlight 更新索引）重新数一下各分类和大文件的数量。
-    /// 只数数量，不跑整个首页（预览、下载来源、清理扫描都不动）。
+    /// 只数数量和首页「下载来源」分组，不跑整个首页（预览、清理扫描都不动）。
     func scheduleCountsRefresh(delay: Double = 5) {
         guard !Demo.isOn, dashboardLoaded else { return }
         countsTask?.cancel()
@@ -970,9 +973,13 @@ final class LibraryStore: ObservableObject {
             }
             let large = await Self.countLargeFiles()
             if Task.isCancelled { return }
+            // 整理下载 / 撤销以后首页「下载来源」卡片也跟着更新（下载文件夹直接读磁盘，搬进子文件夹的文件马上找得到）。
+            let downloaded = await Queries.downloaded(limit: 3000)
+            if Task.isCancelled { return }
             refreshTodayAdded()
             totals = fresh
             largeFileCount = large
+            sourceGroups = SourceGroup.make(from: downloaded)
         }
     }
 

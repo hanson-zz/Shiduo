@@ -118,7 +118,30 @@ enum SourceCatalog {
                        aliases: ["扩展", "插件", "extension", "extensions"]),
     ]
 
-    private static let byID: [String: DownloadSource] = Dictionary(uniqueKeysWithValues: known.map { ($0.id, $0) })
+    /// 只能从「下载它的 App」认出来的来源（系统隔离标记里的 App 名）：浏览器、系统「邮件」。
+    /// 没有域名，不参与网址匹配和搜索别名，所以不放进 known。
+    static let apps: [DownloadSource] = [
+        DownloadSource(id: "safari", name: "Safari", symbol: "safari", tint: .blue, hosts: [], aliases: []),
+        DownloadSource(id: "chrome", name: "Chrome", symbol: "globe", tint: .yellow, hosts: [], aliases: []),
+        DownloadSource(id: "edge", name: "Edge", symbol: "globe", tint: .teal, hosts: [], aliases: []),
+        DownloadSource(id: "firefox", name: "Firefox", symbol: "flame", tint: .orange, hosts: [], aliases: []),
+        DownloadSource(id: "arc", name: "Arc", symbol: "globe", tint: .pink, hosts: [], aliases: []),
+        DownloadSource(id: "brave", name: "Brave", symbol: "shield", tint: .orange, hosts: [], aliases: []),
+        DownloadSource(id: "opera", name: "Opera", symbol: "globe", tint: .red, hosts: [], aliases: []),
+        DownloadSource(id: "qqbrowser", name: String(localized: "QQ 浏览器"), symbol: "globe", tint: .blue, hosts: [], aliases: []),
+        DownloadSource(id: "applemail", name: String(localized: "邮件"), symbol: "envelope", tint: .blue, hosts: [], aliases: []),
+    ]
+
+    /// 下载文件夹里认不出来源的文件归到这一组，页面上照样列出来。
+    static let unrecorded = DownloadSource(id: DownloadSourceLogic.unrecordedID, name: String(localized: "未记录来源"),
+                                           symbol: "questionmark.folder", tint: .gray, hosts: [], aliases: [])
+
+    private static let byID: [String: DownloadSource] = Dictionary(uniqueKeysWithValues: (known + apps).map { ($0.id, $0) })
+
+    /// 没有下载地址时，按系统隔离标记里「下载它的 App」认来源（比下载地址弱，只作补充）。
+    static func source(forAgent agent: String?) -> DownloadSource? {
+        DownloadSourceLogic.sourceID(forAgent: agent).flatMap { byID[$0] }
+    }
 
     static func source(id: String) -> DownloadSource? { byID[id] }
 

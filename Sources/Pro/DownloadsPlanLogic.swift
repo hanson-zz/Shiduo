@@ -16,6 +16,8 @@ struct OrganizeCandidate: Hashable, Identifiable {
     var added: Date?
     var created: Date?
     var modified: Date?
+    /// 文件夹里第一层有几项（不含隐藏文件）；文件或没读到时为 nil。「下载第一层只有文件夹」时列出来用。
+    var childCount: Int? = nil
 
     var id: String { path }
     var ext: String { (name as NSString).pathExtension.lowercased() }
@@ -75,7 +77,11 @@ enum DownloadsPlanLogic {
 
     static func isInProgress(_ c: OrganizeCandidate, now: Date, settle: TimeInterval = settleSeconds) -> SkipReason? {
         if partialExtensions.contains(c.ext) { return .downloading }
-        if let modified = c.modified, now.timeIntervalSince(modified) < settle { return .justModified }
+        // 只看「刚刚」：修改时间在未来很久的（解压出来的、时钟不对的）不算正在写入，否则会一直被跳过。
+        if let modified = c.modified {
+            let age = now.timeIntervalSince(modified)
+            if age < settle && age > -settle { return .justModified }
+        }
         return nil
     }
 
@@ -224,6 +230,71 @@ enum DownloadsPlanLogic {
         }
         let all = folders + (map[.trash] == nil ? [] : [.trash])
         return all.map { TargetGroup(target: $0, items: map[$0] ?? []) }
+    }
+
+    // MARK: - 预览为空时说清楚为什么
+
+    /// 读文件夹时顺带数的：只在 iCloud 云端的占位文件、读不出信息的文件（这两种不进候选列表）。
+    struct ScanStats: Hashable {
+        var cloudOnly = 0
+        var unreadable = 0
+    }
+
+    struct EmptyExplanation: Hashable {
+        enum Kind: Hashable {
+            /// 文件夹是空的（第一层什么都没有）。
+            case emptyFolder
+            /// 第一层只有文件夹（例如之前整理时建的「图片」「文稿」「压缩包」），文件都在子文件夹里。
+            case onlyFolders
+            /// 有文件，但都跳过了（还在下载 / 刚改动 / 只在云端）。
+            case allSkipped
+        }
+        var kind: Kind
+        /// 第一层的文件夹（不移动），按名字排。
+        var folders: [OrganizeCandidate] = []
+        var downloading = 0
+        var justModified = 0
+        var cloudOnly = 0
+        var unreadable = 0
+    }
+
+    /// 跳过的各有几个（预览列表底部和空状态都用）。
+    static func skipCounts(_ plan: Plan) -> (folders: Int, downloading: Int, justModified: Int) {
+        var folders = 0, downloading = 0, justModified = 0
+        for reason in plan.skipped.values {
+            switch reason {
+            case .folder: folders += 1
+            case .downloading: downloading += 1
+            case .justModified: justModified += 1
+            }
+        }
+        return (folders, downloading, justModified)
+    }
+
+    /// 预览没有要整理的文件时，说明原因。预览里有文件时返回 nil。
+    static func explainEmpty(_ plan: Plan, candidates: [OrganizeCandidate], stats: ScanStats = ScanStats()) -> EmptyExplanation? {
+        guard plan.items.isEmpty else { return nil }
+        let counts = skipCounts(plan)
+        let folders = candidates.filter(\.isDirectory)
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        let files = candidates.count - folders.count
+        let kind: EmptyExplanation.Kind
+        if candidates.isEmpty && stats.cloudOnly == 0 && stats.unreadable == 0 {
+            kind = .emptyFolder
+        } else if files == 0 && stats.cloudOnly == 0 && stats.unreadable == 0 {
+            kind = .onlyFolders
+        } else {
+            kind = .allSkipped
+        }
+        return EmptyExplanation(kind: kind, folders: folders, downloading: counts.downloading,
+                                justModified: counts.justModified, cloudOnly: stats.cloudOnly, unreadable: stats.unreadable)
+    }
+
+    /// 诊断日志里的一行：找到多少、各种原因跳过多少、要移动多少（只有数字，不含文件名）。
+    static func logLine(found: Int, stats: ScanStats, plan: Plan) -> String {
+        let c = skipCounts(plan)
+        return "organize scan: found \(found), cloudOnly \(stats.cloudOnly), unreadable \(stats.unreadable), "
+            + "skipped folder \(c.folders) downloading \(c.downloading) justModified \(c.justModified), planned \(plan.items.count)"
     }
 
     // MARK: - 只分组显示（不移动）

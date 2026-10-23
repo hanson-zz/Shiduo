@@ -163,4 +163,55 @@ final class DownloadsPlanTests: XCTestCase {
         XCTAssertFalse(OrganizeConditions(olderThanDays: 7).matches(c, now: now))
         XCTAssertTrue(OrganizeConditions().isEmpty)
     }
+
+    // MARK: 预览为空时的说明
+
+    func testEmptyExplanationOnlyFolders() {
+        // 之前整理过：第一层只剩「图片」「文稿」「压缩包」这些文件夹
+        var images = file("图片", dir: true); images.childCount = 12
+        var docs = file("文稿", dir: true); docs.childCount = 3
+        let zips = file("压缩包", dir: true)
+        let list = [zips, docs, images]
+        let plan = DownloadsPlanLogic.plan(list, in: root, rules: [], now: now) { _ in true }
+        XCTAssertTrue(plan.items.isEmpty)
+        let e = DownloadsPlanLogic.explainEmpty(plan, candidates: list)
+        XCTAssertEqual(e?.kind, .onlyFolders)
+        XCTAssertEqual(e?.folders.count, 3)
+        XCTAssertEqual(e?.folders.first { $0.name == "图片" }?.childCount, 12)
+        XCTAssertEqual(DownloadsPlanLogic.skipCounts(plan).folders, 3)
+    }
+
+    func testEmptyExplanationEmptyAndSkipped() {
+        let emptyPlan = DownloadsPlanLogic.plan([], in: root, rules: [], now: now) { _ in false }
+        XCTAssertEqual(DownloadsPlanLogic.explainEmpty(emptyPlan, candidates: [])?.kind, .emptyFolder)
+        // 只有云端占位文件：不是「空的」
+        let cloud = DownloadsPlanLogic.explainEmpty(emptyPlan, candidates: [],
+                                                    stats: DownloadsPlanLogic.ScanStats(cloudOnly: 2))
+        XCTAssertEqual(cloud?.kind, .allSkipped)
+        XCTAssertEqual(cloud?.cloudOnly, 2)
+
+        let list = [file("a.crdownload"), file("b.pdf", .documents, ageSeconds: 1), file("Old", dir: true)]
+        let plan = DownloadsPlanLogic.plan(list, in: root, rules: [], now: now) { _ in false }
+        let e = DownloadsPlanLogic.explainEmpty(plan, candidates: list)
+        XCTAssertEqual(e?.kind, .allSkipped)
+        XCTAssertEqual(e?.downloading, 1)
+        XCTAssertEqual(e?.justModified, 1)
+        XCTAssertEqual(e?.folders.map(\.name), ["Old"])
+        XCTAssertTrue(DownloadsPlanLogic.logLine(found: list.count, stats: .init(), plan: plan).contains("found 3"))
+    }
+
+    func testNoExplanationWhenSomethingToDo() {
+        let list = [file("ok.pdf", .documents), file("Folder", dir: true)]
+        let plan = DownloadsPlanLogic.plan(list, in: root, rules: [], now: now) { _ in false }
+        XCTAssertNil(DownloadsPlanLogic.explainEmpty(plan, candidates: list))
+        XCTAssertEqual(DownloadsPlanLogic.skipCounts(plan).folders, 1)
+    }
+
+    func testFutureModifiedDateIsNotJustModified() {
+        // 解压出来、修改时间在未来的文件：不能一直当成「刚改动」跳过
+        let future = file("future.pdf", .documents, ageSeconds: -86_400)
+        XCTAssertNil(DownloadsPlanLogic.skipReason(future, now: now))
+        let plan = DownloadsPlanLogic.plan([future], in: root, rules: [], now: now) { _ in false }
+        XCTAssertEqual(plan.items.count, 1)
+    }
 }

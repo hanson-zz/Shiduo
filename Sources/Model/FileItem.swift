@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import CoreServices
 import UniformTypeIdentifiers
 
@@ -19,6 +20,8 @@ struct FileItem: Identifiable, Hashable {
     var isScreenshot: Bool
     var bundleID: String?
     var isDirectory: Bool
+    /// 系统隔离标记里「下载它的 App」（Safari、Google Chrome、WeChat……）。没有下载地址时用来补认来源。
+    var quarantineAgent: String? = nil
 
     var url: URL { URL(fileURLWithPath: path) }
 
@@ -54,7 +57,13 @@ struct FileItem: Identifiable, Hashable {
     }
 
     /// 好认的下载来源（Gmail、微信、GitHub……），认不出来时是网站域名。
-    var downloadSource: DownloadSource? { SourceCatalog.classify(whereFroms: whereFroms) }
+    /// 没有下载地址时，再看系统隔离标记里下载它的 App（微信、Chrome、Safari……）。
+    var downloadSource: DownloadSource? {
+        SourceCatalog.classify(whereFroms: whereFroms) ?? SourceCatalog.source(forAgent: quarantineAgent)
+    }
+
+    /// 有下载来源记录（下载地址，或认得出的下载 App）。
+    var hasDownloadSource: Bool { !whereFroms.isEmpty || downloadSource != nil }
 
     /// 下载来源的域名。优先用引用页（第二项），它通常比 CDN 地址更好认。
     var sourceHost: String? {
@@ -83,7 +92,13 @@ extension FileItem {
         self.created = m.value(forAttribute: "kMDItemFSCreationDate") as? Date
         self.lastUsed = m.value(forAttribute: "kMDItemLastUsedDate") as? Date
         self.added = m.value(forAttribute: "kMDItemDateAdded") as? Date
-        self.whereFroms = m.value(forAttribute: "kMDItemWhereFroms") as? [String] ?? []
+        var whereFroms = m.value(forAttribute: "kMDItemWhereFroms") as? [String] ?? []
+        // Spotlight 没记下（没索引到、导入器没跑）时，直接读文件上的扩展属性。只在下载 / 桌面 / 文稿里读，别处不多花这几次系统调用。
+        if whereFroms.isEmpty, ExtendedAttributes.isDownloadArea(path) {
+            whereFroms = ExtendedAttributes.whereFroms(atPath: path)
+            if whereFroms.isEmpty { self.quarantineAgent = ExtendedAttributes.quarantineAgent(atPath: path) }
+        }
+        self.whereFroms = whereFroms
         // 系统截图有标记；微信 / QQ / Snipaste 等第三方截图按文件名认。
         self.isScreenshot = ScreenshotNameRules.isScreenshot(
             name: name, typeTree: tree,
@@ -126,9 +141,41 @@ extension FileItem {
             bundleID = MDItemCopyAttribute(md, "kMDItemCFBundleIdentifier" as CFString) as? String
         }
         self.lastUsed = lastUsed
+        // Spotlight 没有下载地址时直接读扩展属性；还没有就看隔离标记里下载它的 App。
+        if whereFroms.isEmpty { whereFroms = ExtendedAttributes.whereFroms(atPath: url.path) }
+        if whereFroms.isEmpty { self.quarantineAgent = ExtendedAttributes.quarantineAgent(atPath: url.path) }
         self.whereFroms = whereFroms
         self.isScreenshot = ScreenshotNameRules.isScreenshot(name: url.lastPathComponent, typeTree: tree, systemFlag: isScreenshot,
                                                              path: url.path, folders: ScreenshotFolders.current)
         self.bundleID = bundleID
+    }
+}
+
+/// 直接读文件的扩展属性（不经过 Spotlight）。解析在 DownloadSourceLogic 里（纯函数、有单元测试）。
+enum ExtendedAttributes {
+    /// 读一个扩展属性的原始字节；没有、读不了或大得离谱时返回 nil。不跟随符号链接。
+    static func data(atPath path: String, name: String, maxBytes: Int = 64 * 1024) -> Data? {
+        let size = getxattr(path, name, nil, 0, 0, XATTR_NOFOLLOW)
+        guard size > 0, size <= maxBytes else { return nil }
+        var buffer = [UInt8](repeating: 0, count: size)
+        let read = buffer.withUnsafeMutableBytes { raw in
+            getxattr(path, name, raw.baseAddress, size, 0, XATTR_NOFOLLOW)
+        }
+        guard read > 0 else { return nil }
+        return Data(buffer.prefix(read))
+    }
+
+    static func whereFroms(atPath path: String) -> [String] {
+        data(atPath: path, name: DownloadSourceLogic.whereFromsAttribute).map(DownloadSourceLogic.parseWhereFroms) ?? []
+    }
+
+    static func quarantineAgent(atPath path: String) -> String? {
+        data(atPath: path, name: DownloadSourceLogic.quarantineAttribute).flatMap(DownloadSourceLogic.parseQuarantineAgent)
+    }
+
+    /// 下载 / 桌面 / 文稿里面（「下载来源」页看的地方）。
+    static func isDownloadArea(_ path: String) -> Bool {
+        let home = NSHomeDirectory()
+        return ["Downloads", "Desktop", "Documents"].contains { path.hasPrefix(home + "/" + $0 + "/") }
     }
 }

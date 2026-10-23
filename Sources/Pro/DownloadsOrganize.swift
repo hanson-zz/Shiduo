@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 import SwiftUI
 
 // 「整理下载」：先预览每个文件要去哪儿，用户勾选、确认后才移动；一键「撤销全部」放回原处。
@@ -34,17 +35,39 @@ struct DownloadsOrganizeOutcome {
 }
 
 enum DownloadsOrganizeEngine {
-    /// 读一个文件夹的第一层（隐藏文件、只在 iCloud 云端的占位文件不算）。会阻塞，不要在主线程调用。
-    static func scan(_ folder: String) -> [OrganizeCandidate] {
+    /// 读一个文件夹的第一层（隐藏文件不算；只在 iCloud 云端的占位文件、读不出信息的文件不进列表，只计数）。
+    /// 文件夹顺带数一下里面第一层有几项。会阻塞，不要在主线程调用。
+    static func scan(_ folder: String) -> [OrganizeCandidate] { scanWithStats(folder).candidates }
+
+    static func scanWithStats(_ folder: String) -> (candidates: [OrganizeCandidate], stats: DownloadsPlanLogic.ScanStats) {
         let fm = FileManager.default
         let url = URL(fileURLWithPath: folder, isDirectory: true)
-        guard let urls = try? fm.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else {
-            return []
+        var stats = DownloadsPlanLogic.ScanStats()
+        let urls: [URL]
+        do {
+            urls = try fm.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+        } catch {
+            AppLog.organize.error("organize scan: cannot list folder: \(AppLog.describe(error), privacy: .public)")
+            return ([], stats)
         }
-        return urls.compactMap { file in
-            if file.pathExtension == "icloud" || !FileActions.isLocal(file) { return nil }
-            return FileItem(url: file).map(OrganizeCandidate.init(item:))
+        var candidates: [OrganizeCandidate] = []
+        for file in urls {
+            if file.pathExtension == "icloud" || !FileActions.isLocal(file) {
+                stats.cloudOnly += 1
+                continue
+            }
+            guard let item = FileItem(url: file) else {
+                stats.unreadable += 1
+                continue
+            }
+            var candidate = OrganizeCandidate(item: item)
+            if item.isDirectory {
+                candidate.childCount = (try? fm.contentsOfDirectory(at: file, includingPropertiesForKeys: nil,
+                                                                    options: [.skipsHiddenFiles]))?.count
+            }
+            candidates.append(candidate)
         }
+        return (candidates, stats)
     }
 
     /// 按勾选的计划移动 / 移到废纸篓。只移动、不覆盖：目标位置这时有了同名文件就再换一个编号。会阻塞。
@@ -115,6 +138,7 @@ final class DownloadsOrganizeModel: ObservableObject {
     @Published private(set) var phase: Phase = .loading
     @Published private(set) var candidates: [OrganizeCandidate] = []
     @Published private(set) var plan = DownloadsPlanLogic.Plan()
+    @Published private(set) var stats = DownloadsPlanLogic.ScanStats()
     @Published var unchecked: Set<String> = []
     /// 确认整理后注册到撤销栈的那一项（「撤销全部」用）。
     @Published private(set) var undoAction: FileUndoAction?
@@ -139,6 +163,13 @@ final class DownloadsOrganizeModel: ObservableObject {
         plan.skipped.values.filter { $0 != .folder }.count
     }
 
+    var skippedFolderCount: Int { DownloadsPlanLogic.skipCounts(plan).folders }
+
+    /// 预览为空时为什么空（有要整理的文件时为 nil）。
+    var emptyExplanation: DownloadsPlanLogic.EmptyExplanation? {
+        DownloadsPlanLogic.explainEmpty(plan, candidates: candidates, stats: stats)
+    }
+
     func load(rules: [OrganizeRule], ignored: [String], isPro: Bool) {
         loadGeneration += 1
         let generation = loadGeneration
@@ -150,16 +181,18 @@ final class DownloadsOrganizeModel: ObservableObject {
         let planRules = isPro ? rules.compactMap(\.planRule) : []
         let ignoredSet = Set(ignored)
         Task {
-            let (found, plan) = await Task.detached(priority: .userInitiated) {
-                let found = DownloadsOrganizeEngine.scan(folder)
+            let (found, stats, plan) = await Task.detached(priority: .userInitiated) {
+                let (found, stats) = DownloadsOrganizeEngine.scanWithStats(folder)
                 let fm = FileManager.default
                 let plan = DownloadsPlanLogic.plan(found, in: folder, rules: planRules, ignored: ignoredSet, now: Date()) {
                     fm.fileExists(atPath: $0)
                 }
-                return (found, plan)
+                AppLog.organize.info("\(DownloadsPlanLogic.logLine(found: found.count, stats: stats, plan: plan), privacy: .public)")
+                return (found, stats, plan)
             }.value
             guard generation == loadGeneration else { return }
             candidates = found
+            self.stats = stats
             self.plan = plan
             unchecked = Set(plan.items.filter { !$0.checked }.map(\.id))
             phase = .ready
@@ -383,14 +416,8 @@ struct DownloadsOrganizeSheet: View {
         case .ready:
             if model.mode == .group {
                 groupList
-            } else if model.plan.items.isEmpty {
-                ContentUnavailableView(
-                    "没有需要整理的文件",
-                    systemImage: "checkmark.circle",
-                    description: Text(model.downloadingCount > 0
-                                      ? String(localized: "\(model.downloadingCount) 个文件还在下载或刚刚改动，已跳过。")
-                                      : String(localized: "这个文件夹第一层已经很整齐了。"))
-                )
+            } else if let explanation = model.emptyExplanation {
+                emptyView(explanation)
             } else {
                 previewList
             }
@@ -415,11 +442,101 @@ struct DownloadsOrganizeSheet: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
+                if model.skippedFolderCount > 0 {
+                    Label("\(model.skippedFolderCount) 个文件夹不移动：整理只看第一层的文件。", systemImage: "folder")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                if model.stats.cloudOnly > 0 {
+                    Label("\(model.stats.cloudOnly) 个文件只在 iCloud 云端、还没下载到这台 Mac，这次跳过。", systemImage: "icloud")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
                 Label("只移动、不覆盖：同名文件自动加编号。移到废纸篓的随时可以放回。整理记录在「清理记录」里。", systemImage: "checkmark.shield")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
             .padding(20)
+        }
+    }
+
+    /// 预览为空：说清楚为什么，第一层只有文件夹时列出来，可以直接在拾掇里打开。
+    private func emptyView(_ e: DownloadsPlanLogic.EmptyExplanation) -> some View {
+        ScrollView {
+            VStack(spacing: 14) {
+                Image(systemName: e.kind == .onlyFolders ? "folder" : "checkmark.circle")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.secondary)
+                Text("没有需要整理的文件")
+                    .font(.title3.weight(.semibold))
+                switch e.kind {
+                case .emptyFolder:
+                    Text("这个文件夹是空的。")
+                        .foregroundStyle(.secondary)
+                case .onlyFolders:
+                    Text("下载第一层只有文件夹，之前整理过的文件在这些子文件夹里")
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Text("整理只看第一层的文件，文件夹本身不移动。")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                case .allSkipped:
+                    EmptyView()
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    if e.kind != .onlyFolders && !e.folders.isEmpty {
+                        Label("\(e.folders.count) 个文件夹不移动：整理只看第一层的文件。", systemImage: "folder")
+                    }
+                    if e.downloading > 0 {
+                        Label("\(e.downloading) 个文件还在下载（.download、.crdownload、.part 等），这次跳过。", systemImage: "arrow.down.circle")
+                    }
+                    if e.justModified > 0 {
+                        Label("\(e.justModified) 个文件几秒内刚改动过，可能还在写入，这次跳过。", systemImage: "clock")
+                    }
+                    if e.cloudOnly > 0 {
+                        Label("\(e.cloudOnly) 个文件只在 iCloud 云端、还没下载到这台 Mac，这次跳过。", systemImage: "icloud")
+                    }
+                    if e.unreadable > 0 {
+                        Label("\(e.unreadable) 个文件读不到信息（可能没有权限），这次跳过。", systemImage: "exclamationmark.triangle")
+                    }
+                }
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                if !e.folders.isEmpty {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(e.folders) { folder in
+                            HStack(spacing: 10) {
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: folder.path))
+                                    .resizable()
+                                    .frame(width: 20, height: 20)
+                                Text(folder.name)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                Spacer()
+                                if let count = folder.childCount {
+                                    Text("\(count) 项")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .monospacedDigit()
+                                }
+                                Button("在拾掇中打开") {
+                                    let url = URL(fileURLWithPath: folder.path, isDirectory: true)
+                                    dismiss()
+                                    store.openFolder(url)
+                                }
+                                .controlSize(.small)
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 5)
+                        }
+                    }
+                    .padding(.vertical, 6)
+                    .glassCard(radius: 14)
+                    .frame(maxWidth: 520)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(24)
         }
     }
 

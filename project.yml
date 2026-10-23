@@ -55,6 +55,7 @@ targets:
       - path: Sources/Model/ScreenshotNameRules.swift
       - path: Sources/Model/ScreenshotSourceLogic.swift
       - path: Sources/Model/SourceCatalog.swift
+      - path: Sources/Model/DownloadSourceLogic.swift
       - path: Sources/Model/FileStamp.swift
       - path: Sources/Model/PathLogic.swift
       - path: Sources/Model/LibraryScopeLogic.swift
