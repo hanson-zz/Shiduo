@@ -851,15 +851,10 @@ final class LibraryStore: ObservableObject {
         quietTask = Task {
             let page = await fetch(target, quiet: true)
             let result = page.items
-            func stillHere() -> Bool {
-                !Task.isCancelled && selection == target && currentFolder == folder
-                    && activeQuery == nil && !isLoading && librarySub == sub && !isLoadingMore
-                    && libraryLoaded == loaded
-            }
-            guard stillHere() else { return }
+            guard quietRefreshStillValid(target: target, folder: folder, sub: sub, loaded: loaded) else { return }
             // 几万个文件的比对放到后台做。
             let changed = await Self.listChanged(items, result)
-            guard stillHere() else { return }
+            guard quietRefreshStillValid(target: target, folder: folder, sub: sub, loaded: loaded) else { return }
             applyTruncation(page)
             applyLibrary(page, for: target)
             if case .category(let c) = target, c.usesLibraryScope {
@@ -871,6 +866,13 @@ final class LibraryStore: ObservableObject {
             let alive = Set(result.map(\.id))
             selectedIDs = selectedIDs.intersection(alive)
         }
+    }
+
+    /// 悄悄刷新的结果回来时，页面还是原来那一页、没有在加载 / 翻页。
+    private func quietRefreshStillValid(target: SidebarItem, folder: String?, sub: LibrarySub?, loaded: Int) -> Bool {
+        !Task.isCancelled && selection == target && currentFolder == folder
+            && activeQuery == nil && !isLoading && librarySub == sub && !isLoadingMore
+            && libraryLoaded == loaded
     }
 
     private static func quietlyRefreshable(_ target: SidebarItem) -> Bool {
