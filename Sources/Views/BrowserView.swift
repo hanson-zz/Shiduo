@@ -21,7 +21,8 @@ struct BrowserView: View {
     @State private var sourceFilter: String?
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
 
-    private var sourceGroups: [SourceGroup] { SourceGroup.make(from: store.items) }
+    /// 在 store 里后台算好的（不在每次界面刷新时把几万个文件逐个认一遍来源）。
+    private var sourceGroups: [SourceGroup] { store.itemSourceGroups }
 
     private var visible: [FileItem] {
         var list = store.items
@@ -40,7 +41,9 @@ struct BrowserView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        // 每次刷新只算一次（以前 content、副标题、底栏各算一遍）。没有筛选时就是 store.items 本身，不复制。
+        let shown = visible
+        return VStack(spacing: 0) {
             if let query = store.activeQuery {
                 ChipBar(query: query)
                 Divider()
@@ -72,24 +75,22 @@ struct BrowserView: View {
                 TruncationBanner(text: banner)
                 Divider()
             }
-            content
+            content(shown)
             // 列表模式：翻到底的提示放在列表下面（网格模式放在网格最后）。
-            if viewMode == .list, store.libraryCategory != nil, !visible.isEmpty {
+            if viewMode == .list, store.libraryCategory != nil, !shown.isEmpty {
                 Divider()
                 // 列表下面这一行一直在屏幕上：不能靠它出现来加载（会一直把所有页都取完），由最后一行出现时加载。
                 LibraryListFooter(autoLoad: false)
             }
-            BrowserBottomBar(itemCount: visibleCount, selected: firstSelected, selectedCount: store.selectedIDs.count)
+            BrowserBottomBar(itemCount: shown.count, selected: firstSelected, selectedCount: store.selectedIDs.count)
         }
         .onChange(of: store.selection) { sourceFilter = nil }
         // 进子文件夹、换一个搜索也清掉来源筛选。
         .onChange(of: store.browsePath) { sourceFilter = nil }
         .onChange(of: store.activeQuery) { sourceFilter = nil }
         .navigationTitle(title)
-        .navigationSubtitle(subtitle)
+        .navigationSubtitle(subtitle(shown))
     }
-
-    private var visibleCount: Int { visible.count }
 
     /// 底部路径栏显示的那个：选中的文件里排在列表最前的（只选了一个时就是它）。
     private var firstSelected: FileItem? {
@@ -100,7 +101,7 @@ struct BrowserView: View {
         return items.min { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
-    private var subtitle: String {
+    private func subtitle(_ visible: [FileItem]) -> String {
         let bytes = visible.reduce(Int64(0)) { $0 + $1.size }
         // 列表被截断：写成「3000 / 12480 个项目」，和侧边栏的总数对得上。
         if let total = store.truncatedTotal, visible.count == store.items.count {
@@ -114,7 +115,7 @@ struct BrowserView: View {
     }
 
     @ViewBuilder
-    private var content: some View {
+    private func content(_ visible: [FileItem]) -> some View {
         if store.isLoading && store.items.isEmpty {
             ProgressView("正在查找…")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -351,16 +352,36 @@ struct ChatFilesBar: View {
     }
 }
 
+/// FileCollectionView 第一次出现时的排序结果：同一份列表、同一种排序只排一次。
+/// 列表没换时比较走的是数组的快速路径（同一块存储直接相等），不用逐个比。
+enum InitialSortMemo {
+    private static var input: [FileItem] = []
+    private static var signature = ""
+    private static var output: (items: [FileItem], urls: [URL]) = ([], [])
+
+    static func sorted(_ items: [FileItem]) -> (items: [FileItem], urls: [URL]) {
+        let stored = FileSortKey.stored
+        let sig = "\(stored.key.rawValue)#\(stored.ascending)"
+        if sig == signature, items == input { return output }
+        let sorted = items.sorted(using: stored.key.comparators(ascending: stored.ascending))
+        input = items
+        signature = sig
+        output = (sorted, sorted.map(\.url))
+        return output
+    }
+}
+
 struct FileCollectionView: View {
     @EnvironmentObject private var store: LibraryStore
     let items: [FileItem]
 
     init(items: [FileItem]) {
         self.items = items
-        let stored = FileSortKey.stored
-        let sorted = items.sorted(using: stored.key.comparators(ascending: stored.ascending))
-        _sortedItems = State(initialValue: sorted)
-        _sortedURLs = State(initialValue: sorted.map(\.url))
+        // 父视图每次刷新都会重新调用 init（State 的初始值只在第一次用）：同样的列表就不再重排几千个文件。
+        let sorted = InitialSortMemo.sorted(items)
+        _sortedItems = State(initialValue: sorted.items)
+        _sortedURLs = State(initialValue: sorted.urls)
+        _sortedInput = State(initialValue: items)
     }
 
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
@@ -373,6 +394,8 @@ struct FileCollectionView: View {
     /// 排好序的列表：只在文件或排序方式变了时重排，框选拖动时不会每帧重排几千个文件。
     @State private var sortedItems: [FileItem]
     @State private var sortedURLs: [URL]
+    /// sortedItems 是由哪份列表排出来的：翻到底加载了下一页（只在后面多了文件）时，只排新来的再合并，不把几万个重排一遍。
+    @State private var sortedInput: [FileItem]
     @State private var previewURL: URL?
     /// 图片用自己的预览，能直接划选文字。
     @State private var liveItem: FileItem?
@@ -450,9 +473,23 @@ struct FileCollectionView: View {
             next = SizeSortLogic.sorted(items, ascending: sortAscending,
                                         size: { $0.needsComputedSize ? (sizes.knownSize($0.path) ?? $0.size) : $0.size },
                                         name: \.name)
+        } else if items.count > sortedInput.count, !sortedInput.isEmpty, items.starts(with: sortedInput) {
+            let order = sortOrder
+            let appended = items[sortedInput.count...].sorted(using: order)
+            next = SortMerge.merge(sortedItems, appended) { a, b in
+                for comparator in order {
+                    switch comparator.compare(a, b) {
+                    case .orderedAscending: return true
+                    case .orderedDescending: return false
+                    case .orderedSame: continue
+                    }
+                }
+                return false
+            }
         } else {
             next = items.sorted(using: sortOrder)
         }
+        sortedInput = items
         // 顺序没变就不动（文件夹大小陆续算完时，不要每次都清掉格子位置）。
         guard next != sortedItems else { return }
         sortedItems = next

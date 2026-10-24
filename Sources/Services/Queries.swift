@@ -132,6 +132,10 @@ struct ListPage {
     var sortSignature: String? = nil
     /// 按什么顺序取的前 N 个（提示文字里用）。
     var order: ListTruncation.Order = .recent
+    /// 资料库类别：留着的查询结果，翻到底时直接从这里取下一页。
+    var session: LibrarySession? = nil
+    /// 资料库类别：这次查到的全部文件一共多大（看全部时用来更新侧边栏 / 首页的数字）。
+    var totalBytes: Int64? = nil
 
     init(_ items: [FileItem]) { self.items = items }
 
@@ -165,28 +169,55 @@ enum Queries {
     /// 不设上限（翻到底自动加载下一页，不再停在 3000）。
     /// sort：Spotlight 的排序（跟列表的排序方式一致，翻页时后面几页不会插到前面；nil = 这个类别默认的按日期从新到旧）。
     static func categoryPage(_ c: FileCategory, sub: LibrarySub? = nil, offset: Int = 0, limit: Int = Queries.categoryLimit,
-                             sort: (key: String, ascending: Bool)? = nil) async -> ListPage {
+                             sort: (key: String, ascending: Bool)? = nil, keepSession: Bool = false,
+                             label: String? = nil) async -> ListPage {
         guard let library = libraryFilter(c, sub: sub, countSubs: true) else { return await legacyCategoryPage(c) }
         let order = sort ?? (c.sortKey, false)
         let result = await SpotlightSearch.run(
             predicate: c.predicate(), scopes: Scopes.library(library.scope), maxItems: limit,
-            sortKey: order.key, ascending: order.ascending, offset: offset, library: library
+            sortKey: order.key, ascending: order.ascending, offset: offset, library: library,
+            keepSession: keepSession, label: label
         )
         var page = ListPage(result.items)
         page.total = result.totalCount
         page.offset = offset
         page.sortSignature = "\(order.key)#\(order.ascending)"
         page.subCounts = LibrarySub.subs(for: c).isEmpty ? nil : result.subCounts
+        page.session = result.session
+        page.totalBytes = result.totalBytes
         if c == .recents {
             page.items = result.items.sorted { $0.recentDate > $1.recentDate }
         }
         return page
     }
 
+    /// 资料库类别的第一屏：只查最近 30 天 / 1 年 / 5 年里改过的（结果少，几百毫秒内就回来），
+    /// 够 LibraryFirstScreen.count 个就是按日期从新到旧的前这么多个，先显示；完整的一页在后台同时查。
+    /// 不是按默认日期从新到旧排、或者最近的文件不够数时返回 nil（等完整的查询）。
+    static func categoryFirstScreen(_ c: FileCategory, sub: LibrarySub?, sort: (key: String, ascending: Bool),
+                                    now: Date = Date()) async -> [FileItem]? {
+        guard LibraryFirstScreen.eligible(sortKey: sort.key, defaultKey: c.sortKey, ascending: sort.ascending,
+                                          isRecents: c == .recents),
+              let library = libraryFilter(c, sub: sub, countSubs: false) else { return nil }
+        let scopes = Scopes.library(library.scope)
+        for days in LibraryFirstScreen.windowDays {
+            if Task.isCancelled { return nil }
+            let since = LibraryFirstScreen.cutoff(days: days, now: now)
+            let result = await SpotlightSearch.run(
+                predicate: P.all([c.predicate(now: now), P.after(sort.key, since)]), scopes: scopes,
+                maxItems: LibraryFirstScreen.count, sortKey: sort.key, ascending: false, library: library,
+                label: "first \(c.rawValue) \(days)d"
+            )
+            if LibraryFirstScreen.isEnough(found: result.totalCount) { return result.items }
+        }
+        return nil
+    }
+
     /// 资料库类别的数量和总大小（首页卡片、侧边栏角标）。
     static func categoryTotal(_ c: FileCategory) async -> CategoryTotal {
         let r = await SpotlightSearch.run(
-            predicate: c.predicate(), scopes: libraryScopes(c), maxItems: 0, library: libraryFilter(c)
+            predicate: c.predicate(), scopes: libraryScopes(c), maxItems: 0, library: libraryFilter(c),
+            priority: .utility
         )
         return CategoryTotal(count: r.totalCount, bytes: r.totalBytes)
     }
@@ -201,7 +232,8 @@ enum Queries {
         guard var library = libraryFilter(c) else { return 0 }
         library.countIgnored = true
         return await SpotlightSearch.run(
-            predicate: c.predicate(), scopes: Scopes.home, maxItems: 0, library: library
+            predicate: c.predicate(), scopes: Scopes.home, maxItems: 0, library: library,
+            priority: .utility, label: "ignored \(c.rawValue)"
         ).totalCount
     }
 

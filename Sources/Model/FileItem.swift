@@ -79,8 +79,8 @@ struct FileItem: Identifiable, Hashable {
 }
 
 extension FileItem {
-    /// 从 Spotlight 结果构造。
-    init?(metadata m: NSMetadataItem) {
+    /// 从 Spotlight 结果构造。screenshotFolders：一次查询里先取好的截图工具文件夹（nil = 现取一次）。
+    init?(metadata m: NSMetadataItem, screenshotFolders: [ScreenshotSourceLogic.Folder]? = nil) {
         guard let path = m.value(forAttribute: "kMDItemPath") as? String else { return nil }
         let tree = m.value(forAttribute: "kMDItemContentTypeTree") as? [String] ?? []
         self.path = path
@@ -103,7 +103,7 @@ extension FileItem {
         self.isScreenshot = ScreenshotNameRules.isScreenshot(
             name: name, typeTree: tree,
             systemFlag: (m.value(forAttribute: "kMDItemIsScreenCapture") as? NSNumber)?.boolValue ?? false,
-            path: path, folders: ScreenshotFolders.current)
+            path: path, folders: screenshotFolders ?? ScreenshotFolders.current)
         self.bundleID = m.value(forAttribute: "kMDItemCFBundleIdentifier") as? String
         self.isDirectory = tree.contains("public.folder")
             || (tree.contains("public.directory") && !tree.contains("com.apple.application-bundle"))
@@ -175,7 +175,12 @@ enum ExtendedAttributes {
 
     /// 下载 / 桌面 / 文稿里面（「下载来源」页看的地方）。
     static func isDownloadArea(_ path: String) -> Bool {
-        let home = NSHomeDirectory()
-        return ["Downloads", "Desktop", "Documents"].contains { path.hasPrefix(home + "/" + $0 + "/") }
+        downloadAreaPrefixes.contains { path.hasPrefix($0) }
     }
+
+    /// 只拼一次（每个 Spotlight 结果都会问一次）。
+    private static let downloadAreaPrefixes: [String] = {
+        let home = NSHomeDirectory()
+        return ["Downloads", "Desktop", "Documents"].map { home + "/" + $0 + "/" }
+    }()
 }

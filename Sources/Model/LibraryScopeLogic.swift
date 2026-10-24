@@ -75,9 +75,22 @@ struct LibraryScope: Equatable, Sendable {
 
     /// 去掉末尾的「/」、「.」「..」（不解析符号链接，和 Spotlight 给的路径写法一致）。
     static func standardize(_ path: String) -> String {
+        // 已经是规整的绝对路径（Spotlight 给的几乎都是）：原样返回。
+        // NSString.standardizingPath 会去磁盘上看「/private」能不能去掉，几万个文件逐个调用很慢。
+        if isAlreadyStandard(path) { return path }
         var p = (path as NSString).standardizingPath
         while p.count > 1 && p.hasSuffix("/") { p.removeLast() }
         return p
+    }
+
+    /// 不用 standardizingPath 也知道结果就是它自己：以「/」开头，没有「//」「/./」「/../」，不以「/」「/.」「/..」结尾，
+    /// 不以「~」或「/private」开头（这两种 standardizingPath 会改写）。
+    static func isAlreadyStandard(_ path: String) -> Bool {
+        guard path.hasPrefix("/"), path.count > 1 else { return path == "/" }
+        if path.hasPrefix("/private") { return false }
+        if path.hasSuffix("/") || path.hasSuffix("/.") || path.hasSuffix("/..") { return false }
+        if path.contains("//") || path.contains("/./") || path.contains("/../") { return false }
+        return true
     }
 
     /// 应用、系统、缓存、隐藏文件夹、素材库和工程包里面的文件：即使在个人文件夹里也不算。
@@ -99,28 +112,7 @@ struct LibraryScope: Equatable, Sendable {
     ///   不然路径里的「/Library/」会把整个 iCloud 云盘当成系统文件；容器里 Documents 以外的东西算系统文件。
     /// - 自己加的文件夹里的文件从那个文件夹开始算（加了 ~/Library 里的某个文件夹也能看到里面的文件）。
     func isNoise(_ path: String) -> Bool {
-        var base: String? = nil
-        for root in added where PathLogic.isSameOrInside(path, root) {
-            if base == nil || root.count > base!.count { base = root }
-        }
-        let mobile = mobileDocumentsRoot
-        if PathLogic.isSameOrInside(path, mobile) {
-            let parts = path.dropFirst(mobile.count).split(separator: "/", omittingEmptySubsequences: true)
-            if let container = parts.first {
-                var containerBase: String? = nil
-                if container == "com~apple~CloudDocs" {
-                    containerBase = mobile + "/" + String(container)
-                } else if parts.count >= 2, parts[1] == "Documents" {
-                    containerBase = mobile + "/" + String(container) + "/Documents"
-                } else if base == nil {
-                    return true
-                }
-                if let containerBase, containerBase.count > (base?.count ?? 0) { base = containerBase }
-            }
-        }
-        if base == nil, PathLogic.isSameOrInside(path, home) { base = home }
-        let rest = base.map { String(path.dropFirst($0.count)) } ?? path
-        return Self.noiseMarkers.contains { rest.contains($0) }
+        Matcher(self).isNoise(path)
     }
 
     /// 打开的默认文件夹（磁盘上的位置）。
@@ -152,27 +144,76 @@ struct LibraryScope: Equatable, Sendable {
 
     /// 这个文件算不算资料库里的文件。
     func includes(_ rawPath: String, checkNoise: Bool = true) -> Bool {
-        let path = Self.standardize(rawPath)
-        if checkNoise && isNoise(path) { return false }
-        // 最深的那条规则说了算；同样深时「不算」优先。
-        var best: (depth: Int, included: Bool)? = nil
-        func consider(_ roots: [String], included: Bool) {
-            for root in roots where PathLogic.isSameOrInside(path, root) {
-                let depth = root.count
-                if let current = best {
-                    if depth > current.depth || (depth == current.depth && !included) {
-                        best = (depth, included)
+        Matcher(self).includes(rawPath, checkNoise: checkNoise)
+    }
+
+    /// 把范围预先算好（各条规则的路径只拼一次），逐个判断几万个文件时用它，不在每个文件上重新拼路径。
+    /// LibraryScope.includes / isNoise 也走这里，规则只有一份。
+    struct Matcher: Sendable {
+        let home: String
+        let added: [String]
+        let mobileDocumentsRoot: String
+        let enabled: [String]
+        let disabled: [String]
+        let excluded: [String]
+
+        init(_ scope: LibraryScope) {
+            home = scope.home
+            added = scope.added
+            mobileDocumentsRoot = scope.mobileDocumentsRoot
+            enabled = scope.enabledDefaultPaths
+            disabled = scope.disabledDefaultPaths
+            excluded = scope.excluded
+        }
+
+        func isNoise(_ path: String) -> Bool {
+            var base: String? = nil
+            for root in added where PathLogic.isSameOrInside(path, root) {
+                if base == nil || root.count > base!.count { base = root }
+            }
+            let mobile = mobileDocumentsRoot
+            if PathLogic.isSameOrInside(path, mobile) {
+                let parts = path.dropFirst(mobile.count).split(separator: "/", omittingEmptySubsequences: true)
+                if let container = parts.first {
+                    var containerBase: String? = nil
+                    if container == "com~apple~CloudDocs" {
+                        containerBase = mobile + "/" + String(container)
+                    } else if parts.count >= 2, parts[1] == "Documents" {
+                        containerBase = mobile + "/" + String(container) + "/Documents"
+                    } else if base == nil {
+                        return true
                     }
-                } else {
-                    best = (depth, included)
+                    if let containerBase, containerBase.count > (base?.count ?? 0) { base = containerBase }
                 }
             }
+            if base == nil, PathLogic.isSameOrInside(path, home) { base = home }
+            let rest = base.map { String(path.dropFirst($0.count)) } ?? path
+            return LibraryScope.noiseMarkers.contains { rest.contains($0) }
         }
-        consider(enabledDefaultPaths, included: true)
-        consider(added, included: true)
-        consider(disabledDefaultPaths, included: false)
-        consider(excluded, included: false)
-        return best?.included ?? false
+
+        func includes(_ rawPath: String, checkNoise: Bool = true) -> Bool {
+            let path = LibraryScope.standardize(rawPath)
+            if checkNoise && isNoise(path) { return false }
+            // 最深的那条规则说了算；同样深时「不算」优先。
+            var best: (depth: Int, included: Bool)? = nil
+            func consider(_ roots: [String], included: Bool) {
+                for root in roots where PathLogic.isSameOrInside(path, root) {
+                    let depth = root.count
+                    if let current = best {
+                        if depth > current.depth || (depth == current.depth && !included) {
+                            best = (depth, included)
+                        }
+                    } else {
+                        best = (depth, included)
+                    }
+                }
+            }
+            consider(enabled, included: true)
+            consider(added, included: true)
+            consider(disabled, included: false)
+            consider(excluded, included: false)
+            return best?.included ?? false
+        }
     }
 
     /// 「隐藏小图标」：宽和高都知道、而且都小于 100 像素的图片（应用图标、网页小图、表情）。没有尺寸信息的不隐藏。

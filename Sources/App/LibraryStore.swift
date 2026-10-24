@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 import Quartz
 import SwiftUI
 
@@ -308,8 +309,29 @@ final class LibraryStore: ObservableObject {
         if listLoadedCount != page.items.count { listLoadedCount = page.items.count }
     }
 
-    @Published var items: [FileItem] = []
+    @Published var items: [FileItem] = [] {
+        didSet { scheduleItemSourceGroups() }
+    }
     @Published var isLoading = false
+
+    /// 列表里文件的下载来源分组（「来源」筛选菜单用）。在后台算：几万个文件时逐个认来源要几十毫秒，
+    /// 以前每次界面刷新（点一下选中也算）都在主线程重算两遍。
+    @Published private(set) var itemSourceGroups: [SourceGroup] = []
+    private var sourceGroupsTask: Task<Void, Never>?
+
+    private func scheduleItemSourceGroups() {
+        sourceGroupsTask?.cancel()
+        let list = items
+        guard !list.isEmpty else {
+            if !itemSourceGroups.isEmpty { itemSourceGroups = [] }
+            return
+        }
+        sourceGroupsTask = Task {
+            let groups = await Task.detached(priority: .utility) { SourceGroup.make(from: list) }.value
+            guard !Task.isCancelled else { return }
+            itemSourceGroups = groups
+        }
+    }
 
     // MARK: 资料库类别：小分类、翻到底加载更多、被忽略的文件数
 
@@ -332,6 +354,16 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var ignoredCount = 0
     private var moreTask: Task<Void, Never>?
     private var ignoredTask: Task<Void, Never>?
+    /// 当前资料库类别留着的查询结果：翻到底时直接从这里取下一页（nil = 退回到重新查询）。
+    private var librarySession: LibrarySession?
+    /// 各页面上次读到的第一页（类别 + 小分类 + 排序 + 范围）：点回来马上显示，后台再刷新。
+    private var libraryCache = LibraryPageCache<ListPage>(capacity: 12)
+    /// 各类别上次的小分类数量：换小分类、第一屏还在查时先显示这些，不让小分类那一排消失再出现。
+    private var lastSubCounts: [FileCategory: [LibrarySub: Int]] = [:]
+    /// 第一屏已经显示、完整的一页还在后台查（这时不加载更多、不悄悄刷新）。
+    @Published private(set) var libraryFilling = false
+    /// 从缓存显示后正在后台刷新。
+    private var libraryRefreshing = false
 
     /// 当前页面是资料库类别（全部图片 / 视频 / 音乐 / 文稿 / 压缩包 / 最近使用），并且不在看搜索结果。
     var libraryCategory: FileCategory? {
@@ -376,7 +408,7 @@ final class LibraryStore: ObservableObject {
 
     /// 翻到底：取下一页（每次 3000 个），直到取完。
     func loadMore() {
-        guard canLoadMore, !isLoadingMore, !isLoading, !Demo.isOn, let c = libraryCategory else { return }
+        guard canLoadMore, !isLoadingMore, !isLoading, !libraryFilling, !Demo.isOn, let c = libraryCategory else { return }
         let sort = Self.librarySort(c)
         if let used = librarySortUsed, used != Self.sortSignature(sort) {
             reload()
@@ -390,8 +422,22 @@ final class LibraryStore: ObservableObject {
         isLoadingMore = true
         // 悄悄刷新和加载更多不同时进行：刷新晚一步回来会把刚加载的几页冲掉。
         quietTask?.cancel()
+        let session = librarySession
+        let total = libraryTotal
         moreTask = Task {
-            let page = await Queries.categoryPage(c, sub: sub, offset: offset, sort: sort)
+            let timer = LibraryTimer()
+            let page: ListPage
+            if let session, session.total == total {
+                // 直接从上次的查询结果里取，不用再让 Spotlight 查一遍几万个文件。
+                var next = ListPage(await session.items(offset: offset, limit: Queries.categoryLimit))
+                next.total = session.total
+                next.offset = offset
+                if c == .recents { next.items.sort { $0.recentDate > $1.recentDate } }
+                page = next
+            } else {
+                page = await Queries.categoryPage(c, sub: sub, offset: offset, sort: sort)
+            }
+            AppLog.files.info("library \(c.rawValue, privacy: .public): more offset \(offset, privacy: .public) \(page.items.count, privacy: .public) items in \(timer.ms, privacy: .public) ms (\(session != nil ? "session" : "query", privacy: .public))")
             defer { if moreToken == token { isLoadingMore = false; moreToken = nil } }
             guard !Task.isCancelled, moreToken == token, selection == target, librarySub == sub, activeQuery == nil,
                   libraryLoaded == offset else { return }
@@ -417,12 +463,126 @@ final class LibraryStore: ObservableObject {
             libraryLoaded = 0
             ignoredCount = 0
             librarySortUsed = nil
+            librarySession = nil
             return
         }
         libraryTotal = page.total
         libraryLoaded = page.offset + page.items.count
         subCounts = page.subCounts
+        if let counts = page.subCounts { lastSubCounts[c] = counts }
         librarySortUsed = page.sortSignature
+        librarySession = page.session
+    }
+
+    // MARK: 资料库类别：先出第一屏，缓存，后台补全
+
+    private func libraryCacheKey(_ c: FileCategory, sub: LibrarySub?, sort: (key: String, ascending: Bool)) -> String {
+        LibraryCacheKey.make(category: c.rawValue, sub: sub?.rawValue, sort: Self.sortSignature(sort),
+                             scope: LibraryScopeStore.snapshot)
+    }
+
+    /// 读完整的一页以后存进缓存（不留查询结果，免得占着内存）；看全部时顺便更新侧边栏 / 首页的数量。
+    private func storeLibraryPage(_ page: ListPage, category c: FileCategory, sub: LibrarySub?, key: String) {
+        var cached = page
+        cached.session = nil
+        libraryCache.set(cached, for: key)
+        if sub == nil, let total = page.total, let bytes = page.totalBytes {
+            let fresh = CategoryTotal(count: total, bytes: bytes)
+            if totals[c]?.count != fresh.count || totals[c]?.bytes != fresh.bytes { totals[c] = fresh }
+        }
+    }
+
+    /// 资料库类别（全部图片 / 视频……）：
+    /// 1. 缓存里有：马上显示上次的结果，后台重新查，变了才换。
+    /// 2. 没有：先查最近改过的文件当第一屏（和总数无关，通常不到 1 秒），同时在后台查完整的一页（数量、小分类、翻页）。
+    /// 已忽略数在完整的一页之后、用低优先级数。
+    private func loadLibrary(_ c: FileCategory, target: SidebarItem) async {
+        let timer = LibraryTimer()
+        let sub = librarySub
+        let sort = Self.librarySort(c)
+        let key = libraryCacheKey(c, sub: sub, sort: sort)
+        if let cached = libraryCache.value(for: key) {
+            remember(cached.items)
+            items = cached.items
+            applyTruncation(cached)
+            applyLibrary(cached, for: target)
+            isLoading = false
+            AppLog.files.info("library \(c.rawValue, privacy: .public): first paint \(timer.ms, privacy: .public) ms from cache (\(cached.items.count, privacy: .public) items)")
+            // 已忽略数通常也有缓存（按类别 + 范围），马上换成这个类别的。
+            refreshIgnoredCount(target)
+            await refreshLibraryInBackground(c, sub: sub, sort: sort, key: key, target: target, timer: timer)
+            return
+        }
+        items = []
+        applyTruncation(ListPage([]))
+        applyLibrary(ListPage([]), for: .home)
+        // 小分类数量和选中的是哪个小分类无关：先用上次的，不让那一排消失。
+        subCounts = lastSubCounts[c]
+        isLoading = true
+        libraryFilling = true
+        async let full = Queries.categoryPage(c, sub: sub, sort: sort, keepSession: true, label: "page \(c.rawValue)")
+        if let first = await Queries.categoryFirstScreen(c, sub: sub, sort: sort),
+           !first.isEmpty, !Task.isCancelled, items.isEmpty {
+            remember(first)
+            items = first
+            // 总数先用侧边栏上的（看全部时），底部显示「正在加载更多…」，完整的一页回来后换成准确的。
+            if sub == nil, let known = totals[c]?.count, known > first.count {
+                libraryTotal = known
+                libraryLoaded = first.count
+            }
+            isLoading = false
+            AppLog.files.info("library \(c.rawValue, privacy: .public): first paint \(timer.ms, privacy: .public) ms (\(first.count, privacy: .public) recent items)")
+        }
+        let page = await full
+        guard !Task.isCancelled else { return }
+        let keep = selectedIDs
+        remember(page.items)
+        items = page.items
+        if !keep.isEmpty { selectedIDs = keep.intersection(Set(page.items.map(\.id))) }
+        applyTruncation(page)
+        applyLibrary(page, for: target)
+        isLoading = false
+        libraryFilling = false
+        storeLibraryPage(page, category: c, sub: sub, key: key)
+        AppLog.files.info("library \(c.rawValue, privacy: .public): full load \(timer.ms, privacy: .public) ms (\(page.items.count, privacy: .public) of \(page.total ?? 0, privacy: .public))")
+        refreshIgnoredCount(target)
+    }
+
+    /// 从缓存显示以后：后台重新查一遍，内容变了才换列表（选中的还在就保留）。
+    /// 用户这期间已经加载了更多页，就不去动（以免把加载出来的页冲掉）。
+    private func refreshLibraryInBackground(_ c: FileCategory, sub: LibrarySub?, sort: (key: String, ascending: Bool),
+                                            key: String, target: SidebarItem, timer: LibraryTimer) async {
+        libraryRefreshing = true
+        defer { if selection == target { libraryRefreshing = false } }
+        let loaded = libraryLoaded
+        let page = await Queries.categoryPage(c, sub: sub, sort: sort, keepSession: true, label: "refresh \(c.rawValue)")
+        func stillHere() -> Bool {
+            !Task.isCancelled && selection == target && librarySub == sub && activeQuery == nil
+                && !isLoadingMore && libraryLoaded == loaded
+        }
+        guard stillHere() else { return }
+        let changed = await Self.listChanged(items, page.items)
+        guard stillHere() else { return }
+        storeLibraryPage(page, category: c, sub: sub, key: key)
+        if changed {
+            remember(page.items)
+            items = page.items
+            selectedIDs = selectedIDs.intersection(Set(page.items.map(\.id)))
+        }
+        applyTruncation(page)
+        applyLibrary(page, for: target)
+        AppLog.files.info("library \(c.rawValue, privacy: .public): background refresh \(timer.ms, privacy: .public) ms (\(changed ? "changed" : "same", privacy: .public), \(page.items.count, privacy: .public) of \(page.total ?? 0, privacy: .public))")
+    }
+
+    /// 两份列表的内容是不是不一样（路径、大小、修改时间）。在后台比，几万个文件也不占主线程。
+    nonisolated static func listChanged(_ old: [FileItem], _ new: [FileItem]) async -> Bool {
+        await Task.detached(priority: .utility) {
+            guard old.count == new.count else { return true }
+            let signature: ([FileItem]) -> Set<String> = {
+                Set($0.map { "\($0.path)|\($0.size)|\($0.modified?.timeIntervalSince1970 ?? 0)" })
+            }
+            return signature(old) != signature(new)
+        }.value
     }
 
     /// 后台数一下这个类别有多少文件被资料库范围挡在外面（底部那行提示）。
@@ -449,6 +609,8 @@ final class LibraryStore: ObservableObject {
     /// 资料库范围改了（设置、右键「不在资料库中显示」）：重新读当前的资料库类别，马上重新数各类别。
     func libraryScopeChanged() {
         ignoredCache = nil
+        libraryCache.removeAll()
+        lastSubCounts = [:]
         if libraryCategory != nil { reload() }
         scheduleCountsRefresh(delay: 0)
         refreshLibraryImagesShelf()
@@ -675,7 +837,7 @@ final class LibraryStore: ObservableObject {
 
     /// 悄悄重新读当前页面：不清空列表、不显示加载中，内容没变就什么也不做，选中的文件还在就保留。
     func refreshQuietly() {
-        guard !Demo.isOn, activeQuery == nil, !isLoading else { return }
+        guard !Demo.isOn, activeQuery == nil, !isLoading, !libraryFilling, !libraryRefreshing else { return }
         let target = selection ?? .home
         if case .savedSearch = target {
             refreshSavedSearchQuietly()
@@ -689,13 +851,21 @@ final class LibraryStore: ObservableObject {
         quietTask = Task {
             let page = await fetch(target, quiet: true)
             let result = page.items
-            guard !Task.isCancelled, selection == target, currentFolder == folder,
-                  activeQuery == nil, !isLoading, librarySub == sub, !isLoadingMore,
-                  libraryLoaded == loaded else { return }
+            func stillHere() -> Bool {
+                !Task.isCancelled && selection == target && currentFolder == folder
+                    && activeQuery == nil && !isLoading && librarySub == sub && !isLoadingMore
+                    && libraryLoaded == loaded
+            }
+            guard stillHere() else { return }
+            // 几万个文件的比对放到后台做。
+            let changed = await Self.listChanged(items, result)
+            guard stillHere() else { return }
             applyTruncation(page)
             applyLibrary(page, for: target)
-            let signature: ([FileItem]) -> [String] = { $0.map { "\($0.path)|\($0.size)|\($0.modified?.timeIntervalSince1970 ?? 0)" } }
-            guard Set(signature(result)) != Set(signature(items)) else { return }
+            if case .category(let c) = target, c.usesLibraryScope {
+                storeLibraryPage(page, category: c, sub: sub, key: libraryCacheKey(c, sub: sub, sort: Self.librarySort(c)))
+            }
+            guard changed else { return }
             remember(result)
             items = result
             let alive = Set(result.map(\.id))
@@ -788,6 +958,8 @@ final class LibraryStore: ObservableObject {
     /// 不会把结果换成侧边栏当前页面的内容。
     func reload() {
         loadTask?.cancel()
+        libraryFilling = false
+        libraryRefreshing = false
         selectedIDs = []
         // 换页 / 进出文件夹 / 刷新：不再处在原地改名里（输入框消失时会把已输入的名字提交，和访达一样）。
         inlineRenamePath = nil
@@ -815,6 +987,9 @@ final class LibraryStore: ObservableObject {
         case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf, .folderWall, .cleanupHistory:
             items = []
             return
+        case .category(let c) where c.usesLibraryScope:
+            await loadLibrary(c, target: target)
+            return
         default:
             break
         }
@@ -839,7 +1014,8 @@ final class LibraryStore: ObservableObject {
         case .category(let c):
             // 悄悄刷新时把已经翻出来的几页一起重新读，列表不会缩回第一页。
             let limit = quiet ? max(Queries.categoryLimit, libraryLoaded) : Queries.categoryLimit
-            return await Queries.categoryPage(c, sub: librarySub, limit: limit, sort: Self.librarySort(c))
+            return await Queries.categoryPage(c, sub: librarySub, limit: limit, sort: Self.librarySort(c),
+                                              keepSession: c.usesLibraryScope, label: quiet ? "quiet \(c.rawValue)" : nil)
         case .largeFiles: return await Queries.largeFilesPage()
         case .screenshots: return await Queries.screenshotsPage()
         case .downloads: return ListPage(await Queries.downloaded())
@@ -942,7 +1118,7 @@ final class LibraryStore: ObservableObject {
         for tag in FinderTag.colorTags {
             let count = await SpotlightSearch.run(
                 predicate: NSPredicate(format: "kMDItemUserTags == %@", tag.name),
-                scopes: Scopes.home + Queries.mountedVolumes, maxItems: 0
+                scopes: Scopes.home + Queries.mountedVolumes, maxItems: 0, priority: .utility
             ).totalCount
             if count > 0 { used.insert(tag.name) }
         }
@@ -951,7 +1127,8 @@ final class LibraryStore: ObservableObject {
 
     private static func countLargeFiles() async -> Int {
         await SpotlightSearch.run(
-            predicate: P.all([P.sizeAtLeast(200_000_000), P.notFolder]), scopes: Scopes.home, maxItems: 0
+            predicate: P.all([P.sizeAtLeast(200_000_000), P.notFolder]), scopes: Scopes.home, maxItems: 0,
+            priority: .utility
         ).totalCount
     }
 
@@ -1033,6 +1210,8 @@ final class LibraryStore: ObservableObject {
 
     private func runSearch() {
         loadTask?.cancel()
+        libraryFilling = false
+        libraryRefreshing = false
         guard let query = activeQuery else { return }
         selectedIDs = []
         items = []
@@ -1896,6 +2075,12 @@ final class LibraryStore: ObservableObject {
         items.removeAll { gone($0.path) }
         selectedIDs = selectedIDs.filter { !gone($0) }
         known = known.filter { !gone($0.key) }
+        // 缓存的列表里也拿掉（点回来时不会再闪一下已经移走的文件）。
+        libraryCache.update { page in
+            var next = page
+            next.items.removeAll { gone($0.path) }
+            return next
+        }
         shelves = shelves.map { shelf in
             Shelf(id: shelf.id, title: shelf.title, symbol: shelf.symbol,
                   items: shelf.items.filter { !gone($0.path) }, target: shelf.target)

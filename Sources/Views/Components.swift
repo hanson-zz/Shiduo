@@ -1,3 +1,4 @@
+import UniformTypeIdentifiers
 import SwiftUI
 
 struct ThumbnailView: View {
@@ -35,7 +36,7 @@ struct ThumbnailView: View {
                     .resizable()
                     .aspectRatio(contentMode: fill ? .fill : .fit)
             } else {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                Image(nsImage: PlaceholderIcons.icon(for: url))
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             }
@@ -62,6 +63,26 @@ struct ThumbnailView: View {
             }
             image = await ThumbnailService.shared.thumbnail(for: url, size: size)
         }
+    }
+}
+
+/// 缩略图出来之前的占位图标。图片、视频、音乐、PDF、文本按扩展名缓存一份通用图标
+/// （每个格子每次刷新都去问一次系统图标，几千个格子时很费主线程）；其他文件（App、文件夹、自定义图标的）照旧按文件取。
+enum PlaceholderIcons {
+    private static var byExtension: [String: NSImage] = [:]
+
+    static func icon(for url: URL) -> NSImage {
+        let ext = url.pathExtension.lowercased()
+        if !ext.isEmpty {
+            if let cached = byExtension[ext] { return cached }
+            if let type = UTType(filenameExtension: ext),
+               [UTType.image, .audiovisualContent, .audio, .pdf, .plainText].contains(where: { type.conforms(to: $0) }) {
+                let image = NSWorkspace.shared.icon(for: type)
+                byExtension[ext] = image
+                return image
+            }
+        }
+        return NSWorkspace.shared.icon(forFile: url.path)
     }
 }
 
