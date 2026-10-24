@@ -1,0 +1,38 @@
+run: 40060852320 commit: 738ce2f10e5a69259dc1f98717ac0d1406960243
+== build ==
+385:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:674:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+388:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:694:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+391:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:1039:52: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+444:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:430:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+447:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:446:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+501:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:855:38: error: main actor-isolated property 'selection' can not be referenced from a nonisolated autoclosure
+507:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:855:61: error: main actor-isolated property 'currentFolder' can not be referenced from a nonisolated autoclosure
+513:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:856:24: error: main actor-isolated property 'activeQuery' can not be referenced from a nonisolated autoclosure
+519:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:856:47: error: main actor-isolated property 'isLoading' can not be referenced from a nonisolated autoclosure
+525:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:856:60: error: main actor-isolated property 'librarySub' can not be referenced from a nonisolated autoclosure
+531:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:856:82: error: main actor-isolated property 'isLoadingMore' can not be referenced from a nonisolated autoclosure
+537:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:857:24: error: main actor-isolated property 'libraryLoaded' can not be referenced from a nonisolated autoclosure
+573:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:178:44: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+576:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:251:50: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+585:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/NotchShelf.swift:650:59: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+606:/Users/runner/work/Shiduo/Shiduo/Sources/Views/ShelfPageView.swift:273:76: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+609:/Users/runner/work/Shiduo/Shiduo/Sources/Views/TopBar.swift:137:67: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+650:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:674:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+653:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:694:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+656:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:1039:52: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+709:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:430:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+712:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:446:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+766:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:855:38: error: main actor-isolated property 'selection' can not be referenced from a nonisolated autoclosure
+772:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:855:61: error: main actor-isolated property 'currentFolder' can not be referenced from a nonisolated autoclosure
+778:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:856:24: error: main actor-isolated property 'activeQuery' can not be referenced from a nonisolated autoclosure
+784:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:856:47: error: main actor-isolated property 'isLoading' can not be referenced from a nonisolated autoclosure
+790:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:856:60: error: main actor-isolated property 'librarySub' can not be referenced from a nonisolated autoclosure
+796:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:856:82: error: main actor-isolated property 'isLoadingMore' can not be referenced from a nonisolated autoclosure
+802:/Users/runner/work/Shiduo/Shiduo/Sources/App/LibraryStore.swift:857:24: error: main actor-isolated property 'libraryLoaded' can not be referenced from a nonisolated autoclosure
+838:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:178:44: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+841:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:251:50: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+850:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/NotchShelf.swift:650:59: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+871:/Users/runner/work/Shiduo/Shiduo/Sources/Views/ShelfPageView.swift:273:76: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+874:/Users/runner/work/Shiduo/Shiduo/Sources/Views/TopBar.swift:137:67: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+909:** BUILD FAILED **
+== test ==
