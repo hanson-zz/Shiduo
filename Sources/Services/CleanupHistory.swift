@@ -217,10 +217,15 @@ final class CleanupHistory: ObservableObject {
 
     /// 只给演示模式（--demo，见 Demo.swift）用：换成示例记录，不读也不写记录文件。
     func setDemo(_ list: [CleanupRecord]) {
+        demoRecords = true
         records = list
     }
 
+    /// 演示模式：记录是 setDemo 放进来的，不再从文件读。
+    private var demoRecords = false
+
     func load() {
+        guard !demoRecords else { return }
         guard let data = try? Data(contentsOf: fileURL),
               let decoded = try? Self.decoder().decode([CleanupRecord].self, from: data) else {
             records = []

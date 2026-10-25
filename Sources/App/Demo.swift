@@ -190,6 +190,16 @@ enum Demo {
     }
 
     private static func write(_ spec: Spec, index: Int, to url: URL) {
+        writeContent(spec, index: index, to: url)
+        // 图片、PDF 补成示例里写的大小（文件末尾补零，看图、看 PDF 都不受影响），整理下载预览里大小才对得上。
+        if [.image, .pdf].contains(spec.kind), url.pathExtension.lowercased() != "heic",
+           let handle = try? FileHandle(forWritingTo: url) {
+            if let end = try? handle.seekToEnd(), end < UInt64(spec.size) { try? handle.truncate(atOffset: UInt64(spec.size)) }
+            try? handle.close()
+        }
+    }
+
+    private static func writeContent(_ spec: Spec, index: Int, to url: URL) {
         switch spec.kind {
         case .image:
             let colors = palettes[index % palettes.count]
@@ -350,7 +360,9 @@ extension LibraryStore {
             .apps: Array(apps.prefix(3)),
         ]
         sourceGroups = SourceGroup.make(from: all)
-        let byDate = all.sorted { $0.sortDate > $1.sortDate }
+        var seenNames = Set<String>()
+        // 最近使用里同名的副本（重复文件示例）只放一个。
+        let byDate = all.sorted { $0.sortDate > $1.sortDate }.filter { seenNames.insert($0.name).inserted }
         shelves = [
             Shelf(id: "screenshots", title: String(localized: "最近截图"), symbol: "camera.viewfinder",
                   items: byDate.filter(\.isScreenshot), target: .screenshots),
@@ -359,8 +371,17 @@ extension LibraryStore {
         ]
         dashboardLoaded = true
         // 「今天新增」：示例里今天加进来的文件（截图、照片、下载的图）。
-        setDemoTodayAdded(byDate.filter { item in
-            Demo.specs.contains { $0.name == item.name && $0.daysAgo < 0.6 } || item.name == Demo.n("AI 插画.png")
+        // 时间改成今天的几十分钟前，免得截图机在 UTC 早上时落到昨天。
+        let todayNames = [Demo.n("截屏 2026-10-11 上午9.41.png"), Demo.n("西湖日落.jpg"), Demo.n("AI 插画.png"),
+                          Demo.n("发票-十月.pdf"), "WeChatMac.dmg", Demo.n("会议录屏.mov"), Demo.n("季度复盘.docx")]
+        var seenToday = Set<String>()
+        setDemoTodayAdded(todayNames.enumerated().compactMap { index, name in
+            guard var item = all.first(where: { $0.name == name }), seenToday.insert(name).inserted else { return nil }
+            let date = Date().addingTimeInterval(-Double(index + 1) * 25 * 60)
+            item.modified = date
+            item.created = date
+            item.added = date
+            return item
         })
 
         let old = Date().addingTimeInterval(-30 * 86_400)
@@ -470,6 +491,16 @@ extension LibraryStore {
         case let page where page.hasPrefix("studio-"):
             let mode = ImageStudio.Mode(rawValue: String(page.dropFirst("studio-".count))) ?? .stitch
             selection = .category(.images)
+            if mode == .stitch {
+                // 拼图截成宫格 + 间距 + 圆角，看得出是拼好的一张图。
+                var settings = ImageStudio.shared.settings
+                settings.layout = .grid
+                settings.columns = 3
+                settings.gap = 16
+                settings.margin = 24
+                settings.imageCorner = 14
+                ImageStudio.shared.settings = settings
+            }
             ImageStudio.shared.open(Demo.studioImages(for: mode), mode: mode, toShelf: false)
         case "images": selection = .category(.images)
         case "downloads": selection = .downloads
@@ -502,7 +533,11 @@ extension LibraryStore {
         }
         if let window = NSApp.windows.first(where: { $0.isVisible && !ToolWindow.isToolWindow($0) && !($0 is NSPanel)
                                                 && $0.title != String(localized: "图片工具") }) ?? NSApp.windows.first {
-            window.setFrame(NSRect(x: 80, y: 80, width: 1440, height: 920), display: true)
+            // --page=today 按屏幕区域截图（连同弹窗），窗口要整个在屏幕里。
+            let frame = Demo.page == "today"
+                ? (NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1024, height: 740))
+                : NSRect(x: 80, y: 80, width: 1440, height: 920)
+            window.setFrame(frame, display: true)
         }
     }
 }

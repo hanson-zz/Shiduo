@@ -617,6 +617,10 @@ struct CutoutPanel: View {
                     }
                 }
                 .disabled(running)
+                // 演示模式 --page=studio-cutout 截图：打开就抠，截到抠好的样子。
+                .task {
+                    if Demo.isOn, Demo.page == "studio-cutout", results[item.id] == nil, !running { run([item]) }
+                }
             }
             .padding(22)
         }

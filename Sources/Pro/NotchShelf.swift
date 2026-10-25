@@ -271,11 +271,17 @@ final class NotchShelfController: NSObject, ObservableObject {
         panel.alphaValue = 0
         panel.orderFrontRegardless()
         if !byDrag { panel.makeKey() }
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.22
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            panel.animator().setFrame(frame, display: true)
-            panel.animator().alphaValue = 1
+        if Demo.isOn {
+            // 演示模式截图：直接展开，不做动画。
+            panel.setFrame(frame, display: true)
+            panel.alphaValue = 1
+        } else {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.22
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                panel.animator().setFrame(frame, display: true)
+                panel.animator().alphaValue = 1
+            }
         }
         loadDownloads()
         // 演示模式截图时鼠标不在面板上，不要自动收起。

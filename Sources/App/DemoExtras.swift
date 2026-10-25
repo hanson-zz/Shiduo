@@ -18,6 +18,12 @@ extension Demo {
     static let uninstallHome: URL = FileManager.default.temporaryDirectory
         .appendingPathComponent("ShiduoDemoHome", isDirectory: true)
 
+    /// 示例个人文件夹里的路径显示成 ~/…。
+    static func tildePath(_ path: String) -> String {
+        let home = uninstallHome.path
+        return path.hasPrefix(home) ? "~" + path.dropFirst(home.count) : path
+    }
+
     // MARK: 搬家目标
 
     private static var t7: URL { extraFolder.appendingPathComponent("T7", isDirectory: true) }

@@ -365,7 +365,7 @@ struct UninstallSheet: View {
                                 .background(Capsule().fill(Color.orange.opacity(0.15)))
                         }
                     }
-                    Text("\(item.kind.title) · \((item.path as NSString).abbreviatingWithTildeInPath)")
+                    Text("\(item.kind.title) · \(Demo.isOn ? Demo.tildePath(item.path) : (item.path as NSString).abbreviatingWithTildeInPath)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
