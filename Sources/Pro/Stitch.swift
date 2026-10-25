@@ -400,9 +400,9 @@ final class ImageStudio: ObservableObject {
         var title: String {
             switch self {
             case .stitch: return String(localized: "拼图")
-            case .beautify: return String(localized: "美化")
+            case .beautify: return String(localized: "图片工具标签·美化")
             case .annotate: return String(localized: "标注")
-            case .cutout: return String(localized: "抠图")
+            case .cutout: return String(localized: "图片工具标签·抠图")
             case .upscale: return String(localized: "AI 放大")
             }
         }

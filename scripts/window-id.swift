@@ -35,10 +35,12 @@ if args.contains("--smallest") {
     chosen = owned.filter { layer($0) == 0 && onscreen($0) && width($0) > 300 && height($0) > 200 }
         .min { width($0) * height($0) < width($1) * height($1) }
 } else if args.contains("--panel") {
-    chosen = owned.filter { onscreen($0) && width($0) > 200 && height($0) > 60 }
+    // 浮在菜单栏上的面板在 CI 上常常没有 onscreen 标记，所以只看层级（> 0）和大小。
+    chosen = owned.filter { layer($0) > 0 && width($0) > 200 && height($0) > 60 }
         .max { layer($0) < layer($1) }
 } else {
-    chosen = owned.filter { layer($0) == 0 && width($0) > 400 }.max { width($0) < width($1) }
+    // 跳过菜单栏那几条 24pt 高的透明窗口（宽度和主窗口一样，会被误选）。
+    chosen = owned.filter { layer($0) == 0 && width($0) > 400 && height($0) > 200 }.max { width($0) < width($1) }
 }
 
 if let chosen, let id = chosen[kCGWindowNumber as String] as? Int {
