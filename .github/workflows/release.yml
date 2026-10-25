@@ -79,6 +79,8 @@ jobs:
             ln -s /Applications "$STAGE/Applications"
             hdiutil create -volname "拾掇 ${TAG}" -srcfolder "$STAGE" -ov -format UDZO "Shiduo-${TAG}.dmg"
           fi
+          # 固定文件名的副本：官网按钮用 releases/latest/download/Shiduo.dmg 直接下载最新正式版。
+          cp "Shiduo-${TAG}.dmg" Shiduo.dmg
 
       - name: 发布到 GitHub Releases
         env:
@@ -114,8 +116,8 @@ jobs:
           EOF
           sed -i '' 's/^          //' notes.md
           if gh release view "$TAG" > /dev/null 2>&1; then
-            gh release upload "$TAG" "Shiduo-${TAG}.dmg" "Shiduo-${TAG}.zip" --clobber
+            gh release upload "$TAG" "Shiduo-${TAG}.dmg" "Shiduo-${TAG}.zip" Shiduo.dmg --clobber
           else
-            gh release create "$TAG" "Shiduo-${TAG}.dmg" "Shiduo-${TAG}.zip" \
+            gh release create "$TAG" "Shiduo-${TAG}.dmg" "Shiduo-${TAG}.zip" Shiduo.dmg \
               --title "拾掇 ${TAG}" --notes-file notes.md
           fi

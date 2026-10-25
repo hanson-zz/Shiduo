@@ -38,13 +38,13 @@ The app is in English and Simplified Chinese. It follows your system language, a
 
 ## Shiduo Pro
 
-Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, payments by Creem) adds Organize Downloads with **Tidy Now** to actually move the files (previewing where each file would go and **Group Only** stay free), folder colors, auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, a floating shelf that opens under the notch or at the screen edge, file reminders (on time or when you open WeChat, DingTalk, Feishu or Mail), ⌃⌘1–0 number keys that copy your 10 most recent files, drop-to-convert tools (compress videos, make GIFs, trim clips, merge files into a PDF), an app uninstaller that also trashes the app’s leftovers in Library (restorable for 30 days), on-device background removal plus screenshot styling, and image stitching (long screenshots joined with overlaps removed, grids, masonry, watermarks). The 7-day free trial starts only when you click **Start 7-Day Free Trial** (in **Settings › Pro** or on a Pro feature); no sign-up, no payment details. Enter your license key in **Settings › Pro**.
+Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, payments by Creem) adds Organize Downloads with **Tidy Now** to actually move the files (previewing where each file would go and **Group Only** stay free), folder colors, auto-organize rules, weekly cleanup reminders, photo search by content, external drives in the sidebar, a menu bar helper, a floating shelf that opens under the notch or at the screen edge, file reminders (on time or when you open WeChat, DingTalk, Feishu or Mail), ⌃⌘1–0 number keys that copy your 10 most recent files, drop-to-convert tools (compress videos, make GIFs, trim clips, merge files into a PDF), an app uninstaller that also trashes the app’s leftovers in Library (restorable for 30 days), on-device background removal plus screenshot styling, image stitching (long screenshots joined with overlaps removed, grids, masonry, watermarks), screenshot annotation with on-device auto-blur, AI upscaling (2× / 4×, on your Mac), moving big files out to a drive or NAS with a stand-in left behind, and saved searches in the sidebar. The 7-day free trial starts only when you click **Start 7-Day Free Trial** (in **Settings › Pro** or on a Pro feature); no sign-up, no payment details. Enter your license key in **Settings › Pro**.
 
 <p align="center"><img src="docs/screenshots/en/folderwall.png" alt="Folder Wall" width="880"></p>
 
 ## Install
 
-1. Download the latest `Shiduo-*.dmg` from [Releases](https://github.com/hanson-zz/Shiduo/releases).
+1. Download the latest [Shiduo.dmg](https://github.com/hanson-zz/Shiduo/releases/latest/download/Shiduo.dmg) (older versions are on [Releases](https://github.com/hanson-zz/Shiduo/releases)).
 2. Open it and drag Shiduo to Applications.
 3. The app isn’t notarized by Apple, so macOS stops it the first time. Follow **First launch** below once.
 
