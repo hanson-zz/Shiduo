@@ -116,6 +116,12 @@
 
 <p align="center"><img src="docs/screenshots/folderwall.png" alt="文件夹墙" width="880"></p>
 
+<p align="center"><img src="docs/screenshots/notch-scene.png" alt="刘海暂存架：隔空投送篮筐、拖进来就转换" width="880"></p>
+
+<p align="center"><img src="docs/screenshots/studio-stitch.png" alt="图片工具：拼图、美化、标注、抠图、AI 放大" width="720"></p>
+
+<p align="center"><img src="docs/screenshots/history.png" alt="清理记录：30 天内放回原处" width="880"></p>
+
 - **价格：$9.90 美元，一次买断**，不是订阅，以后的 Pro 更新免费。付款由 Creem 处理。
 - **7 天免费试用**：在付费页或「设置 › Pro」里点「开始 7 天免费试用」才开始计时（打开 Pro 页面不会自动开始），不用注册，也不填付款信息。
 - 购买后在「设置 › Pro」里输入授权码激活；换 Mac 前可以先「解绑此 Mac」。

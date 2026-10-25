@@ -42,6 +42,12 @@ Everything above is free forever. **Shiduo Pro** ($9.90 USD, one-time, payments 
 
 <p align="center"><img src="docs/screenshots/en/folderwall.png" alt="Folder Wall" width="880"></p>
 
+<p align="center"><img src="docs/screenshots/en/notch-scene.png" alt="Notch shelf: AirDrop hoop and drop to convert" width="880"></p>
+
+<p align="center"><img src="docs/screenshots/en/studio-stitch.png" alt="Image Tools: stitch, style, annotate, cut out, AI upscale" width="720"></p>
+
+<p align="center"><img src="docs/screenshots/en/history.png" alt="Cleanup History: put files back within 30 days" width="880"></p>
+
 ## Install
 
 1. Download the latest [Shiduo.dmg](https://github.com/hanson-zz/Shiduo/releases/latest/download/Shiduo.dmg) (older versions are on [Releases](https://github.com/hanson-zz/Shiduo/releases)).
