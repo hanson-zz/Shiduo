@@ -3,11 +3,10 @@ import SwiftUI
 
 // MARK: - 隔空投送篮筐
 //
-// 刘海暂存架「暂存架」标签最左边的隔空投送格，画成一个小篮筐：
-// · 从访达等任何地方把文件拖到篮筐上松手：文件「唰」地落进网兜，然后弹出隔空投送。
-// · 在暂存架卡片上按住 ⌥（Option）拖动再甩出去：文件沿抛物线飞向篮筐，
-//   投进了就隔空投送这个文件；没投进会砸到篮筐边，弹回原来的位置。
-// · 点一下篮筐：投送暂存架里选中的文件。
+// 刘海暂存架拖文件进来时，三个落点中间的「投篮」画成一个小篮筐：
+// · 从访达等任何地方把文件拖到「投篮」上松手：文件「唰」地落进网兜，然后弹出隔空投送。
+// · 暂存架卡片右键「投进篮筐」：先切到三个落点，再播放同样的入网动画。
+// · （⌥ 甩卡片的判定 judge / release 还留着，刘海改版后平时不显示篮筐，暂时不接。）
 // 系统的隔空投送不给进度，所以发送时网兜里的颜色循环涨落；发完变绿，两秒后复位。
 
 /// 刘海暂存架整体的坐标系名字：卡片、篮筐和飞行动画都用它对齐位置。
@@ -98,14 +97,55 @@ final class AirDropHoop: ObservableObject {
     private(set) var rimHitAt: Date?
     private(set) var phaseAt = Date()
 
-    /// 篮筐和整个格子在 notchShelfSpace 里的位置，由 HoopView 报上来。
+    /// 篮筐和整个格子在 notchShelfSpace 里的位置，由 HoopTargetGraphic 报上来。
     var rimFrame: CGRect = .zero
     var tileFrame: CGRect = .zero
     var netCenter: CGPoint = .zero
 
+    /// 篮筐现在画在面板上没有（刘海暂存架平时不显示篮筐，只在拖文件进来或正在投时显示）。
+    private var hoopOnStage = false
+    /// 篮筐还没显示时要投的文件：篮筐一出现就开始播动画。
+    @Published private(set) var pendingSwish: [URL]?
+    /// 文件刚落到「投篮」上、还在读文件地址：先别把三个落点收起来。
+    @Published private(set) var stageHold = false
+
     private var generation = 0
 
     var isAiming: Bool { phase == .idle && (dropHovering || headingIn) }
+
+    /// 刘海暂存架要不要显示三个落点（篮筐在投、刚投完、刚取消）。
+    var wantsStage: Bool {
+        stageHold || pendingSwish != nil || phase != .idle || (flight != nil && flyingURL == nil) || note != nil
+    }
+
+    /// 文件落到「投篮」上：读地址期间保持三个落点；读不到时两秒后自己收回。
+    func holdStage() {
+        stageHold = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            MainActor.assumeIsolated {
+                let hoop = AirDropHoop.shared
+                if hoop.stageHold && hoop.pendingSwish == nil && hoop.phase == .idle { hoop.stageHold = false }
+            }
+        }
+    }
+
+    func releaseStage() { stageHold = false }
+
+    /// 篮筐画出来了（位置已经报上来）：有等着投的文件就开始。
+    func hoopAppeared() {
+        hoopOnStage = true
+        guard let urls = pendingSwish else { return }
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                let hoop = AirDropHoop.shared
+                guard hoop.pendingSwish == urls else { return }
+                hoop.pendingSwish = nil
+                hoop.swish(urls)
+            }
+        }
+    }
+
+    func hoopDisappeared() { hoopOnStage = false }
 
     // MARK: 状态切换
 
@@ -137,10 +177,30 @@ final class AirDropHoop: ObservableObject {
 
     /// 文件直接落进篮筐：播放入网动画，然后隔空投送。
     func swish(_ urls: [URL]) {
-        guard let first = urls.first, phase != .sending else { return }
+        guard let first = urls.first, phase != .sending else {
+            stageHold = false
+            return
+        }
+        guard hoopOnStage, rimFrame.width > 0 else {
+            // 篮筐还没画出来：先让刘海暂存架切到三个落点，篮筐出现后再投。
+            // 兜底：0.8 秒内篮筐都没出现（比如面板收起了），直接隔空投送，不播动画。
+            pendingSwish = urls
+            stageHold = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                MainActor.assumeIsolated {
+                    let hoop = AirDropHoop.shared
+                    guard hoop.pendingSwish == urls else { return }
+                    hoop.pendingSwish = nil
+                    hoop.landed(urls)
+                }
+            }
+            return
+        }
+        stageHold = false
+        pendingSwish = nil
         bump()
         note = nil
-        let top = CGPoint(x: rimFrame.midX, y: rimFrame.minY - max(26, rimFrame.width * 0.6))
+        let top = CGPoint(x: rimFrame.midX, y: rimFrame.minY - max(22, rimFrame.width * 0.7))
         let seg = HoopFlightSegment(p0: top, control: CGPoint(x: rimFrame.midX, y: rimFrame.midY - 4),
                                     p1: netCenter, duration: 0.42, rotation: (-20, 0),
                                     scale: (0.9, 0.55), easeIn: true, trail: false)
@@ -334,12 +394,12 @@ final class AirDropHoop: ObservableObject {
     }
 }
 
-// MARK: - 篮筐格子
+// MARK: - 篮筐图形
 
-struct HoopView: View {
-    let selected: () -> [URL]
+/// 「投篮」落点里的篮筐：篮板、篮筐和网兜按给定大小缩放，报告篮筐位置给飞行动画用。
+/// 放置由整个面板统一处理（NotchShelfDropDelegate），这里不接收拖放、不响应点击。
+struct HoopTargetGraphic: View {
     @ObservedObject private var hoop = AirDropHoop.shared
-    @State private var targeted = false
 
     private var animating: Bool {
         hoop.phase == .sending || hoop.phase == .done || hoop.phase == .miss || hoop.flight != nil
@@ -350,31 +410,23 @@ struct HoopView: View {
         GeometryReader { geo in
             let layout = HoopLayout(size: geo.size)
             TimelineView(.animation(minimumInterval: 1 / 60, paused: !animating)) { context in
-                ZStack(alignment: .topLeading) {
-                    HoopCanvas(layout: layout, state: snapshot(at: context.date))
-                    header(layout)
-                }
+                HoopCanvas(layout: layout, state: snapshot(at: context.date))
             }
-            .onAppear { report(geo, layout) }
+            .onAppear {
+                report(geo, layout)
+                hoop.hoopAppeared()
+            }
+            .onDisappear { hoop.hoopDisappeared() }
             .onChange(of: geo.frame(in: .named(notchShelfSpace))) { report(geo, layout) }
         }
-        .frame(width: 132)
-        .frame(maxHeight: .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            let urls = selected()
-            if !urls.isEmpty { hoop.swish(urls) }
-        }
-        .help("把文件拖到篮筐上，用隔空投送发给附近的 iPhone、iPad 或 Mac；也可以在暂存架卡片上按住 ⌥ 拖动，把文件甩进篮筐；点一下发送暂存架里选中的文件")
-        .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
-            FileDrop.load(providers) { urls in AirDropHoop.shared.swish(urls) }
-        }
-        .onChange(of: targeted) { hoop.dropHovering = targeted }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 
     private func report(_ geo: GeometryProxy, _ layout: HoopLayout) {
-        let origin = geo.frame(in: .named(notchShelfSpace)).origin
-        hoop.tileFrame = CGRect(origin: origin, size: geo.size)
+        let frame = geo.frame(in: .named(notchShelfSpace))
+        let origin = frame.origin
+        hoop.tileFrame = frame
         hoop.rimFrame = layout.rim.offsetBy(dx: origin.x, dy: origin.y)
         hoop.netCenter = CGPoint(x: layout.rim.midX + origin.x, y: layout.rim.midY + layout.netHeight * 0.5 + origin.y)
     }
@@ -408,83 +460,31 @@ struct HoopView: View {
         if hoop.phase == .sending || hoop.phase == .done { s.netIcon = hoop.netIcon }
         return s
     }
-
-    private func header(_ layout: HoopLayout) -> some View {
-        let look: HoopCanvas.Look = hoop.isAiming ? .aim : (hoop.phase == .miss ? .miss : hoop.phase == .done ? .done : .idle)
-        let symbol: String
-        let color: Color
-        switch look {
-        case .miss: symbol = "xmark"; color = HoopPalette.red
-        case .done: symbol = "checkmark"; color = HoopPalette.green
-        default: symbol = "arrow.up"; color = HoopPalette.accent
-        }
-        let d = layout.iconDiameter
-        return HStack(spacing: 5) {
-            Image(systemName: symbol)
-                .font(.system(size: d * 0.5, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: d, height: d)
-                .background(Circle().fill(color))
-            VStack(alignment: .leading, spacing: 0) {
-                Text(title)
-                    .font(.system(size: layout.titleSize, weight: .bold))
-                    .foregroundStyle(look == .miss ? HoopPalette.red : look == .done ? HoopPalette.green : Color(white: 0.13))
-                Text(subtitle)
-                    .font(.system(size: layout.titleSize * 0.78, weight: .medium))
-                    .foregroundStyle(Color(white: 0.42))
-                    .truncationMode(.middle)
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-        }
-        .frame(width: layout.board.width - 12, alignment: .leading)
-        .offset(x: layout.board.minX + 6, y: layout.board.minY + 6)
-        .allowsHitTesting(false)
-    }
-
-    private var title: String {
-        switch hoop.phase {
-        case .miss: return String(localized: "没进！")
-        case .sending: return String(localized: "正在投送…")
-        case .done: return String(localized: "已送达")
-        case .idle: return String(localized: "隔空投送")
-        }
-    }
-
-    private var subtitle: String {
-        switch hoop.phase {
-        case .miss: return String(localized: "再甩一次")
-        case .sending: return hoop.fileName
-        case .done: return "\(hoop.fileName) · \(hoop.fileSize)"
-        case .idle:
-            if hoop.isAiming { return String(localized: "松手投篮") }
-            return hoop.note ?? String(localized: "把文件投进篮筐")
-        }
-    }
 }
 
-/// 篮筐各部件在格子里的位置，按格子大小缩放。
+/// 篮筐各部件的位置：篮板在上半，篮筐贴着篮板下沿，网兜往下挂到底，全部画在给定大小以内。
 struct HoopLayout {
     let size: CGSize
 
     var board: CGRect {
-        CGRect(x: 6, y: 6, width: size.width - 12, height: max(56, size.height * 0.52))
+        let w = min(size.width - 2, size.height * 1.7)
+        let h = size.height * 0.56
+        return CGRect(x: (size.width - w) / 2, y: 1, width: w, height: h)
     }
-    var iconDiameter: CGFloat { min(18, board.height * 0.3) }
-    var titleSize: CGFloat { min(11.5, max(9, board.width / 11)) }
-    var rimHalfWidth: CGFloat { min(size.width * 0.19, 30) }
+    var rimHalfWidth: CGFloat { board.width * 0.26 }
     var rim: CGRect {
-        let h = max(7, rimHalfWidth * 0.32)
-        return CGRect(x: size.width / 2 - rimHalfWidth, y: board.maxY + 2 - h / 2, width: rimHalfWidth * 2, height: h)
+        let h = max(4, rimHalfWidth * 0.3)
+        return CGRect(x: size.width / 2 - rimHalfWidth, y: board.maxY - h / 2, width: rimHalfWidth * 2, height: h)
     }
     var target: CGRect {
-        let w = min(board.width * 0.3, 40), h = min(board.height * 0.26, 26)
-        return CGRect(x: size.width / 2 - w / 2, y: board.maxY - h - 4, width: w, height: h)
+        let w = board.width * 0.34, h = board.height * 0.4
+        return CGRect(x: size.width / 2 - w / 2, y: board.maxY - h - board.height * 0.16, width: w, height: h)
     }
-    var netHeight: CGFloat { max(16, min(size.height - rim.midY - 6, rimHalfWidth * 1.5)) }
+    /// 网兜拉伸时最多变长 18%，这里留出余量，拉伸后也不出格子。
+    var netHeight: CGFloat { max(6, (size.height - rim.midY - 1) / 1.18) }
 }
 
-/// 画篮板、篮筐和网兜。
+/// 画篮板、篮筐和网兜。篮板是深色半透明 + 1 点细边，瞄准时带强调色，没进红、送达绿。
 struct HoopCanvas: View {
     enum Look { case idle, aim, miss, sending, done }
 
@@ -502,16 +502,16 @@ struct HoopCanvas: View {
 
     private var tint: Color {
         switch state.look {
-        case .idle: return Color(white: 0.97)
-        case .aim, .sending: return Color(red: 232 / 255, green: 228 / 255, blue: 1)
-        case .miss: return Color(red: 1, green: 226 / 255, blue: 222 / 255)
-        case .done: return Color(red: 222 / 255, green: 247 / 255, blue: 234 / 255)
+        case .idle: return Color.white.opacity(0.1)
+        case .aim, .sending: return HoopPalette.accent.opacity(0.3)
+        case .miss: return HoopPalette.red.opacity(0.25)
+        case .done: return HoopPalette.green.opacity(0.25)
         }
     }
 
     private var edge: Color {
         switch state.look {
-        case .idle: return HoopPalette.idleEdge
+        case .idle: return Color.white.opacity(0.4)
         case .aim, .sending: return HoopPalette.accent
         case .miss: return HoopPalette.red
         case .done: return HoopPalette.green
@@ -527,23 +527,19 @@ struct HoopCanvas: View {
     }
 
     var body: some View {
-        Canvas { ctx, size in
-            let tile = CGRect(origin: .zero, size: size)
-            ctx.fill(Path(roundedRect: tile, cornerRadius: 14, style: .continuous), with: .color(.white.opacity(0.06)))
-            ctx.stroke(Path(roundedRect: tile.insetBy(dx: 0.5, dy: 0.5), cornerRadius: 14, style: .continuous),
-                       with: .color(.white.opacity(0.12)), lineWidth: 1)
-
+        Canvas { ctx, _ in
             // 篮板
             let board = layout.board
-            ctx.fill(Path(roundedRect: board, cornerRadius: 10, style: .continuous), with: .color(tint.opacity(0.96)))
-            ctx.stroke(Path(roundedRect: board.insetBy(dx: 2.5, dy: 2.5), cornerRadius: 8, style: .continuous),
-                       with: .color(edge.opacity(0.85)), style: StrokeStyle(lineWidth: 1.2, dash: [4, 3.5]))
-            ctx.stroke(Path(roundedRect: layout.target, cornerRadius: 3), with: .color(edge), lineWidth: 1.6)
+            let corner = min(7, board.height * 0.28)
+            ctx.fill(Path(roundedRect: board, cornerRadius: corner, style: .continuous), with: .color(tint))
+            ctx.stroke(Path(roundedRect: board.insetBy(dx: 0.5, dy: 0.5), cornerRadius: corner, style: .continuous),
+                       with: .color(edge), lineWidth: 1)
+            ctx.stroke(Path(roundedRect: layout.target, cornerRadius: 2), with: .color(edge), lineWidth: 1)
 
             // 网兜
             let rim = layout.rim
             let cx = rim.midX
-            let wobbleX = CGFloat(state.wobble) * 2
+            let wobbleX = CGFloat(state.wobble) * 1.5
             let top = rim.midY + 1
             let bottom = rim.midY + layout.netHeight * (1 + 0.18 * CGFloat(state.stretch))
             let wt = layout.rimHalfWidth * 0.92
@@ -562,7 +558,7 @@ struct HoopCanvas: View {
                 for k in 0...20 {
                     let a = Double(k) / 20
                     let x = cx - wt + 2 * wt * CGFloat(a)
-                    let amp: CGFloat = state.look == .done ? 0.6 : 2.2
+                    let amp: CGFloat = state.look == .done ? 0.5 : 1.6
                     wave.addLine(to: CGPoint(x: x, y: fy + amp * CGFloat(sin(a * 6.28 + state.time * 8))))
                 }
                 wave.addLine(to: CGPoint(x: cx + wt, y: bottom + 4))
@@ -573,7 +569,7 @@ struct HoopCanvas: View {
             }
 
             if let icon = state.netIcon {
-                let side = layout.rimHalfWidth * 1.05
+                let side = min(layout.rimHalfWidth * 1.05, bottom - top)
                 let rect = CGRect(x: cx - side / 2, y: top + (bottom - top) * 0.5 - side / 2, width: side, height: side)
                 var inner = ctx
                 inner.clip(to: net)
@@ -582,7 +578,7 @@ struct HoopCanvas: View {
             }
 
             var lattice = Path()
-            let n = 7
+            let n = 5
             for k in 0...n {
                 let a = CGFloat(k) / CGFloat(n)
                 let x0 = cx - wt + 2 * wt * a
@@ -595,13 +591,11 @@ struct HoopCanvas: View {
             }
             lattice.move(to: CGPoint(x: cx - wb, y: bottom))
             lattice.addLine(to: CGPoint(x: cx + wb, y: bottom))
-            ctx.stroke(lattice, with: .color(.white.opacity(0.82)), lineWidth: 1)
+            ctx.stroke(lattice, with: .color(.white.opacity(0.7)), lineWidth: 0.8)
 
-            // 篮筐和连接篮板的支架
-            let bracket = CGRect(x: cx - 6, y: rim.minY - 4, width: 12, height: 5)
-            ctx.fill(Path(roundedRect: bracket, cornerRadius: 1.5), with: .color(rimColor.opacity(0.75)))
-            let ring = rim.offsetBy(dx: wobbleX, dy: CGFloat(state.wobble) * 1.2)
-            ctx.stroke(Path(ellipseIn: ring), with: .color(rimColor), lineWidth: 3)
+            // 篮筐
+            let ring = rim.offsetBy(dx: wobbleX, dy: CGFloat(state.wobble) * 1)
+            ctx.stroke(Path(ellipseIn: ring), with: .color(rimColor), lineWidth: 2)
         }
         .allowsHitTesting(false)
     }

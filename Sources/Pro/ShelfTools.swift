@@ -35,6 +35,21 @@ final class ShelfTools: ObservableObject {
         return true
     }
 
+    /// 文件拖到「转换」上：放上暂存架；全是图片时给出格式按钮，有视频 / PDF 时给出处理按钮。
+    static func handleConvertDrop(_ urls: [URL]) {
+        ShelfStore.shared.add(urls)
+        let found = Self.images(in: urls)
+        if !found.isEmpty, !urls.contains(where: { MediaToolsLogic.isVideo($0) || MediaToolsLogic.isPDF($0) }) {
+            shared.pendingFiles = []
+            shared.pendingImages = found
+        } else if hasMediaActions(urls) {
+            shared.pendingImages = []
+            shared.pendingFiles = urls
+        } else {
+            shared.show(String(localized: "没有可以转换的文件"))
+        }
+    }
+
     static func images(in urls: [URL]) -> [URL] {
         urls.filter { ImageConverter.canConvert($0) }
     }
@@ -137,9 +152,10 @@ struct ShelfConvertMenu: View {
     }
 }
 
-// MARK: - 刘海暂存架里的「转换格式」格子
+// MARK: - 「转换格式」格子
 
 /// 拖图片进来就弹出格式按钮；点一下转换暂存架里选中的图片。
+/// 刘海暂存架改版后改用 NotchDropTargets 里的「转换」落点 + ShelfConvertChooser，这个格子留给别处复用。
 struct ImageConvertDropPane: View {
     let height: CGFloat
     let selected: () -> [URL]
@@ -164,19 +180,7 @@ struct ImageConvertDropPane: View {
         )
         .help("拖图片、视频或 PDF 到这里转换")
         .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
-            FileDrop.load(providers) { urls in
-                ShelfStore.shared.add(urls)
-                let images = ShelfTools.images(in: urls)
-                if !images.isEmpty, !urls.contains(where: { MediaToolsLogic.isVideo($0) || MediaToolsLogic.isPDF($0) }) {
-                    ShelfTools.shared.pendingFiles = []
-                    ShelfTools.shared.pendingImages = images
-                } else if ShelfTools.hasMediaActions(urls) {
-                    ShelfTools.shared.pendingImages = []
-                    ShelfTools.shared.pendingFiles = urls
-                } else {
-                    ShelfTools.shared.show(String(localized: "没有可以转换的文件"))
-                }
-            }
+            FileDrop.load(providers) { urls in ShelfTools.handleConvertDrop(urls) }
         }
     }
 

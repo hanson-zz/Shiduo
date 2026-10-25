@@ -26960,6 +26960,116 @@
           }
         }
       }
+    },
+    "暂存": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Park"
+          }
+        }
+      }
+    },
+    "投篮": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shoot"
+          }
+        }
+      }
+    },
+    "放一下，回头再拖走": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Park it, drag it out later"
+          }
+        }
+      }
+    },
+    "图片 · 视频 · PDF": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image · Video · PDF"
+          }
+        }
+      }
+    },
+    "标准": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard"
+          }
+        }
+      }
+    },
+    "紧凑": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compact"
+          }
+        }
+      }
+    },
+    "刘海宽度": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notch Width"
+          }
+        }
+      }
+    },
+    "暂存架设置…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shelf Settings…"
+          }
+        }
+      }
+    },
+    "显示全部": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show All"
+          }
+        }
+      }
+    },
+    "把文件拖到这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop files here"
+          }
+        }
+      }
+    },
+    "标准：刘海两边各多约 107 点；紧凑：各多约 70 点，平时只显示 3 张卡片和剩余数量。都按这台 Mac 的刘海宽度算。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard: about 107 pt beyond each side of the notch. Compact: about 70 pt, showing 3 cards plus a count of the rest. Both are sized from this Mac's notch."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

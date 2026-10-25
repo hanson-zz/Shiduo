@@ -107,12 +107,44 @@ extension NSScreen {
 
 // MARK: - 设置项
 
+/// 「刘海宽度」：标准 / 紧凑。宽度总是按这块屏幕真实的刘海宽度算。
+enum NotchShelfWidth: String, CaseIterable, Identifiable {
+    case standard, compact
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .standard: return String(localized: "标准")
+        case .compact: return String(localized: "紧凑")
+        }
+    }
+
+    /// 刘海之外多出来的总宽度（两边合计）。
+    var extraWidth: CGFloat {
+        switch self {
+        case .standard: return 214
+        case .compact: return 140
+        }
+    }
+}
+
 enum NotchShelfPrefs {
     nonisolated static let delayKey = "notchShelfHoverDelay"
     nonisolated static let cardSizeKey = "notchShelfCardSize"
     nonisolated static let opacityKey = "notchShelfOpacity"
     nonisolated static let autoHideKey = "notchShelfAutoHide"
     nonisolated static let hoverKey = "notchShelfHoverToOpen"
+    nonisolated static let widthKey = "notchShelfWidth"
+
+    /// 刘海暂存架的宽度档位：标准（刘海两边各多约 107 点）/ 紧凑（各多约 70 点）。
+    static var width: NotchShelfWidth {
+        NotchShelfWidth(rawValue: UserDefaults.standard.string(forKey: widthKey) ?? "") ?? .standard
+    }
+
+    /// 紧凑档的缩略图边长：比设置里的卡片小一号，最大 52，保证一排放得下 3 张 +「+N」。
+    static func compactThumb(_ cardSize: CGFloat) -> CGFloat {
+        min(max(cardSize - 12, 40), 52)
+    }
 
     /// 鼠标停在刘海处多久展开（秒）。
     static var hoverDelay: Double {
@@ -155,6 +187,19 @@ final class NotchShelfController: NSObject, ObservableObject {
     @Published var downloads: [FileItem] = []
     @Published var selectedIndex: Int = 0
     @Published var dropTargeted = false
+    /// 拖着文件经过面板时，鼠标下面是三个落点里的哪一个。
+    @Published var dropHover: DropTarget?
+    /// 演示模式截图：不用真的拖文件，也显示三个落点。
+    @Published var demoDropPreview = false
+    /// 每次展开加一：紧凑档的「+N」展开状态在重新展开时收回去。
+    @Published private(set) var openCount = 0
+    /// 正在从暂存架里往外拖卡片（拖出全部也算）：经过面板时不切换成三个落点。
+    var cardDragging = false
+    /// 内容区在 notchShelfSpace 里的位置：拖文件时按横坐标判断落在哪个落点。
+    var contentFrame: CGRect = .zero
+
+    /// 拖文件进来时的三个落点。
+    enum DropTarget: Int, CaseIterable { case shelf, hoop, convert }
     /// 正在空格预览时不自动收起。
     var previewing = false
 
@@ -176,11 +221,65 @@ final class NotchShelfController: NSObject, ObservableObject {
 
     private func panelSize(for screen: NSScreen) -> NSSize {
         let card = NotchShelfPrefs.cardSize
-        // 标签贴着刘海两边排，宽度只留够标签用；英文标签更长，多给一点。
-        let english = Bundle.main.preferredLocalizations.first?.hasPrefix("en") ?? false
-        let width = max(screen.notchWidth + (english ? 460 : 400), english ? 640 : 580)
-        let height = screen.notchHeight + card + 92
+        guard LicenseManager.shared.isPro else {
+            // 上锁卡片（试用结束 / 需要校验）文字和按钮多，沿用改版前的宽度。
+            let english = Bundle.main.preferredLocalizations.first?.hasPrefix("en") ?? false
+            let width = max(screen.notchWidth + (english ? 460 : 400), english ? 640 : 580)
+            return NSSize(width: min(width, screen.frame.width - 40), height: screen.notchHeight + card + 92)
+        }
+        let mode = NotchShelfPrefs.width
+        // 标签是图标，宽度只按刘海宽度加一个固定值（标准约 400 点、紧凑约 326 点，14 / 16 英寸默认分辨率）。
+        let width = screen.notchWidth + mode.extraWidth
+        let thumb = mode == .compact ? NotchShelfPrefs.compactThumb(card) : card
+        let height = screen.notchHeight + max(100, thumb + 44)
         return NSSize(width: min(width, screen.frame.width - 40), height: height)
+    }
+
+    private func targetFrame(for screen: NSScreen) -> NSRect {
+        let size = panelSize(for: screen)
+        return NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
+                      width: size.width, height: size.height)
+    }
+
+    /// 改了「刘海宽度」或卡片大小：开着的面板直接换成新尺寸。
+    func relayout() {
+        guard let panel, panel.isVisible, let screen else { return }
+        if let host = panel.contentView as? NSHostingView<NotchShelfView> {
+            host.rootView = NotchShelfView(controller: self, screenNotchWidth: screen.hasNotch ? screen.notchWidth : 0,
+                                           topInset: screen.notchHeight)
+        }
+        panel.setFrame(targetFrame(for: screen), display: true, animate: !Demo.isOn)
+    }
+
+    /// 三个落点之一收到文件。行为和以前一样：暂存 = 放上暂存架；投篮 = 隔空投送（篮筐动画）；
+    /// 转换 = 放上暂存架并给出格式 / 处理按钮。
+    func handleDrop(_ providers: [NSItemProvider], target: DropTarget) {
+        switch target {
+        case .shelf:
+            FileDrop.load(providers) { urls in
+                ShelfStore.shared.add(urls)
+                NotchShelfController.shared.tab = .shelf
+                NotchShelfController.shared.selectedIndex = 0
+            }
+        case .hoop:
+            AirDropHoop.shared.holdStage()
+            let started = FileDrop.load(providers) { urls in AirDropHoop.shared.swish(urls) }
+            if !started { AirDropHoop.shared.releaseStage() }
+        case .convert:
+            FileDrop.load(providers) { urls in
+                ShelfTools.handleConvertDrop(urls)
+                NotchShelfController.shared.tab = .shelf
+                NotchShelfController.shared.selectedIndex = 0
+            }
+        }
+    }
+
+    /// 按拖动位置的横坐标选落点：内容区三等分，标签栏上方也按横坐标算。
+    func dropTarget(at location: CGPoint) -> DropTarget {
+        let frame = contentFrame
+        guard frame.width > 0 else { return .shelf }
+        let index = Int(((location.x - frame.minX) / (frame.width / 3)).rounded(.down))
+        return DropTarget(rawValue: min(max(index, 0), 2)) ?? .shelf
     }
 
     /// 点在刘海本身上（不含两边的余量：两边是菜单栏图标）。
@@ -250,20 +349,20 @@ final class NotchShelfController: NSObject, ObservableObject {
         cancelHover()
         self.screen = screen
         openedByDrag = byDrag
-        let size = panelSize(for: screen)
         let panel = self.panel ?? makePanel()
         self.panel = panel
         if let host = panel.contentView as? NSHostingView<NotchShelfView> {
             host.rootView = NotchShelfView(controller: self, screenNotchWidth: screen.hasNotch ? screen.notchWidth : 0,
                                            topInset: screen.notchHeight)
         }
-        let frame = NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
-                           width: size.width, height: size.height)
+        let frame = targetFrame(for: screen)
         // 从刘海里「长」出来：先是刘海大小，再展开。
         let start = NSRect(x: screen.frame.midX - screen.notchWidth / 2, y: screen.frame.maxY - screen.notchHeight,
                            width: screen.notchWidth, height: screen.notchHeight)
         if byDrag { tab = .shelf }
         showGeneration += 1
+        openCount += 1
+        cardDragging = false
         ShelfStore.shared.refresh()
         ReminderStore.shared.refresh()
         selectedIndex = 0
@@ -337,6 +436,7 @@ final class NotchShelfController: NSObject, ObservableObject {
         let mouse = NSEvent.mouseLocation
         let inside = NSMouseInRect(mouse, panel.frame.insetBy(dx: -8, dy: -8), false)
         let dragging = NSEvent.pressedMouseButtons & 1 != 0
+        if !dragging { cardDragging = false }
         if inside {
             outsideSince = nil
             if openedByDrag && !dragging {
@@ -504,10 +604,19 @@ struct NotchShelfView: View {
     @State private var previewURL: URL?
     @FocusState private var focused: Bool
     @AppStorage(NotchShelfPrefs.opacityKey) private var opacity = 1.0
+    @AppStorage(NotchShelfPrefs.widthKey) private var widthMode: NotchShelfWidth = .standard
+    /// 紧凑档：点了「+N」后显示全部。
+    @State private var expanded = false
 
     @ObservedObject private var license = LicenseManager.shared
+    @ObservedObject private var hoop = AirDropHoop.shared
+    @ObservedObject private var tools = ShelfTools.shared
+    @ObservedObject private var media = MediaTools.shared
 
     private var cardSize: CGFloat { NotchShelfPrefs.cardSize }
+    private var compact: Bool { widthMode == .compact }
+    /// 卡片缩略图边长：紧凑档小一号。
+    private var thumb: CGFloat { compact ? NotchShelfPrefs.compactThumb(cardSize) : cardSize }
     private var items: [FileItem] { controller.currentItems }
 
     var body: some View {
@@ -604,18 +713,29 @@ struct NotchShelfView: View {
     }
 
     private var unlockedBody: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             header
                 .frame(height: max(topInset - 4, 24))
+                .padding(.horizontal, 12)
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background {
+                    GeometryReader { geo in
+                        Color.clear.preference(key: NotchContentFrameKey.self, value: geo.frame(in: .named(notchShelfSpace)))
+                    }
+                }
+                .padding(.horizontal, compact ? 14 : 16)
         }
-        .padding(.horizontal, 22)
-        .padding(.bottom, 12)
+        .padding(.bottom, 10)
         .padding(.top, 2)
-        // 甩向篮筐的文件在整个面板上飞，卡片、篮筐都用这个坐标系对齐。
+        .onPreferenceChange(NotchContentFrameKey.self) { frame in
+            MainActor.assumeIsolated { NotchShelfController.shared.contentFrame = frame }
+        }
+        // 甩向篮筐的文件在整个面板上飞，落点、篮筐都用这个坐标系对齐。
         .overlay { HoopFlightLayer() }
         .coordinateSpace(.named(notchShelfSpace))
+        // 整个面板只有这一个放置区：按鼠标横坐标决定落在「暂存 / 投篮 / 转换」哪一个（不用嵌套的放置区，免得来回闪）。
+        .onDrop(of: [.fileURL], delegate: NotchShelfDropDelegate(controller: controller))
         .foregroundStyle(.white)
         .background {
             // 透明度 100% 是纯黑，和刘海融为一体；调低后透出桌面并做模糊。
@@ -628,27 +748,20 @@ struct NotchShelfView: View {
             .clipShape(NotchShape())
         }
         .overlay {
-            if controller.dropTargeted {
+            if controller.dropTargeted && !controller.cardDragging {
                 NotchShape()
-                    .stroke(Color.accentColor, lineWidth: 2.5)
+                    .stroke(Color.accentColor.opacity(0.6), lineWidth: 1.5)
                     .allowsHitTesting(false)
             }
         }
         .environment(\.colorScheme, .dark)
-        .onDrop(of: [.fileURL], isTargeted: $controller.dropTargeted) { providers in
-            FileDrop.load(providers) { urls in
-                ShelfStore.shared.add(urls)
-                controller.tab = .shelf
-                controller.selectedIndex = 0
-                // 拖进来的是图片：「转换格式」格子里直接给出格式按钮。
-                let images = ShelfTools.images(in: urls)
-                if !images.isEmpty { ShelfTools.shared.pendingImages = images }
-            }
-        }
+        // 原来「…」按钮里的操作都搬到面板的右键菜单（卡片上右键还是卡片自己的菜单）。
+        .contextMenu { panelMenu }
         .focusable()
         .focusEffectDisabled()
         .focused($focused)
         .onAppear { focused = true }
+        .onChange(of: controller.openCount) { expanded = false }
         .onKeyPress(.leftArrow) { controller.moveSelection(-1); return .handled }
         .onKeyPress(.rightArrow) { controller.moveSelection(1); return .handled }
         .onKeyPress(.return) { controller.openSelected(); return .handled }
@@ -678,160 +791,199 @@ struct NotchShelfView: View {
         .nativeQuickLook($previewURL, in: items.map(\.url), forwardsArrowKeys: true)
         .onChange(of: controller.selectedIndex) {
             if previewURL != nil { previewURL = controller.selectedItem?.url }
+            // 紧凑档用键盘选到第 4 个以后：自动展开。
+            if compact && controller.tab == .shelf && controller.selectedIndex >= 3 { expanded = true }
         }
         .onChange(of: previewURL) { controller.previewing = previewURL != nil }
         .panelUndoToast()
     }
 
-    private var header: some View {
-        // 刘海正中是摄像头，什么都看不见：标签分到刘海两边，左边两个、右边两个。
-        HStack(spacing: 0) {
-            HStack(spacing: 6) {
-                Spacer(minLength: 0)
-                tabButton(.shelf, title: String(localized: "暂存架"), count: shelf.count)
-                tabButton(.downloads, title: String(localized: "最近下载"), count: nil)
-            }
-            .frame(maxWidth: .infinity)
-            Color.clear.frame(width: screenNotchWidth + 16)
-            HStack(spacing: 6) {
-                tabButton(.reminders, title: String(localized: "提醒"), count: reminders.count)
-                tabButton(.focus, title: String(localized: "专注"), count: nil)
-                Spacer(minLength: 0)
-                rightControls
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .font(.callout)
-    }
+    // MARK: 右键菜单
 
     @ViewBuilder
-    private var rightControls: some View {
-        HStack(spacing: 6) {
-            Button {
-                controller.openInApp()
-            } label: {
-                Image(systemName: "macwindow")
-            }
-            .buttonStyle(.borderless)
-            .help("在拾掇中打开暂存架")
-            Menu {
-                Button("在访达中显示") { FileActions.reveal(items) }
-                    .disabled(items.isEmpty)
-                Button("全部压缩为 ZIP") { ShelfTools.shared.startZip(shelf.urls) }
-                    .disabled(shelf.isEmpty)
-                if !ShelfTools.images(in: shelf.urls).isEmpty {
-                    ShelfConvertMenu(urls: { ShelfTools.images(in: shelf.urls) })
-                }
-                MediaToolsMenu(urls: { shelf.urls }, toShelf: true)
-                Divider()
-                Button("清空暂存架") { shelf.clear() }
-                    .disabled(shelf.isEmpty)
-            } label: {
-                Image(systemName: "ellipsis.circle")
-            }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .fixedSize()
+    private var panelMenu: some View {
+        Button("在拾掇中打开暂存架") { controller.openInApp() }
+        Button("在访达中显示") { FileActions.reveal(items) }
+            .disabled(items.isEmpty)
+        Button("全部压缩为 ZIP") { ShelfTools.shared.startZip(shelf.urls) }
+            .disabled(shelf.isEmpty)
+        if !ShelfTools.images(in: shelf.urls).isEmpty {
+            ShelfConvertMenu(urls: { ShelfTools.images(in: shelf.urls) })
         }
-        .font(.callout)
+        MediaToolsMenu(urls: { shelf.urls }, toShelf: true)
+        Divider()
+        Picker("刘海宽度", selection: Binding(
+            get: { widthMode },
+            set: { value in
+                widthMode = value
+                DispatchQueue.main.async { NotchShelfController.shared.relayout() }
+            }
+        )) {
+            ForEach(NotchShelfWidth.allCases) { Text($0.title).tag($0) }
+        }
+        Button("暂存架设置…") {
+            controller.hide()
+            ShelfSettingsOpener.open()
+        }
+        Divider()
+        Button("清空暂存架") { shelf.clear() }
+            .disabled(shelf.isEmpty)
     }
 
-    private func tabButton(_ tab: NotchShelfController.Tab, title: String, count: Int?) -> some View {
-        Button {
+    // MARK: 顶栏
+
+    private var header: some View {
+        // 刘海正中是摄像头，什么都看不见：图标标签分到刘海两边，左边两个、右边两个。
+        HStack(spacing: 0) {
+            HStack(spacing: compact ? 2 : 6) {
+                tabButton(.shelf, symbol: "tray", title: String(localized: "暂存架"), badge: nil)
+                tabButton(.downloads, symbol: "arrow.down.circle", title: String(localized: "最近下载"), badge: nil)
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            Color.clear.frame(width: screenNotchWidth > 0 ? screenNotchWidth + (compact ? 8 : 16) : 24)
+            HStack(spacing: compact ? 2 : 6) {
+                tabButton(.reminders, symbol: "bell", title: String(localized: "提醒"), badge: reminders.count)
+                tabButton(.focus, symbol: "timer", title: String(localized: "专注"), badge: nil)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func tabButton(_ tab: NotchShelfController.Tab, symbol: String, title: String, badge: Int?) -> some View {
+        let selected = controller.tab == tab
+        return Button {
             controller.tab = tab
             controller.selectedIndex = 0
         } label: {
-            HStack(spacing: 4) {
-                Text(title)
-                if let count, count > 0 {
-                    Text("\(count)")
-                        .font(.caption2.weight(.bold).monospacedDigit())
-                        .padding(.horizontal, 5)
-                        .background(Capsule().fill(Color.white.opacity(0.2)))
+            Image(systemName: symbol)
+                .font(.system(size: compact ? 13 : 14, weight: selected ? .semibold : .regular))
+                .frame(width: compact ? 24 : 28, height: compact ? 20 : 22)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(selected ? Color.white.opacity(0.18) : .clear)
+                )
+                .opacity(selected ? 1 : 0.65)
+                .overlay(alignment: .topTrailing) {
+                    if let badge, badge > 0 {
+                        Text(verbatim: badge > 99 ? "99+" : "\(badge)")
+                            .font(.system(size: 8, weight: .bold).monospacedDigit())
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 3)
+                            .frame(minWidth: 12, minHeight: 12)
+                            .background(Capsule().fill(Color.red))
+                            .offset(x: 4, y: -3)
+                    }
                 }
-            }
-            .font(.callout.weight(controller.tab == tab ? .semibold : .regular))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 3)
-            .background(Capsule().fill(controller.tab == tab ? Color.white.opacity(0.18) : .clear))
-            .opacity(controller.tab == tab ? 1 : 0.7)
-            .fixedSize()
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(title)
+        .accessibilityLabel(Text(title))
+        .accessibilityValue(Text(verbatim: (badge ?? 0) > 0 ? "\(badge ?? 0)" : ""))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    // MARK: 内容
+
+    /// 拖着文件经过面板、或篮筐正在投（右键「投进篮筐」、投送中、已送达）：显示三个落点。
+    private var showsDropTargets: Bool {
+        (controller.dropTargeted && !controller.cardDragging) || hoop.wantsStage || controller.demoDropPreview
     }
 
     @ViewBuilder
     private var content: some View {
-        switch controller.tab {
-        case .focus:
-            FocusTabView(height: cardSize + 30)
-        case .shelf:
-            HStack(spacing: 10) {
-                HoopView {
-                    if let item = controller.selectedItem { return [item.url] }
-                    return shelf.urls
+        Group {
+            if showsDropTargets {
+                NotchDropTargets(compact: compact,
+                                 hovered: controller.dropTargeted || controller.demoDropPreview ? controller.dropHover : nil)
+            } else if !tools.pendingImages.isEmpty || !tools.pendingFiles.isEmpty {
+                // 拖到「转换」后：格式 / 处理按钮占满内容区。
+                ShelfConvertChooser()
+            } else {
+                switch controller.tab {
+                case .focus:
+                    FocusTabView(height: min(thumb + 10, 72), compact: compact)
+                default:
+                    fileList
                 }
-                ImageConvertDropPane(height: cardSize + 40) {
-                    if let item = controller.selectedItem { return [item.url] }
-                    return shelf.urls
-                }
-                fileList
             }
-        default:
-            fileList
+        }
+        .overlay(alignment: .bottom) { statusOverlay }
+    }
+
+    /// 压缩 / 转换的结果提示和视频处理进度（以前显示在「转换」格子里）。
+    @ViewBuilder
+    private var statusOverlay: some View {
+        if media.busy {
+            MediaTaskBar(compact: true)
+                .padding(4)
+                .background(Capsule().fill(Color.black.opacity(0.8)))
+        } else if let message = tools.message {
+            Text(message)
+                .font(.caption2.weight(.semibold))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Color.black.opacity(0.85)))
+                .overlay(Capsule().strokeBorder(Color.white.opacity(0.15), lineWidth: 1))
+                .allowsHitTesting(false)
+        } else if tools.busy {
+            ProgressView().controlSize(.small)
+                .padding(4)
+                .background(Circle().fill(Color.black.opacity(0.8)))
         }
     }
 
     @ViewBuilder
     private var fileList: some View {
         if items.isEmpty {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 Image(systemName: emptySymbol)
-                    .font(.system(size: 24, weight: .light))
+                    .font(.system(size: 16, weight: .light))
                 Text(emptyText)
                     .font(.callout)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            .foregroundStyle(.white.opacity(0.6))
+            .foregroundStyle(.white.opacity(0.55))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.25), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
-            )
         } else {
+            let collapsed = compact && controller.tab == .shelf && !expanded && items.count > 3
+            let shown = collapsed ? Array(items.prefix(3)) : items
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    HStack(spacing: 6) {
+                        ForEach(Array(shown.enumerated()), id: \.element.id) { index, item in
                             card(item, index: index)
                                 .id(item.id)
                         }
-                        if controller.tab == .shelf && items.count > 1 {
-                            MultiFileDragArea(urls: { shelf.urls }) {
-                                Label(String(localized: "拖出全部"), systemImage: "hand.draw")
-                                    .font(.caption.weight(.semibold))
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 5)
-                                    .background(Capsule().fill(Color.white.opacity(0.14)))
+                        if collapsed {
+                            moreTile(items.count - 3) {
+                                withAnimation(.easeOut(duration: 0.15)) { expanded = true }
+                                let target = items[3].id
+                                DispatchQueue.main.async {
+                                    withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(target, anchor: .leading) }
+                                }
                             }
-                            .fixedSize()
+                        } else if controller.tab == .shelf && items.count > 1 {
+                            MultiFileDragArea(urls: {
+                                MainActor.assumeIsolated {
+                                    NotchShelfController.shared.cardDragging = true
+                                    return ShelfStore.shared.urls
+                                }
+                            }) {
+                                Image(systemName: "hand.draw")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .frame(width: 34, height: thumb)
+                                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.08)))
+                            }
                             .help("按住拖到访达、微信、邮件等任何地方，一次带上所有文件")
-                        }
-                        if controller.tab == .shelf && !items.isEmpty {
-                            Button {
-                                ShelfTools.shared.startZip(shelf.urls)
-                            } label: {
-                                Label("压缩为 ZIP", systemImage: "doc.zipper")
-                                    .font(.caption.weight(.semibold))
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 5)
-                                    .background(Capsule().fill(Color.white.opacity(0.14)))
-                            }
-                            .buttonStyle(.plain)
-                            .fixedSize()
-                            .help("把暂存架上的文件压缩为 ZIP，并加入暂存架")
+                            .accessibilityLabel(Text("拖出全部"))
                         }
                     }
-                    .padding(.horizontal, 2)
+                    .padding(.horizontal, 1)
+                    .frame(maxHeight: .infinity)
                 }
                 .onChange(of: controller.selectedIndex) {
                     if let item = controller.selectedItem {
@@ -842,18 +994,35 @@ struct NotchShelfView: View {
         }
     }
 
+    /// 紧凑档的「+N」格子：点一下显示全部并滚过去。
+    private func moreTile(_ count: Int, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(verbatim: "+\(count)")
+                .font(.system(size: 15, weight: .semibold).monospacedDigit())
+                .foregroundStyle(.white.opacity(0.85))
+                .frame(width: 42, height: thumb)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.1)))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .padding(.top, 4)
+        .help("显示全部")
+        .accessibilityLabel(Text("显示全部"))
+    }
+
     private var emptySymbol: String {
         switch controller.tab {
         case .shelf: return "tray.and.arrow.down"
         case .downloads: return "arrow.down.circle"
-        case .reminders: return "alarm"
+        case .reminders: return "bell"
         case .focus: return "timer"
         }
     }
 
     private var emptyText: String {
         switch controller.tab {
-        case .shelf: return String(localized: "把文件拖到这里，暂时放一下")
+        case .shelf: return String(localized: "把文件拖到这里")
         case .downloads: return String(localized: "没有最近下载的文件")
         case .reminders: return String(localized: "还没有提醒")
         case .focus: return ""
@@ -862,34 +1031,35 @@ struct NotchShelfView: View {
 
     private func card(_ item: FileItem, index: Int) -> some View {
         let selected = index == controller.selectedIndex
-        return VStack(spacing: 4) {
-            ThumbnailView(url: item.url, size: cardSize, isFolder: item.isPlainFolder)
+        return VStack(spacing: 3) {
+            ThumbnailView(url: item.url, size: thumb, isFolder: item.isPlainFolder)
                 .quickLookSource(item.url)
                 .overlay(alignment: .topTrailing) {
                     if reminders.paths.contains(item.path) {
                         Image(systemName: "alarm.fill")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(3)
                             .background(Circle().fill(Color.red))
-                            .offset(x: 4, y: -4)
+                            .offset(x: 3, y: -3)
                     }
                 }
             Text(item.name)
                 .font(.caption2)
                 .lineLimit(1)
                 .truncationMode(.middle)
-                .frame(width: cardSize + 14)
+                .frame(width: thumb + 8)
         }
-        .padding(5)
+        .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(selected ? Color.accentColor.opacity(0.45) : Color.white.opacity(0.06))
         )
         .contentShape(Rectangle())
-        .onDrag { InAppDrag.copyOnlyProvider(item.url) }
-        // 按住 ⌥ 拖动：不拖出文件，而是把它甩向左边的隔空投送篮筐。
-        .modifier(HoopFlingModifier(url: item.url, enabled: controller.tab == .shelf))
+        .onDrag {
+            MainActor.assumeIsolated { NotchShelfController.shared.cardDragging = true }
+            return InAppDrag.copyOnlyProvider(item.url)
+        }
         .onTapGesture(count: 2) {
             controller.hide()
             LibraryStore.openFromOutside(item.url)
@@ -924,6 +1094,86 @@ struct NotchShelfView: View {
     }
 }
 
+/// 内容区的位置（拖文件时按它三等分判断落点）。
+struct NotchContentFrameKey: PreferenceKey {
+    static let defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if next.width > 0 { value = next }
+    }
+}
+
+/// 整个刘海暂存架唯一的放置区：拖进来就切成三个落点，按鼠标横坐标高亮其中一个，松手交给 controller。
+/// 从暂存架自己的卡片往外拖时（经过面板）不切换、也不接收。
+struct NotchShelfDropDelegate: DropDelegate {
+    let controller: NotchShelfController
+
+    func validateDrop(info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [.fileURL])
+    }
+
+    func dropEntered(info: DropInfo) {
+        MainActor.assumeIsolated {
+            controller.dropTargeted = true
+            update(info)
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        let forbidden = MainActor.assumeIsolated { () -> Bool in
+            update(info)
+            return controller.cardDragging
+        }
+        return DropProposal(operation: forbidden ? .forbidden : .copy)
+    }
+
+    func dropExited(info: DropInfo) {
+        MainActor.assumeIsolated {
+            controller.dropTargeted = false
+            controller.dropHover = nil
+            AirDropHoop.shared.dropHovering = false
+        }
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        MainActor.assumeIsolated { () -> Bool in
+            let internalDrag = controller.cardDragging
+            let target = controller.dropHover ?? controller.dropTarget(at: info.location)
+            controller.dropTargeted = false
+            controller.dropHover = nil
+            AirDropHoop.shared.dropHovering = false
+            guard !internalDrag else { return false }
+            controller.handleDrop(info.itemProviders(for: [.fileURL]), target: target)
+            return true
+        }
+    }
+
+    @MainActor
+    private func update(_ info: DropInfo) {
+        guard !controller.cardDragging else {
+            controller.dropHover = nil
+            return
+        }
+        let target = controller.dropTarget(at: info.location)
+        if controller.dropHover != target { controller.dropHover = target }
+        let aiming = target == .hoop
+        if AirDropHoop.shared.dropHovering != aiming { AirDropHoop.shared.dropHovering = aiming }
+    }
+}
+
+/// 打开拾掇的「设置 › 暂存架」。
+@MainActor
+enum ShelfSettingsOpener {
+    static let notification = Notification.Name("ShiduoOpenShelfSettings")
+
+    static func open() {
+        UserDefaults.standard.set("shelf", forKey: "settings.tab")
+        MainWindow.show {
+            NotificationCenter.default.post(name: notification, object: nil)
+        }
+    }
+}
+
 // MARK: - 设置
 
 /// 设置 › Pro 里的悬浮暂存架样式选项。
@@ -932,6 +1182,7 @@ struct ShelfStyleSettings: View {
     @AppStorage(NotchShelfPrefs.hoverKey) private var hoverToOpen = false
     @AppStorage(NotchShelfPrefs.delayKey) private var delay = 0.2
     @AppStorage(NotchShelfPrefs.cardSizeKey) private var cardSize = 64.0
+    @AppStorage(NotchShelfPrefs.widthKey) private var notchWidth: NotchShelfWidth = .standard
     @AppStorage(NotchShelfPrefs.autoHideKey) private var autoHide = true
     @AppStorage(NotchShelfPrefs.opacityKey) private var opacity = 1.0
     @AppStorage(FloatingShelfController.shakeKey) private var shakeToSummon = true
@@ -978,11 +1229,19 @@ struct ShelfStyleSettings: View {
             Text("0.5 秒").tag(0.5)
         }
         .disabled(!hoverToOpen)
+        Picker("刘海宽度", selection: $notchWidth) {
+            ForEach(NotchShelfWidth.allCases) { Text($0.title).tag($0) }
+        }
+        .onChange(of: notchWidth) { NotchShelfController.shared.relayout() }
+        Text("标准：刘海两边各多约 107 点；紧凑：各多约 70 点，平时只显示 3 张卡片和剩余数量。都按这台 Mac 的刘海宽度算。")
+            .font(.caption)
+            .foregroundStyle(.secondary)
         Picker("卡片大小", selection: $cardSize) {
             Text("小").tag(52.0)
             Text("中").tag(64.0)
             Text("大").tag(84.0)
         }
+        .onChange(of: cardSize) { NotchShelfController.shared.relayout() }
         Toggle("鼠标移开 0.5 秒后自动收起刘海暂存架", isOn: $autoHide)
         LabeledContent("刘海暂存架透明度") {
             HStack {

@@ -479,9 +479,14 @@ extension LibraryStore {
         case "foldercolor":
             applyDemoFolderWall()
             if let first = pinnedFolders.first { FolderIconService.shared.openEditor([URL(fileURLWithPath: first)]) }
-        case "notch", "notch-convert":
+        case "notch", "notch-convert", "notch-drop":
             pickDemoShelf()
             selection = .shelf
+            if Demo.page == "notch-drop" {
+                // 拖文件进来时的三个落点（「投篮」高亮），不用真的拖。
+                NotchShelfController.shared.demoDropPreview = true
+                NotchShelfController.shared.dropHover = .hoop
+            }
             if Demo.page == "notch-convert" {
                 let images = [Demo.n("设计稿-首页.png"), Demo.n("海报.png"), Demo.n("西湖日落.jpg")]
                 ShelfTools.shared.pendingImages = demoItems.filter { images.contains($0.name) }.map(\.url)

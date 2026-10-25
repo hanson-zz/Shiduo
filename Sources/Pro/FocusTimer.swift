@@ -301,11 +301,13 @@ struct FocusTabView: View {
     @ObservedObject private var timer = FocusTimer.shared
     @ObservedObject private var scrub = FocusScrubState.shared
     let height: CGFloat
+    /// 刘海暂存架「紧凑」宽度：间距更小、按钮小一号、不显示「共 N 分钟」。
+    var compact = false
 
     private var scrubbing: Bool { scrub.active }
 
     var body: some View {
-        HStack(spacing: 18) {
+        HStack(spacing: compact ? 10 : 18) {
             Image(timer.mascotImage)
                 .resizable()
                 .interpolation(.high)
@@ -315,13 +317,15 @@ struct FocusTabView: View {
                 .id(timer.mascotImage)
                 .transition(.scale(scale: 0.85).combined(with: .opacity))
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: compact ? 4 : 6) {
                 HStack(alignment: .firstTextBaseline) {
                     FocusTimeScrubber()
                     Text(scrubbing ? String(localized: "左右拖动调整") : timer.statusText)
                         .font(.callout.weight(.medium))
                         .foregroundStyle(Color.orange)
-                    Spacer()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    Spacer(minLength: 4)
                     Label("\(timer.completedToday)", systemImage: "checkmark.circle.fill")
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(.white.opacity(0.8))
@@ -333,23 +337,27 @@ struct FocusTabView: View {
                     Text(timer.phaseTitle)
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.55))
-                    Spacer()
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
                     Button { timer.reset() } label: { Image(systemName: "arrow.counterclockwise") }
                         .help("重来")
                     Button { timer.toggle() } label: {
                         Image(systemName: timer.running ? "pause.fill" : "play.fill")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundStyle(.black)
-                            .frame(width: 34, height: 34)
+                            .frame(width: compact ? 28 : 34, height: compact ? 28 : 34)
                             .background(Circle().fill(Color.orange))
                     }
                     .help(timer.running ? "暂停（空格）" : "开始（空格）")
                     Button { timer.skip() } label: { Image(systemName: "forward.fill") }
                         .help(timer.phase == .focus ? "跳到休息" : "跳到专注")
-                    Spacer()
-                    Text(String(localized: "共 \(timer.phase == .focus ? FocusTimer.focusMinutes : FocusTimer.restMinutes) 分钟"))
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.55))
+                    Spacer(minLength: 4)
+                    if !compact {
+                        Text(String(localized: "共 \(timer.phase == .focus ? FocusTimer.focusMinutes : FocusTimer.restMinutes) 分钟"))
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.55))
+                            .lineLimit(1)
+                    }
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 14, weight: .semibold))

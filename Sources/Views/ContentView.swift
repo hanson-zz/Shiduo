@@ -36,6 +36,10 @@ struct ContentView: View {
         .toolbar(showToolbar ? .automatic : .hidden, for: .windowToolbar)
         .background(GlassWindowConfigurator())
         .background(MainWindowTagger())
+        // 刘海暂存架右键「暂存架设置…」：打开设置（标签页已经切到「暂存架」）。
+        .onReceive(NotificationCenter.default.publisher(for: ShelfSettingsOpener.notification)) { _ in
+            openSettings()
+        }
         .background(HostWindowReader(window: $hostWindow))
         .task {
             // 启动逻辑只跑一次：开第二个主窗口（⌘N）不会再联网校验授权、再检查更新。
