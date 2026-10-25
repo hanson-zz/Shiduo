@@ -9,6 +9,7 @@ struct ContentView: View {
     @ObservedObject private var trialExpiry = TrialExpiryNotice.shared
     /// 这个主窗口（开了多个窗口时，全局面板只在一个窗口里弹）。
     @State private var hostWindow: NSWindow?
+    @Environment(\.openSettings) private var openSettings
 
     private func ownsSheet(_ kind: String, _ active: Bool) -> Bool {
         SheetOwnership.shared.present(kind, active: active, in: hostWindow)
@@ -41,6 +42,10 @@ struct ContentView: View {
             guard AppLifecycle.shared.claimLaunchTasks() else { return }
             if Demo.isOn {
                 store.startDemo()
+                if Demo.page == "settings" {
+                    try? await Task.sleep(nanoseconds: 800_000_000)
+                    openSettings()
+                }
                 return
             }
             QuickSearchController.shared.configure(store: store)

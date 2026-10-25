@@ -147,6 +147,7 @@ final class DownloadsOrganizeModel: ObservableObject {
 
     init(folder: String) {
         self.folder = folder
+        if Demo.isOn && Demo.page == "organize-group" { mode = .group }
     }
 
     var checkedItems: [DownloadsPlanLogic.PlanItem] {
@@ -270,8 +271,9 @@ final class DownloadsOrganizeModel: ObservableObject {
 
 /// 打开「整理下载」面板的按钮（下载来源页、自动整理页都放一个）。
 struct OrganizeDownloadsButton: View {
-    @State private var showing = false
-    var folder: String = Folders.downloads
+    /// 演示模式 --page=organize 截图时直接打开面板。
+    @State private var showing = Demo.isOn && Demo.page.hasPrefix("organize")
+    var folder: String = Demo.isOn ? Demo.downloadsFolder.path : Folders.downloads
 
     var body: some View {
         Button {
@@ -576,6 +578,7 @@ struct DownloadsOrganizeSheet: View {
     }
 
     static func shortPath(_ path: String) -> String {
+        if Demo.isOn, path.hasPrefix(Demo.folder.path) { return "~" + path.dropFirst(Demo.folder.path.count) }
         let home = NSHomeDirectory()
         return path.hasPrefix(home) ? "~" + path.dropFirst(home.count) : path
     }

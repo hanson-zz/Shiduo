@@ -3,7 +3,8 @@ import SwiftUI
 /// 首页问候语下方的「今天新增 N 个 ›」小标签，点开是今天进来的文件。
 struct TodayAddedChip: View {
     @EnvironmentObject private var store: LibraryStore
-    @State private var showing = false
+    /// 演示模式 --page=today 截图时直接打开弹窗。
+    @State private var showing = Demo.isOn && Demo.page == "today"
 
     var body: some View {
         let count = store.todayAdded.count

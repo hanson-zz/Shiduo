@@ -217,6 +217,7 @@ private let copyProgressCallback: copyfile_callback_t = { what, stage, state, _,
 
 enum MoveOutEngine {
     static func availableBytes(at url: URL) -> Int64 {
+        if Demo.isOn, let fake = Demo.fakeFreeBytes(url.path) { return fake }
         let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeAvailableCapacityKey])
         if let important = values?.volumeAvailableCapacityForImportantUsage, important > 0 { return important }
         return Int64(values?.volumeAvailableCapacity ?? 0)

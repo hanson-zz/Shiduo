@@ -65,6 +65,19 @@ extension LibraryStore {
             paths.append(dir.path)
         }
         pinnedFolders = paths
+        // 文件夹上色（Pro）：几个文件夹换了颜色、加了 emoji / 符号，墙上的卡片和图标跟着变。
+        let colored: [(Int, FolderIconStyle)] = [
+            (0, FolderIconStyle(color: "F5885C", overlay: .emoji("✈️"))),
+            (1, FolderIconStyle(color: "5B8DEF", overlay: .symbol("briefcase.fill"))),
+            (4, FolderIconStyle(color: "F0739C", overlay: .emoji("🐱"))),
+            (2, FolderIconStyle(color: "8E6FE0", overlay: .symbol("paintpalette.fill"))),
+        ]
+        for (index, style) in colored where index < paths.count {
+            let url = URL(fileURLWithPath: paths[index])
+            if FolderIconService.shared.style(for: url) != style {
+                _ = FolderIconService.shared.apply(style, to: [url])
+            }
+        }
         selection = .folderWall
     }
 }

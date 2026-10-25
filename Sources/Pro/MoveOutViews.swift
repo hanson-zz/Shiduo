@@ -324,6 +324,11 @@ struct MoveOutSheet: View {
     // MARK: 动作
 
     private func loadDestinations() {
+        if Demo.isOn {
+            destinations = Demo.moveDestinations()
+            selectedPath = destinations.first?.path
+            return
+        }
         var list = MoveDestinations.detect(volumes: store.volumes.volumes)
         for path in MoveOutSettings.customFolders where FileManager.default.fileExists(atPath: path) {
             if !list.contains(where: { $0.path == path }) {

@@ -144,6 +144,14 @@ enum Demo {
         Spec(name: "IMG_3302.jpg", kind: .image, size: 3_150_000, daysAgo: 15, sameAs: 3, variant: true),
     ]
 
+    /// 资料库小分类的数量（和侧边栏的总数对得上）。
+    static let subCounts: [FileCategory: [LibrarySub: Int]] = [
+        .images: [.photo: 1_836, .screenshot: 312, .design: 132],
+        .videos: [.screenRecording: 41, .footage: 121],
+        .documents: [.pdf: 118, .word: 46, .excel: 17, .slides: 9, .text: 11],
+        .music: [.song: 29, .recording: 5],
+    ]
+
     /// 空间占用图在演示模式下用示例里写的大小（真实的示例文件都很小）。
     static func fakeSize(_ url: URL) -> Int64? {
         let parent = url.deletingLastPathComponent().standardizedFileURL.path
@@ -167,6 +175,8 @@ enum Demo {
             let url = dir.appendingPathComponent(spec.name)
             if !fm.fileExists(atPath: url.path) { write(spec, index: spec.sameAs ?? index, to: url) }
             let date = Date().addingTimeInterval(-spec.daysAgo * 86_400)
+            // 文件日期和示例一致（「整理下载」会跳过刚改动的文件）。
+            try? fm.setAttributes([.modificationDate: date, .creationDate: date], ofItemAtPath: url.path)
             let type = UTType(filenameExtension: url.pathExtension)
             let tree = type.map { [$0.identifier] + $0.supertypes.map(\.identifier) } ?? []
             result.append(FileItem(
@@ -201,7 +211,12 @@ enum Demo {
         case .pdf:
             writePDF(title: (spec.name as NSString).deletingPathExtension, to: url)
         default:
-            try? Data(count: 1024).write(to: url)
+            // 稀疏文件：显示的大小就是示例里写的大小，不真的占空间。
+            FileManager.default.createFile(atPath: url.path, contents: Data("demo".utf8))
+            if let handle = try? FileHandle(forWritingTo: url) {
+                try? handle.truncate(atOffset: UInt64(max(spec.size, 1024)))
+                try? handle.close()
+            }
         }
     }
 
@@ -343,6 +358,10 @@ extension LibraryStore {
                   items: byDate.filter { $0.isImage && !$0.isScreenshot }, target: .category(.images)),
         ]
         dashboardLoaded = true
+        // 「今天新增」：示例里今天加进来的文件（截图、照片、下载的图）。
+        setDemoTodayAdded(byDate.filter { item in
+            Demo.specs.contains { $0.name == item.name && $0.daysAgo < 0.6 } || item.name == Demo.n("AI 插画.png")
+        })
 
         let old = Date().addingTimeInterval(-30 * 86_400)
         cleanup.cards = [
@@ -379,7 +398,9 @@ extension LibraryStore {
         if demoItems.isEmpty { applyDemoDashboard() }
         let all = demoItems
         switch target {
-        case .category(let c): items = all.filter { $0.category == c }
+        case .category(let c):
+            items = all.filter { $0.category == c }
+            setDemoSubCounts(Demo.subCounts[c])
         case .screenshots: items = all.filter(\.isScreenshot)
         case .downloads: items = all.filter { !$0.whereFroms.isEmpty }
         case .largeFiles: items = all.filter { $0.size > 100_000_000 }
@@ -405,11 +426,51 @@ extension LibraryStore {
         isLoading = false
     }
 
+    /// 暂存架里的示例文件。
+    func pickDemoShelf() {
+        let names = [Demo.n("设计稿-首页.png"), Demo.n("海报.png"), Demo.n("年度报告 2026.pdf"), Demo.n("季度复盘.docx"),
+                     Demo.n("西湖日落.jpg"), Demo.n("会议录屏.mov"), Demo.n("项目素材.zip")]
+        var seen = Set<String>()
+        let picks = names.compactMap { name in demoItems.first { $0.name == name && seen.insert(name).inserted } }
+        ShelfStore.shared.setDemo(picks)
+    }
+
     /// 启动时按 --page 打开对应页面。
     func startDemo() {
         if Demo.isDark { NSApp.appearance = NSAppearance(named: .darkAqua) }
+        // 正常的「开始 7 天免费试用」流程（截图机上第一次运行时开始）。
+        if Demo.wantsPro, !license.isPro { license.startTrial() }
         applyDemoDashboard()
+        CleanupHistory.shared.setDemo(Demo.cleanupRecords())
         switch Demo.page {
+        case "today": selection = .home
+        case "organize", "organize-group": selection = .downloads
+        case "history": selection = .cleanupHistory
+        case "moveout":
+            selection = .largeFiles
+            let names = [Demo.n("旅行 Vlog.mov"), Demo.n("毕业典礼.mp4")]
+            moveOutItems = demoItems.filter { names.contains($0.name) }
+        case "uninstall":
+            let app = Demo.makeUninstallApp()
+            selection = .category(.apps)
+            AppUninstaller.shared.open(app)
+        case "settings": selection = .home
+        case "foldercolor":
+            applyDemoFolderWall()
+            if let first = pinnedFolders.first { FolderIconService.shared.openEditor([URL(fileURLWithPath: first)]) }
+        case "notch", "notch-convert":
+            pickDemoShelf()
+            selection = .shelf
+            if Demo.page == "notch-convert" {
+                let images = [Demo.n("设计稿-首页.png"), Demo.n("海报.png"), Demo.n("西湖日落.jpg")]
+                ShelfTools.shared.pendingImages = demoItems.filter { images.contains($0.name) }.map(\.url)
+                    .reduce(into: [URL]()) { list, url in if !list.contains(url) { list.append(url) } }
+            }
+            if let screen = NSScreen.main { NotchShelfController.shared.show(on: screen, byDrag: false) }
+        case let page where page.hasPrefix("studio-"):
+            let mode = ImageStudio.Mode(rawValue: String(page.dropFirst("studio-".count))) ?? .stitch
+            selection = .category(.images)
+            ImageStudio.shared.open(Demo.studioImages(for: mode), mode: mode, toShelf: false)
         case "images": selection = .category(.images)
         case "downloads": selection = .downloads
         case "cleanup": selection = .cleanup
@@ -424,11 +485,7 @@ extension LibraryStore {
         case "storagemap": selection = .storageMap
         case "folderwall": applyDemoFolderWall()
         case "shelf":
-            let names = [Demo.n("设计稿-首页.png"), Demo.n("海报.png"), Demo.n("年度报告 2026.pdf"), Demo.n("季度复盘.docx"),
-                         Demo.n("西湖日落.jpg"), Demo.n("会议录屏.mov"), Demo.n("项目素材.zip")]
-            var seen = Set<String>()
-            let picks = names.compactMap { name in demoItems.first { $0.name == name && seen.insert(name).inserted } }
-            ShelfStore.shared.setDemo(picks)
+            pickDemoShelf()
             selection = .shelf
         case "rename":
             selection = .category(.images)
@@ -443,7 +500,8 @@ extension LibraryStore {
             }
         default: selection = .home
         }
-        if let window = NSApp.windows.first(where: { $0.isVisible }) ?? NSApp.windows.first {
+        if let window = NSApp.windows.first(where: { $0.isVisible && !ToolWindow.isToolWindow($0) && !($0 is NSPanel)
+                                                && $0.title != String(localized: "图片工具") }) ?? NSApp.windows.first {
             window.setFrame(NSRect(x: 80, y: 80, width: 1440, height: 920), display: true)
         }
     }

@@ -648,6 +648,16 @@ final class LibraryStore: ObservableObject {
     @Published var downloadSourceFilter: String?
     /// 演示模式的示例文件。
     var demoItems: [FileItem] = []
+    /// 演示模式（--demo）：直接填「今天新增」，不查 Spotlight。
+    func setDemoTodayAdded(_ list: [FileItem]) {
+        guard Demo.isOn else { return }
+        todayAdded = list
+    }
+    /// 演示模式（--demo）：直接填资料库小分类的数量。
+    func setDemoSubCounts(_ counts: [LibrarySub: Int]?) {
+        guard Demo.isOn else { return }
+        subCounts = counts
+    }
     @Published var dashboardLoaded = false
 
     @Published var searchText = ""

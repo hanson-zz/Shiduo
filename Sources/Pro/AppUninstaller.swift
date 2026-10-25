@@ -405,7 +405,8 @@ struct UninstallSheet: View {
         }
         let fileName = url.deletingPathExtension().lastPathComponent
         let (found, copies) = await Task.detached(priority: .userInitiated) {
-            (AppUninstaller.leftovers(bundleID: id, appName: loaded.name, fileName: fileName, appPath: url.path),
+            (AppUninstaller.leftovers(bundleID: id, appName: loaded.name, fileName: fileName, appPath: url.path,
+                                      home: Demo.isOn ? Demo.uninstallHome.path : NSHomeDirectory()),
              AppUninstaller.otherCopies(of: url, bundleID: id))
         }.value
         items = found

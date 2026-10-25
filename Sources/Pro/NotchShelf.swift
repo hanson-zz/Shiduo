@@ -278,7 +278,8 @@ final class NotchShelfController: NSObject, ObservableObject {
             panel.animator().alphaValue = 1
         }
         loadDownloads()
-        startWatching()
+        // 演示模式截图时鼠标不在面板上，不要自动收起。
+        if !Demo.isOn { startWatching() }
         FocusNotchIndicator.shared.update()
     }
 
