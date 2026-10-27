@@ -192,34 +192,6 @@ struct SpotlightValues {
                                isScreenshot: (attrs[names[2]] as? NSNumber)?.boolValue ?? false,
                                bundleID: attrs[names[3]] as? String)
     }
-
-    /// 一批文件一次问 Spotlight（MDItemsCreateWithURLs + MDItemsCopyAttributes，比一个一个问快很多）。
-    /// 结果和逐个 read(_:) 一样、顺序和 urls 一样；系统没按预期返回时给 nil，调用方逐个取。
-    static func read(batch urls: [URL]) -> [SpotlightValues]? {
-        guard !urls.isEmpty else { return [] }
-        guard let created = MDItemsCreateWithURLs(kCFAllocatorDefault, urls as NSArray as CFArray) as? [AnyObject],
-              created.count == urls.count else { return nil }
-        // Spotlight 不认识的文件是 NSNull：只拿认识的去取属性，再按位置放回去。
-        var positions: [Int] = []
-        var items: [AnyObject] = []
-        for (i, item) in created.enumerated() where !(item is NSNull) {
-            positions.append(i)
-            items.append(item)
-        }
-        var out = [SpotlightValues](repeating: SpotlightValues(), count: urls.count)
-        guard !items.isEmpty else { return out }
-        guard let rows = MDItemsCopyAttributes(items as NSArray as CFArray, cfNames) as? [AnyObject],
-              rows.count == items.count else { return nil }
-        for (k, row) in rows.enumerated() {
-            // 整行是 NSNull：这个文件读不了；某个属性没有：那一格是 NSNull。
-            guard let values = row as? [AnyObject], values.count == names.count else { continue }
-            out[positions[k]] = SpotlightValues(lastUsed: values[0] as? Date,
-                                                whereFroms: values[1] as? [String] ?? [],
-                                                isScreenshot: (values[2] as? NSNumber)?.boolValue ?? false,
-                                                bundleID: values[3] as? String)
-        }
-        return out
-    }
 }
 
 /// 「类型 → 类型树」（自己 + 所有父类型的标识符）缓存。一次读文件夹里大多数文件是同几种类型，

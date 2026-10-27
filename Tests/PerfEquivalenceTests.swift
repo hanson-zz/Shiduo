@@ -1,4 +1,5 @@
 import XCTest
+import CoreServices
 
 /// 性能优化不改结果：加快后的读文件夹、排序和原来的写法逐项比对。
 final class PerfEquivalenceTests: XCTestCase {
@@ -141,20 +142,28 @@ final class PerfEquivalenceTests: XCTestCase {
         }
     }
 
-    func testSpotlightBatchMatchesSingle() throws {
-        var urls = (try? FileManager.default.contentsOfDirectory(at: URL(fileURLWithPath: dir.path), includingPropertiesForKeys: nil,
+    /// 四个 Spotlight 属性一次取（MDItemCopyAttributes）和原来逐个取（MDItemCopyAttribute）结果一样。
+    func testSpotlightValuesMatchSeparateCalls() {
+        let urls = (try? FileManager.default.contentsOfDirectory(at: URL(fileURLWithPath: dir.path), includingPropertiesForKeys: nil,
                                                                  options: [.skipsHiddenFiles])) ?? []
-        urls.append(dir.appendingPathComponent("不存在的文件.txt")) // Spotlight 不认识的也要对得上位置
-        let batch = try XCTUnwrap(SpotlightValues.read(batch: urls))
-        XCTAssertEqual(batch.count, urls.count)
-        for (url, value) in zip(urls, batch) {
-            let single = SpotlightValues.read(url)
-            XCTAssertEqual(value.lastUsed, single.lastUsed, url.lastPathComponent)
-            XCTAssertEqual(value.whereFroms, single.whereFroms, url.lastPathComponent)
-            XCTAssertEqual(value.isScreenshot, single.isScreenshot, url.lastPathComponent)
-            XCTAssertEqual(value.bundleID, single.bundleID, url.lastPathComponent)
+        XCTAssertFalse(urls.isEmpty)
+        for url in urls {
+            let value = SpotlightValues.read(url)
+            var lastUsed: Date?
+            var whereFroms: [String] = []
+            var isScreenshot = false
+            var bundleID: String?
+            if let md = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL) {
+                lastUsed = MDItemCopyAttribute(md, "kMDItemLastUsedDate" as CFString) as? Date
+                whereFroms = MDItemCopyAttribute(md, "kMDItemWhereFroms" as CFString) as? [String] ?? []
+                isScreenshot = (MDItemCopyAttribute(md, "kMDItemIsScreenCapture" as CFString) as? NSNumber)?.boolValue ?? false
+                bundleID = MDItemCopyAttribute(md, "kMDItemCFBundleIdentifier" as CFString) as? String
+            }
+            XCTAssertEqual(value.lastUsed, lastUsed, url.lastPathComponent)
+            XCTAssertEqual(value.whereFroms, whereFroms, url.lastPathComponent)
+            XCTAssertEqual(value.isScreenshot, isScreenshot, url.lastPathComponent)
+            XCTAssertEqual(value.bundleID, bundleID, url.lastPathComponent)
         }
-        XCTAssertEqual(SpotlightValues.read(batch: [])?.count, 0)
     }
 
     func testKindTextMemoMatches() {
