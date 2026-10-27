@@ -173,6 +173,8 @@ final class FileUndoCenter {
             // 之后重做：把放回来的再搬过去。
             action.kind = .paths(outcome.done.map(\.reversed))
             finishPaths(outcome, undo: true)
+            // 用所选项目新建的文件夹：东西移回去以后空了就移到废纸篓（重做时再建出来）。
+            await trashEmptyCreatedFolders(action.createdFolders)
 
         case .history(let batch, _):
             let records = CleanupHistory.shared.records(inBatch: batch).filter { $0.restoredAt == nil }
@@ -219,7 +221,13 @@ final class FileUndoCenter {
             if !outcome.done.isEmpty { store.showToast(String(localized: "已重新改名：\(outcome.done.count) 个")) }
 
         case .paths(let pairs):
-            let outcome = await Task.detached(priority: .userInitiated) { FileUndoLogic.moveOnDisk(pairs) }.value
+            let created = action.createdFolders
+            let outcome = await Task.detached(priority: .userInitiated) { () -> FileUndoLogic.MoveOutcome in
+                for folder in created where !FileManager.default.fileExists(atPath: folder) {
+                    try? FileManager.default.createDirectory(atPath: folder, withIntermediateDirectories: true)
+                }
+                return FileUndoLogic.moveOnDisk(pairs)
+            }.value
             action.kind = .paths(outcome.done)
             finishPaths(outcome, undo: false)
 

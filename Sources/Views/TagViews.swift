@@ -75,15 +75,27 @@ struct FinderTag: Identifiable, Hashable {
     /// 对每个文件执行同一个改动。
     static func update(_ urls: [URL], transform: ([String]) -> [String]) -> WriteResult {
         var result = WriteResult()
+        var changed = Set<String>()
         for url in urls {
             switch writeTags(url, transform: transform) {
-            case .success(true): result.changed += 1
+            case .success(true):
+                result.changed += 1
+                changed.insert(url.standardizedFileURL.path)
             case .success(false): break
             case .failure: result.failed.append(url)
             }
         }
+        if !changed.isEmpty {
+            // 网格 / 列表上的标签小圆点跟着更新。
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: FinderTag.didChange, object: nil, userInfo: ["paths": changed])
+            }
+        }
         return result
     }
+
+    /// 文件上的标签改了（userInfo["paths"]：Set<String>）。
+    static let didChange = Notification.Name("FinderTag.didChange")
 
     enum TagWriteError: Error {
         /// 扩展属性存在但读不懂：不覆盖，免得把别的标签（和颜色）抹掉。
@@ -508,5 +520,159 @@ struct BadgeIcon: View {
                     .fill(LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom))
                     .shadow(color: (colors.last ?? .black).opacity(0.35), radius: 1.5, y: 1)
             )
+    }
+}
+
+/// 网格 / 列表里名字后面的标签小圆点（最多 3 个，叠在一起，和访达一样）。在后台读，短时间缓存。
+struct TagDotsView: View {
+    let path: String
+    @State private var colors: [Int] = []
+    @State private var version = 0
+
+    var body: some View {
+        Group {
+            if !colors.isEmpty {
+                HStack(spacing: -3) {
+                    ForEach(Array(colors.prefix(3).enumerated()), id: \.offset) { _, index in
+                        Circle()
+                            .fill(FinderTag.color(index))
+                            .frame(width: 8, height: 8)
+                            .overlay(Circle().strokeBorder(Color(nsColor: .windowBackgroundColor), lineWidth: 1))
+                    }
+                }
+                .fixedSize()
+            }
+        }
+        .task(id: "\(path)#\(version)") {
+            if let cached = TagColorCache.cached(path) {
+                colors = cached
+                return
+            }
+            let path = self.path
+            let result = await Task.detached(priority: .utility) { TagColorCache.read(path) }.value
+            TagColorCache.store(path, result)
+            colors = result
+        }
+        .onReceive(NotificationCenter.default.publisher(for: FinderTag.didChange)) { note in
+            guard let paths = note.userInfo?["paths"] as? Set<String>, paths.contains(path) else { return }
+            TagColorCache.invalidate(path)
+            version += 1
+        }
+    }
+}
+
+/// 标签颜色缓存：30 秒内同一个文件不重读（滚动网格时不用一直读扩展属性）。
+enum TagColorCache {
+    private static let lock = NSLock()
+    private static var entries: [String: (colors: [Int], at: Date)] = [:]
+
+    static func cached(_ path: String) -> [Int]? {
+        lock.lock(); defer { lock.unlock() }
+        guard let entry = entries[path], Date().timeIntervalSince(entry.at) < 30 else { return nil }
+        return entry.colors
+    }
+
+    static func store(_ path: String, _ colors: [Int]) {
+        lock.lock(); defer { lock.unlock() }
+        if entries.count > 20000 { entries.removeAll() }
+        entries[path] = (colors, Date())
+    }
+
+    static func invalidate(_ path: String) {
+        lock.lock(); defer { lock.unlock() }
+        entries[path] = nil
+    }
+
+    /// 文件上有颜色的标签（访达颜色编号，去重，按文件上的顺序）。
+    static func read(_ path: String) -> [Int] {
+        let url = URL(fileURLWithPath: path)
+        var result: [Int] = []
+        switch FinderTag.readEntries(url) {
+        case .success(let entries?):
+            for entry in entries {
+                let color = FinderTagEntries.color(of: entry)
+                if color > 0, !result.contains(color) { result.append(color) }
+            }
+        case .success(nil):
+            // 老式的访达颜色标记。
+            let names = (try? url.resourceValues(forKeys: [.tagNamesKey]))?.tagNames ?? []
+            let labels = NSWorkspace.shared.fileLabels
+            for name in names {
+                if let index = labels.firstIndex(of: name), index > 0, !result.contains(index) { result.append(index) }
+            }
+        case .failure:
+            break
+        }
+        return result
+    }
+}
+
+/// 右键菜单里那一排 7 个颜色圆点（和访达一样）：点一下给选中的加上 / 去掉这个颜色标签。
+struct TagPaletteRow: View {
+    let store: LibraryStore
+    let items: [FileItem]
+
+    /// 选得太多时不逐个读标签（不打勾，点了就是全部加上）。
+    static let coverageLimit = 200
+
+    var body: some View {
+        let perItem = items.count <= Self.coverageLimit ? items.map { FinderTag.tags(of: $0.url) } : []
+        ControlGroup {
+            ForEach(FinderTag.colorTags) { tag in
+                let coverage = perItem.isEmpty ? FinderTagEntries.Coverage.none : FinderTagEntries.coverage(of: tag.name, in: perItem)
+                Button {
+                    toggle(tag, remove: coverage == .all)
+                } label: {
+                    Image(nsImage: TagDot.paletteImage(tag.color, checked: coverage == .all, partial: coverage == .some))
+                }
+                .help(tag.name)
+            }
+        }
+        .controlGroupStyle(.palette)
+    }
+
+    private func toggle(_ tag: FinderTag, remove: Bool) {
+        let urls = items.map(\.url)
+        let result = FinderTag.set(tag.name, on: !remove, for: urls, color: tag.colorIndex)
+        if !remove, result.changed > 0 { store.usedTags.insert(tag.name) }
+        if remove {
+            store.showToast(String(localized: "已从 \(result.changed) 个项目去掉“\(tag.name)”标签"))
+            store.tagRemoved(tag.name, from: Set(items.map(\.path)).subtracting(Set(result.failed.map(\.path))))
+        } else {
+            store.showToast(String(localized: "已给 \(result.changed) 个项目加上“\(tag.name)”标签"))
+        }
+        if !result.failed.isEmpty {
+            let names = result.failed.prefix(5).map(\.lastPathComponent).joined(separator: String(localized: "、"))
+            store.alertMessage = String(localized: "\(result.failed.count) 个项目的标签读不出来或写不进去，没有改动：\(names)")
+        }
+    }
+}
+
+extension TagDot {
+    /// 调色板里的圆点：全部都有时中间打勾，部分有时中间一条横线。
+    static func paletteImage(_ color: Color, checked: Bool, partial: Bool) -> NSImage {
+        let size = NSSize(width: 16, height: 16)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor(color).setFill()
+            NSBezierPath(ovalIn: rect.insetBy(dx: 1.5, dy: 1.5)).fill()
+            NSColor.white.withAlphaComponent(0.95).setStroke()
+            let path = NSBezierPath()
+            path.lineWidth = 1.8
+            path.lineCapStyle = .round
+            path.lineJoinStyle = .round
+            if checked {
+                path.move(to: NSPoint(x: 4.8, y: 8.2))
+                path.line(to: NSPoint(x: 7.2, y: 5.6))
+                path.line(to: NSPoint(x: 11.4, y: 10.6))
+                path.stroke()
+            } else if partial {
+                path.move(to: NSPoint(x: 5, y: 8))
+                path.line(to: NSPoint(x: 11, y: 8))
+                path.stroke()
+            }
+            return true
+        }
+        image.isTemplate = false
+        return image
     }
 }

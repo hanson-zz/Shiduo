@@ -90,6 +90,8 @@ final class HashModel: ObservableObject {
 struct HashSection: View {
     let item: FileItem
     @StateObject private var model = HashModel()
+    /// 右键 / 文件菜单「计算哈希」。
+    @ObservedObject private var request = HashRequest.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -127,12 +129,23 @@ struct HashSection: View {
             }
             compareField
         }
-        .task(id: item.path) { model.reset(item.path) }
+        .task(id: item.path) {
+            model.reset(item.path)
+            takeRequest()
+        }
+        .onChange(of: request.tick) { takeRequest() }
         .onDisappear { model.cancel() }
         // 粘贴了一个像样的校验值、还没算：直接开始算，算完自动比对。
         .onChange(of: model.compareText) {
             if case .idle = model.phase, HashLogic.extract(model.compareText) != nil { model.start() }
         }
+    }
+
+    /// 「计算哈希」点的就是这个文件：开始算（已经算过 / 正在算就不重来）。
+    private func takeRequest() {
+        guard request.take(item.path) else { return }
+        if case .idle = model.phase { model.start() }
+        if case .failed = model.phase { model.start() }
     }
 
     private func hashRow(_ algorithm: HashAlgorithm) -> some View {

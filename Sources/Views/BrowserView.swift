@@ -19,6 +19,9 @@ struct BrowserView: View {
     @State private var chatKind: ChatFileKind = .all
     /// “来源”筛选：只看从某个来源下载的文件。
     @State private var sourceFilter: String?
+    /// 图片筛选：尺寸 / 方向 / 主色（免费）。
+    @State private var imageFilter = ImageFilter()
+    @ObservedObject private var imageMeta = ImageMetaStore.shared
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
 
     /// 在 store 里后台算好的（不在每次界面刷新时把几万个文件逐个认一遍来源）。
@@ -31,6 +34,15 @@ struct BrowserView: View {
         }
         if let sourceFilter {
             list = list.filter { $0.downloadSource?.id == sourceFilter }
+        }
+        if imageFilter.isActive {
+            // 只看图片；还没分析完的先不显示，分析完一批就多出来一批。
+            _ = imageMeta.version
+            let filter = imageFilter
+            list = list.filter { item in
+                guard item.isImage, let meta = imageMeta.meta(for: item) else { return false }
+                return filter.matches(meta)
+            }
         }
         let needle = ocrFilter.trimmingCharacters(in: .whitespaces).lowercased()
         guard showsOCRTools, !needle.isEmpty else { return list }
@@ -62,11 +74,13 @@ struct BrowserView: View {
                 LibrarySubChips(category: category)
                 Divider()
             }
-            // 设了来源筛选时菜单一直显示，免得列表里没有下载文件时没法清掉筛选。
-            if showsOCRTools || !sourceGroups.isEmpty || sourceFilter != nil {
+            // 设了来源筛选时菜单一直显示，免得列表里没有下载文件时没法清掉筛选。图片筛选同理。
+            let showsImageFilter = imageFilter.isActive || store.items.contains(where: \.isImage)
+            if showsOCRTools || !sourceGroups.isEmpty || sourceFilter != nil || showsImageFilter {
                 HStack(spacing: 12) {
                     if showsOCRTools { ocrBar }
                     if !sourceGroups.isEmpty || sourceFilter != nil { sourceMenu }
+                    if showsImageFilter { ImageFilterButton(filter: $imageFilter) }
                     Spacer()
                 }
                 .padding(.horizontal, 16)
@@ -86,10 +100,13 @@ struct BrowserView: View {
             }
             BrowserBottomBar(itemCount: shown.count, selected: firstSelected, selectedCount: store.selectedIDs.count)
         }
-        .onChange(of: store.selection) { sourceFilter = nil }
-        // 进子文件夹、换一个搜索也清掉来源筛选。
-        .onChange(of: store.browsePath) { sourceFilter = nil }
-        .onChange(of: store.activeQuery) { sourceFilter = nil }
+        .onChange(of: store.selection) { sourceFilter = nil; imageFilter = ImageFilter() }
+        // 进子文件夹、换一个搜索也清掉来源筛选和图片筛选。
+        .onChange(of: store.browsePath) { sourceFilter = nil; imageFilter = ImageFilter() }
+        .onChange(of: store.activeQuery) { sourceFilter = nil; imageFilter = ImageFilter() }
+        // 开始筛图片、或者列表变了：在后台分析还没算过的图片。
+        .onChange(of: imageFilter) { if imageFilter.isActive { imageMeta.analyze(store.items) } }
+        .onChange(of: store.items) { if imageFilter.isActive { imageMeta.analyze(store.items) } }
         .navigationTitle(title)
         .navigationSubtitle(subtitle(shown))
     }
@@ -131,6 +148,19 @@ struct BrowserView: View {
                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles") {
                         NSWorkspace.shared.open(url)
                     }
+                }
+            }
+        } else if visible.isEmpty, imageFilter.isActive {
+            if imageMeta.pending > 0 {
+                ProgressView("正在分析图片…")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ContentUnavailableView {
+                    Label("没有符合条件的图片", systemImage: "photo")
+                } description: {
+                    Text("换一个尺寸、方向或颜色试试。")
+                } actions: {
+                    Button("清除图片筛选") { imageFilter = ImageFilter() }
                 }
             }
         } else if visible.isEmpty {
@@ -659,6 +689,8 @@ struct FileCollectionView: View {
                 Color.clear
                     .contentShape(Rectangle())
                     .gesture(marqueeGesture)
+                    // 空白处右键：新建文件夹、粘贴、在终端 / 编辑器打开当前文件夹。
+                    .contextMenu { FolderBackgroundMenu() }
             )
             .overlay(alignment: .topLeading) { MarqueeOverlay(model: marquee) }
             .background(EnclosingScrollViewReader { marquee.scrollView = $0 })
@@ -880,7 +912,11 @@ struct FileCollectionView: View {
         }
         .scrollContentBackground(.hidden)
         .contextMenu(forSelectionType: String.self) { ids in
-            FileContextMenu(items: resolve(ids), preview: { preview($0) })
+            if ids.isEmpty {
+                FolderBackgroundMenu()
+            } else {
+                FileContextMenu(items: resolve(ids), preview: { preview($0) })
+            }
         } primaryAction: { ids in
             // 列表把回车也当成「主操作」：回车改成重命名（和网格、访达一致），双击仍然打开。
             if let event = NSApp.currentEvent, event.type == .keyDown, event.keyCode == 36 || event.keyCode == 76 {
@@ -1282,12 +1318,16 @@ struct FileGridCell: View {
                 InlineRenameField(item: item, onDone: onRename)
                     .frame(maxWidth: size + 16)
             } else {
-                Text(item.shownName(extensions: showsExtension))
-                    .font(.callout)
-                    .lineLimit(2)
-                    .truncationMode(.middle)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: size + 16)
+                // 访达标签的小圆点跟在名字后面（和访达的图标视图一样）。
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(item.shownName(extensions: showsExtension))
+                        .font(.callout)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                        .multilineTextAlignment(.center)
+                    TagDotsView(path: item.path)
+                }
+                .frame(maxWidth: size + 16)
             }
             if showsInfo {
                 ItemSizeText(item: item)
@@ -1385,6 +1425,7 @@ struct FileListNameCell: View {
                 Text(item.shownName(extensions: showsExtension))
                     .lineLimit(1)
                     .truncationMode(.middle)
+                TagDotsView(path: item.path)
             }
             Spacer(minLength: 0)
             if hovering, !renaming, item.isDirectory, let onOpenFolderMenu {

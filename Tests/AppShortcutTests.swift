@@ -27,6 +27,16 @@ final class AppShortcutTests: XCTestCase {
         XCTAssertEqual(byDisplay["⇧⌘P"], .showPreview)       // 访达：显示预览（命令面板不抢）
         XCTAssertEqual(byDisplay["⌃⌘P"], .commandPalette)
         XCTAssertEqual(byDisplay["⌘L"], .addressBar)
+        // 右键菜单补齐：和访达同样的组合键做同样的事。
+        XCTAssertEqual(byDisplay["⌘X"], .cut)
+        XCTAssertEqual(byDisplay["⌘C"], .copyItems)
+        XCTAssertEqual(byDisplay["⌘V"], .paste)
+        XCTAssertEqual(byDisplay["⌥⌘V"], .pasteAndMove)
+        XCTAssertEqual(byDisplay["⌥⌘C"], .copyPath)
+        XCTAssertEqual(byDisplay["⌃⌘N"], .newFolderWithSelection)
+        XCTAssertEqual(byDisplay["⌃⌘A"], .makeAlias)
+        XCTAssertEqual(byDisplay["⌥⌘⌫"], .deleteImmediately)
+        XCTAssertEqual(byDisplay["⌃⌘C"], .copyText)
         // ⌥⌘1…9 留给收藏（不在这张表里，菜单里按收藏动态生成）
         for digit in 1...9 { XCTAssertNil(byDisplay["⌥⌘\(digit)"]) }
         for finderOnly in ["⇧⌘K", "⇧⌘C", "⌘R", "⌥⌘I", "⌃⌘I", "⇧⌘A", "⇧⌘U", "⇧⌘I", "⇧⌘F", "⇧⌘R", "⌘E"] {

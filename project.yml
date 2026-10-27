@@ -109,6 +109,9 @@ targets:
       - path: Sources/Search/CommandPaletteLogic.swift
       - path: Sources/Model/HashLogic.swift
       - path: Sources/Model/FavoritesLogic.swift
+      # 右键菜单补齐：打开方式、终端 / 编辑器、替身 / 新建文件夹起名、剪切粘贴、直接删除文案；图片筛选和主色。
+      - path: Sources/Model/ContextMenuLogic.swift
+      - path: Sources/Model/ImageFilterLogic.swift
       # 性能实测（Perf* 测试）用到的真实代码：读文件夹、排序、缩略图、性能打点。
       - path: Sources/Model/FileItem.swift
       - path: Sources/Model/FileSortKey.swift

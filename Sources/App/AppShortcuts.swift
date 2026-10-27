@@ -6,6 +6,8 @@ import SwiftUI
 /// 找文件更快：⌘L 输入路径（访达的 ⌘L 是「制作替身」，拾掇没有这一项，按用户确认的效果图用 ⌘L）、⇧⌘G 前往文件夹（和访达一样，做同一件事）；
 /// 命令面板用 ⌃⌘P（⇧⌘P 在访达和拾掇里都是「显示预览」，不抢）；收藏 1…9 用 ⌥⌘1…9（⌘1 / ⌘2 是「为图标 / 为列表」，⌃⌘ 加数字是「数字键直达」）。
 /// ⌥⌘I 在访达里是「检查器」、⌃⌘I 是「显示摘要信息」，所以图片工具用 ⌃⌘E。
+/// 右键菜单补齐：⌘X / ⌘C / ⌘V、⌥⌘V 粘贴并移动、⌥⌘C 拷贝路径、⌃⌘N 用所选项目新建文件夹、⌃⌘A 制作替身、⌥⌘⌫ 直接删除，都和访达一样
+/// （访达以前的「制作替身」是 ⌘L，现在是 ⌃⌘A；⌘L 留给输入路径）。拷贝文字仍是 ⌃⌘C。
 enum AppShortcut: String, CaseIterable, Identifiable {
     // 文件
     case newFolder
@@ -45,6 +47,15 @@ enum AppShortcut: String, CaseIterable, Identifiable {
     case addressBar
     case goToFolder
     case commandPalette
+    // 右键菜单补齐（编辑 / 文件菜单）
+    case cut
+    case copyItems
+    case paste
+    case pasteAndMove
+    case copyPath
+    case newFolderWithSelection
+    case makeAlias
+    case deleteImmediately
 
     var id: String { rawValue }
 
@@ -83,19 +94,28 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .addressBar: return "l"
         case .goToFolder: return "g"
         case .commandPalette: return "p"
+        case .cut: return "x"
+        case .copyItems: return "c"
+        case .paste: return "v"
+        case .pasteAndMove: return "v"
+        case .copyPath: return "c"
+        case .newFolderWithSelection: return "n"
+        case .makeAlias: return "a"
+        case .deleteImmediately: return .delete
         }
     }
 
     var modifiers: EventModifiers {
         switch self {
         case .search, .asIcons, .asList, .showInfo, .toggleStatusBar, .viewOptions, .biggerIcons, .smallerIcons,
-             .back, .forward, .enclosingFolder, .openSelection, .addressBar:
+             .back, .forward, .enclosingFolder, .openSelection, .addressBar, .cut, .copyItems, .paste:
             return .command
         case .newFolder, .showPreview, .homeFolder, .desktop, .documents, .downloadSources, .goToFolder:
             return [.command, .shift]
-        case .toggleToolbar, .togglePathBar, .refresh, .downloads:
+        case .toggleToolbar, .togglePathBar, .refresh, .downloads, .pasteAndMove, .copyPath, .deleteImmediately:
             return [.command, .option]
-        case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .home, .duplicates, .cleanup, .commandPalette:
+        case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .home, .duplicates, .cleanup, .commandPalette,
+             .newFolderWithSelection, .makeAlias:
             return [.command, .control]
         }
     }
@@ -136,6 +156,14 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .addressBar: return String(localized: "输入路径…")
         case .goToFolder: return String(localized: "前往文件夹…")
         case .commandPalette: return String(localized: "命令面板…")
+        case .cut: return String(localized: "剪切")
+        case .copyItems: return String(localized: "拷贝")
+        case .paste: return String(localized: "粘贴")
+        case .pasteAndMove: return String(localized: "粘贴并移动")
+        case .copyPath: return String(localized: "拷贝路径")
+        case .newFolderWithSelection: return String(localized: "用所选项目新建文件夹")
+        case .makeAlias: return String(localized: "制作替身")
+        case .deleteImmediately: return String(localized: "直接删除…")
         }
     }
 
@@ -171,7 +199,6 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         (String(localized: "打开"), "⌘↓ / ⌘O / " + String(localized: "双击")),
         (String(localized: "快速查看"), String(localized: "空格") + " / ⌘Y"),
         (String(localized: "移到废纸篓"), "⌘⌫"),
-        (String(localized: "立即删除…"), "⌥⌘⌫"),
         (String(localized: "前往第 1…9 个收藏"), "⌥⌘1…9"),
     ]
 }

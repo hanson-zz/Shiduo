@@ -149,6 +149,13 @@ private struct FileMenuItems<Extra: View>: View {
     private var folders: [FileItem] { items.filter(\.isDirectory) }
     private var files: [FileItem] { items.filter { !$0.isDirectory } }
 
+    /// 用所选项目新建文件夹：正在浏览一个文件夹，选中的都在这个文件夹里。
+    private var canGroupIntoFolder: Bool {
+        guard let folder = store.currentFolder, store.activeQuery == nil else { return false }
+        let parent = URL(fileURLWithPath: folder).standardizedFileURL.path
+        return items.allSatisfy { $0.url.deletingLastPathComponent().standardizedFileURL.path == parent }
+    }
+
     /// 要在主窗口里弹面板的操作：不在主窗口时先把主窗口拿到前面。
     private func inMain(_ action: @escaping @MainActor () -> Void) {
         if context.outsideMainWindow { MainWindow.show(then: action) } else { action() }
@@ -217,7 +224,10 @@ private struct FileMenuItems<Extra: View>: View {
                 store.openItems(items)
             }
         }
+        OpenWithMenu(urls: urls)
         Button("在访达中显示") { FileActions.reveal(items) }
+        Button("在终端打开") { ExternalApps.openInTerminal(items) }
+        Button("在编辑器打开") { ExternalApps.openInEditor(items) }
         if let first = items.first, let preview = context.preview {
             Button("快速查看") { preview(first) }
         }
@@ -230,9 +240,28 @@ private struct FileMenuItems<Extra: View>: View {
                 store.showInspector = true
             }
         }
+        if items.count == 1, let file = items.first, !file.isDirectory {
+            Button("计算哈希") { store.showHash(file) }
+        }
         Divider()
 
-        // 2. 整理
+        // 2. 剪切、拷贝（剪贴板里是文件，访达里也能粘贴）、替身
+        Button("剪切") { FileClipboard.write(items, cut: true) }
+            .keyboardShortcut(.cut)
+        Button("拷贝") { FileClipboard.write(items, cut: false) }
+            .keyboardShortcut(.copyItems)
+        Button(items.count > 1 ? String(localized: "拷贝 \(items.count) 个路径") : String(localized: "拷贝路径")) { FileActions.copyPaths(items) }
+            .keyboardShortcut(.copyPath)
+        Button("制作替身") { store.makeAliases(items) }
+            .keyboardShortcut(.makeAlias)
+        if context.inBrowser, canGroupIntoFolder {
+            Button(String(localized: "用所选项目新建文件夹（\(items.count) 项）")) { store.newFolderWithSelection(items) }
+                .keyboardShortcut(.newFolderWithSelection)
+        }
+        Divider()
+
+        // 3. 整理：一排颜色圆点（和访达一样）+ 标签子菜单
+        TagPaletteRow(store: store, items: items)
         TagMenu(items: items)
             .environmentObject(store)
         if context.onShelf {
@@ -311,8 +340,7 @@ private struct FileMenuItems<Extra: View>: View {
         }
         Divider()
 
-        // 5. 拷贝、分享
-        Button(items.count > 1 ? String(localized: "拷贝 \(items.count) 个路径") : String(localized: "拷贝路径")) { FileActions.copyPaths(items) }
+        // 5. 文字、分享
         if items.contains(where: TextExtractor.canExtract) {
             Button("拷贝文字") { store.copyText(items) }
         }
@@ -379,6 +407,32 @@ private struct FileMenuItems<Extra: View>: View {
             } icon: {
                 Image(systemName: "lock.fill")
             }
+        }
+    }
+}
+
+/// 文件夹空白处的右键菜单（网格空白处、列表空白处）：新建文件夹、粘贴、在终端 / 编辑器打开、拷贝路径。
+struct FolderBackgroundMenu: View {
+    var body: some View {
+        if let store = LibraryStore.shared, store.activeQuery == nil, let path = store.currentFolder {
+            let folder = URL(fileURLWithPath: path, isDirectory: true)
+            Button("新建文件夹") { DispatchQueue.main.async { store.newFolderInCurrent() } }
+                .keyboardShortcut(.newFolder)
+            Divider()
+            let count = FileClipboard.fileCount
+            Button(count > 1 ? String(localized: "粘贴 \(count) 个项目") : String(localized: "粘贴")) {
+                FileClipboard.paste(into: folder, forceMove: false)
+            }
+            .keyboardShortcut(.paste)
+            .disabled(count == 0)
+            Button("粘贴并移动") { FileClipboard.paste(into: folder, forceMove: true) }
+                .keyboardShortcut(.pasteAndMove)
+                .disabled(count == 0)
+            Divider()
+            Button("在终端打开") { ExternalApps.openInTerminal([(path, true)]) }
+            Button("在编辑器打开") { ExternalApps.openFolderInEditor(folder) }
+            Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([folder]) }
+            Button("拷贝路径") { FileActions.copy(path) }
         }
     }
 }

@@ -128,6 +128,8 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
         }
 
+        ExternalToolsSection()
+
         // 全局的文件夹图标（以前只管文件夹墙，键名沿用，旧的选择保留）。
         Section("文件夹图标") {
             Picker("文件夹图标", selection: $folderWallIconStyle) {

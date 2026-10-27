@@ -2070,7 +2070,7 @@ final class LibraryStore: ObservableObject {
         if !notes.isEmpty { alertMessage = notes.joined(separator: "\n") }
     }
 
-    /// 「立即删除…」（⌥⌘⌫，调用前已经确认过）：真的删掉，不进废纸篓、不能撤销，也不记进清理记录。
+    /// 「直接删除…」（⌥⌘⌫，调用前已经确认过）：真的删掉，不进废纸篓、不能撤销，也不记进清理记录。
     /// 只在 iCloud 云端的文件照样跳过（删掉会连云端一起没）。删除在后台线程做。
     func deleteImmediately(_ list: [FileItem]) {
         guard !list.isEmpty else { return }
@@ -2106,7 +2106,7 @@ final class LibraryStore: ObservableObject {
                 ReminderStore.shared.remove { gone.contains($0) }
                 FolderWallModel.shared.forget { gone.contains($0) }
                 filesChangedTick += 1
-                showToast(String(localized: "已立即删除 \(removed.count) 个项目"))
+                showToast(String(localized: "已直接删除 \(removed.count) 个项目"))
                 scheduleCountsRefresh()
             }
             var notes: [String] = []

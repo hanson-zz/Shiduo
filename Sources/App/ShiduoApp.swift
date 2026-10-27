@@ -48,6 +48,8 @@ struct ShiduoApp: App {
             }
             // 和访达一样：「文件」菜单里的「移到废纸篓 ⌘⌫」，不管焦点在侧边栏、搜索结果还是简介栏都能用。
             TrashCommands(center: trash)
+            // 编辑：剪切 / 拷贝 / 粘贴文件（和访达互通）、拷贝路径；文件：用所选项目新建文件夹、制作替身、在终端 / 编辑器打开、计算哈希。
+            FileCommands(center: trash, store: store)
             CommandGroup(after: .textEditing) {
                 Button("搜索") { store.focusSearch() }
                     .keyboardShortcut(.search)

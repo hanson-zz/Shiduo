@@ -91,21 +91,58 @@ final class TrashCommandCenter: ObservableObject {
         context.perform(list)
     }
 
-    /// 菜单「立即删除…」：先确认（不能撤销），确认后才真正删除。
+    /// 前台窗口里选中的文件（剪切 / 拷贝 / 制作替身这些菜单命令用）。
+    func currentItems() -> [FileItem] {
+        guard let context = current, !context.ids.isEmpty else { return [] }
+        return context.items()
+    }
+
+    /// 菜单「直接删除…」⌥⌘⌫：先在后台算一下一共多大，再弹红色确认框（不能撤销），确认后才真正删除。
     func deleteCurrentImmediately() {
         guard let context = current, let store = LibraryStore.shared else { return }
         let list = context.items()
         guard !list.isEmpty else { return }
+        let window = context.window
+        let entries = list.map { (url: $0.url, isDirectory: $0.isDirectory, size: $0.size,
+                                  known: FolderSizeStore.shared.knownSize($0.path)) }
+        Task {
+            // 文件夹太大时最多等 1.5 秒，算不完就只说个数。
+            let bytes = await Self.totalSize(entries, timeout: 1.5)
+            Self.confirmDelete(list, bytes: bytes, window: window, store: store)
+        }
+    }
+
+    private static func totalSize(_ entries: [(url: URL, isDirectory: Bool, size: Int64, known: Int64?)],
+                                  timeout: TimeInterval) async -> Int64? {
+        let deadline = Date().addingTimeInterval(timeout)
+        return await Task.detached(priority: .userInitiated) { () -> Int64? in
+            var total: Int64 = 0
+            for entry in entries {
+                if !entry.isDirectory && entry.size > 0 { total += entry.size; continue }
+                if let known = entry.known { total += known; continue }
+                let keys: [URLResourceKey] = [.totalFileAllocatedSizeKey, .fileAllocatedSizeKey]
+                guard let enumerator = FileManager.default.enumerator(at: entry.url, includingPropertiesForKeys: keys) else { continue }
+                for case let file as URL in enumerator {
+                    if Date() > deadline { return nil }
+                    let values = try? file.resourceValues(forKeys: Set(keys))
+                    total += Int64(values?.totalFileAllocatedSize ?? values?.fileAllocatedSize ?? 0)
+                }
+            }
+            return total
+        }.value
+    }
+
+    private static func confirmDelete(_ list: [FileItem], bytes: Int64?, window: NSWindow?, store: LibraryStore) {
         let alert = NSAlert()
         alert.alertStyle = .critical
-        alert.messageText = list.count == 1
-            ? String(localized: "确定要立即删除“\(list[0].name)”吗？")
-            : String(localized: "确定要立即删除这 \(list.count) 个项目吗？")
-        alert.informativeText = String(localized: "此操作不能撤销，也不会进废纸篓。只在 iCloud 云端的文件会被跳过。")
-        alert.addButton(withTitle: String(localized: "删除"))
+        alert.messageText = DirectDeleteLogic.title(count: list.count, firstName: list[0].name)
+        alert.informativeText = DirectDeleteLogic.detail(count: list.count, bytes: bytes)
+        alert.addButton(withTitle: String(localized: "直接删除"))
         alert.addButton(withTitle: String(localized: "取消"))
+        // 红色按钮；回车不会误按到它（默认按钮是「取消」）。
         alert.buttons.first?.hasDestructiveAction = true
-        let window = context.window
+        alert.buttons.first?.keyEquivalent = ""
+        alert.buttons.last?.keyEquivalent = "\r"
         let run: (NSApplication.ModalResponse) -> Void = { response in
             guard response == .alertFirstButtonReturn else { return }
             store.deleteImmediately(list)
@@ -132,7 +169,7 @@ enum TrashKeys {
     }
 }
 
-/// 「文件」菜单：移到废纸篓 ⌘⌫、立即删除… ⌥⌘⌫。
+/// 「文件」菜单：移到废纸篓 ⌘⌫、直接删除… ⌥⌘⌫（只在菜单栏里，不放进右键菜单，免得误点）。
 struct TrashCommands: Commands {
     @ObservedObject var center: TrashCommandCenter
 
@@ -142,8 +179,8 @@ struct TrashCommands: Commands {
             Button("移到废纸篓") { center.trashCurrent() }
                 .keyboardShortcut(.delete, modifiers: .command)
                 .disabled(!center.canTrash)
-            Button("立即删除…") { center.deleteCurrentImmediately() }
-                .keyboardShortcut(.delete, modifiers: [.command, .option])
+            Button("直接删除…") { center.deleteCurrentImmediately() }
+                .keyboardShortcut(.deleteImmediately)
                 .disabled(!center.canTrash)
         }
     }

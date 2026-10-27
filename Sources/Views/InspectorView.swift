@@ -76,11 +76,13 @@ struct InspectorView: View {
     @State private var media = MediaInfo()
     @State private var tags: [String] = []
     @AppStorage(FolderWallIconStyle.key) private var folderIconStyle: FolderWallIconStyle = .shiduo
+    @ObservedObject private var hashRequest = HashRequest.shared
 
     var body: some View {
         if selectionCount > 1, !selection.isEmpty {
             SelectionSummaryView(items: selection, mode: mode)
         } else if let item {
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     // 拾掇风格下文件夹不用快速查看（那里是访达图标），显示拾掇文件夹。
@@ -113,6 +115,8 @@ struct InspectorView: View {
                         InfoRow(title: String(localized: "大小"), value: item.sizeText)
                     }
                     if let dimensions = media.dimensions { InfoRow(title: String(localized: "尺寸"), value: dimensions) }
+                    // 图片的主色：前 5 个，点一下拷贝 HEX。
+                    if item.isImage { DominantColorsSection(item: item) }
                     if let duration = media.duration { InfoRow(title: String(localized: "时长"), value: duration) }
                     if let camera = media.camera { InfoRow(title: String(localized: "相机"), value: camera) }
                     if let pages = media.pages { InfoRow(title: String(localized: "页数"), value: pages) }
@@ -157,6 +161,7 @@ struct InspectorView: View {
                     if !item.isDirectory {
                         Divider()
                         HashSection(item: item)
+                            .id(Self.hashAnchor)
                     }
                     if let text = ocr.text(for: item), !text.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
@@ -177,6 +182,11 @@ struct InspectorView: View {
                 }
                 .padding(16)
             }
+            // 「计算哈希」：滚到校验值（等简介排好版再滚）。
+            .onChange(of: hashRequest.tick) { scrollToHash(proxy, path: item.path) }
+            .onAppear { scrollToHash(proxy, path: item.path) }
+            .onChange(of: item.path) { scrollToHash(proxy, path: item.path) }
+            }
             .task(id: item.path) {
                 media = MediaInfo()
                 tags = []
@@ -190,6 +200,16 @@ struct InspectorView: View {
 }
 
 extension InspectorView {
+    static let hashAnchor = "inspector.hash"
+
+    private func scrollToHash(_ proxy: ScrollViewProxy, path: String) {
+        guard hashRequest.scrollPath == path else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            guard hashRequest.takeScroll(path) else { return }
+            withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.hashAnchor, anchor: .top) }
+        }
+    }
+
     /// 访达标签（不在主线程上读）。
     static func loadTags(_ url: URL) async -> [String] {
         await Task.detached(priority: .userInitiated) { () -> [String] in
