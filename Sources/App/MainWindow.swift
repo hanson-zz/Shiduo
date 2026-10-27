@@ -203,7 +203,8 @@ enum MainWindow {
             }
         } else {
             windowLog.info("reopenFromDock: no main window, hidden=\(hidden, privacy: .public) windows=\(windows.count, privacy: .public) registrations=\(registrations, privacy: .public)")
-            show()
+            // 窗口都关了、从程序坞重新打开：和刚启动一样进起始位置（设过的话）。
+            show { LibraryStore.shared?.openStartFolder() }
         }
     }
 

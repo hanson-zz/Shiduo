@@ -7,6 +7,8 @@ struct ShiduoApp: App {
     @StateObject private var license = LicenseManager.shared
     /// ⌘⌫「移到废纸篓」：哪个窗口里选中了什么。
     @StateObject private var trash = TrashCommandCenter.shared
+    /// 侧边栏「收藏」：「前往」菜单里列出来，前 9 个是 ⌥⌘1…9。
+    @StateObject private var favorites = FavoritesStore.shared
     /// Pro：菜单栏小助手（设置里打开，默认关闭）。
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
     // 「显示」菜单的勾选状态（各自存在 UserDefaults，下次打开保持原样）。
@@ -116,6 +118,17 @@ struct ShiduoApp: App {
                     .keyboardShortcut(.enclosingFolder)
                     .disabled(!store.canGoUp || renaming)
                 Divider()
+                // 可输入地址栏：⌘L（效果图）和访达的 ⇧⌘G「前往文件夹」做同一件事。
+                Button("输入路径…") { AddressBarModel.shared.begin() }
+                    .keyboardShortcut(.addressBar)
+                    .disabled(renaming)
+                Button("前往文件夹…") { AddressBarModel.shared.begin() }
+                    .keyboardShortcut(.goToFolder)
+                    .disabled(renaming)
+                Button("命令面板…") { CommandPaletteModel.shared.toggle() }
+                    .keyboardShortcut(.commandPalette)
+                    .disabled(renaming)
+                Divider()
                 // ⇧⌘H 在访达里是「个人文件夹」，留给下面那一项；首页用 ⌃⌘H。
                 Button("首页") { store.selection = .home }
                     .keyboardShortcut(.home)
@@ -138,6 +151,15 @@ struct ShiduoApp: App {
                 Button("下载") { store.goToFolder(.downloads) }
                     .keyboardShortcut(.downloads)
                     .disabled(renaming)
+                if !favorites.paths.isEmpty {
+                    Divider()
+                    // 侧边栏「收藏」：前 9 个 ⌥⌘1…9（⌘1 / ⌘2 是「为图标 / 为列表」，⌃⌘ 数字是「数字键直达」）。
+                    ForEach(Array(favorites.paths.prefix(FavoritesLogic.shortcutSlots).enumerated()), id: \.element) { index, path in
+                        Button(FavoritesStore.displayName(path)) { store.goToRoot(path) }
+                            .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: [.command, .option])
+                            .disabled(renaming)
+                    }
+                }
                 Divider()
                 Button("下载来源") { store.selection = .downloads }
                     .keyboardShortcut(.downloadSources)

@@ -35,6 +35,8 @@ struct SettingsView: View {
     @AppStorage(CleanupReminder.weekdayKey) private var reminderWeekday = 7
     @AppStorage(CleanupReminder.hourKey) private var reminderHour = 10
     @State private var language = AppLanguage.current
+    /// 快捷位置：起始位置、收藏。
+    @ObservedObject private var favorites = FavoritesStore.shared
 
     /// 设置分成几个标签页：常用的在前，Pro 放最后（免费用户打开设置先看到的是能用的设置）。
     enum Tab: String, Hashable {
@@ -103,6 +105,27 @@ struct SettingsView: View {
             Text(loginItemMessage ?? String(localized: "关掉拾掇的窗口后它仍在后台，快捷键随时可用。"))
                 .font(.caption)
                 .foregroundStyle(loginItemMessage == nil ? Color.secondary : Color.orange)
+        }
+
+        Section("起始位置") {
+            LabeledContent("打开拾掇时先进") {
+                if let start = favorites.startFolder {
+                    let missing = favorites.validStartFolder == nil
+                    Text(missing ? String(localized: "\(FavoritesStore.displayName(start))（找不到，暂时显示首页）") : FavoritesStore.displayName(start))
+                        .foregroundStyle(missing ? Color.orange : Color.primary)
+                        .help(start)
+                } else {
+                    Text("首页")
+                }
+            }
+            HStack {
+                Button("选择文件夹…") { favorites.chooseStartFolder() }
+                Button("恢复为首页") { favorites.setStartFolder(nil) }
+                    .disabled(favorites.startFolder == nil)
+            }
+            Text("也可以在文件夹上点右键选「设为起始位置」。关掉所有窗口后从程序坞重新打开，也会先进这里。侧边栏「收藏」里的前 9 个文件夹可以用 ⌥⌘1…9 直达。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
 
         // 全局的文件夹图标（以前只管文件夹墙，键名沿用，旧的选择保留）。

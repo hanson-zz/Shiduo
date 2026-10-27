@@ -7,6 +7,8 @@ struct ContentView: View {
     @ObservedObject private var folderIcons = FolderIconService.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
     @ObservedObject private var trialExpiry = TrialExpiryNotice.shared
+    /// 命令面板（⌃⌘P）：只在打开它的那个窗口里显示。
+    @ObservedObject private var palette = CommandPaletteModel.shared
     /// 这个主窗口（开了多个窗口时，全局面板只在一个窗口里弹）。
     @State private var hostWindow: NSWindow?
     @Environment(\.openSettings) private var openSettings
@@ -41,6 +43,13 @@ struct ContentView: View {
             openSettings()
         }
         .background(HostWindowReader(window: $hostWindow))
+        .overlay {
+            if palette.isPresented(in: hostWindow) {
+                CommandPaletteView(model: palette)
+            }
+        }
+        .animation(.easeOut(duration: 0.15), value: palette.isPresented)
+        .onAppear { palette.openSettings = { openSettings() } }
         .task {
             // 启动逻辑只跑一次：开第二个主窗口（⌘N）不会再联网校验授权、再检查更新。
             guard AppLifecycle.shared.claimLaunchTasks() else { return }
@@ -60,6 +69,8 @@ struct ContentView: View {
             TrialReminder.shared.start()
             SavedSearchStore.shared.start()
             if !UserDefaults.standard.bool(forKey: "onboardingDone") { store.showOnboarding = true }
+            // 设了起始位置：打开拾掇先进那个文件夹（不在了就留在首页）。
+            store.openStartFolder()
             // 更新后“完全磁盘访问权限”丢了就提醒重新授权；切回拾掇时自动重新检查。
             FullDiskAccessMonitor.shared.start()
             // 拾掇 Pro：最多每 24 小时联网校验一次授权（不挡住首页加载）；之后马上自动整理一次，再每 10 分钟一次。
@@ -172,6 +183,13 @@ struct ContentView: View {
 
 struct DetailView: View {
     @EnvironmentObject private var store: LibraryStore
+    @ObservedObject private var address = AddressBarModel.shared
+    @State private var hostWindow: NSWindow?
+
+    /// 文件夹页面的路径栏自己就能输入；其他页面（首页、资料库、搜索结果……）按 ⌘L 时在顶部浮出地址栏。
+    private var showsFloatingAddressBar: Bool {
+        address.isEditing(in: hostWindow) && !(store.activeQuery == nil && store.currentFolder != nil)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -219,6 +237,19 @@ struct DetailView: View {
                     .accessibilityHidden(true)
             }
             .toolbarBackground(.hidden, for: .windowToolbar)
+            .overlay(alignment: .top) {
+                if showsFloatingAddressBar {
+                    FloatingAddressBar()
+                        .padding(.top, 52)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .animation(.easeOut(duration: 0.15), value: showsFloatingAddressBar)
+            .background(HostWindowReader(window: $hostWindow))
+            // 记下去过的文件夹（命令面板的「最近」）。
+            .onChange(of: store.currentFolder) {
+                if let folder = store.currentFolder, store.activeQuery == nil { FavoritesStore.shared.noteVisited(folder) }
+            }
             .inspector(isPresented: $store.showInspector) {
                 InspectorView(item: store.inspectedItem, selectionCount: store.selectedIDs.count,
                               selection: store.selectedIDs.count > 1 ? store.selectedItems : [],

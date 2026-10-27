@@ -139,6 +139,7 @@ extension FileContextMenu where Extra == EmptyView {
 
 private struct FileMenuItems<Extra: View>: View {
     let store: LibraryStore
+    @ObservedObject var favorites = FavoritesStore.shared
     let items: [FileItem]
     let context: FileMenuContext
     @ViewBuilder let extra: () -> Extra
@@ -151,6 +152,37 @@ private struct FileMenuItems<Extra: View>: View {
     /// 要在主窗口里弹面板的操作：不在主窗口时先把主窗口拿到前面。
     private func inMain(_ action: @escaping @MainActor () -> Void) {
         if context.outsideMainWindow { MainWindow.show(then: action) } else { action() }
+    }
+
+    /// 快捷位置：文件夹「加入收藏 / 从收藏移除」「设为起始位置」。
+    @ViewBuilder
+    private var favoriteItems: some View {
+        let plain = folders.filter { $0.isPlainFolder }
+        if !plain.isEmpty, plain.count == items.count {
+            if plain.count == 1, let folder = plain.first {
+                if favorites.contains(folder.path) {
+                    Button("从收藏移除") { favorites.remove(folder.path) }
+                } else {
+                    Button("加入收藏") {
+                        favorites.add([folder.url])
+                        store.showToast(String(localized: "已加入收藏：\(folder.name)"))
+                    }
+                }
+                if favorites.startFolder == FavoritesLogic.standardized(folder.path) {
+                    Button("不再作为起始位置") { favorites.setStartFolder(nil) }
+                } else {
+                    Button("设为起始位置") {
+                        favorites.setStartFolder(folder.path)
+                        store.showToast(String(localized: "以后打开拾掇先进「\(folder.name)」"))
+                    }
+                }
+            } else {
+                Button("把 \(plain.count) 个文件夹加入收藏") {
+                    favorites.add(plain.map(\.url))
+                    store.showToast(String(localized: "已加入收藏：\(plain.count) 个文件夹"))
+                }
+            }
+        }
     }
 
     /// 资料库范围：文件夹「不在资料库中显示 / 在资料库中显示」；资料库类别里的单个文件可以直接隐藏它所在的文件夹。
@@ -223,6 +255,7 @@ private struct FileMenuItems<Extra: View>: View {
         } else if items.count == 1, let item = items.first {
             Button("将所在文件夹添加到文件夹墙") { store.pin(item.url.deletingLastPathComponent().path) }
         }
+        favoriteItems
         libraryScopeItems
         Divider()
 

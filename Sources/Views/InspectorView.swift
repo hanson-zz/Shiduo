@@ -153,6 +153,11 @@ struct InspectorView: View {
                             }
                         }
                     }
+                    // 校验值（MD5 / SHA-1 / SHA-256）：点了才算，大文件在后台算、可以取消。
+                    if !item.isDirectory {
+                        Divider()
+                        HashSection(item: item)
+                    }
                     if let text = ocr.text(for: item), !text.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {

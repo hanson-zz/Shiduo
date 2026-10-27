@@ -53,7 +53,9 @@ struct BrowserView: View {
                 Divider()
             }
             if store.activeQuery == nil, store.currentFolder != nil {
+                // 输入路径时补全下拉要盖在列表上面。
                 FolderPathBar()
+                    .zIndex(5)
                 Divider()
             }
             if let category = store.libraryCategory, store.subCounts != nil, !LibrarySub.subs(for: category).isEmpty {
@@ -717,6 +719,10 @@ struct FileCollectionView: View {
         // ⇧⌘N / 回车开始改名：滚到那个格子（LazyVGrid 不在屏幕上的格子没有输入框，打字没地方去）。
         .onChange(of: store.inlineRenamePath) { scrollToRenaming(proxy) }
         .onChange(of: sizeResortTick) { keepSelectionVisible(proxy) }
+        // 地址栏输入的是文件：读完文件夹选中它后滚过去（等排好序再滚）。
+        .onChange(of: store.revealTick) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { keepSelectionVisible(proxy) }
+        }
         }
     }
 
@@ -909,6 +915,10 @@ struct FileCollectionView: View {
         .modifier(FileKeyCommands(onTrash: trashSelection, onOpen: openSelection))
         .onChange(of: store.inlineRenamePath) { scrollToRenaming(proxy) }
         .onChange(of: sizeResortTick) { keepSelectionVisible(proxy) }
+        // 地址栏输入的是文件：读完文件夹选中它后滚过去（等排好序再滚）。
+        .onChange(of: store.revealTick) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { keepSelectionVisible(proxy) }
+        }
         }
     }
 
@@ -1398,7 +1408,9 @@ struct FileListNameCell: View {
 /// 固定文件夹 / 外接磁盘 / 任意文件夹页面顶部：返回、上一层、可点的路径。子文件夹都在拾掇里打开，不跳到访达。
 struct FolderPathBar: View {
     @EnvironmentObject private var store: LibraryStore
+    @ObservedObject private var address = AddressBarModel.shared
     @State private var targetedCrumb: String?
+    @State private var hostWindow: NSWindow?
 
     private func crumbTargeted(_ path: String) -> Binding<Bool> {
         Binding(get: { targetedCrumb == path },
@@ -1466,6 +1478,31 @@ struct FolderPathBar: View {
             .help(AppShortcut.enclosingFolder.help)
             .accessibilityLabel("上一层文件夹")
 
+            if address.isEditing(in: hostWindow) {
+                // 可输入地址栏（⌘L / 点路径栏空白处 / 点最后一层）。
+                AddressBarEditor(model: address)
+            } else {
+                crumbBar
+            }
+            if let current = store.currentFolder, !address.isEditing(in: hostWindow) {
+                Button {
+                    NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: current)])
+                } label: {
+                    Image(systemName: "arrow.up.forward.app")
+                }
+                .buttonStyle(.borderless)
+                .help("在访达中显示")
+            }
+        }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(HostWindowReader(window: $hostWindow))
+    }
+
+    /// 平时的样子：一层层可点的路径；点空白处或最后一层进入输入。
+    private var crumbBar: some View {
+        HStack(spacing: 0) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 2) {
                     let list = crumbs
@@ -1476,7 +1513,11 @@ struct FolderPathBar: View {
                                 .foregroundStyle(.tertiary)
                         }
                         Button {
-                            store.openFolder(URL(fileURLWithPath: crumb.path, isDirectory: true))
+                            if index == list.count - 1 {
+                                address.begin(in: hostWindow)
+                            } else {
+                                store.openFolder(URL(fileURLWithPath: crumb.path, isDirectory: true))
+                            }
                         } label: {
                             HStack(spacing: 4) {
                                 if index == 0 {
@@ -1491,29 +1532,23 @@ struct FolderPathBar: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .disabled(index == list.count - 1)
-                        .help(crumb.path)
+                        .help(index == list.count - 1 ? String(localized: "点一下输入路径（⌘L）") : crumb.path)
                         // 把文件拖到路径上的某一层：移进那个文件夹（⌥ 拷贝），⌘Z 可以撤销。
                         .modifier(FolderDropTarget(enabled: index < list.count - 1, targeted: crumbTargeted(crumb.path)) { urls, copy in
                             store.transferDropped(urls, into: URL(fileURLWithPath: crumb.path, isDirectory: true), copy: copy)
                         })
                     }
+                    // 路径后面的空白：点一下进入输入（和浏览器的地址栏一样）。
+                    Color.clear
+                        .frame(minWidth: 24, maxWidth: .infinity, minHeight: 22)
+                        .contentShape(Rectangle())
+                        .onTapGesture { address.begin(in: hostWindow) }
+                        .help("点一下输入路径（⌘L）")
                 }
-            }
-            Spacer(minLength: 8)
-            if let current = store.currentFolder {
-                Button {
-                    NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: current)])
-                } label: {
-                    Image(systemName: "arrow.up.forward.app")
-                }
-                .buttonStyle(.borderless)
-                .help("在访达中显示")
+                .frame(minWidth: geo.size.width, alignment: .leading)
             }
         }
-        .buttonStyle(.borderless)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .frame(height: 26)
     }
 }
 

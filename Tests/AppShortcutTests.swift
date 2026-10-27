@@ -23,7 +23,13 @@ final class AppShortcutTests: XCTestCase {
         XCTAssertEqual(byDisplay["⌘]"], .forward)
         XCTAssertEqual(byDisplay["⌘↑"], .enclosingFolder)
         XCTAssertEqual(byDisplay["⌃⌘T"], .addToFolderWall)   // 访达：添加到侧边栏
-        for finderOnly in ["⇧⌘K", "⇧⌘C", "⌘R", "⌥⌘I", "⌃⌘I", "⇧⌘A", "⇧⌘G", "⇧⌘U", "⇧⌘I", "⇧⌘F", "⇧⌘R", "⌘E"] {
+        XCTAssertEqual(byDisplay["⇧⌘G"], .goToFolder)        // 访达：前往文件夹
+        XCTAssertEqual(byDisplay["⇧⌘P"], .showPreview)       // 访达：显示预览（命令面板不抢）
+        XCTAssertEqual(byDisplay["⌃⌘P"], .commandPalette)
+        XCTAssertEqual(byDisplay["⌘L"], .addressBar)
+        // ⌥⌘1…9 留给收藏（不在这张表里，菜单里按收藏动态生成）
+        for digit in 1...9 { XCTAssertNil(byDisplay["⌥⌘\(digit)"]) }
+        for finderOnly in ["⇧⌘K", "⇧⌘C", "⌘R", "⌥⌘I", "⌃⌘I", "⇧⌘A", "⇧⌘U", "⇧⌘I", "⇧⌘F", "⇧⌘R", "⌘E"] {
             XCTAssertNil(byDisplay[finderOnly], "\(finderOnly) 在访达里是别的意思")
         }
         // 系统级的组合键不用。

@@ -181,6 +181,9 @@ struct SidebarView: View {
                 }
             }
 
+            // 快捷位置：自己收藏的文件夹，前 9 个可以用 ⌥⌘1…9 直达。
+            FavoritesSidebarSection()
+
             CollapsibleSection("locations", title: "位置") {
                 ForEach(locations) { location in
                     Label {
@@ -317,5 +320,91 @@ struct CollapsibleSection<Content: View, Header: View>: View {
 extension CollapsibleSection where Header == Text {
     init(_ id: String, title: LocalizedStringKey, @ViewBuilder content: () -> Content) {
         self.init(id, content: content) { Text(title) }
+    }
+}
+
+/// 侧边栏「收藏」：把文件夹拖进来（拖到两行之间可以插在那里）、右键「加入收藏」；拖动排序；右键移除、设为起始位置。
+/// 前 9 个右边显示 ⌥⌘1…9。免费。
+struct FavoritesSidebarSection: View {
+    @EnvironmentObject private var store: LibraryStore
+    @ObservedObject private var favorites = FavoritesStore.shared
+    @State private var placeholderTargeted = false
+
+    var body: some View {
+        CollapsibleSection("favorites", title: "收藏") {
+            ForEach(Array(favorites.paths.enumerated()), id: \.element) { index, path in
+                row(index: index, path: path)
+            }
+            .onMove { favorites.move(from: $0, to: $1) }
+            .onInsert(of: [.fileURL]) { index, providers in
+                add(providers, at: index)
+            }
+            if favorites.paths.isEmpty {
+                Label("把文件夹拖到这里", systemImage: "star")
+                    .font(.callout)
+                    .foregroundStyle(placeholderTargeted ? Color.accentColor : Color.secondary)
+                    .help("也可以在文件夹上点右键选「加入收藏」；前 9 个收藏可以用 ⌥⌘1…9 直达")
+                    .onDrop(of: [.fileURL], isTargeted: $placeholderTargeted) { providers in
+                        add(providers, at: nil)
+                        return true
+                    }
+            }
+        }
+    }
+
+    private func add(_ providers: [NSItemProvider], at index: Int?) {
+        FileDrop.load(providers) { urls in
+            let folders = urls.filter { LibraryStore.isBrowsableFolder($0) }
+            if folders.isEmpty {
+                store.showToast(String(localized: "只能收藏文件夹"))
+                return
+            }
+            favorites.add(folders, at: index)
+        }
+    }
+
+    private func row(index: Int, path: String) -> some View {
+        let exists = FileManager.default.fileExists(atPath: path)
+        let name = FavoritesStore.displayName(path)
+        return Label {
+            HStack(spacing: 4) {
+                Text(name)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                if index < FavoritesLogic.shortcutSlots {
+                    Text(FavoritesLogic.shortcutDisplay(slot: index))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        } icon: {
+            Image(systemName: exists ? "folder.fill" : "questionmark.folder")
+                .foregroundStyle(exists ? Color.accentColor : Color.secondary)
+        }
+        .opacity(exists ? 1 : 0.5)
+        .help(exists ? path : String(localized: "找不到这个文件夹：\(path)"))
+        .tag(SidebarItem.pinned(path))
+        // 在子文件夹里再点一次这一行：回到收藏的那一层。
+        .simultaneousGesture(TapGesture().onEnded { store.reselect(.pinned(path)) })
+        .contextMenu {
+            Button("打开") { store.goToRoot(path) }
+            Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)]) }
+            Divider()
+            Button("上移") { favorites.move(from: IndexSet(integer: index), to: index - 1) }
+                .disabled(index == 0)
+            Button("下移") { favorites.move(from: IndexSet(integer: index), to: index + 2) }
+                .disabled(index >= favorites.paths.count - 1)
+            if favorites.startFolder == path {
+                Button("不再作为起始位置") { favorites.setStartFolder(nil) }
+            } else {
+                Button("设为起始位置") {
+                    favorites.setStartFolder(path)
+                    store.showToast(String(localized: "以后打开拾掇先进「\(name)」"))
+                }
+                .disabled(!exists)
+            }
+            Divider()
+            Button("从收藏移除") { favorites.remove(path) }
+        }
     }
 }

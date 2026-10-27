@@ -165,6 +165,8 @@ final class LibraryStore: ObservableObject {
         // 2. 落在侧边栏「位置」/ 固定文件夹 / 外接磁盘里：切到那一页（选最深的那个）
         var roots: [(item: SidebarItem, root: String)] = Self.builtInLocationPaths.map { (item: SidebarItem.pinned($0), root: $0) }
         roots += pinnedFolders.map { (item: SidebarItem.pinned($0), root: $0) }
+        // 侧边栏「收藏」也是根目录：在收藏的文件夹里往下走，侧边栏那一行保持高亮。
+        roots += FavoritesStore.shared.paths.map { (item: SidebarItem.pinned($0), root: $0) }
         // 外接磁盘页是 Pro 功能：免费用户直接把磁盘里的文件夹当「任意文件夹」打开，不显示上锁页，也不悄悄开始试用。
         if license.isPro {
             roots += volumes.volumes.map { (item: SidebarItem.volume($0.path), root: $0.path) }
@@ -211,6 +213,63 @@ final class LibraryStore: ObservableObject {
            !FileManager.default.fileExists(atPath: current) {
             selection = .home
         }
+    }
+
+    // MARK: 地址栏 / 收藏 / 起始位置
+
+    /// 读完列表后要选中的文件（地址栏里输入的是文件：打开它所在的文件夹并选中它）。
+    private var pendingRevealPath: String?
+    /// 选中了要显示的文件后加一：网格 / 列表滚到它。
+    @Published private(set) var revealTick = 0
+
+    /// 打开文件所在的文件夹，读完后选中它（和访达「前往文件夹」输入文件路径一样）。
+    func revealInFolder(_ fileURL: URL) {
+        let path = fileURL.standardizedFileURL.path
+        let parent = (path as NSString).deletingLastPathComponent
+        pendingRevealPath = path
+        if currentFolder == parent, activeQuery == nil {
+            // 已经在这个文件夹里：直接选中，不重新读。
+            applyPendingReveal()
+            return
+        }
+        openFolder(URL(fileURLWithPath: parent, isDirectory: true))
+    }
+
+    private func applyPendingReveal() {
+        guard let path = pendingRevealPath else { return }
+        guard let item = items.first(where: { $0.path == path }) else {
+            // 列表里没有（比如隐藏文件没显示）：不留着，免得以后误选。
+            if !isLoading { pendingRevealPath = nil }
+            return
+        }
+        pendingRevealPath = nil
+        selectedIDs = [item.id]
+        revealTick += 1
+    }
+
+    /// 跳到侧边栏里的一个根文件夹（⌥⌘1…9 收藏、命令面板），记进返回历史；已经在那一页时回到它的根目录。
+    func goToRoot(_ path: String) {
+        let url = URL(fileURLWithPath: path, isDirectory: true)
+        guard Self.isBrowsableFolder(url) else {
+            showToast(String(localized: "找不到这个文件夹：\((path as NSString).lastPathComponent)"))
+            return
+        }
+        let target = SidebarItem.pinned(path)
+        if selection == target {
+            reselect(target)
+            return
+        }
+        history.visit(from: here)
+        navigating = true
+        selection = target
+        navigating = false
+    }
+
+    /// 打开拾掇（或从程序坞重新打开窗口）时进起始位置；没设过、或者已经不在了就留在首页。不记进返回历史。
+    func openStartFolder() {
+        guard !Demo.isOn, let start = FavoritesStore.shared.validStartFolder else { return }
+        openFolder(URL(fileURLWithPath: start, isDirectory: true))
+        history.reset()
     }
 
     /// 回到上一层文件夹（⌘↑）。
@@ -1027,6 +1086,7 @@ final class LibraryStore: ObservableObject {
         applyTruncation(page)
         applyLibrary(page, for: target)
         isLoading = false
+        applyPendingReveal()
         refreshIgnoredCount(target)
     }
 
@@ -1776,6 +1836,7 @@ final class LibraryStore: ObservableObject {
 
     /// 文件夹被移动 / 改名：文件夹墙上记的路径、卡片颜色、自动整理规则跟着改。
     func folderMoved(from old: String, to new: String) {
+        FavoritesStore.shared.folderMoved(from: old, to: new)
         guard let index = pinnedFolders.firstIndex(of: old) else { return }
         pinnedFolders[index] = new
         FolderWallModel.shared.movePath(old, to: new)

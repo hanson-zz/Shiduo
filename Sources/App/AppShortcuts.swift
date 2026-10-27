@@ -3,6 +3,8 @@ import SwiftUI
 /// 拾掇主窗口里所有菜单快捷键，只在这里写一次：菜单、按钮的悬停提示、帮助和说明文字都从这里取。
 /// 原则：访达里有的组合键，要么做和访达一样的事，要么不用（⇧⌘H 个人文件夹、⇧⌘D 桌面、⇧⌘O 文稿、⌥⌘L 下载……）。
 /// 拾掇自己的页面用 ⌃⌘ 加字母（⌃⌘H 首页、⌃⌘E 图片工具……；⌃⌘ 加数字留给「数字键直达」，⌃⌘D 是系统的「查询」、⌃⌘F 全屏、⌃⌘Q 锁屏、⌃⌘空格 表情与符号，都不用）。
+/// 找文件更快：⌘L 输入路径（访达的 ⌘L 是「制作替身」，拾掇没有这一项，按用户确认的效果图用 ⌘L）、⇧⌘G 前往文件夹（和访达一样，做同一件事）；
+/// 命令面板用 ⌃⌘P（⇧⌘P 在访达和拾掇里都是「显示预览」，不抢）；收藏 1…9 用 ⌥⌘1…9（⌘1 / ⌘2 是「为图标 / 为列表」，⌃⌘ 加数字是「数字键直达」）。
 /// ⌥⌘I 在访达里是「检查器」、⌃⌘I 是「显示摘要信息」，所以图片工具用 ⌃⌘E。
 enum AppShortcut: String, CaseIterable, Identifiable {
     // 文件
@@ -39,6 +41,10 @@ enum AppShortcut: String, CaseIterable, Identifiable {
     case downloadSources
     case duplicates
     case cleanup
+    // 找文件更快
+    case addressBar
+    case goToFolder
+    case commandPalette
 
     var id: String { rawValue }
 
@@ -74,19 +80,22 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .downloadSources: return "j"
         case .duplicates: return "u"
         case .cleanup: return "k"
+        case .addressBar: return "l"
+        case .goToFolder: return "g"
+        case .commandPalette: return "p"
         }
     }
 
     var modifiers: EventModifiers {
         switch self {
         case .search, .asIcons, .asList, .showInfo, .toggleStatusBar, .viewOptions, .biggerIcons, .smallerIcons,
-             .back, .forward, .enclosingFolder, .openSelection:
+             .back, .forward, .enclosingFolder, .openSelection, .addressBar:
             return .command
-        case .newFolder, .showPreview, .homeFolder, .desktop, .documents, .downloadSources:
+        case .newFolder, .showPreview, .homeFolder, .desktop, .documents, .downloadSources, .goToFolder:
             return [.command, .shift]
         case .toggleToolbar, .togglePathBar, .refresh, .downloads:
             return [.command, .option]
-        case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .home, .duplicates, .cleanup:
+        case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .home, .duplicates, .cleanup, .commandPalette:
             return [.command, .control]
         }
     }
@@ -124,6 +133,9 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .downloadSources: return String(localized: "下载来源")
         case .duplicates: return String(localized: "重复与相似")
         case .cleanup: return String(localized: "清理")
+        case .addressBar: return String(localized: "输入路径…")
+        case .goToFolder: return String(localized: "前往文件夹…")
+        case .commandPalette: return String(localized: "命令面板…")
         }
     }
 
@@ -160,6 +172,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         (String(localized: "快速查看"), String(localized: "空格") + " / ⌘Y"),
         (String(localized: "移到废纸篓"), "⌘⌫"),
         (String(localized: "立即删除…"), "⌥⌘⌫"),
+        (String(localized: "前往第 1…9 个收藏"), "⌥⌘1…9"),
     ]
 }
 
