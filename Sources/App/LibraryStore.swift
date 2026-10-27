@@ -1016,15 +1016,26 @@ final class LibraryStore: ObservableObject {
         applyTruncation(ListPage([]))
         applyLibrary(ListPage([]), for: .home)
         isLoading = true
+        let isFolderPage = Self.isFolderPage(target)
+        if isFolderPage { PerfLog.folderOpened() }
         let page = await fetch(target)
         if case .chat = target { cleanup.updateChatCard() }
         guard !Task.isCancelled else { return }
         remember(page.items)
         items = page.items
+        if isFolderPage { PerfLog.folderShown(count: page.items.count) }
         applyTruncation(page)
         applyLibrary(page, for: target)
         isLoading = false
         refreshIgnoredCount(target)
+    }
+
+    /// 直接读磁盘的文件夹页面（性能打点用）。
+    private static func isFolderPage(_ target: SidebarItem) -> Bool {
+        switch target {
+        case .pinned, .folder, .volume: return true
+        default: return false
+        }
     }
 
     /// 读出一个页面的文件列表（不改界面状态）。

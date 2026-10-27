@@ -64,6 +64,7 @@ final class ThumbnailService {
             cache.removeObject(forKey: key)
             return nil
         }
+        PerfLog.thumbnailDelivered()
         return entry.image
     }
 
@@ -77,6 +78,7 @@ final class ThumbnailService {
             let image = NSWorkspace.shared.icon(forFile: url.path)
             image.size = NSSize(width: edge, height: edge)
             cache.setObject(Entry(image: image, stamp: before), forKey: key)
+            PerfLog.thumbnailDelivered()
             return image
         }
         let request = QLThumbnailGenerator.Request(
@@ -89,6 +91,7 @@ final class ThumbnailService {
             let representation = try await QLThumbnailGenerator.shared.generateBestRepresentation(for: request)
             let image = representation.nsImage
             cache.setObject(Entry(image: image, stamp: before), forKey: key)
+            PerfLog.thumbnailDelivered()
             return image
         } catch {
             return nil

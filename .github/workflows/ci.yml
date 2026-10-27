@@ -62,6 +62,8 @@ jobs:
             DEVELOPMENT_TEAM="" \
             > test.log 2>&1 || { grep -E "error:|failed|\*\* TEST" test.log | head -80; exit 1; }
           grep -E "Executed [0-9]+ test" test.log | tail -1
+          # 性能实测（Perf* 测试）的结果：只打印，不判断快慢。
+          grep -F "PERF|" test.log || true
 
       # 失败时把错误摘要推到 ci-logs 分支，方便不打开网页也能读到。
       - name: 保存错误摘要

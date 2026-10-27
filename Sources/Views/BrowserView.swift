@@ -363,7 +363,7 @@ enum InitialSortMemo {
         let stored = FileSortKey.stored
         let sig = "\(stored.key.rawValue)#\(stored.ascending)"
         if sig == signature, items == input { return output }
-        let sorted = items.sorted(using: stored.key.comparators(ascending: stored.ascending))
+        let sorted = stored.key.sort(items, ascending: stored.ascending)
         input = items
         signature = sig
         output = (sorted, sorted.map(\.url))
@@ -493,7 +493,7 @@ struct FileCollectionView: View {
                 return false
             }
         } else {
-            next = items.sorted(using: sortOrder)
+            next = sortKey.sort(items, ascending: sortAscending)
         }
         sortedInput = items
         // 顺序没变就不动（文件夹大小陆续算完时，不要每次都清掉格子位置）。

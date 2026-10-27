@@ -458,11 +458,7 @@ enum Queries {
     static func folder(_ path: String) async -> [FileItem] {
         let showHidden = UserDefaults.standard.bool(forKey: showHiddenFilesKey)
         return await Task.detached(priority: .userInitiated) { () -> [FileItem] in
-            let url = URL(fileURLWithPath: path)
-            let urls = (try? FileManager.default.contentsOfDirectory(
-                at: url, includingPropertiesForKeys: nil, options: showHidden ? [] : [.skipsHiddenFiles]
-            )) ?? []
-            return urls.compactMap { FileItem(url: $0) }
+            FolderListing.items(atPath: path, showHidden: showHidden)
         }.value
     }
 }
