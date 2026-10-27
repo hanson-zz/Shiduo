@@ -261,6 +261,9 @@ extension CleanupKind {
     var tint: Color {
         switch self {
         case .installers: return Color(red: 0.95, green: 0.62, blue: 0.20)
+        case .otherInstallers: return Color(red: 0.85, green: 0.55, blue: 0.30)
+        case .screenRecordings: return Color(red: 0.92, green: 0.30, blue: 0.30)
+        case .bigFiles: return Color(red: 0.45, green: 0.52, blue: 0.66)
         case .oldDownloads: return Color(red: 0.30, green: 0.56, blue: 0.98)
         case .oldScreenshots: return Color(red: 0.95, green: 0.42, blue: 0.55)
         case .bigOldVideos: return Color(red: 0.55, green: 0.45, blue: 0.95)

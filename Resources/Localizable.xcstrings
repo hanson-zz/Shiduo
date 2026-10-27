@@ -27406,6 +27406,390 @@
           }
         }
       }
+    },
+    "换装": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restyle"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "换装"
+          }
+        }
+      }
+    },
+    "选择要换装的文件夹，可以多选": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the folders to restyle (you can pick several)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择要换装的文件夹，可以多选"
+          }
+        }
+      }
+    },
+    "已安装应用的安装包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installers for Installed Apps"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已安装应用的安装包"
+          }
+        }
+      }
+    },
+    "其他旧安装包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other Old Installers"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他旧安装包"
+          }
+        }
+      }
+    },
+    "旧录屏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Old Screen Recordings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧录屏"
+          }
+        }
+      }
+    },
+    "很久没打开的大文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Big Files Not Opened in a While"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "很久没打开的大文件"
+          }
+        }
+      }
+    },
+    "对应的应用已经装在“应用程序”里，安装包用完了；要重装可以再下载": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app is already in Applications, so the installer has done its job. You can download it again if you need to reinstall."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "对应的应用已经装在“应用程序”里，安装包用完了；要重装可以再下载"
+          }
+        }
+      }
+    },
+    "“下载”和桌面上超过 7 天的 .dmg / .pkg，没找到对应的已装应用，可能还没装": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ".dmg / .pkg files older than 7 days in Downloads and on the Desktop with no matching installed app — maybe not installed yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“下载”和桌面上超过 7 天的 .dmg / .pkg，没找到对应的已装应用，可能还没装"
+          }
+        }
+      }
+    },
+    "30 天以前录的屏幕录像，通常只用一次": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen recordings made more than 30 days ago — usually needed only once"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 天以前录的屏幕录像，通常只用一次"
+          }
+        }
+      }
+    },
+    "“下载”里放了 90 天以上、之后再没打开过的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files in Downloads for more than 90 days that were never opened again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“下载”里放了 90 天以上、之后再没打开过的文件"
+          }
+        }
+      }
+    },
+    "超过 1 GB、90 天没打开的文件（不含视频和应用）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files over 1 GB not opened in 90 days (videos and apps excluded)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超过 1 GB、90 天没打开的文件（不含视频和应用）"
+          }
+        }
+      }
+    },
+    "放心清": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safe to Clean"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放心清"
+          }
+        }
+      }
+    },
+    "确认用过或能重新下载的，默认勾选": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already used or easy to download again — checked by default"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确认用过或能重新下载的，默认勾选"
+          }
+        }
+      }
+    },
+    "正在找…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在找…"
+          }
+        }
+      }
+    },
+    "这一组没有要清的": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to clean here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这一组没有要清的"
+          }
+        }
+      }
+    },
+    "清理勾选的 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean Checked · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理勾选的 %@"
+          }
+        }
+      }
+    },
+    "你来决定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Call"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你来决定"
+          }
+        }
+      }
+    },
+    "可能还要用，默认不勾，点进去自己挑": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You might still need these — unchecked by default, open to pick"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可能还要用，默认不勾，点进去自己挑"
+          }
+        }
+      }
+    },
+    "查看": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看"
+          }
+        }
+      }
+    },
+    "这台 Mac 已用 %@，共 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac has used %1$@ of %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 已用 %1$@，共 %2$@"
+          }
+        }
+      }
+    },
+    "还剩 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ free"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还剩 %@"
+          }
+        }
+      }
+    },
+    "已用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已用"
+          }
+        }
+      }
+    },
+    "可以腾出 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can free up %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可以腾出 %@"
+          }
+        }
+      }
+    },
+    "选几个文件夹，换颜色、主题插画或加角标，访达里同步显示": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick folders to give them a color, a themed illustration or a badge — Finder shows it too"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选几个文件夹，换颜色、主题插画或加角标，访达里同步显示"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

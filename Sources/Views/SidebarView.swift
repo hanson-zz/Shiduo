@@ -100,6 +100,21 @@ struct SidebarView: View {
             .tag(SidebarItem.folderWall)
             .help("常用的文件夹放在一面卡片墙上，一眼看到里面有什么")
 
+            // 文件夹换装（Pro）：不是一个页面，点一下选文件夹，直接打开换装编辑器。
+            Button {
+                FolderIconService.chooseFoldersAndEdit()
+            } label: {
+                HStack {
+                    Label("文件夹换装", systemImage: "paintpalette")
+                    Spacer()
+                    ProBadge()
+                        .opacity(license.isPro ? 0.55 : 1)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("选几个文件夹，换颜色、主题插画或加角标，访达里同步显示")
+
             CollapsibleSection("library", title: "资料库") {
                 ForEach(FileCategory.allCases) { category in
                     Label {

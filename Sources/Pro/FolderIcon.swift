@@ -293,6 +293,23 @@ final class FolderIconService: ObservableObject {
 
     // MARK: 入口
 
+    /// 侧边栏「文件夹换装」：先选文件夹（可多选），再打开编辑器。不是 Pro 就直接弹付费页。
+    static func chooseFoldersAndEdit() {
+        guard LicenseManager.shared.isPro else {
+            LicenseManager.shared.showPaywall = true
+            return
+        }
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = true
+        panel.canCreateDirectories = false
+        panel.prompt = String(localized: "换装")
+        panel.message = String(localized: "选择要换装的文件夹，可以多选")
+        guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
+        shared.openEditor(panel.urls)
+    }
+
     /// 打开编辑器；不是 Pro 就弹付费页（跟「提醒我处理…」一样）。
     func openEditor(_ urls: [URL], color: NSColor? = nil) {
         guard LicenseManager.shared.isPro else {

@@ -390,31 +390,49 @@ final class SimilarPhotoScanner: ObservableObject {
 
 enum CleanupKind: String, CaseIterable, Identifiable {
     case installers
+    case otherInstallers
+    case screenRecordings
     case oldDownloads
     case oldScreenshots
     case bigOldVideos
+    case bigFiles
     case unusedApps
     case chatFiles
 
     var id: String { rawValue }
 
+    /// 放心清：确认用过、能重新下载的，默认勾选；其余你来决定，默认不勾。
+    var group: CleanupGroup {
+        switch self {
+        case .installers: return .safe
+        default: return .review
+        }
+    }
+
     var title: String {
         switch self {
-        case .installers: return String(localized: "用过的安装包")
+        case .installers: return String(localized: "已安装应用的安装包")
+        case .otherInstallers: return String(localized: "其他旧安装包")
+        case .screenRecordings: return String(localized: "旧录屏")
         case .oldDownloads: return String(localized: "被遗忘的下载")
         case .oldScreenshots: return String(localized: "旧截图")
         case .bigOldVideos: return String(localized: "很久没看的大视频")
+        case .bigFiles: return String(localized: "很久没打开的大文件")
         case .unusedApps: return String(localized: "不常用的应用")
         case .chatFiles: return String(localized: "微信 / QQ 大文件")
         }
     }
 
+    /// 为什么建议清：显示在卡片和审阅页上。
     var detail: String {
         switch self {
-        case .installers: return String(localized: "“下载”和桌面上超过 7 天的 .dmg / .pkg 安装包")
-        case .oldDownloads: return String(localized: "“下载”里放了 30 天以上、之后再没打开过的文件")
+        case .installers: return String(localized: "对应的应用已经装在“应用程序”里，安装包用完了；要重装可以再下载")
+        case .otherInstallers: return String(localized: "“下载”和桌面上超过 7 天的 .dmg / .pkg，没找到对应的已装应用，可能还没装")
+        case .screenRecordings: return String(localized: "30 天以前录的屏幕录像，通常只用一次")
+        case .oldDownloads: return String(localized: "“下载”里放了 90 天以上、之后再没打开过的文件")
         case .oldScreenshots: return String(localized: "30 天以前拍的截图")
         case .bigOldVideos: return String(localized: "超过 200 MB、90 天没打开的视频")
+        case .bigFiles: return String(localized: "超过 1 GB、90 天没打开的文件（不含视频和应用）")
         case .unusedApps: return String(localized: "“应用程序”里半年以上没打开过的第三方应用")
         case .chatFiles: return String(localized: "聊天里收到的 20 MB 以上的文件和视频，删掉后聊天里就打不开了")
         }
@@ -423,9 +441,12 @@ enum CleanupKind: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .installers: return "shippingbox"
+        case .otherInstallers: return "shippingbox.circle"
+        case .screenRecordings: return "record.circle"
         case .oldDownloads: return "tray.and.arrow.down"
         case .oldScreenshots: return "camera.viewfinder"
         case .bigOldVideos: return "film.stack"
+        case .bigFiles: return "externaldrive"
         case .unusedApps: return "app.dashed"
         case .chatFiles: return "message.fill"
         }
@@ -469,15 +490,27 @@ final class CleanupScanner: ObservableObject {
         func daysAgo(_ n: Int) -> Date { Calendar.current.date(byAdding: .day, value: -n, to: now) ?? now }
         let installerExts: Set<String> = ["dmg", "pkg", "mpkg", "xip"]
 
-        // 用过的安装包
-        let installers = await SpotlightSearch.run(
+        // 安装包：先看对应的应用装了没有。装了 → 放心清；没装、放了 7 天以上 → 你来决定。
+        let installerHits = await SpotlightSearch.run(
             predicate: P.any(installerExts.map { P.nameLike("*.\($0)") }),
             scopes: [Folders.downloads, Folders.desktop], maxItems: 1000, sortKey: "kMDItemFSSize"
-        ).items.filter { item in
-            (item.added ?? item.created ?? item.modified ?? now) < daysAgo(7)
+        ).items
+        let installedAppNames = await SpotlightSearch.run(
+            predicate: P.type("com.apple.application-bundle"), scopes: Scopes.apps,
+            maxItems: 3000, sortKey: "kMDItemFSName", ascending: true
+        ).items.map(\.name)
+        var installedInstallers: [FileItem] = []
+        var otherInstallers: [FileItem] = []
+        for item in installerHits {
+            let added = item.added ?? item.created ?? item.modified ?? now
+            if SmartCleanupLogic.installedApp(forInstaller: item.name, appNames: installedAppNames) != nil {
+                if added < daysAgo(1) { installedInstallers.append(item) }
+            } else if added < daysAgo(7) {
+                otherInstallers.append(item)
+            }
         }
 
-        // 被遗忘的下载（只看“下载”文件夹第一层）
+        // 被遗忘的下载（只看“下载”文件夹第一层，90 天）
         let downloadsRoot = URL(fileURLWithPath: Folders.downloads).standardizedFileURL.path
         let oldDownloads = await SpotlightSearch.run(
             predicate: P.all([P.everything, P.notFolder]), scopes: [Folders.downloads],
@@ -488,7 +521,7 @@ final class CleanupScanner: ObservableObject {
             else { return false }
             let added = item.added ?? item.created ?? item.modified ?? now
             let used = item.lastUsed ?? .distantPast
-            return added < daysAgo(30) && used < daysAgo(30)
+            return added < daysAgo(90) && used < daysAgo(90)
         }
 
         // 旧截图
@@ -496,11 +529,29 @@ final class CleanupScanner: ObservableObject {
             predicate: P.screenshot, scopes: Scopes.home, maxItems: 5000, sortKey: "kMDItemFSCreationDate"
         ).items.filter { $0.isScreenshot && ($0.created ?? $0.modified ?? now) < daysAgo(30) }
 
+        // 旧录屏（单独一张，不再混在大视频里）
+        let videos = await SpotlightSearch.run(
+            predicate: FileCategory.videos.predicate(), scopes: Scopes.home, maxItems: 5000, sortKey: "kMDItemFSSize"
+        ).items
+        let recordings = videos.filter {
+            SmartCleanupLogic.isScreenRecording(name: $0.name) && ($0.created ?? $0.modified ?? now) < daysAgo(30)
+        }
+
         // 很久没看的大视频
-        let bigVideos = await SpotlightSearch.run(
-            predicate: P.all([FileCategory.videos.predicate(), P.sizeAtLeast(200_000_000)]),
-            scopes: Scopes.home, maxItems: 1000, sortKey: "kMDItemFSSize"
-        ).items.filter { ($0.lastUsed ?? $0.modified ?? now) < daysAgo(90) }
+        let bigVideos = videos.filter {
+            $0.size >= 200_000_000 && ($0.lastUsed ?? $0.modified ?? now) < daysAgo(90)
+        }
+
+        // 很久没打开的大文件（1 GB 以上，不含视频、应用、安装包和资源库里的东西）
+        let library = Folders.path("Library") + "/"
+        let bigFiles = await SpotlightSearch.run(
+            predicate: P.all([P.sizeAtLeast(1_000_000_000), P.notFolder]), scopes: Scopes.home,
+            maxItems: 1000, sortKey: "kMDItemFSSize"
+        ).items.filter { item in
+            item.category != .videos && item.ext != "app" && !installerExts.contains(item.ext)
+                && !item.path.hasPrefix(library)
+                && (item.lastUsed ?? item.modified ?? now) < daysAgo(90)
+        }
 
         // 不常用的应用（只看 /Applications 第一层的第三方应用）
         let ownID = Bundle.main.bundleIdentifier ?? ""
@@ -523,13 +574,22 @@ final class CleanupScanner: ObservableObject {
         }.value
 
         let local: ([FileItem]) -> [FileItem] = { $0.filter { FileActions.isLocal($0.url) } }
-        cards = [
-            CleanupCard(kind: .installers, items: local(installers)),
-            CleanupCard(kind: .oldDownloads, items: local(oldDownloads)),
-            CleanupCard(kind: .oldScreenshots, items: local(oldScreenshots)),
-            CleanupCard(kind: .bigOldVideos, items: local(bigVideos)),
-            CleanupCard(kind: .unusedApps, items: apps.sorted { $0.size > $1.size }),
+        // 顺序就是归属优先级：一个文件只出现在第一张认领它的卡片里，总量不会重复算。
+        let ordered: [(CleanupKind, [FileItem])] = [
+            (.installers, local(installedInstallers)),
+            (.otherInstallers, local(otherInstallers)),
+            (.screenRecordings, local(recordings)),
+            (.bigOldVideos, local(bigVideos)),
+            (.oldScreenshots, local(oldScreenshots)),
+            (.oldDownloads, local(oldDownloads)),
+            (.bigFiles, local(bigFiles)),
+            (.unusedApps, apps.sorted { $0.size > $1.size }),
         ]
+        let kept = SmartCleanupLogic.dedupe(ordered.map { ($0.0, $0.1.map(\.path)) })
+        cards = zip(ordered, kept).map { pair, keep in
+            let paths = Set(keep.1)
+            return CleanupCard(kind: pair.0, items: pair.1.filter { paths.contains($0.path) })
+        }
         updateChatCard()
     }
 

@@ -6,9 +6,19 @@ struct CleanupView: View {
     @EnvironmentObject private var scanner: CleanupScanner
     @EnvironmentObject private var duplicates: DuplicateScanner
 
+    /// 放心清里被用户取消勾选的卡片（默认全部勾选）。
+    @State private var uncheckedSafe: Set<CleanupKind> = []
+    @State private var confirmSafe: [FileItem] = []
+
     private var cards: [CleanupCard] {
         scanner.cards.filter { !$0.items.isEmpty && $0.bytes > 0 }.sorted { $0.bytes > $1.bytes }
     }
+
+    private var safeCards: [CleanupCard] { cards.filter { $0.kind.group == .safe } }
+    private var reviewCards: [CleanupCard] { cards.filter { $0.kind.group == .review } }
+    private var checkedSafe: [CleanupCard] { safeCards.filter { !uncheckedSafe.contains($0.kind) } }
+    private var checkedSafeItems: [FileItem] { checkedSafe.flatMap(\.items) }
+    private var checkedSafeBytes: Int64 { checkedSafe.reduce(0) { $0 + $1.bytes } }
 
     private var total: Int64 { scanner.totalBytes + duplicates.reclaimable }
 
@@ -52,12 +62,60 @@ struct CleanupView: View {
 
                 FreeUpHero(bytes: total, scanning: scanner.isRunning || duplicates.isRunning)
 
-                // 用户来清理页就是想看「能清掉什么」：清理卡片放最前面，Pro 的工具放在后面。
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 16)], spacing: 16) {
+                DiskUsageBar(reclaimable: total)
+
+                // 放心清：确认用过、能重新下载的，默认勾选，一键移到废纸篓。
+                CleanupGroupHeader(
+                    title: String(localized: "放心清"),
+                    subtitle: String(localized: "确认用过或能重新下载的，默认勾选"),
+                    symbol: "checkmark.seal.fill", tint: .green
+                )
+                if safeCards.isEmpty {
+                    Text(scanner.isRunning ? String(localized: "正在找…") : String(localized: "这一组没有要清的"))
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 4)
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(safeCards) { card in
+                            SafeCleanupRow(
+                                card: card,
+                                checked: Binding(
+                                    get: { !uncheckedSafe.contains(card.kind) },
+                                    set: { on in
+                                        if on { uncheckedSafe.remove(card.kind) } else { uncheckedSafe.insert(card.kind) }
+                                    }
+                                ),
+                                open: { store.cleanupReview = card.kind }
+                            )
+                        }
+                    }
+                    HStack {
+                        Spacer()
+                        Button {
+                            trashSafe()
+                        } label: {
+                            Label(String(localized: "清理勾选的 \(checkedSafeBytes.byteText)"), systemImage: "trash")
+                                .padding(.horizontal, 6)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                        .controlSize(.large)
+                        .disabled(checkedSafeItems.isEmpty)
+                    }
+                }
+
+                // 你来决定：默认不勾，点进去逐个挑。
+                CleanupGroupHeader(
+                    title: String(localized: "你来决定"),
+                    subtitle: String(localized: "可能还要用，默认不勾，点进去自己挑"),
+                    symbol: "hand.raised.fill", tint: .orange
+                )
+                .padding(.top, 6)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 16)], spacing: 16) {
                     Button { store.selection = .duplicates } label: { DuplicatesTile() }
                         .buttonStyle(.plain)
-                    ForEach(cards) { card in
-                        Button { store.cleanupReview = card.kind } label: { CleanupTile(card: card) }
+                    ForEach(reviewCards) { card in
+                        Button { store.cleanupReview = card.kind } label: { CleanupTile(card: card, showsReason: true) }
                             .buttonStyle(.plain)
                     }
                 }
@@ -78,6 +136,161 @@ struct CleanupView: View {
             .padding(.vertical, 24)
         }
         .scrollContentBackground(.hidden)
+        .confirmationDialog(
+            "将 \(confirmSafe.count) 个项目移到废纸篓？",
+            isPresented: Binding(get: { !confirmSafe.isEmpty }, set: { if !$0 { confirmSafe = [] } }),
+            titleVisibility: .visible
+        ) {
+            Button("移到废纸篓", role: .destructive) {
+                let list = confirmSafe
+                confirmSafe = []
+                moveSafe(list)
+            }
+            Button("取消", role: .cancel) { confirmSafe = [] }
+        } message: {
+            Text("随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。")
+        }
+    }
+
+    /// 少量直接移到废纸篓（小提示上可以撤销）；大批量（≥100 个或 ≥5 GB）先确认。
+    private func trashSafe() {
+        let list = checkedSafeItems
+        guard !list.isEmpty else { return }
+        let size = LibraryStore.trashSize(list)
+        if TrashConfirm.needsConfirm(count: list.count, bytes: size.bytes, unknownFolderSize: size.unknownFolder) {
+            confirmSafe = list
+        } else {
+            moveSafe(list)
+        }
+    }
+
+    private func moveSafe(_ list: [FileItem]) {
+        store.moveToTrash(list) { moved in
+            scanner.remove(paths: moved)
+        }
+    }
+}
+
+/// 清理页里一组的标题：放心清 / 你来决定。
+private struct CleanupGroupHeader: View {
+    let title: String
+    let subtitle: String
+    let symbol: String
+    let tint: Color
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: symbol)
+                .foregroundStyle(tint)
+            Text(title)
+                .font(.title3.weight(.semibold))
+            Text(subtitle)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// 放心清的一行：勾选框、原因、能腾出的空间，「查看」进审阅页。
+private struct SafeCleanupRow: View {
+    let card: CleanupCard
+    @Binding var checked: Bool
+    let open: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Toggle(card.kind.title, isOn: $checked)
+                .toggleStyle(.checkbox)
+                .labelsHidden()
+            TintedIcon(symbol: card.kind.symbol, tint: card.kind.tint, size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(card.kind.title)
+                    .font(.headline)
+                Text(card.kind.detail)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 12)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(card.bytes.byteText)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                Text("\(card.items.count) 个项目")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Button("查看", action: open)
+                .buttonStyle(.bordered)
+        }
+        .padding(14)
+        .glassCard(tint: card.kind.tint, radius: 16)
+        .opacity(checked ? 1 : 0.6)
+    }
+}
+
+/// 这台 Mac 的磁盘：已用多少、共多少，以及清理后能腾出多少（画在同一根条上）。
+struct DiskUsageBar: View {
+    let reclaimable: Int64
+    @State private var total: Int64 = 0
+    @State private var free: Int64 = 0
+
+    private var used: Int64 { max(total - free, 0) }
+
+    var body: some View {
+        if total > 0 {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("这台 Mac 已用 \(used.byteText)，共 \(total.byteText)")
+                        .font(.callout.weight(.medium))
+                    Spacer()
+                    Text("还剩 \(free.byteText)")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                GeometryReader { geo in
+                    let width = geo.size.width
+                    let usedW = width * CGFloat(Double(used) / Double(total))
+                    let freeUpW = min(usedW, width * CGFloat(Double(reclaimable) / Double(total)))
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color.primary.opacity(0.08))
+                        Capsule().fill(Color.accentColor.opacity(0.75)).frame(width: usedW)
+                        Capsule().fill(Color.green).frame(width: freeUpW)
+                            .offset(x: usedW - freeUpW)
+                    }
+                }
+                .frame(height: 10)
+                HStack(spacing: 14) {
+                    Label("已用", systemImage: "circle.fill")
+                        .foregroundStyle(Color.accentColor)
+                    Label("可以腾出 \(reclaimable.byteText)", systemImage: "circle.fill")
+                        .foregroundStyle(.green)
+                }
+                .font(.caption)
+                .labelStyle(DotLabelStyle())
+            }
+            .padding(16)
+            .glassCard(radius: 16)
+        } else {
+            Color.clear.frame(height: 0)
+                .task { load() }
+        }
+    }
+
+    private func load() {
+        let url = URL(fileURLWithPath: NSHomeDirectory())
+        let keys: Set<URLResourceKey> = [.volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey]
+        guard let values = try? url.resourceValues(forKeys: keys) else { return }
+        total = Int64(values.volumeTotalCapacity ?? 0)
+        free = values.volumeAvailableCapacityForImportantUsage ?? 0
+    }
+}
+
+private struct DotLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 4) {
+            configuration.icon.font(.system(size: 7))
+            configuration.title.foregroundStyle(.secondary)
+        }
     }
 }
 

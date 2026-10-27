@@ -268,11 +268,14 @@ struct LibraryTile: View {
 /// 清理卡片：标题、能腾出的空间，右边一个「清理」按钮（点卡片任何地方都进入清理）。
 struct CleanupTile: View {
     let card: CleanupCard
+    /// 清理页上显示「为什么建议清」；首页不显示。
+    var showsReason = false
 
     var body: some View {
         CompactCleanupTile(
             symbol: card.kind.symbol, tint: card.kind.tint, title: card.kind.title,
-            value: card.bytes.byteText, detail: String(localized: "\(card.items.count) 个项目")
+            value: card.bytes.byteText, detail: String(localized: "\(card.items.count) 个项目"),
+            reason: showsReason ? card.kind.detail : ""
         )
     }
 }
@@ -284,6 +287,7 @@ struct CompactCleanupTile: View {
     let value: String
     var detail: String = ""
     var progress: Double? = nil
+    var reason: String = ""
 
     var body: some View {
         HStack(spacing: 12) {
@@ -304,6 +308,14 @@ struct CompactCleanupTile: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
+                }
+                if !reason.isEmpty {
+                    Text(reason)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .help(reason)
                 }
             }
             Spacer(minLength: 6)
