@@ -179,11 +179,12 @@ final class FontLogicTests: XCTestCase {
     }
 
     func testCJKCoverageWithSystemFonts() {
-        let chinese = CTFontCreateUIFontForLanguage(.system, 14, "zh-Hans" as CFString)
-        XCTAssertNotNil(chinese)
-        if let chinese {
-            XCTAssertTrue(FontCoverage.coversCJK(font: chinese), "中文界面字体（苹方）包含常用汉字")
-        }
+        // 系统界面字体本身没有汉字（靠字体回退显示），所以让 Core Text 挑一个能显示汉字的系统字体（通常是苹方）。
+        let base = CTFontCreateWithName("Helvetica" as CFString, 14, nil)
+        let sample = "永和九年" as CFString
+        let chinese = CTFontCreateForString(base, sample, CFRange(location: 0, length: CFStringGetLength(sample)))
+        XCTAssertTrue(FontCoverage.coversCJK(font: chinese),
+                      "能显示汉字的系统字体（\(CTFontCopyPostScriptName(chinese) as String)）包含常用汉字")
         let menlo = CTFontCreateWithName("Menlo-Regular" as CFString, 14, nil)
         XCTAssertFalse(FontCoverage.coversCJK(font: menlo), "Menlo 没有汉字")
     }
