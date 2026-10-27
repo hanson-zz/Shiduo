@@ -15,8 +15,9 @@ final class BrowserTab: ObservableObject, Identifiable {
     }
 
     init(panes: [LibraryStore], layout: PaneLayout, focused: Int) {
-        self.panes = Array(panes.prefix(2))
-        state = PaneLayoutState(layout: layout, paneCount: self.panes.count, focused: focused)
+        let list = Array(panes.prefix(2))
+        self.panes = list
+        state = PaneLayoutState(layout: layout, paneCount: list.count, focused: focused)
     }
 
     var layout: PaneLayout { state.layout }
