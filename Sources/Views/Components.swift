@@ -252,6 +252,8 @@ private struct FileMenuItems<Extra: View>: View {
             .keyboardShortcut(.copyItems)
         Button(items.count > 1 ? String(localized: "拷贝 \(items.count) 个路径") : String(localized: "拷贝路径")) { FileActions.copyPaths(items) }
             .keyboardShortcut(.copyPath)
+        Button("复制") { store.duplicate(items) }
+            .keyboardShortcut(.duplicate)
         Button("制作替身") { store.makeAliases(items) }
             .keyboardShortcut(.makeAlias)
         if context.inBrowser, canGroupIntoFolder {

@@ -37,6 +37,7 @@ final class AppShortcutTests: XCTestCase {
         XCTAssertEqual(byDisplay["⌃⌘A"], .makeAlias)
         XCTAssertEqual(byDisplay["⌥⌘⌫"], .deleteImmediately)
         XCTAssertEqual(byDisplay["⌃⌘C"], .copyText)
+        XCTAssertEqual(byDisplay["⌘D"], .duplicate)
         // ⌥⌘1…9 留给收藏（不在这张表里，菜单里按收藏动态生成）
         for digit in 1...9 { XCTAssertNil(byDisplay["⌥⌘\(digit)"]) }
         for finderOnly in ["⇧⌘K", "⇧⌘C", "⌘R", "⌥⌘I", "⌃⌘I", "⇧⌘A", "⇧⌘U", "⇧⌘I", "⇧⌘F", "⇧⌘R", "⌘E"] {

@@ -162,6 +162,9 @@ struct FileCommands: Commands {
             Button("用所选项目新建文件夹") { store.newFolderWithSelection(FileCommandRouter.selection) }
                 .keyboardShortcut(.newFolderWithSelection)
                 .disabled(!center.canTrash || store.currentFolder == nil || store.activeQuery != nil || store.isInlineRenaming)
+            Button("复制") { store.duplicate(FileCommandRouter.selection) }
+                .keyboardShortcut(.duplicate)
+                .disabled(!center.canTrash)
             Button("制作替身") { store.makeAliases(FileCommandRouter.selection) }
                 .keyboardShortcut(.makeAlias)
                 .disabled(!center.canTrash)
@@ -298,6 +301,15 @@ extension LibraryStore {
                     + result.failed.prefix(5).joined(separator: String(localized: "、"))
             }
         }
+    }
+
+    /// ⌘D 复制：在原处拷贝一份（同名自动叫「名称 2」），走移动 / 拷贝的进度卡片，⌘Z 把副本移到废纸篓。
+    /// 选中的在不同文件夹里（搜索结果）时，只复制和第一个在同一个文件夹里的。
+    func duplicate(_ list: [FileItem]) {
+        guard let first = list.first else { return }
+        let parent = first.url.deletingLastPathComponent()
+        let same = list.filter { $0.url.deletingLastPathComponent().standardizedFileURL.path == parent.standardizedFileURL.path }
+        transferDropped(same.map(\.url), into: parent, copy: true)
     }
 
     /// 计算哈希：打开简介、滚到「校验值」并开始算。
