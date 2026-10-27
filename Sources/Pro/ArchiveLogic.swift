@@ -152,9 +152,12 @@ struct ArchiveTree {
                 // 文件大小加到每一层上级文件夹里。
                 var dir = ArchivePathLogic.parent(of: entry.path)
                 while !dir.isEmpty {
-                    nodes[dir]?.fileCount += 1
-                    if let size = entry.size { nodes[dir]?.size = (nodes[dir]?.size ?? 0) + size }
-                    if let packed = entry.compressedSize { nodes[dir]?.compressedSize = (nodes[dir]?.compressedSize ?? 0) + packed }
+                    if var folder = nodes[dir] {
+                        folder.fileCount += 1
+                        if let size = entry.size { folder.size = (folder.size ?? 0) + size }
+                        if let packed = entry.compressedSize { folder.compressedSize = (folder.compressedSize ?? 0) + packed }
+                        nodes[dir] = folder
+                    }
                     dir = ArchivePathLogic.parent(of: dir)
                 }
             }
