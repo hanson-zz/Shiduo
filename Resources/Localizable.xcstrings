@@ -27790,6 +27790,278 @@
           }
         }
       }
+    },
+    "空格：快速查看　按住 Shift：立即预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space: Quick Look   Hold Shift: preview now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格：快速查看　按住 Shift：立即预览"
+          }
+        }
+      }
+    },
+    "默认静音，鼠标移开就停": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muted by default; stops when the pointer leaves"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认静音，鼠标移开就停"
+          }
+        }
+      }
+    },
+    "暂停": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停"
+          }
+        }
+      }
+    },
+    "打开声音": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unmute"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开声音"
+          }
+        }
+      }
+    },
+    "静音": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mute"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "静音"
+          }
+        }
+      }
+    },
+    "展开文件夹里的内容": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show what’s inside this folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开文件夹里的内容"
+          }
+        }
+      }
+    },
+    "%@ · %lld 项": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld items"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld 项"
+          }
+        }
+      }
+    },
+    "打开此文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open This Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开此文件夹"
+          }
+        }
+      }
+    },
+    "无法读取这个文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can’t read this folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取这个文件夹"
+          }
+        }
+      }
+    },
+    "还有 %lld 项…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还有 %lld 项…"
+          }
+        }
+      }
+    },
+    "点按：打开　⌘ 点按：在新的访达窗口打开　⌥ 点按：在访达中显示": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click: open   ⌘-click: open in a new Finder window   ⌥-click: show in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点按：打开　⌘ 点按：在新的访达窗口打开　⌥ 点按：在访达中显示"
+          }
+        }
+      }
+    },
+    "悬停预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hover Preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬停预览"
+          }
+        }
+      }
+    },
+    "延迟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delay"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "延迟"
+          }
+        }
+      }
+    },
+    "0.3 秒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0.3 s"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0.3 秒"
+          }
+        }
+      }
+    },
+    "1 秒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 s"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 秒"
+          }
+        }
+      }
+    },
+    "鼠标在文件上停一会儿就弹出预览：图片看大图，视频、音频可以直接播放（默认静音，移开就停），文本和 PDF 看第一页。按住 Shift 立即弹出。文件夹右边的小箭头可以逐级展开里面的内容。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rest the pointer on a file to preview it: large images, playable video and audio (muted by default, stops when you move away), and the first page of text and PDFs. Hold Shift to preview right away. The small arrow on a folder lets you browse inside it level by level."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鼠标在文件上停一会儿就弹出预览：图片看大图，视频、音频可以直接播放（默认静音，移开就停），文本和 PDF 看第一页。按住 Shift 立即弹出。文件夹右边的小箭头可以逐级展开里面的内容。"
+          }
+        }
+      }
+    },
+    "开始播放": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始播放"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -95,6 +95,7 @@ targets:
       - path: Sources/Pro/UnlockCelebrationLogic.swift
       - path: Sources/Model/FolderArtLogic.swift
       - path: Sources/Model/SmartCleanupLogic.swift
+      - path: Sources/Model/HoverPreviewLogic.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests

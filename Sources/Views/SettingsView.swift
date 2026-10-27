@@ -12,6 +12,8 @@ struct SettingsView: View {
     @AppStorage("autoInstallUpdates") private var autoInstall = true
     @AppStorage("autoOCR") private var autoOCR = true
     @AppStorage("liveTextPreview") private var liveTextPreview = true
+    @AppStorage(HoverPreviewPrefs.enabledKey) private var hoverPreviewEnabled = true
+    @AppStorage(HoverPreviewPrefs.delayKey) private var hoverPreviewDelay = HoverPreviewLogic.defaultDelay
     @AppStorage("quickSearchEnabled") private var quickSearchEnabled = true
     @AppStorage("quickSearchHotKey") private var hotKey: QuickSearchHotKey = .optionSpace
     @State private var loginItem = LoginItem.isEnabled
@@ -109,6 +111,19 @@ struct SettingsView: View {
                 ForEach(FolderWallIconStyle.allCases) { Text($0.title).tag($0) }
             }
             Text("「拾掇风格」：拾掇里看到的文件夹都是拾掇文件夹，上过色的保留颜色和图案，有自定义图标的把它放在文件夹上。「系统图标」：和访达里一样。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+
+        Section("悬停预览") {
+            Toggle("悬停预览", isOn: $hoverPreviewEnabled)
+            Picker("延迟", selection: $hoverPreviewDelay) {
+                Text("0.3 秒").tag(0.3)
+                Text("0.5 秒").tag(0.5)
+                Text("1 秒").tag(1.0)
+            }
+            .disabled(!hoverPreviewEnabled)
+            Text("鼠标在文件上停一会儿就弹出预览：图片看大图，视频、音频可以直接播放（默认静音，移开就停），文本和 PDF 看第一页。按住 Shift 立即弹出。文件夹右边的小箭头可以逐级展开里面的内容。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

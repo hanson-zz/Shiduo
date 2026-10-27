@@ -613,7 +613,9 @@ struct FileCollectionView: View {
                         ),
                         showsExtension: showExtensions, showsInfo: showItemInfo,
                         renaming: store.inlineRenamePath == item.path,
-                        onRename: { store.commitInlineRename(item, to: $0) }
+                        onRename: { store.commitInlineRename(item, to: $0) },
+                        hoverPreview: true,
+                        onOpenFolderMenu: item.isDirectory ? { openFolderMenu(item) } : nil
                     )
                         .contextMenu {
                             FileContextMenu(items: targets(for: item), preview: { preview($0) })
@@ -824,17 +826,12 @@ struct FileCollectionView: View {
         ScrollViewReader { proxy in
         Table(of: FileItem.self, selection: $store.selectedIDs, sortOrder: sortBinding) {
             TableColumn("名称", value: \FileItem.name) { item in
-                HStack(spacing: 6) {
-                    ThumbnailView(url: item.url, size: 20, modified: item.modified, isFolder: item.isPlainFolder)
-                        .quickLookSource(item.url)
-                    if store.inlineRenamePath == item.path {
-                        InlineRenameField(item: item) { store.commitInlineRename(item, to: $0) }
-                    } else {
-                        Text(item.shownName(extensions: showExtensions))
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-                }
+                FileListNameCell(
+                    item: item, showsExtension: showExtensions,
+                    renaming: store.inlineRenamePath == item.path,
+                    onRename: { store.commitInlineRename(item, to: $0) },
+                    onOpenFolderMenu: item.isDirectory ? { openFolderMenu(item) } : nil
+                )
                 .help(item.path)
                 // 资料库类别：最后一行出现时加载下一页。
                 .onAppear { if item.id == sortedItems.last?.id { store.loadMore() } }
@@ -943,6 +940,13 @@ struct FileCollectionView: View {
             liveItem = nil
         } else if let first = sorted.first(where: { store.selectedIDs.contains($0.id) }) {
             preview(first)
+        }
+    }
+
+    /// 文件夹右边的小箭头：弹出级联菜单，选中的文件夹在这个窗口里打开。
+    private func openFolderMenu(_ item: FileItem) {
+        FolderCascadeMenu.present(folder: item.url) { url in
+            store.openFolder(url)
         }
     }
 
@@ -1240,8 +1244,13 @@ struct FileGridCell: View {
     /// 正在原地改名：名字换成输入框。
     var renaming = false
     var onRename: ((String?) -> Void)? = nil
+    /// 主窗口的网格：悬停弹出预览（设置里可关）。
+    var hoverPreview = false
+    /// 文件夹：悬停时右边出现小圆箭头，点开级联菜单。
+    var onOpenFolderMenu: (() -> Void)? = nil
 
     @State private var hovering = false
+    @State private var anchor = HoverAnchor()
 
     var body: some View {
         VStack(spacing: 6) {
@@ -1303,8 +1312,74 @@ struct FileGridCell: View {
                 }
                 .padding(.top, 8)
         }
-        .onHover { hovering = $0 }
+        .overlay(alignment: .top) {
+            // 文件夹缩略图右边缘、垂直居中的小圆箭头。
+            Color.clear
+                .frame(width: size, height: size)
+                .overlay(alignment: .trailing) {
+                    if hovering, !renaming, item.isDirectory, let onOpenFolderMenu {
+                        FolderCascadeButton(action: onOpenFolderMenu)
+                            .offset(x: 10)
+                            .transition(.opacity)
+                    }
+                }
+                .padding(.top, 8)
+        }
+        .background(HoverAnchorReader(anchor: anchor))
+        .onHover { inside in
+            hovering = inside
+            guard hoverPreview else { return }
+            if inside, !renaming {
+                HoverPreviewController.shared.hoverBegan(item, anchor: anchor)
+            } else {
+                HoverPreviewController.shared.hoverEnded(item)
+            }
+        }
+        .onDisappear {
+            if hoverPreview { HoverPreviewController.shared.hoverEnded(item) }
+        }
         .animation(.easeOut(duration: 0.12), value: hovering)
+    }
+}
+
+/// 列表「名称」一列：缩略图 + 名字（或改名输入框）；悬停弹出预览，文件夹在右边出现级联小箭头。
+struct FileListNameCell: View {
+    let item: FileItem
+    let showsExtension: Bool
+    let renaming: Bool
+    let onRename: (String?) -> Void
+    var onOpenFolderMenu: (() -> Void)? = nil
+
+    @State private var hovering = false
+    @State private var anchor = HoverAnchor()
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ThumbnailView(url: item.url, size: 20, modified: item.modified, isFolder: item.isPlainFolder)
+                .quickLookSource(item.url)
+            if renaming {
+                InlineRenameField(item: item, onDone: onRename)
+            } else {
+                Text(item.shownName(extensions: showsExtension))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            Spacer(minLength: 0)
+            if hovering, !renaming, item.isDirectory, let onOpenFolderMenu {
+                FolderCascadeButton(diameter: 18, action: onOpenFolderMenu)
+            }
+        }
+        .contentShape(Rectangle())
+        .background(HoverAnchorReader(anchor: anchor))
+        .onHover { inside in
+            hovering = inside
+            if inside, !renaming {
+                HoverPreviewController.shared.hoverBegan(item, anchor: anchor)
+            } else {
+                HoverPreviewController.shared.hoverEnded(item)
+            }
+        }
+        .onDisappear { HoverPreviewController.shared.hoverEnded(item) }
     }
 }
 
