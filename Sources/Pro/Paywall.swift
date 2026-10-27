@@ -43,6 +43,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case archiveBrowse
     case renamePlus
     case fileTemplates
+    case dualPane
 
     var id: Self { self }
 
@@ -66,6 +67,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .archiveBrowse: return String(localized: "压缩包浏览")
         case .renamePlus: return String(localized: "批量改名增强")
         case .fileTemplates: return String(localized: "新建文件模板")
+        case .dualPane: return String(localized: "双栏浏览")
         }
     }
 
@@ -89,6 +91,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .archiveBrowse: return String(localized: "双击 zip、tar.gz 像文件夹一样看里面有什么，空格预览，只解压需要的几个")
         case .renamePlus: return String(localized: "常用预设一点就用、存自己的预设，正则查找替换（$1 引用），重名和非法名字先标红")
         case .fileTemplates: return String(localized: "右键「新建文件 ▸」：文本、Markdown、脚本……模板文件夹里放什么就能新建什么")
+        case .dualPane: return String(localized: "左右双栏或上下排，两栏各走各的；拖过去就移动，一键拷贝 / 移动到另一栏")
         }
     }
 
@@ -112,6 +115,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .archiveBrowse: return "doc.zipper"
         case .renamePlus: return "character.cursor.ibeam"
         case .fileTemplates: return "doc.badge.plus"
+        case .dualPane: return "rectangle.split.2x1"
         }
     }
 
@@ -135,6 +139,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .archiveBrowse: return .purple
         case .renamePlus: return .green
         case .fileTemplates: return .blue
+        case .dualPane: return .teal
         }
     }
 }

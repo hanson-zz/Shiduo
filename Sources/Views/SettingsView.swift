@@ -38,6 +38,9 @@ struct SettingsView: View {
     @State private var language = AppLanguage.current
     /// 快捷位置：起始位置、收藏。
     @ObservedObject private var favorites = FavoritesStore.shared
+    /// 标签页：重新打开时恢复、只有一个标签时也显示标签栏。
+    @AppStorage(TabBarLogic.restoreKey) private var restoreTabs = true
+    @AppStorage(TabBarLogic.alwaysShowKey) private var alwaysShowTabBar = false
 
     /// 设置分成几个标签页：常用的在前，Pro 放最后（免费用户打开设置先看到的是能用的设置）。
     enum Tab: String, Hashable {
@@ -125,6 +128,14 @@ struct SettingsView: View {
                     .disabled(favorites.startFolder == nil)
             }
             Text("也可以在文件夹上点右键选「设为起始位置」。关掉所有窗口后从程序坞重新打开，也会先进这里。侧边栏「收藏」里的前 9 个文件夹可以用 ⌥⌘1…9 直达。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+
+        Section("标签页") {
+            Toggle("重新打开拾掇时恢复上次的标签页", isOn: $restoreTabs)
+            Toggle("只有一个标签时也显示标签栏", isOn: $alwaysShowTabBar)
+            Text("⌘T 新建标签页，⌘W 关闭，⌃⇥ 切换；⌘ 双击或中键点按文件夹在新标签页中打开。拾掇 Pro 可以在「显示」菜单里分成左右双栏或上下排，两栏之间直接拖文件。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

@@ -119,9 +119,13 @@ struct FileContextMenu<Extra: View>: View {
         self.extra = extra()
     }
 
+    /// 在哪一栏上点的右键就作用在哪一栏（双栏时不一定是当前栏）；主窗口外面用「当前」那一份。
+    @Environment(\.paneStore) private var paneStore
+    @Environment(\.windowTabs) private var windowTabs
+
     var body: some View {
-        if let store = LibraryStore.shared, !items.isEmpty {
-            FileMenuItems(store: store, items: items, context: context) { extra }
+        if let store = paneStore ?? LibraryStore.shared, !items.isEmpty {
+            FileMenuItems(store: store, windowTabs: windowTabs, items: items, context: context) { extra }
         }
     }
 }
@@ -139,6 +143,7 @@ extension FileContextMenu where Extra == EmptyView {
 
 private struct FileMenuItems<Extra: View>: View {
     let store: LibraryStore
+    let windowTabs: WindowTabs?
     @ObservedObject var favorites = FavoritesStore.shared
     let items: [FileItem]
     let context: FileMenuContext
@@ -222,6 +227,16 @@ private struct FileMenuItems<Extra: View>: View {
                 LibraryStore.openFromOutside(item.url)
             } else {
                 store.openItems(items)
+            }
+        }
+        if items.count == 1, let folder = items.first, folder.isPlainFolder, let windowTabs, !context.outsideMainWindow {
+            Button("在新标签页中打开") { windowTabs.openInNewTab(folder.path) }
+            if windowTabs.selectedTab.layout.isDual, LicenseManager.shared.isPro,
+               let other = windowTabs.selectedTab.panes.first(where: { $0 !== store }) {
+                Button("在另一栏中打开") {
+                    other.openFolder(folder.url)
+                    windowTabs.focusPane(other)
+                }
             }
         }
         OpenWithMenu(urls: urls)
@@ -433,8 +448,10 @@ private struct FileMenuItems<Extra: View>: View {
 
 /// 文件夹空白处的右键菜单（网格空白处、列表空白处）：新建文件夹、粘贴、在终端 / 编辑器打开、拷贝路径。
 struct FolderBackgroundMenu: View {
+    @Environment(\.paneStore) private var paneStore
+
     var body: some View {
-        if let store = LibraryStore.shared, store.activeQuery == nil, let path = store.currentFolder {
+        if let store = paneStore ?? LibraryStore.shared, store.activeQuery == nil, let path = store.currentFolder {
             let folder = URL(fileURLWithPath: path, isDirectory: true)
             Button("新建文件夹") { DispatchQueue.main.async { store.newFolderInCurrent() } }
                 .keyboardShortcut(.newFolder)

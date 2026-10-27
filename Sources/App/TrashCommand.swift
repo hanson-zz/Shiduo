@@ -197,6 +197,9 @@ struct TrashContextModifier: ViewModifier {
     @State private var id = UUID()
     @State private var window: NSWindow?
     @State private var visible = false
+    /// 双栏时只有当前栏接 ⌘⌫（另一栏的选中不会被删）。
+    @Environment(\.isActivePane) private var isActivePane
+    @Environment(\.paneStore) private var paneStore
 
     func body(content: Content) -> some View {
         content
@@ -205,12 +208,18 @@ struct TrashContextModifier: ViewModifier {
             .onDisappear { visible = false; TrashCommandCenter.shared.unregister(id) }
             .onChange(of: ids) { update() }
             .onChange(of: window) { update() }
+            .onChange(of: isActivePane) { update() }
     }
 
     @MainActor
     private func update() {
         guard visible, let window else { return }
-        let perform = self.perform ?? { LibraryStore.shared?.moveToTrash($0) }
+        guard isActivePane else {
+            TrashCommandCenter.shared.unregister(id)
+            return
+        }
+        let store = paneStore
+        let perform = self.perform ?? { (store ?? LibraryStore.shared)?.moveToTrash($0) }
         TrashCommandCenter.shared.register(id, window: window, ids: ids, items: items, perform: perform)
     }
 }

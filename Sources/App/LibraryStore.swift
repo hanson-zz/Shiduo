@@ -747,15 +747,30 @@ final class LibraryStore: ObservableObject {
     @Published var selectedIDs: Set<String> = []
     /// 右边的简介 / 预览栏（「显示」菜单 ⌘I / ⇧⌘P），下次打开拾掇时保持原样。
     @Published var showInspector = UserDefaults.standard.bool(forKey: "showInspector") {
-        didSet { UserDefaults.standard.set(showInspector, forKey: "showInspector") }
+        didSet {
+            UserDefaults.standard.set(showInspector, forKey: "showInspector")
+            for other in Self.all.allObjects where other !== self && other.showInspector != showInspector {
+                other.showInspector = showInspector
+            }
+        }
     }
     /// 右边栏显示简介（小缩略图）还是预览（大的实时预览）。
     @Published var inspectorMode: InspectorMode = InspectorMode(rawValue: UserDefaults.standard.string(forKey: "inspectorMode") ?? "") ?? .info {
-        didSet { UserDefaults.standard.set(inspectorMode.rawValue, forKey: "inspectorMode") }
+        didSet {
+            UserDefaults.standard.set(inspectorMode.rawValue, forKey: "inspectorMode")
+            for other in Self.all.allObjects where other !== self && other.inspectorMode != inspectorMode {
+                other.inspectorMode = inspectorMode
+            }
+        }
     }
     /// 左边的侧边栏（⌃⌘S）。
     @Published var sidebarVisible = UserDefaults.standard.object(forKey: "sidebarVisible") as? Bool ?? true {
-        didSet { UserDefaults.standard.set(sidebarVisible, forKey: "sidebarVisible") }
+        didSet {
+            UserDefaults.standard.set(sidebarVisible, forKey: "sidebarVisible")
+            for other in Self.all.allObjects where other !== self && other.sidebarVisible != sidebarVisible {
+                other.sidebarVisible = sidebarVisible
+            }
+        }
     }
 
     /// ⌘I / ⇧⌘P：已经在显示这一种就收起，否则切到这一种并打开。
@@ -778,35 +793,61 @@ final class LibraryStore: ObservableObject {
     @Published var update: UpdateInfo?
 
     @Published var pinnedFolders: [String] = UserDefaults.standard.stringArray(forKey: "pinnedFolders") ?? [] {
-        didSet { UserDefaults.standard.set(pinnedFolders, forKey: "pinnedFolders") }
+        didSet {
+            UserDefaults.standard.set(pinnedFolders, forKey: "pinnedFolders")
+            for other in Self.all.allObjects where other !== self && other.pinnedFolders != pinnedFolders {
+                other.pinnedFolders = pinnedFolders
+            }
+        }
     }
 
-    let ocr = OCRStore()
-    let duplicates = DuplicateScanner()
-    let similar = SimilarPhotoScanner()
-    let cleanup = CleanupScanner()
-    let player = MusicPlayer()
-    let updater = Updater()
+    // 扫描器、播放器这些整个 App 只要一份：每个标签 / 每一栏各有一个 LibraryStore（各自的浏览状态），它们共用这些。
+    let ocr = AppServices.shared.ocr
+    let duplicates = AppServices.shared.duplicates
+    let similar = AppServices.shared.similar
+    let cleanup = AppServices.shared.cleanup
+    let player = AppServices.shared.player
+    let updater = AppServices.shared.updater
     let chat = ChatFilesStore.shared
     // 拾掇 Pro
     let license = LicenseManager.shared
-    let organizer = AutoOrganizer()
-    let volumes = VolumeMonitor()
-    let photos = PhotoContentStore()
+    let organizer = AppServices.shared.organizer
+    let volumes = AppServices.shared.volumes
+    let photos = AppServices.shared.photos
 
     var libraryBytes: Int64 { totals.values.reduce(0) { $0 + $1.bytes } }
 
-    /// 主窗口外面的界面（悬浮暂存架、刘海暂存架、提醒通知）用它找到主窗口的状态。
-    static weak var shared: LibraryStore?
+    /// 主窗口外面的界面（悬浮暂存架、刘海暂存架、提醒通知、菜单命令）用它找到「当前」的浏览状态：
+    /// 最前面那个主窗口里、当前标签的当前栏。没有时退回到 App 启动时建的那一份。
+    static var shared: LibraryStore? {
+        get { activeStore ?? primary }
+        set { activeStore = newValue }
+    }
+    private static weak var activeStore: LibraryStore?
+    /// App 启动时建的那一份（ShiduoApp 一直持有，第一个窗口的第一个标签用它）。
+    private(set) static weak var primary: LibraryStore?
+    /// 现在还在的所有浏览状态（侧边栏固定文件夹这类全局设置在它们之间同步）。
+    static let all = NSHashTable<LibraryStore>.weakObjects()
 
-    init() {
-        // 外接磁盘插拔时检查当前页面还在不在。
-        volumes.onChange = { [weak self] list in self?.volumesChanged(list) }
-        LibraryStore.shared = self
+    /// App 启动时的那一份：做只需要做一次的事。
+    convenience init() {
+        self.init(seededFrom: nil)
+        LibraryStore.primary = self
+        if LibraryStore.activeStore == nil { LibraryStore.activeStore = self }
         // 清理记录里恢复的文件夹：上色记录跟着回到原路径
         CleanupHistory.shared.onMovedBack = { FolderIconService.shared.movePath($0, to: $1) }
         // 启动时在后台认一次截图工具和它们的存放文件夹。
         ScreenshotSourceDetector.shared.refreshIfNeeded(force: true)
+    }
+
+    /// 新标签、第二栏、⌘N 新窗口用：首页统计、侧边栏数量先拷一份过来（不用等重新统计），之后各自浏览。
+    init(seededFrom source: LibraryStore?) {
+        LibraryStore.all.add(self)
+        // 外接磁盘插拔时检查每一栏的当前页面还在不在。
+        volumes.onChange = { list in
+            for store in LibraryStore.all.allObjects { store.volumesChanged(list) }
+        }
+        if let source { seedDashboard(from: source) }
         // 回到拾掇时：正在看的列表悄悄重新读一次（在访达里新建、改名、删除的文件跟着变）。
         NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
@@ -817,7 +858,10 @@ final class LibraryStore: ObservableObject {
         NotificationCenter.default.addObserver(
             forName: .NSCalendarDayChanged, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshTodayAdded() }
+            MainActor.assumeIsolated {
+                guard let self, LibraryStore.shared === self else { return }
+                self.refreshTodayAdded()
+            }
         }
     }
 
@@ -909,10 +953,13 @@ final class LibraryStore: ObservableObject {
     private var lastActivationRefresh = Date.distantPast
 
     private func appBecameActive() {
-        // 截图工具装了 / 卸了 / 改了存放位置（最多 5 分钟查一次）。
-        ScreenshotSourceDetector.shared.refreshIfNeeded()
-        refreshTodayAdded()
-        chat.refreshBadges()
+        // 全局的事只由当前那一栏做一次（开了好几个标签 / 两栏时不重复查）。
+        if LibraryStore.shared === self {
+            // 截图工具装了 / 卸了 / 改了存放位置（最多 5 分钟查一次）。
+            ScreenshotSourceDetector.shared.refreshIfNeeded()
+            refreshTodayAdded()
+            chat.refreshBadges()
+        }
         // Spotlight 类页面每次都要重新查，节流一下；文件夹页面直接读磁盘，很便宜。
         let isFolderPage = currentFolder != nil
         guard isFolderPage || Date().timeIntervalSince(lastActivationRefresh) > 30 else { return }
@@ -1003,7 +1050,8 @@ final class LibraryStore: ObservableObject {
         let folder = Demo.isOn || activeQuery != nil ? nil : currentFolder
         folderWatcher.watch(folder)
         treeWatcher.watch(folder)
-        FolderSizeStore.shared.watchedRoot = folder
+        // 文件夹大小只盯当前那一栏正在看的文件夹。
+        if LibraryStore.shared === self { FolderSizeStore.shared.watchedRoot = folder }
     }
 
     /// 是不是一个能进去浏览的文件夹（.app 等文件包不算）。
@@ -2240,4 +2288,184 @@ struct CopiedPreview: Equatable {
     let id = UUID()
     let title: String
     let text: String
+}
+
+// MARK: - 标签页与双栏：每一栏一份浏览状态
+
+/// 整个 App 共用一份的扫描器、播放器（每个 LibraryStore 都指向这里，不各自扫描）。
+@MainActor
+final class AppServices {
+    static let shared = AppServices()
+
+    let ocr = OCRStore()
+    let duplicates = DuplicateScanner()
+    let similar = SimilarPhotoScanner()
+    let cleanup = CleanupScanner()
+    let player = MusicPlayer()
+    let updater = Updater()
+    let organizer = AutoOrganizer()
+    let volumes = VolumeMonitor()
+    let photos = PhotoContentStore()
+
+    private init() {}
+}
+
+extension LibraryStore {
+    /// 新标签 / 第二栏一开始先用别的栏已经统计好的首页数字和侧边栏数量。
+    fileprivate func seedDashboard(from source: LibraryStore) {
+        totals = source.totals
+        shelves = source.shelves
+        previews = source.previews
+        sourceGroups = source.sourceGroups
+        todayFolderShotPaths = source.todayFolderShotPaths
+        todayAdded = source.todayAdded
+        largeFileCount = source.largeFileCount
+        usedTags = source.usedTags
+        dashboardLoaded = source.dashboardLoaded
+        remember(source.todayAdded)
+    }
+
+    /// 变成「当前栏」：菜单命令、悬浮暂存架、地址栏这些都作用在它上面。
+    func becomeActivePane() {
+        guard LibraryStore.shared !== self else { return }
+        LibraryStore.shared = self
+        updateFolderWatch()
+    }
+
+    /// 标签关掉了：停掉后台任务和文件夹监视。
+    func retire() {
+        loadTask?.cancel()
+        quietTask?.cancel()
+        moreTask?.cancel()
+        ignoredTask?.cancel()
+        todayTask?.cancel()
+        midnightTask?.cancel()
+        sourceGroupsTask?.cancel()
+        folderWatcher.watch(nil)
+        treeWatcher.watch(nil)
+        archiveSession = nil
+        LibraryStore.all.remove(self)
+        if LibraryStore.activeStore === self { LibraryStore.activeStore = nil }
+    }
+
+    /// 正在浏览一个真正的文件夹（不是搜索结果、压缩包、资料库这类跨文件夹的列表）：可以往里放文件。
+    var browsingFolder: String? {
+        guard activeQuery == nil, archiveSession == nil else { return nil }
+        return currentFolder
+    }
+
+    /// 记住这一栏的位置（重新打开拾掇时恢复）。搜索结果、压缩包记成它下面的那一页。
+    var tabPlace: TabPlace {
+        if let folder = currentFolder { return .folder(folder) }
+        let item = selection ?? .home
+        if item == .home { return .home }
+        return Self.pageKey(for: item).map(TabPlace.page) ?? .home
+    }
+
+    /// 打开一个记住的位置，不记进返回历史。文件夹已经不在了就回到首页。
+    func open(_ place: TabPlace) {
+        switch place {
+        case .home:
+            selection = .home
+        case .folder(let path):
+            let url = URL(fileURLWithPath: path, isDirectory: true)
+            if Self.isBrowsableFolder(url) { openFolder(url) } else { selection = .home }
+        case .page(let key):
+            selection = Self.sidebarItem(forPageKey: key) ?? .home
+        }
+        history.reset()
+    }
+
+    /// 侧边栏页面 ↔ 记住用的键名（文件夹类页面不用，直接记路径）。
+    static func pageKey(for item: SidebarItem) -> String? {
+        switch item {
+        case .shelf: return "shelf"
+        case .reminders: return "reminders"
+        case .folderWall: return "folderWall"
+        case .largeFiles: return "largeFiles"
+        case .screenshots: return "screenshots"
+        case .downloads: return "downloads"
+        case .duplicates: return "duplicates"
+        case .similarPhotos: return "similarPhotos"
+        case .cleanup: return "cleanup"
+        case .storageMap: return "storageMap"
+        case .autoOrganize: return "autoOrganize"
+        case .cleanupHistory: return "cleanupHistory"
+        case .category(let c): return "category:" + c.rawValue
+        case .tag(let name): return "tag:" + name
+        case .chat(let app): return "chat:" + app.rawValue
+        case .savedSearch(let id): return "saved:" + id.uuidString
+        case .home, .pinned, .folder, .volume: return nil
+        }
+    }
+
+    static func sidebarItem(forPageKey key: String) -> SidebarItem? {
+        let simple: [String: SidebarItem] = [
+            "shelf": .shelf, "reminders": .reminders, "folderWall": .folderWall, "largeFiles": .largeFiles,
+            "screenshots": .screenshots, "downloads": .downloads, "duplicates": .duplicates,
+            "similarPhotos": .similarPhotos, "cleanup": .cleanup, "storageMap": .storageMap,
+            "autoOrganize": .autoOrganize, "cleanupHistory": .cleanupHistory,
+        ]
+        if let item = simple[key] { return item }
+        let parts = key.split(separator: ":", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else { return nil }
+        switch parts[0] {
+        case "category": return FileCategory(rawValue: parts[1]).map(SidebarItem.category)
+        case "tag": return .tag(parts[1])
+        case "chat": return ChatApp(rawValue: parts[1]).map(SidebarItem.chat)
+        case "saved": return UUID(uuidString: parts[1]).map(SidebarItem.savedSearch)
+        default: return nil
+        }
+    }
+
+    /// 标签上的名字：文件夹名，或者页面名。
+    var tabTitle: String {
+        if let archive = archiveSession { return archive.url.lastPathComponent }
+        if activeQuery != nil { return String(localized: "搜索结果") }
+        if let folder = currentFolder { return FileManager.default.displayName(atPath: folder) }
+        switch selection ?? .home {
+        case .home: return String(localized: "首页")
+        case .shelf: return String(localized: "暂存架")
+        case .reminders: return String(localized: "文件提醒")
+        case .folderWall: return String(localized: "文件夹墙")
+        case .category(let c): return c.libraryTitle
+        case .largeFiles: return String(localized: "大文件")
+        case .screenshots: return String(localized: "截图")
+        case .downloads: return String(localized: "下载来源")
+        case .duplicates: return String(localized: "重复与相似")
+        case .similarPhotos: return String(localized: "相似照片")
+        case .cleanup: return String(localized: "清理")
+        case .storageMap: return String(localized: "空间占用")
+        case .autoOrganize: return String(localized: "自动整理规则")
+        case .cleanupHistory: return String(localized: "清理记录")
+        case .tag(let name): return String(localized: "标签：\(name)")
+        case .chat(let app): return String(localized: "\(app.name)文件")
+        case .savedSearch(let id): return SavedSearchStore.shared.search(id)?.name ?? String(localized: "保存的搜索")
+        case .pinned(let path), .folder(let path), .volume(let path): return FileManager.default.displayName(atPath: path)
+        }
+    }
+
+    /// 标签上的小图标（文件夹页面用文件夹自己的图标，见 TabBarView）。
+    var tabSymbol: String {
+        if archiveSession != nil { return "doc.zipper" }
+        if activeQuery != nil { return "magnifyingglass" }
+        switch selection ?? .home {
+        case .home: return "house"
+        case .shelf: return "tray"
+        case .reminders: return "alarm"
+        case .folderWall: return "square.grid.2x2"
+        case .category: return "square.stack"
+        case .largeFiles: return "externaldrive"
+        case .screenshots: return "camera.viewfinder"
+        case .downloads: return "arrow.down.circle"
+        case .duplicates, .similarPhotos: return "square.on.square"
+        case .cleanup, .cleanupHistory: return "sparkles"
+        case .storageMap: return "chart.pie"
+        case .autoOrganize: return "wand.and.stars"
+        case .tag: return "tag"
+        case .chat: return "bubble.left.and.bubble.right"
+        case .savedSearch: return "folder.badge.gearshape"
+        case .pinned, .folder, .volume: return "folder"
+        }
+    }
 }

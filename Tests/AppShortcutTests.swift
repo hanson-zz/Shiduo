@@ -38,6 +38,9 @@ final class AppShortcutTests: XCTestCase {
         XCTAssertEqual(byDisplay["⌥⌘⌫"], .deleteImmediately)
         XCTAssertEqual(byDisplay["⌃⌘C"], .copyText)
         XCTAssertEqual(byDisplay["⌘D"], .duplicate)
+        // 标签页：⌘T / ⌘W 和访达一样（新建标签页 / 关闭标签页）。
+        XCTAssertEqual(byDisplay["⌘T"], .newTab)
+        XCTAssertEqual(byDisplay["⌘W"], .closeTab)
         // ⌥⌘1…9 留给收藏（不在这张表里，菜单里按收藏动态生成）
         for digit in 1...9 { XCTAssertNil(byDisplay["⌥⌘\(digit)"]) }
         for finderOnly in ["⇧⌘K", "⇧⌘C", "⌘R", "⌥⌘I", "⌃⌘I", "⇧⌘A", "⇧⌘U", "⇧⌘I", "⇧⌘F", "⇧⌘R", "⌘E"] {
@@ -47,6 +50,24 @@ final class AppShortcutTests: XCTestCase {
         for system in ["⌃⌘D", "⌃⌘F", "⌃⌘Q", "⌥⌘D", "⌃⌘空格"] {
             XCTAssertNil(byDisplay[system], system)
         }
+    }
+
+    func testTabAndPaneShortcuts() {
+        XCTAssertEqual(AppShortcut.nextTab.display, "⌃⇥")
+        XCTAssertEqual(AppShortcut.previousTab.display, "⌃⇧⇥")
+        XCTAssertEqual(AppShortcut.nextTabAlt.display, "⇧⌘]")
+        XCTAssertEqual(AppShortcut.previousTabAlt.display, "⇧⌘[")
+        XCTAssertEqual(AppShortcut.closeWindow.display, "⇧⌘W")
+        XCTAssertEqual(AppShortcut.dualHorizontal.display, "⌘\\")
+        XCTAssertEqual(AppShortcut.dualVertical.display, "⌥⌘\\")
+        XCTAssertEqual(AppShortcut.focusFirstPane.display, "⌥⌘←")
+        XCTAssertEqual(AppShortcut.focusSecondPane.display, "⌥⌘→")
+        XCTAssertEqual(AppShortcut.copyToOtherPane.display, "⌥⇧⌘C")
+        XCTAssertEqual(AppShortcut.moveToOtherPane.display, "⌥⇧⌘M")
+        // 双栏不占系统的 ⌥⌘D（隐藏程序坞），也不占 ⌘1 / ⌘2（为图标 / 为列表）。
+        let all = Set(AppShortcut.allCases.map(\.display))
+        XCTAssertFalse(all.contains("⌥⌘D"))
+        XCTAssertEqual(AppShortcut.asIcons.display, "⌘1")
     }
 
     func testDisplayOrder() {

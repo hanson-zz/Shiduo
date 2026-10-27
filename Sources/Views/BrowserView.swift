@@ -405,6 +405,10 @@ enum InitialSortMemo {
 
 struct FileCollectionView: View {
     @EnvironmentObject private var store: LibraryStore
+    /// 这块界面所在窗口的标签页（⌘ 双击 / 中键点按文件夹在新标签页中打开）。
+    @Environment(\.windowTabs) private var windowTabs
+    /// 双栏时只有当前栏往窗口工具栏里放按钮。
+    @Environment(\.isActivePane) private var isActivePane
     let items: [FileItem]
 
     init(items: [FileItem]) {
@@ -585,6 +589,7 @@ struct FileCollectionView: View {
         .animation(.easeOut(duration: 0.15), value: liveItem?.id)
         .toolbar {
             ToolbarItemGroup {
+                if isActivePane {
                 if viewMode == .grid {
                     Slider(value: $thumbnailSize, in: 64...256) {
                         Text("缩略图大小")
@@ -626,6 +631,7 @@ struct FileCollectionView: View {
                     Label("简介", systemImage: "info.circle")
                 }
                 .help("显示或隐藏简介")
+                }
             }
         }
     }
@@ -647,11 +653,20 @@ struct FileCollectionView: View {
                             onClick: { count, flags in
                                 gridFocused = true
                                 if count >= 2 {
-                                    store.open(item, in: sorted)
+                                    // ⌘ 双击文件夹：在新标签页中打开（和访达一样）。
+                                    if flags.contains(.command), item.isDirectory, let windowTabs {
+                                        windowTabs.openInNewTab(item.path)
+                                    } else {
+                                        store.open(item, in: sorted)
+                                    }
                                 } else {
                                     select(item, flags: flags)
                                 }
-                            }
+                            },
+                            // 中键点按文件夹：在后台的新标签页中打开（和浏览器一样）。
+                            onMiddleClick: item.isDirectory && windowTabs != nil ? {
+                                windowTabs?.openInNewTab(item.path, select: false)
+                            } : nil
                         ),
                         showsExtension: showExtensions, showsInfo: showItemInfo,
                         renaming: store.inlineRenamePath == item.path,
@@ -926,7 +941,12 @@ struct FileCollectionView: View {
             }
             let list = resolve(ids)
             if list.count == 1, let item = list.first {
-                store.open(item, in: sorted)
+                // ⌘ 双击文件夹：在新标签页中打开。
+                if item.isDirectory, let windowTabs, NSApp.currentEvent?.modifierFlags.contains(.command) == true {
+                    windowTabs.openInNewTab(item.path)
+                } else {
+                    store.open(item, in: sorted)
+                }
             } else {
                 store.openItems(list)
             }
@@ -1519,13 +1539,13 @@ struct FolderPathBar: View {
             .help(AppShortcut.enclosingFolder.help)
             .accessibilityLabel("上一层文件夹")
 
-            if address.isEditing(in: hostWindow) {
+            if address.isEditing(in: hostWindow, store: store) {
                 // 可输入地址栏（⌘L / 点路径栏空白处 / 点最后一层）。
                 AddressBarEditor(model: address)
             } else {
                 crumbBar
             }
-            if let current = store.currentFolder, !address.isEditing(in: hostWindow) {
+            if let current = store.currentFolder, !address.isEditing(in: hostWindow, store: store) {
                 Button {
                     NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: current)])
                 } label: {
@@ -1555,7 +1575,7 @@ struct FolderPathBar: View {
                         }
                         Button {
                             if index == list.count - 1 {
-                                address.begin(in: hostWindow)
+                                address.begin(in: hostWindow, store: store)
                             } else {
                                 store.openFolder(URL(fileURLWithPath: crumb.path, isDirectory: true))
                             }
@@ -1583,7 +1603,7 @@ struct FolderPathBar: View {
                     Color.clear
                         .frame(minWidth: 24, maxWidth: .infinity, minHeight: 22)
                         .contentShape(Rectangle())
-                        .onTapGesture { address.begin(in: hostWindow) }
+                        .onTapGesture { address.begin(in: hostWindow, store: store) }
                         .help("点一下输入路径（⌘L）")
                 }
                 .frame(minWidth: geo.size.width, alignment: .leading)

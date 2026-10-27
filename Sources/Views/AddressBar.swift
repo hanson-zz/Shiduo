@@ -131,15 +131,21 @@ final class AddressBarModel: ObservableObject {
 
     private var home: String { FileManager.default.homeDirectoryForCurrentUser.path }
 
-    func isEditing(in window: NSWindow?) -> Bool {
-        isEditing && (windowID == nil || window.map(ObjectIdentifier.init) == windowID)
+    /// 正在输入的是哪一栏（双栏时只有那一栏的路径栏变成输入框，回车也在那一栏里打开）。
+    private weak var editingStore: LibraryStore?
+
+    func isEditing(in window: NSWindow?, store: LibraryStore? = nil) -> Bool {
+        guard isEditing && (windowID == nil || window.map(ObjectIdentifier.init) == windowID) else { return false }
+        guard let store, let editingStore else { return true }
+        return store === editingStore
     }
 
     /// 进入输入：框里是当前文件夹（~/文稿/工作/），光标在最后，下拉列出它的子文件夹。
-    func begin(in window: NSWindow? = nil) {
+    func begin(in window: NSWindow? = nil, store paneStore: LibraryStore? = nil) {
         let window = window ?? NSApp.keyWindow
         cancelWork?.cancel()
-        let store = LibraryStore.shared
+        let store = paneStore ?? LibraryStore.shared
+        editingStore = store
         base = store?.activeQuery == nil ? store?.currentFolder : nil
         windowID = window.map(ObjectIdentifier.init)
         listingCache = [:]
@@ -217,10 +223,10 @@ final class AddressBarModel: ObservableObject {
             switch kind {
             case .folder:
                 self.finish()
-                LibraryStore.shared?.openFolder(URL(fileURLWithPath: path, isDirectory: true))
+                (editingStore ?? LibraryStore.shared)?.openFolder(URL(fileURLWithPath: path, isDirectory: true))
             case .file:
                 self.finish()
-                LibraryStore.shared?.revealInFolder(URL(fileURLWithPath: path))
+                (editingStore ?? LibraryStore.shared)?.revealInFolder(URL(fileURLWithPath: path))
             case .missing:
                 if let fallback {
                     self.pick(fallback)
@@ -237,7 +243,7 @@ final class AddressBarModel: ObservableObject {
         let folder = AddressBarLogic.listingFolder(for: text, current: base, home: home)
         let path = (folder as NSString).appendingPathComponent(name)
         finish()
-        LibraryStore.shared?.openFolder(URL(fileURLWithPath: path, isDirectory: true))
+        (editingStore ?? LibraryStore.shared)?.openFolder(URL(fileURLWithPath: path, isDirectory: true))
     }
 
     private func finish() {

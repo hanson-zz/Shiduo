@@ -656,35 +656,50 @@ class MultiFileDragNSView: NSView, NSDraggingSource {
 struct FileCellMouseArea: NSViewRepresentable {
     let urls: () -> [URL]
     let onClick: (Int, NSEvent.ModifierFlags) -> Void
+    /// 中键点按（文件夹：在新标签页中打开）；nil 时不接中键。
+    var onMiddleClick: (() -> Void)? = nil
 
     func makeNSView(context: Context) -> FileCellMouseNSView {
         let view = FileCellMouseNSView()
         view.provider = urls
         view.onClick = onClick
+        view.onMiddleClick = onMiddleClick
         return view
     }
 
     func updateNSView(_ view: FileCellMouseNSView, context: Context) {
         view.provider = urls
         view.onClick = onClick
+        view.onMiddleClick = onMiddleClick
     }
 }
 
 final class FileCellMouseNSView: MultiFileDragNSView {
     var onClick: ((Int, NSEvent.ModifierFlags) -> Void)?
+    var onMiddleClick: (() -> Void)?
 
     override func resetCursorRects() {}
 
-    /// 只接左键（不按 Control）的事件，其余让给下面的 SwiftUI 视图。
+    /// 只接左键（不按 Control）和中键（设了 onMiddleClick 时）的事件，其余让给下面的 SwiftUI 视图。
     override func hitTest(_ point: NSPoint) -> NSView? {
         guard let event = NSApp.currentEvent else { return nil }
         switch event.type {
         case .leftMouseDown, .leftMouseDragged, .leftMouseUp:
             if event.modifierFlags.contains(.control) { return nil }
             return super.hitTest(point)
+        case .otherMouseDown, .otherMouseUp:
+            return onMiddleClick == nil ? nil : super.hitTest(point)
         default:
             return nil
         }
+    }
+
+    override func otherMouseDown(with event: NSEvent) {
+        if onMiddleClick == nil { super.otherMouseDown(with: event) }
+    }
+
+    override func otherMouseUp(with event: NSEvent) {
+        if event.buttonNumber == 2, let onMiddleClick { onMiddleClick() } else { super.otherMouseUp(with: event) }
     }
 
     override func mouseUp(with event: NSEvent) {

@@ -69,6 +69,7 @@ targets:
       - path: Sources/Model/FullDiskAccessLogic.swift
       - path: Sources/Model/ListTruncationLogic.swift
       - path: Sources/Model/NavigationHistoryLogic.swift
+      - path: Sources/Model/TabsLogic.swift
       - path: Sources/App/AppShortcuts.swift
       - path: Sources/Services/DuplicateSafety.swift
       - path: Sources/Services/OCRCacheKeys.swift

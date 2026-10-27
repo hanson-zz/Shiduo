@@ -59,6 +59,22 @@ enum AppShortcut: String, CaseIterable, Identifiable {
     case duplicate
     // 拾掇 Pro：新建文件模板（访达的 ⌥⌘N 是「新建智能文件夹」，拾掇没有这一项，按效果图用它）
     case newFromLastTemplate
+    // 标签页（免费）：⌘T / ⌘W 和访达一样；⌃⇥ / ⌃⇧⇥ 切换（⇧⌘] / ⇧⌘[ 也行）；⇧⌘W 关闭整个窗口
+    case newTab
+    case closeTab
+    case closeWindow
+    case nextTab
+    case previousTab
+    case nextTabAlt
+    case previousTabAlt
+    // 双栏（Pro）：⌥⌘D 是系统的「隐藏程序坞」，不用；⌘\ 左右双栏、⌥⌘\ 上下排；⌥⌘← / ⌥⌘→ 切到左（上）/ 右（下）栏；
+    // 拷贝 / 移动到另一栏 ⌥⇧⌘C / ⌥⇧⌘M（⌥⌘C 已是拷贝路径，⇧⌘C 在访达里是「电脑」，都不抢）
+    case dualHorizontal
+    case dualVertical
+    case focusFirstPane
+    case focusSecondPane
+    case copyToOtherPane
+    case moveToOtherPane
 
     var id: String { rawValue }
 
@@ -107,18 +123,38 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .deleteImmediately: return .delete
         case .duplicate: return "d"
         case .newFromLastTemplate: return "n"
+        case .newTab: return "t"
+        case .closeTab: return "w"
+        case .closeWindow: return "w"
+        case .nextTab, .previousTab: return .tab
+        case .nextTabAlt: return "]"
+        case .previousTabAlt: return "["
+        case .dualHorizontal, .dualVertical: return "\\"
+        case .focusFirstPane: return .leftArrow
+        case .focusSecondPane: return .rightArrow
+        case .copyToOtherPane: return "c"
+        case .moveToOtherPane: return "m"
         }
     }
 
     var modifiers: EventModifiers {
         switch self {
         case .search, .asIcons, .asList, .showInfo, .toggleStatusBar, .viewOptions, .biggerIcons, .smallerIcons,
-             .back, .forward, .enclosingFolder, .openSelection, .addressBar, .cut, .copyItems, .paste, .duplicate:
+             .back, .forward, .enclosingFolder, .openSelection, .addressBar, .cut, .copyItems, .paste, .duplicate,
+             .newTab, .closeTab, .dualHorizontal:
             return .command
-        case .newFolder, .showPreview, .homeFolder, .desktop, .documents, .downloadSources, .goToFolder:
+        case .newFolder, .showPreview, .homeFolder, .desktop, .documents, .downloadSources, .goToFolder,
+             .closeWindow, .nextTabAlt, .previousTabAlt:
             return [.command, .shift]
-        case .toggleToolbar, .togglePathBar, .refresh, .downloads, .pasteAndMove, .copyPath, .deleteImmediately, .newFromLastTemplate:
+        case .toggleToolbar, .togglePathBar, .refresh, .downloads, .pasteAndMove, .copyPath, .deleteImmediately, .newFromLastTemplate,
+             .dualVertical, .focusFirstPane, .focusSecondPane:
             return [.command, .option]
+        case .copyToOtherPane, .moveToOtherPane:
+            return [.command, .option, .shift]
+        case .nextTab:
+            return .control
+        case .previousTab:
+            return [.control, .shift]
         case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .home, .duplicates, .cleanup, .commandPalette,
              .newFolderWithSelection, .makeAlias:
             return [.command, .control]
@@ -171,6 +207,17 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .deleteImmediately: return String(localized: "直接删除…")
         case .duplicate: return String(localized: "复制")
         case .newFromLastTemplate: return String(localized: "新建上一次用的模板")
+        case .newTab: return String(localized: "新建标签页")
+        case .closeTab: return String(localized: "关闭标签页")
+        case .closeWindow: return String(localized: "关闭窗口")
+        case .nextTab, .nextTabAlt: return String(localized: "显示下一个标签页")
+        case .previousTab, .previousTabAlt: return String(localized: "显示上一个标签页")
+        case .dualHorizontal: return String(localized: "左右双栏")
+        case .dualVertical: return String(localized: "上下排")
+        case .focusFirstPane: return String(localized: "切到左边（上面）一栏")
+        case .focusSecondPane: return String(localized: "切到右边（下面）一栏")
+        case .copyToOtherPane: return String(localized: "拷贝到另一栏")
+        case .moveToOtherPane: return String(localized: "移动到另一栏")
         }
     }
 
@@ -193,6 +240,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .return: return "↩"
         case .delete: return "⌫"
         case .space: return String(localized: "空格")
+        case .tab: return "⇥"
         default: return String(key.character).uppercased()
         }
     }

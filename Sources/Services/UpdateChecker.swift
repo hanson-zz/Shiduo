@@ -162,6 +162,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         MainActor.assumeIsolated {
             AppAppearance.current.apply()
         }
+        // 拾掇有自己的标签栏（⌘T），不要系统的窗口标签（「显示标签页栏」那一套）。
+        NSWindow.allowsAutomaticWindowTabbing = false
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

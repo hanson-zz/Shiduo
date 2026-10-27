@@ -3,7 +3,13 @@ import SwiftUI
 @main
 struct ShiduoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var store = LibraryStore()
+    /// App 启动时的那一份浏览状态（第一个窗口的第一个标签用它；设置、菜单栏小助手也用它）。
+    @StateObject private var appStore = LibraryStore()
+    /// 最前面那个主窗口里当前标签的当前栏（菜单命令作用在它上面）。
+    @FocusedObject private var focusedStore: LibraryStore?
+    /// 最前面那个主窗口的标签页。
+    @FocusedObject private var focusedTabs: WindowTabs?
+    private var store: LibraryStore { focusedStore ?? appStore }
     @StateObject private var license = LicenseManager.shared
     /// ⌘⌫「移到废纸篓」：哪个窗口里选中了什么。
     @StateObject private var trash = TrashCommandCenter.shared
@@ -21,23 +27,43 @@ struct ShiduoApp: App {
     var body: some Scene {
         WindowGroup("拾掇", id: MainWindow.sceneID) {
             ContentView()
-                .environmentObject(store)
-                .environmentObject(store.ocr)
-                .environmentObject(store.duplicates)
-                .environmentObject(store.similar)
-                .environmentObject(store.cleanup)
-                .environmentObject(store.player)
-                .environmentObject(store.updater)
-                .environmentObject(store.chat)
-                .environmentObject(store.license)
-                .environmentObject(store.organizer)
-                .environmentObject(store.volumes)
-                .environmentObject(store.photos)
+                .environmentObject(appStore)
+                .environmentObject(appStore.ocr)
+                .environmentObject(appStore.duplicates)
+                .environmentObject(appStore.similar)
+                .environmentObject(appStore.cleanup)
+                .environmentObject(appStore.player)
+                .environmentObject(appStore.updater)
+                .environmentObject(appStore.chat)
+                .environmentObject(appStore.license)
+                .environmentObject(appStore.organizer)
+                .environmentObject(appStore.volumes)
+                .environmentObject(appStore.photos)
                 .frame(minWidth: 760, minHeight: 560)
         }
         .commands {
             // 快捷键都登记在 AppShortcut 里（AppShortcuts.swift），这里只用名字引用。
             SupportCommands()
+            // 标签页：⌘T 新建、⌘W 关闭标签（最后一个时关窗口）、⇧⌘W 关闭窗口。系统的「关闭」换成这两项。
+            CommandGroup(replacing: .saveItem) {
+                Button("关闭标签页") { closeTabOrWindow() }
+                    .keyboardShortcut(.closeTab)
+                Button("关闭窗口") { NSApp.keyWindow?.performClose(nil) }
+                    .keyboardShortcut(.closeWindow)
+            }
+            CommandGroup(after: .newItem) {
+                Button("新建标签页") { newTab() }
+                    .keyboardShortcut(.newTab)
+            }
+            CommandGroup(after: .windowArrangement) {
+                Divider()
+                Button("显示下一个标签页") { focusedTabs?.selectNext() }
+                    .keyboardShortcut(.nextTab)
+                    .disabled((focusedTabs?.count ?? 0) < 2)
+                Button("显示上一个标签页") { focusedTabs?.selectPrevious() }
+                    .keyboardShortcut(.previousTab)
+                    .disabled((focusedTabs?.count ?? 0) < 2)
+            }
             CommandGroup(after: .newItem) {
                 Button("新建文件夹") { store.newFolderInCurrent() }
                     .keyboardShortcut(.newFolder)
@@ -95,6 +121,8 @@ struct ShiduoApp: App {
                     showHiddenFiles.toggle()
                     if store.currentFolder != nil && store.activeQuery == nil { store.reload() }
                 }
+                Divider()
+                PaneCommands(tabs: focusedTabs, store: store)
                 Divider()
                 Button("放大图标") { store.iconSizeStep(1) }
                     .keyboardShortcut(.biggerIcons)
@@ -204,24 +232,43 @@ struct ShiduoApp: App {
 
         Settings {
             SettingsView()
-                .environmentObject(store)
-                .environmentObject(store.ocr)
-                .environmentObject(store.updater)
-                .environmentObject(store.license)
-                .environmentObject(store.photos)
+                .environmentObject(appStore)
+                .environmentObject(appStore.ocr)
+                .environmentObject(appStore.updater)
+                .environmentObject(appStore.license)
+                .environmentObject(appStore.photos)
         }
 
         MenuBarExtra(isInserted: menuBarInserted) {
             MenuBarContent()
-                .environmentObject(store)
-                .environmentObject(store.license)
+                .environmentObject(appStore)
+                .environmentObject(appStore.license)
         } label: {
-            MenuBarLabel(cleanup: store.cleanup, duplicates: store.duplicates)
+            MenuBarLabel(cleanup: appStore.cleanup, duplicates: appStore.duplicates)
         }
         .menuBarExtraStyle(.window)
     }
 
     private var renaming: Bool { store.isInlineRenaming }
+
+    /// ⌘T：最前面是主窗口时在里面新开一个标签；没有主窗口时开一个。
+    private func newTab() {
+        if let tabs = focusedTabs, let key = NSApp.keyWindow, MainWindow.isMain(key) {
+            tabs.newTab()
+        } else {
+            MainWindow.show()
+        }
+    }
+
+    /// ⌘W：主窗口里关掉当前标签（最后一个时关窗口）；设置、图片工具这些别的窗口照常关掉。
+    private func closeTabOrWindow() {
+        guard let key = NSApp.keyWindow else { return }
+        if MainWindow.isMain(key), let tabs = focusedTabs {
+            tabs.closeSelected()
+        } else {
+            key.performClose(nil)
+        }
+    }
 
     /// 打开了开关、并且是 Pro（含试用）时显示在菜单栏。试用结束 / 需要联网校验 / 授权失效后图标仍然留着（点开是上锁卡片），不悄悄消失。
     private var menuBarInserted: Binding<Bool> {
@@ -249,5 +296,44 @@ struct SupportCommands: Commands {
             Button("发送反馈…") { openWindow(id: FeedbackView.windowID) }
             Button("在 GitHub 上查看源代码") { Support.openRepo() }
         }
+    }
+}
+
+/// 「显示」菜单里的布局和双栏命令（双栏是 Pro：免费用户选了弹升级面板）。
+struct PaneCommands: View {
+    let tabs: WindowTabs?
+    @ObservedObject var store: LibraryStore
+    @ObservedObject private var license = LicenseManager.shared
+
+    private var layout: PaneLayout { tabs?.selectedTab.layout ?? .single }
+    private var dual: Bool { layout.isDual && license.isPro }
+
+    var body: some View {
+        Toggle("单栏", isOn: Binding(get: { layout == .single }, set: { if $0 { tabs?.setLayout(.single) } }))
+            .disabled(tabs == nil)
+        Toggle(license.isPro ? String(localized: "左右双栏") : String(localized: "左右双栏（Pro）"),
+               isOn: Binding(get: { layout == .horizontal }, set: { _ in tabs?.toggleLayout(.horizontal) }))
+            .keyboardShortcut(.dualHorizontal)
+            .disabled(tabs == nil)
+        Toggle(license.isPro ? String(localized: "上下排") : String(localized: "上下排（Pro）"),
+               isOn: Binding(get: { layout == .vertical }, set: { _ in tabs?.toggleLayout(.vertical) }))
+            .keyboardShortcut(.dualVertical)
+            .disabled(tabs == nil)
+        Button(layout == .vertical ? String(localized: "切到上面一栏") : String(localized: "切到左边一栏")) { tabs?.focusPane(0) }
+            .keyboardShortcut(.focusFirstPane)
+            .disabled(!dual || store.isInlineRenaming)
+        Button(layout == .vertical ? String(localized: "切到下面一栏") : String(localized: "切到右边一栏")) { tabs?.focusPane(1) }
+            .keyboardShortcut(.focusSecondPane)
+            .disabled(!dual || store.isInlineRenaming)
+        Button("拷贝到另一栏") { tabs?.transferSelectionToOther(copy: true) }
+            .keyboardShortcut(.copyToOtherPane)
+            .disabled(!dual || !(tabs?.canTransferToOther ?? false))
+        Button("移动到另一栏") { tabs?.transferSelectionToOther(copy: false) }
+            .keyboardShortcut(.moveToOtherPane)
+            .disabled(!dual || !(tabs?.canTransferToOther ?? false))
+        Button("两栏同步到同一文件夹") { tabs?.syncOtherPane() }
+            .disabled(!dual || !(tabs?.canSyncPanes ?? false))
+        Button("交换两栏") { tabs?.swapPanes() }
+            .disabled(!dual)
     }
 }
