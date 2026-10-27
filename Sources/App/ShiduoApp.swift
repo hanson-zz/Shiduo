@@ -44,26 +44,8 @@ struct ShiduoApp: App {
         .commands {
             // 快捷键都登记在 AppShortcut 里（AppShortcuts.swift），这里只用名字引用。
             SupportCommands()
-            // 标签页：⌘T 新建、⌘W 关闭标签（最后一个时关窗口）、⇧⌘W 关闭窗口。系统的「关闭」换成这两项。
-            CommandGroup(replacing: .saveItem) {
-                Button("关闭标签页") { closeTabOrWindow() }
-                    .keyboardShortcut(.closeTab)
-                Button("关闭窗口") { NSApp.keyWindow?.performClose(nil) }
-                    .keyboardShortcut(.closeWindow)
-            }
-            CommandGroup(after: .newItem) {
-                Button("新建标签页") { newTab() }
-                    .keyboardShortcut(.newTab)
-            }
-            CommandGroup(after: .windowArrangement) {
-                Divider()
-                Button("显示下一个标签页") { focusedTabs?.selectNext() }
-                    .keyboardShortcut(.nextTab)
-                    .disabled((focusedTabs?.count ?? 0) < 2)
-                Button("显示上一个标签页") { focusedTabs?.selectPrevious() }
-                    .keyboardShortcut(.previousTab)
-                    .disabled((focusedTabs?.count ?? 0) < 2)
-            }
+            // 标签页：⌘T 新建、⌘W 关闭标签（最后一个时关窗口）、⇧⌘W 关闭窗口、⌃⇥ 切换。
+            TabCommands(tabs: focusedTabs)
             CommandGroup(after: .newItem) {
                 Button("新建文件夹") { store.newFolderInCurrent() }
                     .keyboardShortcut(.newFolder)
@@ -251,25 +233,6 @@ struct ShiduoApp: App {
 
     private var renaming: Bool { store.isInlineRenaming }
 
-    /// ⌘T：最前面是主窗口时在里面新开一个标签；没有主窗口时开一个。
-    private func newTab() {
-        if let tabs = focusedTabs, let key = NSApp.keyWindow, MainWindow.isMain(key) {
-            tabs.newTab()
-        } else {
-            MainWindow.show()
-        }
-    }
-
-    /// ⌘W：主窗口里关掉当前标签（最后一个时关窗口）；设置、图片工具这些别的窗口照常关掉。
-    private func closeTabOrWindow() {
-        guard let key = NSApp.keyWindow else { return }
-        if MainWindow.isMain(key), let tabs = focusedTabs {
-            tabs.closeSelected()
-        } else {
-            key.performClose(nil)
-        }
-    }
-
     /// 打开了开关、并且是 Pro（含试用）时显示在菜单栏。试用结束 / 需要联网校验 / 授权失效后图标仍然留着（点开是上锁卡片），不悄悄消失。
     private var menuBarInserted: Binding<Bool> {
         Binding(
@@ -335,5 +298,53 @@ struct PaneCommands: View {
             .disabled(!dual || !(tabs?.canSyncPanes ?? false))
         Button("交换两栏") { tabs?.swapPanes() }
             .disabled(!dual)
+    }
+}
+
+/// 标签页的菜单命令：系统的「关闭」换成「关闭标签页 ⌘W」「关闭窗口 ⇧⌘W」，「文件」里加「新建标签页 ⌘T」，「窗口」里加切换标签。
+struct TabCommands: Commands {
+    let tabs: WindowTabs?
+
+    var body: some Commands {
+        CommandGroup(replacing: .saveItem) {
+            Button("关闭标签页") { closeTabOrWindow() }
+                .keyboardShortcut(.closeTab)
+            Button("关闭窗口") { NSApp.keyWindow?.performClose(nil) }
+                .keyboardShortcut(.closeWindow)
+        }
+        CommandGroup(after: .newItem) {
+            Button("新建标签页") { newTab() }
+                .keyboardShortcut(.newTab)
+        }
+        CommandGroup(after: .windowArrangement) {
+            Divider()
+            Button("显示下一个标签页") { tabs?.selectNext() }
+                .keyboardShortcut(.nextTab)
+                .disabled((tabs?.count ?? 0) < 2)
+            Button("显示上一个标签页") { tabs?.selectPrevious() }
+                .keyboardShortcut(.previousTab)
+                .disabled((tabs?.count ?? 0) < 2)
+        }
+    }
+
+    /// ⌘T：最前面是主窗口时在里面新开一个标签；没有主窗口时开一个。
+    @MainActor
+    private func newTab() {
+        if let tabs, let key = NSApp.keyWindow, MainWindow.isMain(key) {
+            tabs.newTab()
+        } else {
+            MainWindow.show()
+        }
+    }
+
+    /// ⌘W：主窗口里关掉当前标签（最后一个时关窗口）；设置、图片工具这些别的窗口照常关掉。
+    @MainActor
+    private func closeTabOrWindow() {
+        guard let key = NSApp.keyWindow else { return }
+        if MainWindow.isMain(key), let tabs {
+            tabs.closeSelected()
+        } else {
+            key.performClose(nil)
+        }
     }
 }
