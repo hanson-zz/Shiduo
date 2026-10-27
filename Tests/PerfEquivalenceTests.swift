@@ -42,11 +42,23 @@ final class PerfEquivalenceTests: XCTestCase {
 
     /// 比对用：类型树只看包含哪些（父类型的先后本来就没有意义）。
     private func fingerprint(_ item: FileItem) -> String {
-        [item.path, item.name, String(item.size), item.contentType ?? "-", item.typeTree.sorted().joined(separator: ","),
-         String(item.modified?.timeIntervalSince1970 ?? -1), String(item.created?.timeIntervalSince1970 ?? -1),
-         String(item.lastUsed?.timeIntervalSince1970 ?? -1), String(item.added?.timeIntervalSince1970 ?? -1),
-         item.whereFroms.joined(separator: ","), String(item.isScreenshot), item.bundleID ?? "-", String(item.isDirectory),
-         item.quarantineAgent ?? "-"].joined(separator: "|")
+        func time(_ date: Date?) -> String { String(date?.timeIntervalSince1970 ?? -1) }
+        var parts: [String] = []
+        parts.append(item.path)
+        parts.append(item.name)
+        parts.append(String(item.size))
+        parts.append(item.contentType ?? "-")
+        parts.append(item.typeTree.sorted().joined(separator: ","))
+        parts.append(time(item.modified))
+        parts.append(time(item.created))
+        parts.append(time(item.lastUsed))
+        parts.append(time(item.added))
+        parts.append(item.whereFroms.joined(separator: ","))
+        parts.append(String(item.isScreenshot))
+        parts.append(item.bundleID ?? "-")
+        parts.append(String(item.isDirectory))
+        parts.append(item.quarantineAgent ?? "-")
+        return parts.joined(separator: "|")
     }
 
     func testListingMatchesReference() {
