@@ -246,7 +246,7 @@ private struct FileMenuItems<Extra: View>: View {
                 let list = folders.map(\.url)
                 inMain { FolderIconService.shared.openEditor(list) }
             } label: {
-                proLabel(String(localized: "文件夹上色…"))
+                proLabel(String(localized: "文件夹换装…"))
             }
             let colored = folders.map(\.url).filter { FolderIconService.shared.hasRecord($0) }
             if !colored.isEmpty {

@@ -10,8 +10,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.14.1-beta.1"
-    CURRENT_PROJECT_VERSION: "1401"
+    MARKETING_VERSION: "0.14.1-beta.2"
+    CURRENT_PROJECT_VERSION: "1402"
     DEAD_CODE_STRIPPING: YES
     # 界面支持简体中文和英文：代码里的中文是 key，英文翻译在 Resources/Localizable.xcstrings。
     SWIFT_EMIT_LOC_STRINGS: YES
@@ -32,6 +32,11 @@ targets:
       - path: Resources
         excludes:
           - "Info.plist"
+          - "ThemeIcons/**"
+      # 「文件夹换装」的主题图标：整个文件夹原样拷进 App（ThemeIcons/<分类>/<名字>.png）。
+      - path: Resources/ThemeIcons
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_NAME: Shiduo

@@ -895,7 +895,7 @@ struct FolderCard: View {
                     actionButton("folder", help: String(localized: "移动到…"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { moveFolder() }
                     if iconStyle == .system {
                         // 系统图标看不到卡片颜色：直接打开「文件夹上色」（Pro，不是 Pro 弹付费页）。
-                        actionButton("paintpalette", help: String(localized: "文件夹上色…")) {
+                        actionButton("paintpalette", help: String(localized: "文件夹换装…")) {
                             FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path, isDirectory: true)], color: tint)
                         }
                     } else {

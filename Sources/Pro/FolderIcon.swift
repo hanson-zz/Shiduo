@@ -1,4 +1,5 @@
 import AppKit
+import CoreImage
 import CryptoKit
 import ImageIO
 import UniformTypeIdentifiers
@@ -14,21 +15,31 @@ enum FolderIconRenderer {
         guard let rep = bitmap(side) else { return image }
         let rect = NSRect(x: 0, y: 0, width: side, height: side)
 
-        // 1. 系统文件夹图标画进位图
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-        NSGraphicsContext.current?.imageInterpolation = .high
-        NSWorkspace.shared.icon(for: .folder).draw(in: rect, from: .zero, operation: .copy, fraction: 1)
-        NSGraphicsContext.restoreGraphicsState()
+        let themeArt = style.theme.flatMap { themeImage($0, hue: style.hue) }
+        if let themeArt {
+            // 1'. 主题图标：整张画进来（四周留一点边，和系统文件夹图标一样大），不再染色
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+            NSGraphicsContext.current?.imageInterpolation = .high
+            NSGraphicsContext.current?.cgContext.draw(themeArt, in: rect.insetBy(dx: CGFloat(side) * 0.03, dy: CGFloat(side) * 0.03))
+            NSGraphicsContext.restoreGraphicsState()
+        } else {
+            // 1. 系统文件夹图标画进位图
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+            NSGraphicsContext.current?.imageInterpolation = .high
+            NSWorkspace.shared.icon(for: .folder).draw(in: rect, from: .zero, operation: .copy, fraction: 1)
+            NSGraphicsContext.restoreGraphicsState()
 
-        // 2. 灰度化后按目标颜色着色，保留原来的明暗
-        tint(rep, style.rgb)
+            // 2. 灰度化后按目标颜色着色，保留原来的明暗
+            tint(rep, style.rgb)
+        }
 
         // 3. 叠加层
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
         NSGraphicsContext.current?.imageInterpolation = .high
-        drawOverlay(style, canvas: CGFloat(side))
+        drawOverlay(style, canvas: CGFloat(side), themed: themeArt != nil)
         NSGraphicsContext.restoreGraphicsState()
 
         rep.size = image.size
@@ -90,14 +101,60 @@ enum FolderIconRenderer {
     }
 
     /// 叠加层的位置：文件夹正面中心偏下（坐标原点在左下角）。
-    static func overlayRect(scale: Double, canvas: CGFloat) -> NSRect {
+    /// 主题图标的正面已经有插画，叠加层改成右下角的小角标，不挡住插画。
+    static func overlayRect(scale: Double, canvas: CGFloat, themed: Bool = false) -> NSRect {
+        if themed {
+            let length = canvas * CGFloat(FolderIconStyle.clampScale(scale)) * 0.62
+            let margin = canvas * 0.07
+            return NSRect(x: canvas - margin - length, y: margin, width: length, height: length)
+        }
         let length = canvas * CGFloat(FolderIconStyle.clampScale(scale))
         let center = NSPoint(x: canvas * 0.5, y: canvas * 0.42)
         return NSRect(x: center.x - length / 2, y: center.y - length / 2, width: length, height: length)
     }
 
-    private static func drawOverlay(_ style: FolderIconStyle, canvas: CGFloat) {
-        let box = overlayRect(scale: style.overlayScale, canvas: canvas)
+    // MARK: 主题图标
+
+    private static let themeCache = NSCache<NSString, CGImage>()
+    private static let ciContext = CIContext(options: [.cacheIntermediates: false])
+
+    /// App 自带的主题图标（色相调好），找不到返回 nil。结果缓存。
+    static func themeImage(_ theme: String, hue: Double) -> CGImage? {
+        guard let relative = FolderThemeCatalog.resourcePath(theme) else { return nil }
+        let hue = FolderIconStyle.clampHue(hue)
+        let key = "\(theme)#\(Int(hue))" as NSString
+        if let hit = themeCache.object(forKey: key) { return hit }
+        let url = Bundle.main.resourceURL?.appendingPathComponent(relative)
+        guard let url, let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let original = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+        var result = original
+        if hue != 0, let filter = CIFilter(name: "CIHueAdjust") {
+            filter.setValue(CIImage(cgImage: original), forKey: kCIInputImageKey)
+            filter.setValue(hue * .pi / 180, forKey: kCIInputAngleKey)
+            if let output = filter.outputImage,
+               let shifted = ciContext.createCGImage(output, from: CGRect(x: 0, y: 0, width: original.width, height: original.height)) {
+                result = shifted
+            }
+        }
+        themeCache.setObject(result, forKey: key)
+        return result
+    }
+
+    private static func drawOverlay(_ style: FolderIconStyle, canvas: CGFloat, themed: Bool) {
+        var box = overlayRect(scale: style.overlayScale, canvas: canvas, themed: themed)
+        if themed, style.overlay != FolderIconStyle.Overlay.none {
+            // 主题图标上的角标：白色圆底 + 一点阴影，插画再花也看得清
+            NSGraphicsContext.saveGraphicsState()
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor.black.withAlphaComponent(0.22)
+            shadow.shadowBlurRadius = box.width * 0.08
+            shadow.shadowOffset = NSSize(width: 0, height: -box.width * 0.03)
+            shadow.set()
+            NSColor.white.withAlphaComponent(0.94).setFill()
+            NSBezierPath(ovalIn: box).fill()
+            NSGraphicsContext.restoreGraphicsState()
+            box = box.insetBy(dx: box.width * 0.16, dy: box.height * 0.16)
+        }
         switch style.overlay {
         case .none:
             return

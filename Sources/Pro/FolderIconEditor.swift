@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// 「文件夹上色」编辑器：左边实时预览，右边颜色、叠加层、大小、历史。
+/// 「文件夹换装」编辑器：左边实时预览，右边「颜色 / 主题」、叠加层、大小、历史。
 struct FolderIconEditor: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var service = FolderIconService.shared
@@ -23,8 +23,23 @@ struct FolderIconEditor: View {
         }
     }
 
+    enum Mode: Hashable, CaseIterable, Identifiable {
+        case color, theme
+        var id: Self { self }
+        var title: String {
+            switch self {
+            case .color: return String(localized: "颜色")
+            case .theme: return String(localized: "主题")
+            }
+        }
+    }
+
     @State private var folders: [URL]
     @State private var color: String
+    @State private var mode: Mode = .color
+    @State private var theme = FolderThemeCatalog.allThemes.first ?? "animal/cat"
+    @State private var themeCategory = FolderThemeCatalog.categories.first?.id ?? "food"
+    @State private var hue = 0.0
     @State private var kind: Kind = .off
     @State private var symbol = "star.fill"
     @State private var emoji = "📁"
@@ -45,6 +60,12 @@ struct FolderIconEditor: View {
         let start = saved ?? FolderIconStyle(color: seedColor ?? FolderPalette.hex(FolderPalette.colors[4].1))
         _color = State(initialValue: seedColor.flatMap(FolderIconStyle.normalizedHex) ?? start.color)
         _scale = State(initialValue: start.overlayScale)
+        if let saved = start.theme {
+            _mode = State(initialValue: .theme)
+            _theme = State(initialValue: saved)
+            _hue = State(initialValue: start.hue)
+            _themeCategory = State(initialValue: FolderThemeCatalog.category(of: saved)?.id ?? "food")
+        }
         switch start.overlay {
         case .none: _kind = State(initialValue: .off)
         case .symbol(let name):
@@ -67,12 +88,15 @@ struct FolderIconEditor: View {
         case .emoji: overlay = emoji.isEmpty ? FolderIconStyle.Overlay.none : .emoji(emoji)
         case .image: overlay = imagePath.map { FolderIconStyle.Overlay.image($0) } ?? FolderIconStyle.Overlay.none
         }
+        if mode == .theme {
+            return FolderIconStyle(color: color, overlay: overlay, overlayScale: scale, theme: theme, hue: hue)
+        }
         return FolderIconStyle(color: color, overlay: overlay, overlayScale: scale)
     }
 
     private var title: String {
-        if folders.count == 1 { return String(localized: "给「\(folders[0].lastPathComponent)」上色") }
-        return String(localized: "给 \(folders.count) 个文件夹上色")
+        if folders.count == 1 { return String(localized: "给「\(folders[0].lastPathComponent)」换装") }
+        return String(localized: "给 \(folders.count) 个文件夹换装")
     }
 
     var body: some View {
@@ -82,7 +106,17 @@ struct FolderIconEditor: View {
                 previewPane
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
-                        colorSection
+                        Picker("", selection: $mode) {
+                            ForEach(Mode.allCases) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        if mode == .theme {
+                            themeSection
+                            hueSection
+                        } else {
+                            colorSection
+                        }
                         overlaySection
                         sizeSection
                         historySection
@@ -94,7 +128,7 @@ struct FolderIconEditor: View {
             footer
         }
         .padding(22)
-        .frame(width: 720, height: 600)
+        .frame(width: 760, height: 660)
         .overlay {
             if dropTargeted {
                 RoundedRectangle(cornerRadius: 14)
@@ -125,7 +159,7 @@ struct FolderIconEditor: View {
                     Text(title).font(.headline).lineLimit(1).truncationMode(.middle)
                     ProBadge()
                 }
-                Text("把文件夹拖到这里可以一起上色")
+                Text("改的是访达里真实的文件夹图标，把文件夹拖到这里可以一起换")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -160,7 +194,7 @@ struct FolderIconEditor: View {
                                     Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                                 }
                                 .buttonStyle(.plain)
-                                .help("不给这个文件夹上色")
+                                .help("不给这个文件夹换装")
                             }
                         }
                         .font(.callout)
@@ -208,6 +242,88 @@ struct FolderIconEditor: View {
                 .buttonStyle(.plain)
                 .help("自定义颜色…")
             }
+        }
+    }
+
+    private var themeSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(FolderThemeCatalog.categories) { category in
+                        let selected = themeCategory == category.id
+                        Button {
+                            themeCategory = category.id
+                        } label: {
+                            Label(category.title, systemImage: category.symbol)
+                                .font(.callout.weight(selected ? .semibold : .regular))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .foregroundStyle(selected ? Color.white : Color.primary)
+                                .background(Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.06)))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            let items = FolderThemeCatalog.categories.first { $0.id == themeCategory }?.themes ?? []
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) {
+                ForEach(items, id: \.self) { item in
+                    let selected = theme == item
+                    Button {
+                        theme = item
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
+                            Group {
+                                if let art = FolderIconRenderer.themeImage(item, hue: 0) {
+                                    Image(decorative: art, scale: 1).resizable().interpolation(.high).scaledToFit()
+                                } else {
+                                    Color.primary.opacity(0.05)
+                                }
+                            }
+                            .padding(6)
+                            .frame(width: 78, height: 78)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.04)))
+                            .overlay(RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(selected ? Color.accentColor : Color.clear, lineWidth: 2.5))
+                            if selected {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(.white, Color.accentColor)
+                                    .padding(4)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var hueSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                sectionTitle("色相调整")
+                Spacer()
+                Text(verbatim: "\(Int(hue))°")
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                Button {
+                    hue = 0
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                }
+                .buttonStyle(.borderless)
+                .disabled(hue == 0)
+                .help("回到原来的颜色")
+            }
+            Slider(value: $hue, in: FolderIconStyle.hueRange, step: 5)
+                .background(
+                    LinearGradient(colors: [.cyan, .blue, .purple, .red, .orange, .yellow, .green, .cyan],
+                                   startPoint: .leading, endPoint: .trailing)
+                        .frame(height: 4)
+                        .clipShape(Capsule())
+                        .opacity(0.55)
+                )
         }
     }
 
@@ -335,25 +451,25 @@ struct FolderIconEditor: View {
 
     private var footer: some View {
         HStack(spacing: 10) {
-            Button("还原默认") {
+            Button("恢复原图标") {
                 let outcome = service.restore(folders.filter { service.hasRecord($0) })
                 finish(outcome, done: String(localized: "已还原 \(outcome.succeeded.count) 个文件夹图标"))
             }
             .disabled(!folders.contains { service.hasRecord($0) })
-            .help("只还原拾掇上过色的文件夹")
+            .help("只还原拾掇换过图标的文件夹")
             Button("导出 PNG…", action: exportPNG)
             Spacer()
             Button("取消") { dismiss() }
                 .keyboardShortcut(.cancelAction)
             if applying { ProgressView().controlSize(.small) }
-            Button("应用") {
+            Button("应用到文件夹") {
                 applying = true
                 let style = style
                 let folders = folders
                 Task {
                     let outcome = await service.applyInBackground(style, to: folders)
                     applying = false
-                    finish(outcome, done: String(localized: "已给 \(outcome.succeeded.count) 个文件夹上色"))
+                    finish(outcome, done: String(localized: "已给 \(outcome.succeeded.count) 个文件夹换装"))
                 }
             }
             .keyboardShortcut(.defaultAction)
@@ -381,6 +497,14 @@ struct FolderIconEditor: View {
 
     private func load(_ item: FolderIconStyle) {
         color = item.color
+        if let saved = item.theme {
+            mode = .theme
+            theme = saved
+            hue = item.hue
+            themeCategory = FolderThemeCatalog.category(of: saved)?.id ?? themeCategory
+        } else {
+            mode = .color
+        }
         scale = item.overlayScale
         switch item.overlay {
         case .none: kind = .off
@@ -391,6 +515,16 @@ struct FolderIconEditor: View {
     }
 
     private func randomize() {
+        if mode == .theme {
+            let category = FolderThemeCatalog.categories.randomElement()
+            if let category, let pick = category.themes.randomElement() {
+                themeCategory = category.id
+                theme = pick
+            }
+            hue = 0
+            kind = .off
+            return
+        }
         if Bool.random() {
             color = FolderPalette.hex(FolderPalette.colors.randomElement()?.1 ?? .systemBlue)
         } else {

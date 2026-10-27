@@ -33,6 +33,8 @@ struct ShiduoFolderVariant: Equatable {
     var badgeScale: Double = 0.30
     /// 颜色来自「文件夹上色」（文件夹墙卡片也跟着用这个颜色）。
     var styled = false
+    /// 「文件夹换装」选了主题图标：整张图（在 ShiduoFolderArtCache 的角标图里）代替拾掇风格的文件夹。
+    var themed = false
 
     /// 默认颜色：和文件夹墙上普通文件夹同一个淡紫。
     static let defaultHex = "8F87ED"
@@ -152,6 +154,19 @@ final class ShiduoFolderArtCache {
         let service = FolderIconService.shared
         if !service.ledger.folders.isEmpty, let style = service.style(for: url) {
             var v = ShiduoFolderVariant(hex: style.color, badgeScale: style.overlayScale, styled: true)
+            if style.theme != nil {
+                let art = FolderIconRenderer.render(style, pixels: 256)
+                var rect = NSRect(x: 0, y: 0, width: 128, height: 128)
+                if let image = art.cgImage(forProposedRect: &rect, context: nil, hints: nil) {
+                    if !Task.isCancelled { storeBadge(image, for: path) }
+                    // 文件夹墙卡片用自己的颜色，主题图标当角标贴在前片上
+                    v.themed = true
+                    v.styled = false
+                    v.badge = .customIcon
+                    v.badgeScale = 0.34
+                    return v
+                }
+            }
             switch style.overlay {
             case .none: v.badge = .none
             case .symbol(let name): v.badge = .symbol(name)
@@ -239,13 +254,20 @@ struct ShiduoFolderIcon: View {
         let dark = scheme == .dark
         let baseKey = FolderArtLogic.cacheKey(hex: v.hex, pixels: pixels, dark: dark)
         ZStack {
-            if let base = cache.cachedBase(hex: v.hex, pixels: pixels, dark: dark) ?? renderedBase {
+            if v.themed, let art = cache.badgeImage(path) {
+                Image(decorative: art, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
+            } else if let base = cache.cachedBase(hex: v.hex, pixels: pixels, dark: dark) ?? renderedBase {
                 Image(decorative: base, scale: 1)
                     .resizable()
                     .interpolation(.high)
                     .antialiased(true)
             }
-            ShiduoFolderBadge.square(variant: v, image: cache.badgeImage(path), side: side, dark: scheme == .dark)
+            if !v.themed {
+                ShiduoFolderBadge.square(variant: v, image: cache.badgeImage(path), side: side, dark: scheme == .dark)
+            }
         }
         .frame(width: side, height: side)
         .accessibilityHidden(true)

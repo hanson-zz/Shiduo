@@ -29,6 +29,35 @@ final class FolderIconStyleTests: XCTestCase {
 
         let unknown = try JSONDecoder().decode(FolderIconStyle.self, from: Data(#"{"color":"123456","overlay":{"type":"video"}}"#.utf8))
         XCTAssertEqual(unknown.overlay, FolderIconStyle.Overlay.none)
+        XCTAssertNil(bare.theme)
+        XCTAssertEqual(bare.hue, 0)
+    }
+
+    func testThemeRoundTripAndValidation() throws {
+        let themed = FolderIconStyle(color: "87B3EB", overlay: .emoji("⭐️"), overlayScale: 0.4, theme: "animal/cat", hue: 47.6)
+        XCTAssertEqual(themed.hue, 48)
+        let decoded = try JSONDecoder().decode(FolderIconStyle.self, from: JSONEncoder().encode(themed))
+        XCTAssertEqual(decoded, themed)
+        XCTAssertEqual(decoded.theme, "animal/cat")
+
+        XCTAssertEqual(FolderIconStyle(color: "123456", theme: "animal/cat", hue: 999).hue, 180)
+        XCTAssertNil(FolderIconStyle(color: "123456", theme: "../etc/passwd").theme)
+        XCTAssertNil(FolderIconStyle(color: "123456", theme: "Animal/Cat").theme)
+        XCTAssertNil(FolderIconStyle(color: "123456", theme: "animal").theme)
+        // 没有主题时色相没意义，固定为 0
+        XCTAssertEqual(FolderIconStyle(color: "123456", hue: 90).hue, 0)
+    }
+
+    func testThemeCatalog() {
+        XCTAssertEqual(FolderThemeCatalog.categories.map(\.id), ["food", "animal", "starry", "planet", "plant", "material", "building"])
+        XCTAssertEqual(FolderThemeCatalog.allThemes.count, 52)
+        XCTAssertEqual(Set(FolderThemeCatalog.allThemes).count, 52)
+        for theme in FolderThemeCatalog.allThemes {
+            XCTAssertEqual(FolderIconStyle.normalizedTheme(theme), theme)
+        }
+        XCTAssertEqual(FolderThemeCatalog.resourcePath("plant/monstera"), "ThemeIcons/plant/monstera.png")
+        XCTAssertNil(FolderThemeCatalog.resourcePath("plant/rose"))
+        XCTAssertEqual(FolderThemeCatalog.category(of: "building/eiffel")?.id, "building")
     }
 }
 

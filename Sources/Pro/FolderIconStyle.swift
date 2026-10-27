@@ -1,6 +1,6 @@
 import Foundation
 
-/// 拾掇 Pro「文件夹上色」的样式：颜色 + 叠加层 + 叠加层大小。
+/// 拾掇 Pro「文件夹换装」的样式：颜色（或主题图标 + 色相）+ 叠加层 + 叠加层大小。
 /// 这个文件只用 Foundation，单元测试直接编译它。
 struct FolderIconStyle: Codable, Hashable {
     enum Overlay: Hashable {
@@ -13,17 +13,42 @@ struct FolderIconStyle: Codable, Hashable {
 
     static let scaleRange: ClosedRange<Double> = 0.3...0.7
     static let defaultScale = 0.45
+    /// 主题图标的色相调整，单位度。
+    static let hueRange: ClosedRange<Double> = -180...180
 
     /// 十六进制 RRGGBB（大写，不带 #）。
     var color: String
     var overlay: Overlay
     /// 叠加层边长占图标边长的比例，0.3–0.7。
     var overlayScale: Double
+    /// 主题图标「分类/名字」（如 animal/cat）；nil 是普通的上色。有主题时不用 color 染色。
+    var theme: String?
+    /// 主题图标的色相调整（度，-180…180），0 是原样。
+    var hue: Double
 
-    init(color: String, overlay: Overlay = .none, overlayScale: Double = FolderIconStyle.defaultScale) {
+    init(color: String, overlay: Overlay = .none, overlayScale: Double = FolderIconStyle.defaultScale,
+         theme: String? = nil, hue: Double = 0) {
         self.color = FolderIconStyle.normalizedHex(color) ?? "87B3EB"
         self.overlay = overlay
         self.overlayScale = FolderIconStyle.clampScale(overlayScale)
+        self.theme = FolderIconStyle.normalizedTheme(theme)
+        self.hue = self.theme == nil ? 0 : FolderIconStyle.clampHue(hue)
+    }
+
+    static func clampHue(_ value: Double) -> Double {
+        guard value.isFinite else { return 0 }
+        return min(max(value, hueRange.lowerBound), hueRange.upperBound).rounded()
+    }
+
+    /// 只接受「小写字母数字和 - 组成的 分类/名字」，防止拼出别的路径。
+    static func normalizedTheme(_ text: String?) -> String? {
+        guard let text else { return nil }
+        let parts = text.split(separator: "/", omittingEmptySubsequences: false)
+        guard parts.count == 2 else { return nil }
+        let ok = parts.allSatisfy { part in
+            !part.isEmpty && part.allSatisfy { ($0.isLetter && $0.isASCII && $0.isLowercase) || ($0.isNumber && $0.isASCII) || $0 == "-" }
+        }
+        return ok ? text : nil
     }
 
     static func clampScale(_ value: Double) -> Double {
@@ -47,7 +72,7 @@ struct FolderIconStyle: Codable, Hashable {
 
     // MARK: Codable（叠加层写成 {"type": "symbol", "value": "star"}，好读也好迁移）
 
-    private enum CodingKeys: String, CodingKey { case color, overlay, overlayScale }
+    private enum CodingKeys: String, CodingKey { case color, overlay, overlayScale, theme, hue }
     private enum OverlayKeys: String, CodingKey { case type, value }
 
     init(from decoder: Decoder) throws {
@@ -66,13 +91,17 @@ struct FolderIconStyle: Codable, Hashable {
             default: overlay = .none
             }
         }
-        self.init(color: hex, overlay: overlay, overlayScale: scale)
+        let theme = try c.decodeIfPresent(String.self, forKey: .theme)
+        let hue = try c.decodeIfPresent(Double.self, forKey: .hue) ?? 0
+        self.init(color: hex, overlay: overlay, overlayScale: scale, theme: theme, hue: hue)
     }
 
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(color, forKey: .color)
         try c.encode(overlayScale, forKey: .overlayScale)
+        try c.encodeIfPresent(theme, forKey: .theme)
+        if theme != nil { try c.encode(hue, forKey: .hue) }
         var o = c.nestedContainer(keyedBy: OverlayKeys.self, forKey: .overlay)
         switch overlay {
         case .none: try o.encode("none", forKey: .type)
@@ -219,5 +248,56 @@ enum FolderIconSyncHint: Equatable {
         if cloudRoots.contains(where: { path == $0 || path.hasPrefix($0 + "/") }) { return .cloud }
         // iCloud「桌面与文稿」：桌面、文稿在 iCloud 里时，访达给的仍是 ~/Desktop、~/Documents，这里不猜。
         return nil
+    }
+}
+
+/// 「文件夹换装」自带的主题图标：分类和顺序。图在 App 里的 ThemeIcons/<分类>/<名字>.png。
+enum FolderThemeCatalog {
+    struct Category: Identifiable, Hashable {
+        let id: String
+        let symbol: String
+        let items: [String]
+        var title: String {
+            switch id {
+            case "food": return String(localized: "美食")
+            case "animal": return String(localized: "动物")
+            case "starry": return String(localized: "星空")
+            case "planet": return String(localized: "星球")
+            case "plant": return String(localized: "植物")
+            case "material": return String(localized: "材质")
+            case "building": return String(localized: "建筑")
+            default: return id
+            }
+        }
+        /// 完整的主题 ID（分类/名字）。
+        var themes: [String] { items.map { id + "/" + $0 } }
+    }
+
+    static let categories: [Category] = [
+        Category(id: "food", symbol: "fork.knife", items: ["cake", "donut", "matcha", "ramen", "sushi", "watermelon"]),
+        Category(id: "animal", symbol: "pawprint.fill", items: ["cat", "dog", "bear", "panda", "rabbit", "fox",
+                                                                 "coral-fish", "jellyfish", "octopus", "turtle"]),
+        Category(id: "starry", symbol: "moon.stars.fill", items: ["aurora", "constellation", "galaxy", "galaxy-2", "moon", "moon-2",
+                                                                   "shooting-star", "shooting-star-2", "stars"]),
+        Category(id: "planet", symbol: "globe.asia.australia.fill", items: ["earth", "saturn", "jupiter", "mars", "ice", "pastel",
+                                                                             "astronaut", "rover", "ufo"]),
+        Category(id: "plant", symbol: "leaf.fill", items: ["monstera", "succulent", "bonsai", "palm", "sunflower", "tulip"]),
+        Category(id: "material", symbol: "square.stack.3d.up.fill", items: ["frosted-glass", "gradient-glass", "holographic",
+                                                                             "marble", "metal", "wood"]),
+        Category(id: "building", symbol: "building.columns.fill", items: ["eiffel", "big-ben", "liberty", "opera-house",
+                                                                           "taj-mahal", "pyramids"]),
+    ]
+
+    static var allThemes: [String] { categories.flatMap(\.themes) }
+
+    static func category(of theme: String) -> Category? {
+        let id = theme.split(separator: "/").first.map(String.init)
+        return categories.first { $0.id == id }
+    }
+
+    /// App 里图片的相对路径（ThemeIcons/animal/cat.png）。不认识的主题返回 nil。
+    static func resourcePath(_ theme: String) -> String? {
+        guard allThemes.contains(theme) else { return nil }
+        return "ThemeIcons/" + theme + ".png"
     }
 }
