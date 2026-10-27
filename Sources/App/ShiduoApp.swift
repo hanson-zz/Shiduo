@@ -15,6 +15,8 @@ struct ShiduoApp: App {
     @StateObject private var trash = TrashCommandCenter.shared
     /// 侧边栏「收藏」：「前往」菜单里列出来，前 9 个是 ⌥⌘1…9。
     @StateObject private var favorites = FavoritesStore.shared
+    /// 拾掇 Pro 自定义快捷键：改了以后菜单马上换。
+    @StateObject private var shortcuts = ShortcutStore.shared
     /// Pro：菜单栏小助手（设置里打开，默认关闭）。
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
     // 「显示」菜单的勾选状态（各自存在 UserDefaults，下次打开保持原样）。
@@ -245,6 +247,8 @@ struct ShiduoApp: App {
 /// 应用菜单里的「支持拾掇…」，帮助菜单里的「发送反馈…」。
 struct SupportCommands: Commands {
     @Environment(\.openWindow) private var openWindow
+    /// 拾掇 Pro 自定义快捷键：改了以后菜单马上换。
+    @ObservedObject private var shortcuts = ShortcutStore.shared
 
     var body: some Commands {
         CommandGroup(after: .appInfo) {
@@ -267,6 +271,8 @@ struct PaneCommands: View {
     let tabs: WindowTabs?
     @ObservedObject var store: LibraryStore
     @ObservedObject private var license = LicenseManager.shared
+    /// 拾掇 Pro 自定义快捷键：改了以后菜单马上换。
+    @ObservedObject private var shortcuts = ShortcutStore.shared
 
     private var layout: PaneLayout { tabs?.selectedTab.layout ?? .single }
     private var dual: Bool { layout.isDual && license.isPro }
@@ -304,6 +310,8 @@ struct PaneCommands: View {
 /// 标签页的菜单命令：系统的「关闭」换成「关闭标签页 ⌘W」「关闭窗口 ⇧⌘W」，「文件」里加「新建标签页 ⌘T」，「窗口」里加切换标签。
 struct TabCommands: Commands {
     let tabs: WindowTabs?
+    /// 拾掇 Pro 自定义快捷键：改了以后菜单马上换。
+    @ObservedObject private var shortcuts = ShortcutStore.shared
 
     var body: some Commands {
         CommandGroup(replacing: .saveItem) {

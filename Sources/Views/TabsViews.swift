@@ -28,7 +28,7 @@ struct TabBarView: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
-            .help(AppShortcut.newTab.help)
+            .help(AppShortcut.newTab.currentHelp)
         }
         .padding(.horizontal, 14)
         .padding(.bottom, 4)
@@ -70,7 +70,7 @@ private struct TabChip: View {
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
             .opacity(hovering || selected ? 1 : 0)
-            .help(AppShortcut.closeTab.help)
+            .help(AppShortcut.closeTab.currentHelp)
         }
         .padding(.leading, 10)
         .padding(.trailing, 6)

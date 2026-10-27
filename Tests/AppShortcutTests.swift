@@ -70,6 +70,27 @@ final class AppShortcutTests: XCTestCase {
         XCTAssertEqual(AppShortcut.asIcons.display, "⌘1")
     }
 
+    /// 出厂快捷键一个都不在「不能用」的表里（设置里改快捷键时也用这张表挡）。
+    func testDefaultsAvoidReservedList() {
+        for s in AppShortcut.allCases {
+            XCTAssertNil(ReservedShortcuts.list[s.display], "\(s) 的 \(s.display) 是 \(ReservedShortcuts.list[s.display] ?? "")")
+        }
+        // 测试里列过的访达 / 系统组合键都在表里。
+        for combo in ["⇧⌘K", "⇧⌘C", "⌘R", "⌥⌘I", "⌃⌘I", "⇧⌘A", "⇧⌘U", "⇧⌘I", "⇧⌘F", "⇧⌘R", "⌘E",
+                      "⌃⌘D", "⌃⌘F", "⌃⌘Q", "⌥⌘D", "⌃⌘空格", "⌥⌘1", "⌥⌘9"] {
+            XCTAssertNotNil(ReservedShortcuts.list[combo], combo)
+        }
+    }
+
+    /// KeyCombo 的写法和 AppShortcut.display 一模一样（设置里的表、菜单、悬停提示都对得上）。
+    func testDefaultComboMatchesDisplay() {
+        for s in AppShortcut.allCases {
+            XCTAssertEqual(s.defaultCombo?.display, s.display, "\(s)")
+            XCTAssertEqual(s.defaultCombo?.eventModifiers, s.modifiers, "\(s)")
+            XCTAssertEqual(s.defaultCombo?.keyEquivalent, s.key, "\(s)")
+        }
+    }
+
     func testDisplayOrder() {
         XCTAssertEqual(AppShortcut.addToShelf.display, "⌃⌘B")
         XCTAssertEqual(AppShortcut.refresh.display, "⌥⌘R")

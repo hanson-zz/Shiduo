@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 拾掇主窗口里所有菜单快捷键，只在这里写一次：菜单、按钮的悬停提示、帮助和说明文字都从这里取。
+/// 拾掇主窗口里所有菜单快捷键的出厂值，只在这里写一次（拾掇 Pro 可以在设置「菜单与快捷键」里改，见 CustomMenuStore.swift）：菜单、按钮的悬停提示、帮助和说明文字都从这里取。
 /// 原则：访达里有的组合键，要么做和访达一样的事，要么不用（⇧⌘H 个人文件夹、⇧⌘D 桌面、⇧⌘O 文稿、⌥⌘L 下载……）。
 /// 拾掇自己的页面用 ⌃⌘ 加字母（⌃⌘H 首页、⌃⌘E 图片工具……；⌃⌘ 加数字留给「数字键直达」，⌃⌘D 是系统的「查询」、⌃⌘F 全屏、⌃⌘Q 锁屏、⌃⌘空格 表情与符号，都不用）。
 /// 找文件更快：⌘L 输入路径（访达的 ⌘L 是「制作替身」，拾掇没有这一项，按用户确认的效果图用 ⌘L）、⇧⌘G 前往文件夹（和访达一样，做同一件事）；
@@ -256,11 +256,4 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         (String(localized: "移到废纸篓"), "⌘⌫"),
         (String(localized: "前往第 1…9 个收藏"), "⌥⌘1…9"),
     ]
-}
-
-extension View {
-    /// 用 AppShortcut 里登记的快捷键。
-    func keyboardShortcut(_ shortcut: AppShortcut) -> some View {
-        keyboardShortcut(shortcut.key, modifiers: shortcut.modifiers)
-    }
 }

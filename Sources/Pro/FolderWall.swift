@@ -556,7 +556,7 @@ struct FolderWallView: View {
                     Label("添加到文件夹墙", systemImage: "plus")
                 }
                 .buttonStyle(.borderedProminent)
-                .help(AppShortcut.addToFolderWall.help)
+                .help(AppShortcut.addToFolderWall.currentHelp)
             }
             HStack(spacing: 12) {
                 HStack(spacing: 8) {

@@ -172,6 +172,8 @@ enum TrashKeys {
 /// 「文件」菜单：移到废纸篓 ⌘⌫、直接删除… ⌥⌘⌫（只在菜单栏里，不放进右键菜单，免得误点）。
 struct TrashCommands: Commands {
     @ObservedObject var center: TrashCommandCenter
+    /// 拾掇 Pro 自定义快捷键：改了以后菜单马上换。
+    @ObservedObject private var shortcuts = ShortcutStore.shared
 
     var body: some Commands {
         CommandGroup(after: .newItem) {

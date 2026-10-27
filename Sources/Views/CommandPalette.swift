@@ -95,7 +95,7 @@ enum PaletteCatalog {
                  subtitle: String? = nil, shortcut: AppShortcut? = nil, shortcutText: String? = nil,
                  keywords: [String] = [], action: @escaping @MainActor () -> Void) {
             let item = PaletteItem(id: id, title: title, section: section, subtitle: subtitle,
-                                   shortcut: shortcutText ?? shortcut?.display, symbol: symbol, keywords: keywords)
+                                   shortcut: shortcutText ?? shortcut?.currentDisplay, symbol: symbol, keywords: keywords)
             list.append((item, action))
         }
         let defaults = UserDefaults.standard
@@ -317,6 +317,8 @@ enum PaletteCatalog {
                  [String(localized: "起始位置"), String(localized: "悬停预览"), String(localized: "语言"), String(localized: "文件夹图标")]),
                 (.shelf, String(localized: "设置：暂存架"), "tray.full", [String(localized: "刘海")]),
                 (.search, String(localized: "设置：搜索与识别"), "magnifyingglass", [String(localized: "快速搜索"), "OCR"]),
+                (.menus, String(localized: "设置：菜单与快捷键"), "contextualmenu.and.cursorarrow",
+                 [String(localized: "右键菜单"), String(localized: "快捷键"), String(localized: "自定义菜单")]),
                 (.updates, String(localized: "设置：更新与隐私"), "lock.shield", [String(localized: "检查更新"), String(localized: "完全磁盘访问")]),
                 (.pro, String(localized: "设置：Pro"), "sparkles", [String(localized: "授权"), "License"]),
             ]
@@ -376,7 +378,7 @@ struct CommandPaletteView: View {
                                     font: .systemFont(ofSize: 18),
                                     onCommand: { model.handle($0) })
                     .frame(height: 26)
-                Text(AppShortcut.commandPalette.display)
+                Text(AppShortcut.commandPalette.currentDisplay)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }

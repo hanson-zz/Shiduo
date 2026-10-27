@@ -44,7 +44,7 @@ struct SettingsView: View {
 
     /// 设置分成几个标签页：常用的在前，Pro 放最后（免费用户打开设置先看到的是能用的设置）。
     enum Tab: String, Hashable {
-        case general, shelf, search, updates, pro
+        case general, shelf, search, menus, updates, pro
     }
 
     @AppStorage("settings.tab") private var tab: Tab = .general
@@ -67,6 +67,10 @@ struct SettingsView: View {
             page { searchTab }
                 .tabItem { Label("搜索与识别", systemImage: "magnifyingglass") }
                 .tag(Tab.search)
+            // 拾掇 Pro：右键菜单编辑、快捷键编辑（左边列表、右边预览，所以这一页宽一些）。
+            MenuShortcutSettingsView()
+                .tabItem { Label("菜单与快捷键", systemImage: "contextualmenu.and.cursorarrow") }
+                .tag(Tab.menus)
             page { updatesTab }
                 .tabItem { Label("更新与隐私", systemImage: "lock.shield") }
                 .tag(Tab.updates)
@@ -74,7 +78,7 @@ struct SettingsView: View {
                 .tabItem { Label("Pro", systemImage: "sparkles") }
                 .tag(Tab.pro)
         }
-        .frame(width: 600, height: 620)
+        .frame(width: tab == .menus ? 820 : 600, height: tab == .menus ? 640 : 620)
     }
 
     private func revealLibraryScope(_ proxy: ScrollViewProxy) {

@@ -140,6 +140,8 @@ enum FileCommandRouter {
 /// 「文件」菜单：用所选项目新建文件夹、制作替身、打开方式之外的几项。
 struct FileCommands: Commands {
     @ObservedObject var center: TrashCommandCenter
+    /// 拾掇 Pro 自定义快捷键：改了以后菜单马上换。
+    @ObservedObject private var shortcuts = ShortcutStore.shared
     let store: LibraryStore
 
     var body: some Commands {

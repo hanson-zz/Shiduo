@@ -113,6 +113,9 @@ targets:
       # 右键菜单补齐：打开方式、终端 / 编辑器、替身 / 新建文件夹起名、剪切粘贴、直接删除文案；图片筛选和主色。
       - path: Sources/Model/ContextMenuLogic.swift
       - path: Sources/Model/ImageFilterLogic.swift
+      # 拾掇 Pro 菜单与快捷键：右键菜单布局（排序 / 隐藏 / 分组 / 和新版本默认合并）、自定义快捷键（冲突、交换、存取）。
+      - path: Sources/Model/MenuLayoutLogic.swift
+      - path: Sources/Model/ShortcutSettingsLogic.swift
       # Pro 加值：压缩包浏览（zip 目录 / GBK 名字 / ZIP64、系统 tar 列表、解压）、批量改名规则引擎、新建文件模板。
       - path: Sources/Pro/ArchiveLogic.swift
       - path: Sources/Pro/ArchiveExtract.swift

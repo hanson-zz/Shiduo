@@ -46,6 +46,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case dualPane
     case fontArchive
     case fontSets
+    case customMenus
 
     var id: Self { self }
 
@@ -72,6 +73,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .dualPane: return String(localized: "双栏浏览")
         case .fontArchive: return String(localized: "字体压缩存放 / 搬到移动硬盘")
         case .fontSets: return String(localized: "字体集与项目绑定")
+        case .customMenus: return String(localized: "自定义右键菜单与快捷键")
         }
     }
 
@@ -98,6 +100,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .dualPane: return String(localized: "左右双栏或上下排，两栏各走各的；拖过去就移动，一键拷贝 / 移动到另一栏")
         case .fontArchive: return String(localized: "停用的字体打成 zip 省一半空间，或搬到移动硬盘，清单记着，随时取回")
         case .fontSets: return String(localized: "按客户、品牌建字体集，一键临时启用（注销后自动停用）；绑定项目文件夹，打开项目就启用")
+        case .customMenus: return String(localized: "右键菜单留哪些、什么顺序、收进子菜单由你定；菜单快捷键随便改，撞键当场提示，可一键交换")
         }
     }
 
@@ -124,6 +127,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .dualPane: return "rectangle.split.2x1"
         case .fontArchive: return "archivebox"
         case .fontSets: return "textformat"
+        case .customMenus: return "contextualmenu.and.cursorarrow"
         }
     }
 
@@ -150,6 +154,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .dualPane: return .teal
         case .fontArchive: return .brown
         case .fontSets: return .indigo
+        case .customMenus: return .mint
         }
     }
 }

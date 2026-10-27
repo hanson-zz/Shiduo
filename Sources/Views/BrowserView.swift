@@ -1388,7 +1388,7 @@ struct FileGridCell: View {
                         }
                         .buttonStyle(.plain)
                         .padding(6)
-                        .help(AppShortcut.copyText.help)
+                        .help(AppShortcut.copyText.currentHelp)
                         .transition(.opacity)
                     }
                 }
@@ -1517,7 +1517,7 @@ struct FolderPathBar: View {
                     .frame(width: 22, height: 20)
             }
             .disabled(!store.canGoBack)
-            .help(AppShortcut.back.help)
+            .help(AppShortcut.back.currentHelp)
             .accessibilityLabel("返回")
             Button {
                 store.goForward()
@@ -1526,7 +1526,7 @@ struct FolderPathBar: View {
                     .frame(width: 22, height: 20)
             }
             .disabled(!store.canGoForward)
-            .help(AppShortcut.forward.help)
+            .help(AppShortcut.forward.currentHelp)
             .accessibilityLabel("前进")
             // 快捷键在「前往」菜单里（AppShortcut），这里只是按钮。
             Button {
@@ -1536,7 +1536,7 @@ struct FolderPathBar: View {
                     .frame(width: 22, height: 20)
             }
             .disabled(!store.canGoUp)
-            .help(AppShortcut.enclosingFolder.help)
+            .help(AppShortcut.enclosingFolder.currentHelp)
             .accessibilityLabel("上一层文件夹")
 
             if address.isEditing(in: hostWindow, store: store) {

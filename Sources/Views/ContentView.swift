@@ -12,6 +12,8 @@ struct ContentView: View {
     @ObservedObject private var folderIcons = FolderIconService.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
     @ObservedObject private var trialExpiry = TrialExpiryNotice.shared
+    /// 拾掇 Pro 自定义快捷键（⇧⌘] / ⇧⌘[ 这几个藏起来的按钮也跟着换）。
+    @ObservedObject private var shortcuts = ShortcutStore.shared
     /// 命令面板（⌃⌘P）：只在打开它的那个窗口里显示。
     @ObservedObject private var palette = CommandPaletteModel.shared
     /// 这个主窗口（开了多个窗口时，全局面板只在一个窗口里弹）。
