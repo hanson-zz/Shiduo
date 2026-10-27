@@ -556,6 +556,15 @@ enum FontScanner {
                 read(url, location: location, manifestID: entry?.id, into: &result)
             }
         }
+        // 系统字体不全在 /System/Library/Fonts（苹方等是系统按需下载的资源，放在 /System/Library/AssetsV2 里）：
+        // 问 Core Text 现在能用的字体，/System 下面还没读过的也算系统字体（只读，不碰）。
+        var seen = Set(result.faces.map { FontPathRules.normalize($0.path) })
+        for url in (CTFontManagerCopyAvailableFontURLs() as? [URL]) ?? [] {
+            let path = FontPathRules.normalize(url.path)
+            guard FontPathRules.isSystem(path), FontFileFormat.extensions.contains(url.pathExtension.lowercased()),
+                  seen.insert(path).inserted else { continue }
+            read(url, location: .system, manifestID: nil, into: &result)
+        }
         // 搬到移动硬盘的：硬盘接着就读文件；压缩存放的：按清单里记的信息显示。
         for entry in entries {
             switch entry.storage {
