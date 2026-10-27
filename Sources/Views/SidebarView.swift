@@ -11,6 +11,7 @@ struct SidebarView: View {
     @ObservedObject private var reminders = ReminderStore.shared
     @ObservedObject private var customTags = CustomTagStore.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
+    @ObservedObject private var fonts = FontLibrary.shared
     @State private var shelfTargeted = false
 
     /// 常用位置，和访达侧边栏一样。
@@ -162,6 +163,11 @@ struct SidebarView: View {
                     .tag(duplicatesRow)
                     .help("完全相同的副本，以及看起来差不多的照片；数字是上次扫描找到的可腾出空间")
                     .simultaneousGesture(TapGesture().onEnded { store.reselectDuplicates() })
+                // 字体管理：数字是问题字体（重复 / 旧版本 / 损坏）里可以停用的个数。
+                Label("字体", systemImage: "textformat")
+                    .badge(fonts.actionableIssueCount > 0 ? Text("\(fonts.actionableIssueCount)") : nil)
+                    .tag(SidebarItem.fonts)
+                    .help("装了哪些字体、中文样张预览，停用不常用的，查重复和损坏的字体")
             }
 
             if !chat.installedApps.isEmpty {

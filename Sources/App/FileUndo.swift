@@ -11,6 +11,8 @@ final class FileUndoAction {
         case paths([FileUndoLogic.PathPair])
         /// 记在「清理记录」里的一批（移到废纸篓、移动、整理下载、搬家）。redoable 为 false 时只能撤销不能重做（搬家：替身、跨盘）。
         case history(batch: UUID, redoable: Bool)
+        /// 自己知道怎么撤销 / 重做的操作（停用 / 启用字体：要同时改停用清单、注册字体）。
+        case custom(undo: @MainActor () async -> Void, redo: @MainActor () async -> Void)
     }
 
     var kind: Kind
@@ -99,6 +101,12 @@ final class FileUndoCenter {
         let action = FileUndoAction(kind: .history(batch: batch, redoable: redoable), name: name)
         action.createdFolders = createdFolders
         return register(action, toast: toast)
+    }
+
+    @discardableResult
+    func registerCustom(name: String, toast: String?, undo: @escaping @MainActor () async -> Void,
+                        redo: @escaping @MainActor () async -> Void) -> FileUndoAction {
+        register(FileUndoAction(kind: .custom(undo: undo, redo: redo), name: name), toast: toast)
     }
 
     /// 小提示上的「撤销」：它还在撤销栈顶就直接 undo()（这样 ⌘⇧Z 能重做）；
@@ -190,6 +198,9 @@ final class FileUndoCenter {
                 ReminderStore.shared.relocate(from: from, to: pair.restored)
             }
             await trashEmptyCreatedFolders(action.createdFolders)
+
+        case .custom(let undo, _):
+            await undo()
         }
     }
 
@@ -233,6 +244,9 @@ final class FileUndoCenter {
 
         case .history:
             await redoHistory(action, store: store)
+
+        case .custom(_, let redo):
+            await redo()
         }
     }
 

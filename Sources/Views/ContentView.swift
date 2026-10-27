@@ -246,8 +246,13 @@ struct PaneContent: View {
         content
             // 记下去过的文件夹（命令面板的「最近」）。
             .onChange(of: store.currentFolder) {
-                if let folder = store.currentFolder, store.activeQuery == nil { FavoritesStore.shared.noteVisited(folder) }
+                if let folder = store.currentFolder, store.activeQuery == nil {
+                    FavoritesStore.shared.noteVisited(folder)
+                    // 字体集绑定了这个项目文件夹（Pro）：按设置询问或自动启用。
+                    FontLibrary.shared.folderOpened(folder)
+                }
             }
+            .overlay(alignment: .top) { FontProjectBannerView() }
     }
 
     @ViewBuilder
@@ -299,6 +304,8 @@ struct PaneContent: View {
                 }
             case .cleanupHistory:
                 CleanupTabs { CleanupHistoryView() }
+            case .fonts:
+                FontsView()
             case .savedSearch(let id):
                 SavedSearchPage(id: id)
                     .proGated(.savedSearch)

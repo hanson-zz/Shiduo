@@ -201,6 +201,7 @@ enum PaletteCatalog {
         add("shelf", String(localized: "暂存架"), .go, symbol: "tray.full", keywords: ["Shelf"]) { store.selection = .shelf }
         add("reminders", String(localized: "提醒"), .go, symbol: "alarm") { store.selection = .reminders }
         add("folderWall", String(localized: "文件夹墙"), .go, symbol: "square.grid.2x2") { store.selection = .folderWall }
+        add("fonts", String(localized: "字体"), .go, symbol: "textformat", keywords: ["Fonts", String(localized: "字体库")]) { store.selection = .fonts }
         add("homeFolder", String(localized: "个人文件夹"), .go, symbol: "house.circle", shortcut: .homeFolder) { store.goToHomeFolder() }
         add("desktop", String(localized: "桌面"), .go, symbol: "menubar.dock.rectangle", shortcut: .desktop, keywords: ["Desktop"]) {
             store.goToFolder(.desktop)

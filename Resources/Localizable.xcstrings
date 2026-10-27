@@ -33566,6 +33566,2102 @@
           }
         }
       }
+    },
+    "字体压缩存放 / 搬到移动硬盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font archive / move to external drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字体压缩存放 / 搬到移动硬盘"
+          }
+        }
+      }
+    },
+    "字体集与项目绑定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font sets & project linking"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字体集与项目绑定"
+          }
+        }
+      }
+    },
+    "停用的字体打成 zip 省一半空间，或搬到移动硬盘，清单记着，随时取回": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zip disabled fonts to save about half the space, or move them to an external drive; a manifest keeps track so you can bring them back anytime"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用的字体打成 zip 省一半空间，或搬到移动硬盘，清单记着，随时取回"
+          }
+        }
+      }
+    },
+    "按客户、品牌建字体集，一键临时启用（注销后自动停用）；绑定项目文件夹，打开项目就启用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group fonts into sets by client or brand and activate them temporarily in one click (off again at logout); link a set to a project folder and it turns on when you open the project"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按客户、品牌建字体集，一键临时启用（注销后自动停用）；绑定项目文件夹，打开项目就启用"
+          }
+        }
+      }
+    },
+    "字体库": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font Library"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字体库"
+          }
+        }
+      }
+    },
+    "样张": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specimens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "样张"
+          }
+        }
+      }
+    },
+    "问题字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "问题字体"
+          }
+        }
+      }
+    },
+    "已停用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disabled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已停用"
+          }
+        }
+      }
+    },
+    "字体集": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font Sets"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字体集"
+          }
+        }
+      }
+    },
+    "正在停用…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disabling…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在停用…"
+          }
+        }
+      }
+    },
+    "已停用 %lld 个字体文件（没有删除，随时可以启用）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disabled %lld font file(s) (not deleted; enable them anytime)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已停用 %lld 个字体文件（没有删除，随时可以启用）"
+          }
+        }
+      }
+    },
+    "停用字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用字体"
+          }
+        }
+      }
+    },
+    "%lld 个没有停用（文件已经不在，或没有权限）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld not disabled (file missing or no permission): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个没有停用（文件已经不在，或没有权限）：%@"
+          }
+        }
+      }
+    },
+    "正在启用…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enabling…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在启用…"
+          }
+        }
+      }
+    },
+    "已启用 %lld 个字体文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enabled %lld font file(s)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已启用 %lld 个字体文件"
+          }
+        }
+      }
+    },
+    "启用字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用字体"
+          }
+        }
+      }
+    },
+    "%lld 个没有启用（找不到文件：移动硬盘没接上，或文件被移走了）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld not enabled (file not found: drive not connected, or the file was moved): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个没有启用（找不到文件：移动硬盘没接上，或文件被移走了）：%@"
+          }
+        }
+      }
+    },
+    "只有「用户字体」（~/Library/Fonts 里的）可以停用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only User fonts (in ~/Library/Fonts) can be disabled."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有「用户字体」（~/Library/Fonts 里的）可以停用。"
+          }
+        }
+      }
+    },
+    "%lld 个在 /Library/Fonts 里（这台 Mac 所有用户共用），改动要管理员权限，拾掇不动它们。需要的话可以在访达里手动处理。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld are in /Library/Fonts (shared by all users of this Mac). Changing them needs admin rights, so Shiduo leaves them alone. You can handle them manually in Finder if needed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个在 /Library/Fonts 里（这台 Mac 所有用户共用），改动要管理员权限，拾掇不动它们。需要的话可以在访达里手动处理。"
+          }
+        }
+      }
+    },
+    "系统字体是 macOS 自带的，拾掇只显示、永远不动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System fonts come with macOS. Shiduo only shows them and never touches them."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统字体是 macOS 自带的，拾掇只显示、永远不动。"
+          }
+        }
+      }
+    },
+    "正在压缩…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compressing…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在压缩…"
+          }
+        }
+      }
+    },
+    "已压缩存放 %lld 个，省下 %@（原文件在废纸篓里，清空后才真正腾出空间）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived %1$lld, saving %2$@ (the originals are in the Trash; space is freed once you empty it)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已压缩存放 %lld 个，省下 %@（原文件在废纸篓里，清空后才真正腾出空间）"
+          }
+        }
+      }
+    },
+    "%lld 个没有压缩（原文件没动）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld not archived (originals untouched): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个没有压缩（原文件没动）：%@"
+          }
+        }
+      }
+    },
+    "不能搬到这个文件夹，请选移动硬盘或其他普通文件夹。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't move fonts to this folder. Choose an external drive or another regular folder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不能搬到这个文件夹，请选移动硬盘或其他普通文件夹。"
+          }
+        }
+      }
+    },
+    "正在搬…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在搬…"
+          }
+        }
+      }
+    },
+    "已搬走 %lld 个字体文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved %lld font file(s)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已搬走 %lld 个字体文件"
+          }
+        }
+      }
+    },
+    "%lld 个没有搬走（原文件没动）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld not moved (originals untouched): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个没有搬走（原文件没动）：%@"
+          }
+        }
+      }
+    },
+    "正在取回…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bringing back…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在取回…"
+          }
+        }
+      }
+    },
+    "已取回 %lld 个字体文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brought back %lld font file(s)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取回 %lld 个字体文件"
+          }
+        }
+      }
+    },
+    "%lld 个没有取回（移动硬盘没接上，或文件不在了）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld not brought back (drive not connected, or the file is gone): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个没有取回（移动硬盘没接上，或文件不在了）：%@"
+          }
+        }
+      }
+    },
+    "新字体集": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Font Set"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新字体集"
+          }
+        }
+      }
+    },
+    "已把「%@」加入「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added “%1$@” to “%2$@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已把「%@」加入「%@」"
+          }
+        }
+      }
+    },
+    "已临时启用「%@」：%lld 个字体（注销后自动停用）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporarily activated “%1$@”: %2$lld font(s) (off again at logout)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已临时启用「%@」：%lld 个字体（注销后自动停用）"
+          }
+        }
+      }
+    },
+    "%lld 个字体没能启用（移动硬盘没接上，或文件不在了）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld font(s) couldn't be activated (drive not connected, or the file is gone): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个字体没能启用（移动硬盘没接上，或文件不在了）：%@"
+          }
+        }
+      }
+    },
+    "已停止临时启用「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopped temporary activation of “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已停止临时启用「%@」"
+          }
+        }
+      }
+    },
+    "已为此项目启用 %lld 个字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activated %lld font(s) for this project"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已为此项目启用 %lld 个字体"
+          }
+        }
+      }
+    },
+    "这个项目绑定了字体集「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This project is linked to the font set “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个项目绑定了字体集「%@」"
+          }
+        }
+      }
+    },
+    "拾掇字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇字体"
+          }
+        }
+      }
+    },
+    "搜索字体（中文名、英文名、拼音首字母）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search fonts (Chinese name, English name, pinyin initials)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索字体（中文名、英文名、拼音首字母）"
+          }
+        }
+      }
+    },
+    "筛选": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "筛选"
+          }
+        }
+      }
+    },
+    "全部字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部字体"
+          }
+        }
+      }
+    },
+    "中文字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chinese Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中文字体"
+          }
+        }
+      }
+    },
+    "用户字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用户字体"
+          }
+        }
+      }
+    },
+    "本机字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本机字体"
+          }
+        }
+      }
+    },
+    "系统字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统字体"
+          }
+        }
+      }
+    },
+    "总占用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total Size"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "总占用"
+          }
+        }
+      }
+    },
+    "添加日期": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date Added"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加日期"
+          }
+        }
+      }
+    },
+    "正在读取字体…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading fonts…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取字体…"
+          }
+        }
+      }
+    },
+    "%lld 个字体家族（中文 %lld 个）· 用户字体占 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld font families (%2$lld Chinese) · User fonts use %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个字体家族（中文 %lld 个）· 用户字体占 %@"
+          }
+        }
+      }
+    },
+    "用户": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用户"
+          }
+        }
+      }
+    },
+    "本机": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本机"
+          }
+        }
+      }
+    },
+    "系统": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统"
+          }
+        }
+      }
+    },
+    "移动硬盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "External Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动硬盘"
+          }
+        }
+      }
+    },
+    "已压缩": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已压缩"
+          }
+        }
+      }
+    },
+    "已压缩存放，取回后可以预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived. Bring it back to preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已压缩存放，取回后可以预览"
+          }
+        }
+      }
+    },
+    "无法预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法预览"
+          }
+        }
+      }
+    },
+    "没有符合条件的字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有符合条件的字体"
+          }
+        }
+      }
+    },
+    "系统字体只显示、不会动；/Library/Fonts 里的要管理员权限，拾掇也不改。停用是移进拾掇的字体仓库，不是删除。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System fonts are shown but never touched; fonts in /Library/Fonts need admin rights, so Shiduo doesn't change them either. Disabling moves a font into Shiduo's font store — it isn't deleted."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统字体只显示、不会动；/Library/Fonts 里的要管理员权限，拾掇也不改。停用是移进拾掇的字体仓库，不是删除。"
+          }
+        }
+      }
+    },
+    "启用所选": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Selected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用所选"
+          }
+        }
+      }
+    },
+    "停用所选（%lld）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable Selected (%lld)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用所选（%lld）"
+          }
+        }
+      }
+    },
+    "只停用「用户字体」（~/Library/Fonts 里的）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only User fonts (in ~/Library/Fonts) are disabled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只停用「用户字体」（~/Library/Fonts 里的）"
+          }
+        }
+      }
+    },
+    "新建字体集": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Font Set"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建字体集"
+          }
+        }
+      }
+    },
+    "名字，比如「客户A 品牌」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name, e.g. “Client A Brand”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字，比如「客户A 品牌」"
+          }
+        }
+      }
+    },
+    "停用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用"
+          }
+        }
+      }
+    },
+    "拷贝 PostScript 名称": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy PostScript Name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝 PostScript 名称"
+          }
+        }
+      }
+    },
+    "加入字体集": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Font Set"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入字体集"
+          }
+        }
+      }
+    },
+    "新建字体集…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Font Set…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建字体集…"
+          }
+        }
+      }
+    },
+    "%lld 个样式": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld styles"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个样式"
+          }
+        }
+      }
+    },
+    "可变字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Variable font"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可变字体"
+          }
+        }
+      }
+    },
+    "已损坏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Damaged"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已损坏"
+          }
+        }
+      }
+    },
+    "包含常用汉字": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Includes common Chinese characters"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "包含常用汉字"
+          }
+        }
+      }
+    },
+    "可变": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Variable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可变"
+          }
+        }
+      }
+    },
+    "样张文字": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "样张文字"
+          }
+        }
+      }
+    },
+    "%lld 个样式 · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld styles · %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个样式 · %@"
+          }
+        }
+      }
+    },
+    "没有重复、旧版本或损坏的字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No duplicate, outdated or damaged fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有重复、旧版本或损坏的字体"
+          }
+        }
+      }
+    },
+    "重复的字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重复的字体"
+          }
+        }
+      }
+    },
+    "同一个字体装了好几份，版本也一样：留一份就够": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The same font is installed more than once, same version: one copy is enough"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同一个字体装了好几份，版本也一样：留一份就够"
+          }
+        }
+      }
+    },
+    "多个版本": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple Versions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多个版本"
+          }
+        }
+      }
+    },
+    "同一个字体装了不同版本，容易用错：建议留版本最高的": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Different versions of the same font are installed, which is easy to mix up: keep the newest"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同一个字体装了不同版本，容易用错：建议留版本最高的"
+          }
+        }
+      }
+    },
+    "损坏的字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Damaged Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "损坏的字体"
+          }
+        }
+      }
+    },
+    "系统读不出来（可能下载不完整或已损坏），装着也用不了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS can't read these (incomplete download or damaged), so they're useless even when installed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统读不出来（可能下载不完整或已损坏），装着也用不了"
+          }
+        }
+      }
+    },
+    "全不勾": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select None"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全不勾"
+          }
+        }
+      }
+    },
+    "也可以直接移到废纸篓（30 天内可以在「清理记录」里放回）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can also move them to the Trash (put back within 30 days from Cleanup History)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "也可以直接移到废纸篓（30 天内可以在「清理记录」里放回）"
+          }
+        }
+      }
+    },
+    "停用勾选的（%lld 个 · %@）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable Selected (%1$lld · %2$@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用勾选的（%lld 个 · %@）"
+          }
+        }
+      }
+    },
+    "移进拾掇的字体仓库，随时可以在「已停用」里启用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moves them into Shiduo's font store; enable them anytime from Disabled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移进拾掇的字体仓库，随时可以在「已停用」里启用"
+          }
+        }
+      }
+    },
+    "把 %lld 个字体文件移到废纸篓？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %lld font file(s) to the Trash?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把 %lld 个字体文件移到废纸篓？"
+          }
+        }
+      }
+    },
+    "推荐用「停用」：不删文件，以后还能一键启用。移到废纸篓后 30 天内可以在「清理记录」里放回。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable is recommended: nothing is deleted and you can turn the fonts back on in one click. Items moved to the Trash can be put back within 30 days from Cleanup History."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐用「停用」：不删文件，以后还能一键启用。移到废纸篓后 30 天内可以在「清理记录」里放回。"
+          }
+        }
+      }
+    },
+    "多余的一份": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra copy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多余的一份"
+          }
+        }
+      }
+    },
+    "旧版本": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older version"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧版本"
+          }
+        }
+      }
+    },
+    "读不出来": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unreadable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "读不出来"
+          }
+        }
+      }
+    },
+    "还没有停用的字体。在「字体库」里选中用户字体，点「停用」：字体移进拾掇的字体仓库，不是删除。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No disabled fonts yet. Select User fonts in Font Library and click Disable: they move into Shiduo's font store, nothing is deleted."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有停用的字体。在「字体库」里选中用户字体，点「停用」：字体移进拾掇的字体仓库，不是删除。"
+          }
+        }
+      }
+    },
+    "停用中（在拾掇字体仓库里）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disabled (in Shiduo's font store)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用中（在拾掇字体仓库里）"
+          }
+        }
+      }
+    },
+    "压缩存放": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩存放"
+          }
+        }
+      }
+    },
+    "在移动硬盘 / 其他文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On an external drive / other folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在移动硬盘 / 其他文件夹"
+          }
+        }
+      }
+    },
+    "放回 ~/Library/Fonts，马上就能用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puts them back in ~/Library/Fonts, ready to use right away"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放回 ~/Library/Fonts，马上就能用"
+          }
+        }
+      }
+    },
+    "取回到字体仓库": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring Back to Font Store"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取回到字体仓库"
+          }
+        }
+      }
+    },
+    "打成 zip（中文字体通常能省一半），放在：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zip them (Chinese fonts usually shrink by about half), stored in: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打成 zip（中文字体通常能省一半），放在：%@"
+          }
+        }
+      }
+    },
+    "搬到移动硬盘…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to External Drive…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搬到移动硬盘…"
+          }
+        }
+      }
+    },
+    "选择压缩存放的位置…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Archive Location…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择压缩存放的位置…"
+          }
+        }
+      }
+    },
+    "恢复默认位置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Default Location"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复默认位置"
+          }
+        }
+      }
+    },
+    "在访达中显示字体仓库": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Font Store in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中显示字体仓库"
+          }
+        }
+      }
+    },
+    "%@ · %lld 个 · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld · %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %lld 个 · %@"
+          }
+        }
+      }
+    },
+    "选一个移动硬盘或文件夹：字体会放进里面的「拾掇字体」文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an external drive or folder: fonts go into a “Shiduo Fonts” folder inside it"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选一个移动硬盘或文件夹：字体会放进里面的「拾掇字体」文件夹"
+          }
+        }
+      }
+    },
+    "移动硬盘没接上": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive not connected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动硬盘没接上"
+          }
+        }
+      }
+    },
+    "原来的位置：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original location: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原来的位置：%@"
+          }
+        }
+      }
+    },
+    "已启用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已启用"
+          }
+        }
+      }
+    },
+    "按客户或品牌建一个字体集，平时字体停用着，要用时一键临时启用；绑定项目文件夹后，在拾掇里打开项目就能自动启用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a font set per client or brand. Keep the fonts disabled day to day and activate them temporarily in one click when needed; link a project folder and they turn on when you open the project in Shiduo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按客户或品牌建一个字体集，平时字体停用着，要用时一键临时启用；绑定项目文件夹后，在拾掇里打开项目就能自动启用。"
+          }
+        }
+      }
+    },
+    "打开绑定的项目文件夹时": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When opening a linked project folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开绑定的项目文件夹时"
+          }
+        }
+      }
+    },
+    "询问我": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask Me"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "询问我"
+          }
+        }
+      }
+    },
+    "自动启用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activate Automatically"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动启用"
+          }
+        }
+      }
+    },
+    "不处理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do Nothing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不处理"
+          }
+        }
+      }
+    },
+    "字体集名字": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font set name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字体集名字"
+          }
+        }
+      }
+    },
+    "停止临时启用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Temporary Activation"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止临时启用"
+          }
+        }
+      }
+    },
+    "临时启用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activate Temporarily"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "临时启用"
+          }
+        }
+      }
+    },
+    "停用中 / 移动硬盘 / 压缩存放的字体，注册到这次登录（注销或重启后自动停用，文件不动）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registers disabled, external and archived fonts for this login session (off again after logout or restart; files stay where they are)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用中 / 移动硬盘 / 压缩存放的字体，注册到这次登录（注销或重启后自动停用，文件不动）"
+          }
+        }
+      }
+    },
+    "%lld 个家族": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld families"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个家族"
+          }
+        }
+      }
+    },
+    "添加字体…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Fonts…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加字体…"
+          }
+        }
+      }
+    },
+    "还没有字体。点「添加字体…」，或在「字体库」里右键 › 加入字体集。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No fonts yet. Click Add Fonts…, or right-click in Font Library › Add to Font Set."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有字体。点「添加字体…」，或在「字体库」里右键 › 加入字体集。"
+          }
+        }
+      }
+    },
+    "从字体集里拿掉（字体本身不动）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from the set (the font itself is untouched)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从字体集里拿掉（字体本身不动）"
+          }
+        }
+      }
+    },
+    "有 %lld 个字体找不到了（文件被删掉或移走）：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld font(s) can't be found (file deleted or moved): %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %lld 个字体找不到了（文件被删掉或移走）：%@"
+          }
+        }
+      }
+    },
+    "绑定项目文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linked Project Folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绑定项目文件夹"
+          }
+        }
+      }
+    },
+    "在拾掇里打开这些文件夹（或里面的子文件夹）时：": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you open these folders (or folders inside them) in Shiduo:"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在拾掇里打开这些文件夹（或里面的子文件夹）时："
+          }
+        }
+      }
+    },
+    "删除字体集…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Font Set…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除字体集…"
+          }
+        }
+      }
+    },
+    "删除字体集「%@」？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the font set “%@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除字体集「%@」？"
+          }
+        }
+      }
+    },
+    "只删除这个字体集，里面的字体文件不动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the set is deleted; its font files stay untouched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只删除这个字体集，里面的字体文件不动。"
+          }
+        }
+      }
+    },
+    "绑定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绑定"
+          }
+        }
+      }
+    },
+    "添加到「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加到「%@」"
+          }
+        }
+      }
+    },
+    "系统字体一直都能用，不用加进字体集。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System fonts are always available and don't need to be in a set."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统字体一直都能用，不用加进字体集。"
+          }
+        }
+      }
+    },
+    "添加（%lld）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add (%lld)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加（%lld）"
+          }
+        }
+      }
+    },
+    "重复、旧版本和损坏的字体；默认是停用（不删除，随时可以启用）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate, outdated and damaged fonts; the default action is Disable (nothing deleted, enable anytime)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重复、旧版本和损坏的字体；默认是停用（不删除，随时可以启用）"
+          }
+        }
+      }
+    },
+    "装了哪些字体、中文样张预览，停用不常用的，查重复和损坏的字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See your installed fonts with Chinese specimens, disable ones you rarely use, and find duplicate or damaged fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "装了哪些字体、中文样张预览，停用不常用的，查重复和损坏的字体"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

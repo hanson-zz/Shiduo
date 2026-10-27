@@ -5,6 +5,7 @@ struct CleanupView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var scanner: CleanupScanner
     @EnvironmentObject private var duplicates: DuplicateScanner
+    @ObservedObject private var fonts = FontLibrary.shared
 
     /// 放心清里用户改过勾选的卡片（没改过的按卡片自己的默认：开发缓存 / 已装应用的安装包勾，邮件附件副本不勾）。
     @State private var safeOverrides: [CleanupKind: Bool] = [:]
@@ -52,6 +53,8 @@ struct CleanupView: View {
             guard !Demo.isOn else { return }
             // 重复文件在后台另外比对（「重复文件」页上可以停止）。
             if !duplicates.hasScanned, !duplicates.isRunning { duplicates.start() }
+            // 字体只扫字体文件夹，很快；扫完「你来决定」里出现「字体」卡片。
+            fonts.scanIfNeeded()
             if !scanner.hasScanned, !scanner.isRunning { await scanner.scan() }
         }
     }
@@ -153,6 +156,14 @@ struct CleanupView: View {
                     }
                     ForEach(reviewCards) { card in
                         Button { store.cleanupReview = card.kind } label: { CleanupTile(card: card, showsReason: true) }
+                            .buttonStyle(.plain)
+                    }
+                    // 字体：重复、多版本、损坏的字体，默认不勾，点进去在字体页里挑；默认是「停用」（可以再启用），不是删除。
+                    if fonts.actionableIssueCount > 0 || fonts.isScanning {
+                        Button {
+                            fonts.tab = .problems
+                            store.selection = .fonts
+                        } label: { FontsCleanupTile() }
                             .buttonStyle(.plain)
                     }
                 }
