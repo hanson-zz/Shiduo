@@ -296,13 +296,6 @@ final class PerfBenchmarkTests: XCTestCase {
             measureMs("mainThread", n, "[FileItem] == (different buffers)") { same = list == copy }
             XCTAssertTrue(same)
             measureMs("mainThread", n, "map(\\.url)") { _ = list.map(\.url) }
-            let urls = list.map(\.url)
-            let resorted = FileSortKey.name.sort(list, ascending: true)
-            var reused: [URL] = []
-            measureMs("mainThread", n, "SortedURLs.make(after resort)") {
-                reused = SortedURLs.make(for: resorted, previous: list, previousURLs: urls)
-            }
-            XCTAssertEqual(reused, resorted.map(\.url))
         }
     }
 

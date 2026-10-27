@@ -161,19 +161,3 @@ extension ComparisonResult {
         }
     }
 }
-
-/// 浏览器重排后给「快速查看」左右翻页用的 URL 列表。
-enum SortedURLs {
-    /// 和上一次一样的文件（路径和所有信息都没变）直接用上次生成的 URL，只给新的 / 变了的文件生成：
-    /// URL(fileURLWithPath:) 每个都要去磁盘看一下是不是文件夹，几万个在主线程上要几百毫秒。结果和 items.map(\.url) 一样。
-    static func make(for items: [FileItem], previous: [FileItem], previousURLs: [URL]) -> [URL] {
-        guard !previous.isEmpty, previous.count == previousURLs.count else { return items.map(\.url) }
-        var index: [String: Int] = [:]
-        index.reserveCapacity(previous.count)
-        for (i, item) in previous.enumerated() { index[item.path] = i }
-        return items.map { item in
-            if let i = index[item.path], previous[i] == item { return previousURLs[i] }
-            return item.url
-        }
-    }
-}

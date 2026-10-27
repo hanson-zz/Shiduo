@@ -141,16 +141,20 @@ final class PerfEquivalenceTests: XCTestCase {
         }
     }
 
-    func testSortedURLsReuseMatches() {
-        let list = referenceListing()
-        let urls = list.map(\.url)
-        var changed = FileSortKey.name.sort(list, ascending: false)
-        changed[0].size += 1 // 变了的文件重新生成
-        changed.append(FileItem(path: dir.appendingPathComponent("Folder").path, name: "Folder", size: 0, contentType: nil,
-                                typeTree: [], modified: nil, created: nil, lastUsed: nil, added: nil, whereFroms: [],
-                                isScreenshot: false, bundleID: nil, isDirectory: true))
-        XCTAssertEqual(SortedURLs.make(for: changed, previous: list, previousURLs: urls), changed.map(\.url))
-        XCTAssertEqual(SortedURLs.make(for: changed, previous: [], previousURLs: []), changed.map(\.url))
+    func testSpotlightBatchMatchesSingle() throws {
+        var urls = (try? FileManager.default.contentsOfDirectory(at: URL(fileURLWithPath: dir.path), includingPropertiesForKeys: nil,
+                                                                 options: [.skipsHiddenFiles])) ?? []
+        urls.append(dir.appendingPathComponent("不存在的文件.txt")) // Spotlight 不认识的也要对得上位置
+        let batch = try XCTUnwrap(SpotlightValues.read(batch: urls))
+        XCTAssertEqual(batch.count, urls.count)
+        for (url, value) in zip(urls, batch) {
+            let single = SpotlightValues.read(url)
+            XCTAssertEqual(value.lastUsed, single.lastUsed, url.lastPathComponent)
+            XCTAssertEqual(value.whereFroms, single.whereFroms, url.lastPathComponent)
+            XCTAssertEqual(value.isScreenshot, single.isScreenshot, url.lastPathComponent)
+            XCTAssertEqual(value.bundleID, single.bundleID, url.lastPathComponent)
+        }
+        XCTAssertEqual(SpotlightValues.read(batch: [])?.count, 0)
     }
 
     func testKindTextMemoMatches() {

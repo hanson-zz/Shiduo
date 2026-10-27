@@ -128,9 +128,6 @@ extension FileItem {
         .contentTypeKey, .isDirectoryKey, .addedToDirectoryDateKey, .isPackageKey,
     ]
     private static let diskKeySet = Set(diskKeys)
-    private static let metadataNames = [
-        "kMDItemLastUsedDate", "kMDItemWhereFroms", "kMDItemIsScreenCapture", "kMDItemCFBundleIdentifier",
-    ] as CFArray
 
     /// 直接从磁盘读取（用于固定文件夹）。
     init?(url: URL) {
@@ -139,7 +136,9 @@ extension FileItem {
 
     /// screenshotFolders：一次读文件夹时先取好的截图工具文件夹；
     /// typeTrees：同一次读文件夹里共用的「类型 → 类型树」缓存（同一种类型只展开一次父类型）。
-    init?(url: URL, screenshotFolders: [ScreenshotSourceLogic.Folder], typeTrees: TypeTreeCache?) {
+    /// spotlight：一批里先一次取好的 Spotlight 属性（nil = 这个文件自己去取）。
+    init?(url: URL, screenshotFolders: [ScreenshotSourceLogic.Folder], typeTrees: TypeTreeCache?,
+          spotlight: SpotlightValues? = nil) {
         guard let values = try? url.resourceValues(forKeys: Self.diskKeySet) else { return nil }
         var tree: [String] = []
         if let type = values.contentType {
@@ -157,19 +156,11 @@ extension FileItem {
         self.added = values.addedToDirectoryDate
         self.isDirectory = (values.isDirectory ?? false) && !(values.isPackage ?? false)
 
-        var lastUsed: Date?
-        var whereFroms: [String] = []
-        var isScreenshot = false
-        var bundleID: String?
-        // 四个 Spotlight 属性一次取回（逐个取要问四次）。
-        if let md = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL),
-           let attrs = MDItemCopyAttributes(md, Self.metadataNames) as? [String: Any] {
-            lastUsed = attrs["kMDItemLastUsedDate"] as? Date
-            whereFroms = attrs["kMDItemWhereFroms"] as? [String] ?? []
-            isScreenshot = (attrs["kMDItemIsScreenCapture"] as? NSNumber)?.boolValue ?? false
-            bundleID = attrs["kMDItemCFBundleIdentifier"] as? String
-        }
-        self.lastUsed = lastUsed
+        let md = spotlight ?? SpotlightValues.read(url)
+        var whereFroms = md.whereFroms
+        let isScreenshot = md.isScreenshot
+        let bundleID = md.bundleID
+        self.lastUsed = md.lastUsed
         // Spotlight 没有下载地址时直接读扩展属性；还没有就看隔离标记里下载它的 App。
         if whereFroms.isEmpty { whereFroms = ExtendedAttributes.whereFroms(atPath: path) }
         if whereFroms.isEmpty { self.quarantineAgent = ExtendedAttributes.quarantineAgent(atPath: path) }
@@ -177,6 +168,57 @@ extension FileItem {
         self.isScreenshot = ScreenshotNameRules.isScreenshot(name: name, typeTree: tree, systemFlag: isScreenshot,
                                                              path: path, folders: screenshotFolders)
         self.bundleID = bundleID
+    }
+}
+
+/// 直接读磁盘时从 Spotlight 取的四个属性：最近打开、下载地址、是不是系统截图、Bundle ID。
+struct SpotlightValues {
+    var lastUsed: Date?
+    var whereFroms: [String] = []
+    var isScreenshot = false
+    var bundleID: String?
+
+    static let names = [
+        "kMDItemLastUsedDate", "kMDItemWhereFroms", "kMDItemIsScreenCapture", "kMDItemCFBundleIdentifier",
+    ]
+    private static let cfNames = names as CFArray
+
+    /// 一个文件：四个属性一次取回（逐个取要问四次）。Spotlight 不知道这个文件时全是空的。
+    static func read(_ url: URL) -> SpotlightValues {
+        guard let md = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL),
+              let attrs = MDItemCopyAttributes(md, cfNames) as? [String: Any] else { return SpotlightValues() }
+        return SpotlightValues(lastUsed: attrs[names[0]] as? Date,
+                               whereFroms: attrs[names[1]] as? [String] ?? [],
+                               isScreenshot: (attrs[names[2]] as? NSNumber)?.boolValue ?? false,
+                               bundleID: attrs[names[3]] as? String)
+    }
+
+    /// 一批文件一次问 Spotlight（MDItemsCreateWithURLs + MDItemsCopyAttributes，比一个一个问快很多）。
+    /// 结果和逐个 read(_:) 一样、顺序和 urls 一样；系统没按预期返回时给 nil，调用方逐个取。
+    static func read(batch urls: [URL]) -> [SpotlightValues]? {
+        guard !urls.isEmpty else { return [] }
+        guard let created = MDItemsCreateWithURLs(kCFAllocatorDefault, urls as NSArray as CFArray) as? [AnyObject],
+              created.count == urls.count else { return nil }
+        // Spotlight 不认识的文件是 NSNull：只拿认识的去取属性，再按位置放回去。
+        var positions: [Int] = []
+        var items: [AnyObject] = []
+        for (i, item) in created.enumerated() where !(item is NSNull) {
+            positions.append(i)
+            items.append(item)
+        }
+        var out = [SpotlightValues](repeating: SpotlightValues(), count: urls.count)
+        guard !items.isEmpty else { return out }
+        guard let rows = MDItemsCopyAttributes(items as NSArray as CFArray, cfNames) as? [AnyObject],
+              rows.count == items.count else { return nil }
+        for (k, row) in rows.enumerated() {
+            // 整行是 NSNull：这个文件读不了；某个属性没有：那一格是 NSNull。
+            guard let values = row as? [AnyObject], values.count == names.count else { continue }
+            out[positions[k]] = SpotlightValues(lastUsed: values[0] as? Date,
+                                                whereFroms: values[1] as? [String] ?? [],
+                                                isScreenshot: (values[2] as? NSNumber)?.boolValue ?? false,
+                                                bundleID: values[3] as? String)
+        }
+        return out
     }
 }
 

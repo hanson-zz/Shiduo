@@ -485,9 +485,8 @@ struct FileCollectionView: View {
         sortedInput = items
         // 顺序没变就不动（文件夹大小陆续算完时，不要每次都清掉格子位置）。
         guard next != sortedItems else { return false }
-        let urls = SortedURLs.make(for: next, previous: sortedItems, previousURLs: sortedURLs)
         sortedItems = next
-        sortedURLs = urls
+        sortedURLs = sortedItems.map(\.url)
         // 排版变了：之前记下的格子位置都作废
         cellFrames.frames = [:]
         return true
