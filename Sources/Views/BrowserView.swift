@@ -415,6 +415,8 @@ struct FileCollectionView: View {
     @State private var dropFolderID: FileItem.ID?
     /// 正在往当前文件夹的空白处拖文件。
     @State private var dropOnBackground = false
+    /// 按大小排序、文件夹大小算出来后重排了一次（网格 / 列表据此把选中的留在看得见的地方）。
+    @State private var sizeResortTick = 0
 
     /// 正在浏览的文件夹（不是搜索、分类这些跨文件夹的列表）：空白处可以放进拖来的文件。
     private var dropFolder: URL? {
@@ -465,14 +467,18 @@ struct FileCollectionView: View {
         )
     }
 
-    private func resort() {
+    /// 重排；顺序真的变了时返回 true。
+    @discardableResult
+    private func resort() -> Bool {
         let next: [FileItem]
         if sortKey == .size {
-            // 文件夹 / 包按后台算出的大小排（和显示的一致）；还没算出来的先按已知大小，算完后再重排。
+            // 文件夹 / 包按后台算出的大小排（和显示的一致）；还没算出来的排在已知大小的后面，算完后再插到该在的位置。
             let sizes = FolderSizeStore.shared
             next = SizeSortLogic.sorted(items, ascending: sortAscending,
-                                        size: { $0.needsComputedSize ? (sizes.knownSize($0.path) ?? $0.size) : $0.size },
+                                        size: { item -> Int64? in item.needsComputedSize ? sizes.knownSize(item.path) : Optional(item.size) },
                                         name: \.name)
+            // 不在屏幕上的文件夹也在后台算（不然永远不知道大小，排不对）。
+            sizes.prefetch(Array(items.lazy.filter(\.needsComputedSize).prefix(Self.sizePrefetchLimit).map(\.path)))
         } else if items.count > sortedInput.count, !sortedInput.isEmpty, items.starts(with: sortedInput) {
             let order = sortOrder
             let appended = items[sortedInput.count...].sorted(using: order)
@@ -491,11 +497,22 @@ struct FileCollectionView: View {
         }
         sortedInput = items
         // 顺序没变就不动（文件夹大小陆续算完时，不要每次都清掉格子位置）。
-        guard next != sortedItems else { return }
+        guard next != sortedItems else { return false }
         sortedItems = next
         sortedURLs = sortedItems.map(\.url)
         // 排版变了：之前记下的格子位置都作废
         cellFrames.frames = [:]
+        return true
+    }
+
+    /// 按大小排序时最多预先算这么多个文件夹的大小。
+    private static let sizePrefetchLimit = 500
+
+    /// 文件夹大小算出来后重排了：只选中一个时，让它留在看得见的地方（本来就看得见就不滚）。
+    private func keepSelectionVisible(_ proxy: ScrollViewProxy) {
+        guard store.selectedIDs.count == 1, let id = store.selectedIDs.first,
+              !store.isInlineRenaming else { return }
+        proxy.scrollTo(id)
     }
 
     var body: some View {
@@ -511,11 +528,17 @@ struct FileCollectionView: View {
         .trashContext(ids: store.selectedIDs) { resolve(store.selectedIDs) }
         .onChange(of: items) { resort() }
         // 资料库类别还没取完时，排序改了要从头按新顺序取（store 里判断）。
-        .onChange(of: sortKey) { resort(); store.librarySortChanged() }
+        .onChange(of: sortKey) {
+            if sortKey != .size { FolderSizeStore.shared.prefetch([]) }
+            resort(); store.librarySortChanged()
+        }
         .onChange(of: sortAscending) { resort(); store.librarySortChanged() }
         // 按大小排序时：文件夹大小算出来以后重排（攒一小会儿才发一次）。
-        .onReceive(FolderSizeStore.shared.sizesSettled) { if sortKey == .size { resort() } }
+        .onReceive(FolderSizeStore.shared.sizesSettled) {
+            if sortKey == .size, resort() { sizeResortTick += 1 }
+        }
         .onAppear { if sortKey == .size { resort() } }
+        .onDisappear { FolderSizeStore.shared.prefetch([]) }
         .onChange(of: thumbnailSize) { cellFrames.frames = [:] }
         .onChange(of: gridWidth) { cellFrames.frames = [:] }
         .onCopyCommand { copyProviders() }
@@ -706,6 +729,7 @@ struct FileCollectionView: View {
         .modifier(FileKeyCommands(onTrash: trashSelection, onOpen: openSelection))
         // ⇧⌘N / 回车开始改名：滚到那个格子（LazyVGrid 不在屏幕上的格子没有输入框，打字没地方去）。
         .onChange(of: store.inlineRenamePath) { scrollToRenaming(proxy) }
+        .onChange(of: sizeResortTick) { keepSelectionVisible(proxy) }
         }
     }
 
@@ -897,6 +921,7 @@ struct FileCollectionView: View {
         }
         .modifier(FileKeyCommands(onTrash: trashSelection, onOpen: openSelection))
         .onChange(of: store.inlineRenamePath) { scrollToRenaming(proxy) }
+        .onChange(of: sizeResortTick) { keepSelectionVisible(proxy) }
         }
     }
 

@@ -7,7 +7,10 @@ import SwiftUI
 /// - 谁要谁算：格子 / 行出现时 request，消失时 release，没人要了就取消（还没开始的直接丢掉，正在算的中途停）；
 /// - 结果按「路径 + 修改时间」缓存，并有存活时间（深层变化不改上层修改时间），缓存有上限；
 /// - 每个路径一个小的 FolderSizeBox，格子只观察自己那一格：一个文件夹算完不会让几百个格子一起重画；
-/// - 结果攒一小会儿再一起发布；没人要的路径的状态会被丢掉（要的时候从缓存里拿），statuses 不会一直变大。
+/// - 结果攒一小会儿再一起发布；没人要的路径的状态会被丢掉（要的时候从缓存里拿），statuses 不会一直变大；
+/// - 按大小排序时 prefetch：列表里不在屏幕上的文件夹也在后台算（结果只进缓存），排序才用得上真实大小；
+/// - 里面有东西变了（noteChanged）：变化的路径和它往上各层（到正在浏览的根）都作废，防抖 1.5 秒后重算正在显示的，
+///   重算期间照旧显示旧值，不闪「计算中…」。
 @MainActor
 final class FolderSizeStore {
     static let shared = FolderSizeStore()
@@ -31,6 +34,17 @@ final class FolderSizeStore {
     private var running: [String: Operation] = [:]
     private var buffered: [String: Status] = [:]
     private var flushScheduled = false
+    /// 按大小排序时要预先算的文件夹（不在屏幕上也算，结果只进缓存）。
+    private var prefetchWanted: Set<String> = []
+    /// 有变化、等着重算的文件夹（防抖、冷却）。
+    private var scheduler = FolderRefreshScheduler()
+    private var refreshTimer: DispatchWorkItem?
+    /// 正在算的期间里面又变了：算完后再排一次。值：变化是不是磁盘监视报告的（决定要不要冷却）。
+    private var rerun: [String: Bool] = [:]
+    /// 每次计算开始的时间（算得久的文件夹，磁盘监视触发的重算隔得更久）。
+    private var startedAt: [String: Date] = [:]
+    /// 正在浏览的文件夹：有变化时往上作废到这里为止。
+    var watchedRoot: String?
     private let queue: OperationQueue = {
         let queue = OperationQueue()
         queue.name = "Shiduo.FolderSize"
@@ -97,7 +111,12 @@ final class FolderSizeStore {
             // 来回滚动时别反复开始、取消。
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             guard let self, self.demand[path] == nil else { return }
-            self.running.removeValue(forKey: path)?.cancel()
+            // 按大小排序要用的：滚出屏幕也接着算完（结果进缓存）。
+            if !self.prefetchWanted.contains(path), let op = self.running.removeValue(forKey: path) {
+                op.cancel()
+                self.startedAt[path] = nil
+                self.rerun[path] = nil
+            }
             self.buffered[path] = nil
             self.statuses[path] = nil
             self.boxes.object(forKey: path as NSString)?.status = nil
@@ -113,11 +132,82 @@ final class FolderSizeStore {
         start(path, stamp: stamp, urgent: true)
     }
 
-    private func start(_ path: String, stamp: FileStamp, urgent: Bool) {
-        publish(path, .pending, immediately: true)
+    /// 按大小排序：这些文件夹（通常是当前列表里所有的文件夹）不在屏幕上也要算出大小，结果只进缓存。
+    /// 换了一批时，旧的里面没人要的停掉。同样的一批再调用什么也不做。
+    func prefetch(_ paths: [String]) {
+        let wanted = Set(paths)
+        guard wanted != prefetchWanted else { return }
+        let dropped = prefetchWanted.subtracting(wanted)
+        prefetchWanted = wanted
+        for path in dropped where demand[path] == nil {
+            guard let op = running.removeValue(forKey: path) else { continue }
+            op.cancel()
+            startedAt[path] = nil
+            rerun[path] = nil
+        }
+        guard !Demo.isOn else { return }
+        for path in paths where running[path] == nil && demand[path] == nil {
+            let stamp = FileStamp(path: path)
+            guard stamp.exists, !cache.isFresh(path, stamp: stamp) else { continue }
+            start(path, stamp: stamp, urgent: false, showPending: false)
+        }
+    }
+
+    /// 里面有东西变了（拾掇自己移动 / 移到废纸篓 / 改名 / 放回，或磁盘监视报告的变化）：
+    /// 变化的路径本身、它里面的、它往上各层的缓存标成过期（按大小排序还能用旧值），
+    /// 往上到正在浏览的根为止、正在显示或要排序的，防抖后重算。
+    func noteChanged(_ paths: [String], fromDiskWatcher: Bool = false) {
+        guard !Demo.isOn else { return }
+        let changed = paths.map(FolderSizeInvalidation.normalize).filter { $0.hasPrefix("/") && $0 != "/" }
+        guard !changed.isEmpty else { return }
+        for path in changed { cache.markStale(around: path) }
+        let affected = FolderSizeInvalidation.affected(by: changed, root: watchedRoot)
+        for path in affected where running[path] != nil {
+            // 正在算的结果已经过时：算完后再算一次（拾掇自己的操作不等冷却）。
+            rerun[path] = (rerun[path] ?? true) && fromDiskWatcher
+        }
+        scheduler.add(affected, now: Date(), fromDiskWatcher: fromDiskWatcher)
+        scheduleRefreshTimer()
+    }
+
+    private func scheduleRefreshTimer() {
+        refreshTimer?.cancel()
+        refreshTimer = nil
+        guard let deadline = scheduler.nextDeadline() else { return }
+        let item = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated { self?.refreshDue() }
+        }
+        refreshTimer = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(0.05, deadline.timeIntervalSinceNow), execute: item)
+    }
+
+    private func refreshDue() {
+        refreshTimer = nil
+        let due = scheduler.takeDue(now: Date())
+        for path in due {
+            let shown = demand[path] != nil
+            // 没人看、也不用排序的：缓存已经标成过期，下次要的时候再算。
+            guard shown || prefetchWanted.contains(path) else { continue }
+            // 正在算：noteChanged 里已经记下「算完再算一次」。
+            guard running[path] == nil else { continue }
+            let stamp = FileStamp(path: path)
+            guard stamp.exists else { continue }
+            var showsOld = false
+            if case .done = statuses[path] { showsOld = true }
+            start(path, stamp: stamp, urgent: false, showPending: shown && !showsOld)
+            // 屏幕上看得见的排在预先算的前面。
+            if shown { running[path]?.queuePriority = .normal }
+        }
+        scheduleRefreshTimer()
+    }
+
+    /// showPending 为 false 时不把格子改成「计算中…」（后台重算、预先算）。
+    private func start(_ path: String, stamp: FileStamp, urgent: Bool, showPending: Bool = true) {
+        if showPending { publish(path, .pending, immediately: true) }
         let op = FolderSizeOperation(path: path, stamp: stamp)
-        op.queuePriority = urgent ? .high : .normal
+        op.queuePriority = urgent ? .high : (showPending ? .normal : .low)
         running[path] = op
+        startedAt[path] = Date()
         queue.addOperation(op)
     }
 
@@ -132,7 +222,15 @@ final class FolderSizeStore {
         // 期间被取消或换成了新的一次计算：丢掉旧结果。
         guard running[path] === op else { return }
         running[path] = nil
+        if let started = startedAt.removeValue(forKey: path) {
+            scheduler.noteComputed(path, duration: Date().timeIntervalSince(started))
+        }
         cache.insert(path, stamp: stamp, stats: stats)
+        if let fromDisk = rerun.removeValue(forKey: path) {
+            // 算的期间里面又变了：这次的结果先显示，再排一次重算。
+            scheduler.add([path], now: Date(), fromDiskWatcher: fromDisk)
+            scheduleRefreshTimer()
+        }
         // 算完时已经没人要了：只进缓存。
         guard demand[path] != nil else {
             statuses[path] = nil

@@ -157,7 +157,9 @@ struct ShelfPageView: View {
     /// 移动 / 拷贝的进度和取消。
     private func transferBar(_ progress: MoveOutProgress) -> some View {
         HStack(spacing: 10) {
-            ProgressView(value: progress.bytesTotal > 0 ? Double(progress.bytesDone) / Double(progress.bytesTotal) : 0)
+            ProgressView(value: MoveProgressLogic.fraction(bytesMode: progress.bytesMode, itemsDone: progress.fileIndex,
+                                                           itemCount: progress.fileCount, bytesDone: progress.bytesDone,
+                                                           bytesTotal: progress.bytesTotal))
                 .frame(maxWidth: 220)
             Text(transfer.isCopy
                  ? String(localized: "正在拷贝 \(min(progress.fileIndex + 1, progress.fileCount))/\(progress.fileCount)：\(progress.currentName)")
@@ -359,14 +361,24 @@ struct ShelfPageView: View {
 
 // MARK: - 移动 / 拷贝（后台进行）
 
-/// 暂存架页的「移动到… / 拷贝到…」：在后台跑，不卡界面，有进度、能取消。
+/// 「移动到… / 拷贝到…」（暂存架页、主窗口右键、拖进文件夹）：在后台跑，不卡界面，有进度、能取消。
+/// 主窗口右下角的进度卡片（MoveProgressCard）在超过 0.5 秒还没做完、或要跨盘搬数据时出现。
 /// 移动完成后：暂存架、文件提醒、文件夹颜色记录跟到新位置，记进「清理记录」（可撤销），主窗口列表忘掉旧路径。
+/// 中途取消：已经搬好的留在新位置，作为一步撤销（⌘Z）登记；没搬的留在原处。
 @MainActor
 final class ShelfTransfer: ObservableObject {
     static let shared = ShelfTransfer()
 
     @Published private(set) var progress: MoveOutProgress?
     @Published private(set) var isCopy = false
+    /// 主窗口的进度卡片要不要显示。
+    @Published private(set) var panelVisible = false
+    /// 已经点了「取消」，正在停下当前这一项。
+    @Published private(set) var isCancelling = false
+    /// 卡片标题里的目标（「移动硬盘 / 归档」）。
+    @Published private(set) var destinationLabel = ""
+    /// 开始的时间（估计剩余时间用）。
+    private(set) var startedAt = Date()
     private var flag: MoveOutCancelFlag?
 
     var isRunning: Bool { progress != nil }
@@ -374,7 +386,9 @@ final class ShelfTransfer: ObservableObject {
     private init() {}
 
     func cancel() {
-        flag?.cancel()
+        guard let flag else { return }
+        isCancelling = true
+        flag.cancel()
     }
 
     func start(_ urls: [URL], to folder: URL, copy: Bool, store: LibraryStore) {
@@ -384,28 +398,67 @@ final class ShelfTransfer: ObservableObject {
         let cancel = MoveOutCancelFlag()
         flag = cancel
         isCopy = copy
+        isCancelling = false
+        panelVisible = false
+        startedAt = Date()
+        destinationLabel = Self.label(for: folder)
         progress = MoveOutProgress(fileIndex: 0, fileCount: urls.count, currentName: urls[0].lastPathComponent,
                                    bytesDone: 0, bytesTotal: 0)
+        // 同一块盘上的文件夹不再遍历统计大小：用界面已经算好的（记进清理记录）。
+        var known: [String: Int64] = [:]
+        for url in urls {
+            if let size = FolderSizeStore.shared.knownSize(url.path) { known[url.path] = size }
+        }
+        // 一下子就做完的不弹卡片；超过 0.5 秒还在做才弹。
+        DispatchQueue.main.asyncAfter(deadline: .now() + MoveProgressLogic.showDelay) {
+            MainActor.assumeIsolated {
+                let transfer = ShelfTransfer.shared
+                guard transfer.flag === cancel else { return }
+                transfer.updatePanel()
+            }
+        }
+        let knownSizes = known
         Task { @MainActor in
             let result = await Task.detached(priority: .userInitiated) {
-                MoveOutEngine.transfer(urls, to: folder, copyOnly: copy, cancel: cancel) { snapshot in
+                MoveOutEngine.transfer(urls, to: folder, copyOnly: copy, knownSizes: knownSizes, cancel: cancel) { snapshot in
                     Task { @MainActor in
                         let transfer = ShelfTransfer.shared
                         guard transfer.flag === cancel else { return }
                         transfer.progress = snapshot
+                        transfer.updatePanel()
                     }
                 }
             }.value
             let transfer = ShelfTransfer.shared
             transfer.flag = nil
             transfer.progress = nil
+            transfer.panelVisible = false
+            transfer.isCancelling = false
             transfer.finish(result, folder: folder, copy: copy, store: store)
         }
+    }
+
+    private func updatePanel() {
+        guard let progress else { return }
+        let show = MoveProgressLogic.shouldShow(elapsed: Date().timeIntervalSince(startedAt),
+                                                movesData: progress.bytesMode, finished: false)
+        if show != panelVisible { panelVisible = show }
+    }
+
+    /// 「磁盘名 / 文件夹名」（启动盘上只写文件夹名）。
+    private static func label(for folder: URL) -> String {
+        let values = try? folder.resourceValues(forKeys: [.volumeNameKey, .volumeIsRootFileSystemKey, .volumeURLKey])
+        let isRootFS = values?.volumeIsRootFileSystem ?? true
+        let isVolumeRoot = values?.volume?.standardizedFileURL.path == folder.standardizedFileURL.path
+        return MoveProgressLogic.destinationLabel(folderName: FileManager.default.displayName(atPath: folder.path),
+                                                  volumeName: isRootFS ? nil : values?.volumeName,
+                                                  isVolumeRoot: isVolumeRoot)
     }
 
     private func finish(_ result: MoveOutResult, folder: URL, copy: Bool, store: LibraryStore) {
         if copy {
             if !result.moved.isEmpty {
+                FolderSizeStore.shared.noteChanged(result.moved.map(\.to))
                 store.showToast(String(localized: "已拷贝 \(result.moved.count) 个项目"))
                 // 和访达一样，⌘Z 撤销拷贝 = 把拷出来的副本移到废纸篓（废纸篓里还能找回，小提示上也能再撤销）。
                 if let manager = FileUndoCenter.shared.undoManager {
@@ -439,9 +492,13 @@ final class ShelfTransfer: ObservableObject {
                 return record
             })
             store.forget(paths: Set(result.moved.map(\.from)))
-            // ⌘Z / 小提示上的「撤销」走主窗口同一个撤销栈；⌘⇧Z 可以重做。
-            FileUndoCenter.shared.registerHistory(batch: batch, name: String(localized: "移动"),
-                                                  toast: String(localized: "已移动 \(result.moved.count) 个项目"))
+            // 搬到的文件夹（和往上各层）的大小也变了。
+            FolderSizeStore.shared.noteChanged(result.moved.map(\.to))
+            // ⌘Z / 小提示上的「撤销」走主窗口同一个撤销栈；⌘⇧Z 可以重做。中途取消时，已经搬好的也是一步撤销。
+            let toast = result.cancelled
+                ? String(localized: "已取消：\(result.moved.count) 个已移动，其余留在原处")
+                : String(localized: "已移动 \(result.moved.count) 个项目")
+            FileUndoCenter.shared.registerHistory(batch: batch, name: String(localized: "移动"), toast: toast)
         }
         var problems: [String] = []
         if !result.failed.isEmpty {
@@ -452,7 +509,8 @@ final class ShelfTransfer: ObservableObject {
             let names = result.partial.prefix(5).map(\.name).joined(separator: String(localized: "、"))
             problems.append(String(localized: "\(result.partial.count) 个已经完整拷到新位置，但原位置有文件删不掉（可能被锁定或没有权限），两边都保留了，请手动处理：\(names)"))
         }
-        if result.cancelled {
+        // 移动中途取消、已经有搬好的：小提示里已经说了（还带「撤销」），不再弹框。
+        if result.cancelled, copy || result.moved.isEmpty {
             problems.append(copy ? String(localized: "拷贝已取消，没拷完的文件已清理。") : String(localized: "移动已取消，还没移动的文件留在原处。"))
         }
         if !problems.isEmpty { store.alertMessage = problems.joined(separator: "\n") }

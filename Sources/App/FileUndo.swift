@@ -284,6 +284,7 @@ final class FileUndoCenter {
         action.kind = .history(batch: batch, redoable: true)
         action.restored = []
         store.forget(paths: Set(trashOutcome.moved.map(\.path) + moveOutcome.done.map(\.from)))
+        FolderSizeStore.shared.noteChanged(moveOutcome.done.map(\.to))
         store.filesChanged()
 
         let done = records.count
@@ -301,6 +302,8 @@ final class FileUndoCenter {
         guard let store else { return }
         relocate(outcome.done)
         store.forget(paths: Set(outcome.done.map(\.from)))
+        // 搬到的位置（和往上各层）的大小也变了。
+        FolderSizeStore.shared.noteChanged(outcome.done.map(\.to))
         FolderWallModel.shared.reload(store.pinnedFolders)
         store.filesChanged()
         if !outcome.done.isEmpty {

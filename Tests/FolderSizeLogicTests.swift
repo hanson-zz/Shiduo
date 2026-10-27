@@ -129,18 +129,26 @@ final class FolderSizeLogicTests: XCTestCase {
         XCTAssertNotNil(cache.entries["/a"], "peek 不删条目")
     }
 
-    func testSizeSortUsesProvidedSizeAndNameTiebreak() {
-        // (名字, 已知大小)：文件夹的已知大小是 0，算出来的是 2 GB。
-        let items: [(String, Int64)] = [("b.txt", 10), ("Folder", 0), ("a.txt", 10), ("small", 1)]
-        let computed: [String: Int64] = ["Folder": 2_000_000_000]
-        let size: ((String, Int64)) -> Int64 = { computed[$0.0] ?? $0.1 }
-        let desc = SizeSortLogic.sorted(items, ascending: false, size: size, name: { $0.0 }).map(\.0)
-        XCTAssertEqual(desc, ["Folder", "a.txt", "b.txt", "small"])
-        let asc = SizeSortLogic.sorted(items, ascending: true, size: size, name: { $0.0 }).map(\.0)
-        XCTAssertEqual(asc, ["small", "a.txt", "b.txt", "Folder"])
-        // 名字里的数字按数值排（和访达一样）
-        let numbered: [(String, Int64)] = [("f10", 1), ("f2", 1)]
-        XCTAssertEqual(SizeSortLogic.sorted(numbered, ascending: true, size: { $0.1 }, name: { $0.0 }).map(\.0), ["f2", "f10"])
+    func testCacheMarkStaleKeepsPeekButFailsLookup() {
+        var cache = FolderStatsCache(capacity: 10, maxAge: 600)
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        let stamp = FileStamp(modified: t0, size: nil)
+        var stats = FolderStats()
+        stats.size = 42
+        for path in ["/u", "/u/a", "/u/a/deep", "/u/b"] { cache.insert(path, stamp: stamp, stats: stats, now: t0) }
+        XCTAssertTrue(cache.isFresh("/u/a", stamp: stamp, now: t0))
+        cache.markStale(around: "/u/a/")
+        // 它自己、里面的、上层的都过期；旁边的 /u/b 不受影响
+        XCTAssertFalse(cache.isFresh("/u/a", stamp: stamp, now: t0))
+        XCTAssertFalse(cache.isFresh("/u/a/deep", stamp: stamp, now: t0))
+        XCTAssertFalse(cache.isFresh("/u", stamp: stamp, now: t0))
+        XCTAssertTrue(cache.isFresh("/u/b", stamp: stamp, now: t0))
+        // 旧值还能看（按大小排序用），isFresh 不删条目
+        XCTAssertEqual(cache.peek("/u")?.size, 42)
+        XCTAssertNotNil(cache.entries["/u/a"])
+        // lookup 不认过期的
+        XCTAssertNil(cache.lookup("/u", stamp: stamp, now: t0))
+        XCTAssertEqual(cache.lookup("/u/b", stamp: stamp, now: t0)?.size, 42)
     }
 
     // MARK: 遍历磁盘

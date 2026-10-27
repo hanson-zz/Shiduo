@@ -196,10 +196,16 @@ struct DetailView: View {
                 }
             }
             .overlay(alignment: .bottomTrailing) {
-                // 压缩视频这类长任务：进度和取消。
-                MediaTaskBar()
-                    .padding(.trailing, 16)
-                    .padding(.bottom, store.toast == nil && store.copiedPreview == nil ? 20 : 76)
+                VStack(alignment: .trailing, spacing: 10) {
+                    // 「移动到… / 拷贝到…」的进度卡片（暂存架页自己底部有进度条，不重复显示）。
+                    if store.selection != .shelf {
+                        MoveProgressCard()
+                    }
+                    // 压缩视频这类长任务：进度和取消。
+                    MediaTaskBar()
+                }
+                .padding(.trailing, 16)
+                .padding(.bottom, store.toast == nil && store.copiedPreview == nil ? 20 : 76)
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.toast)
             .animation(.easeOut(duration: 0.18), value: store.searchFieldFocused)

@@ -185,6 +185,8 @@ struct MoveOutProgress: Sendable {
     var currentName: String
     var bytesDone: Int64
     var bytesTotal: Int64
+    /// 要真的搬数据（跨盘移动或拷贝）：进度按字节算；否则同一块盘上改位置，按项目数算。
+    var bytesMode = false
 }
 
 /// copyfile 回调用的上下文。
@@ -396,15 +398,41 @@ enum MoveOutEngine {
         return expected
     }
 
-    /// 暂存架页的「移动到… / 拷贝到…」：在后台一个个处理，有进度、能取消。
-    /// 移动时同一块盘直接改位置；跨盘走「拷贝、核对、删除」（和搬家一样，删原文件失败时两边都保留）。
-    /// 结果里 moved 是处理成功的（拷贝时就是拷好的副本）。会阻塞，在后台线程调用。
-    static func transfer(_ urls: [URL], to folder: URL, copyOnly: Bool, cancel: MoveOutCancelFlag,
-                         progress: @escaping (MoveOutProgress) -> Void) -> MoveOutResult {
+    /// 「移动到… / 拷贝到…」（主窗口右键、暂存架页、拖进文件夹）：在后台一个个处理，有进度、能取消。
+    /// 移动时同一块盘直接改位置（瞬间完成，不统计大小，进度按项目数）；跨盘走「拷贝、核对、删除」
+    /// （和搬家一样，删原文件失败时两边都保留），进度按字节。取消时停在当前这一项：已经处理好的留在新位置。
+    /// `knownSizes`：同一块盘上移动的文件夹不再遍历统计大小，用界面已经算好的（记进清理记录用，没有就记 0）。
+    /// 进度回调已经限流（约 0.1 秒一次）。结果里 moved 是处理成功的（拷贝时就是拷好的副本）。会阻塞，在后台线程调用。
+    static func transfer(_ urls: [URL], to folder: URL, copyOnly: Bool, knownSizes: [String: Int64] = [:],
+                         cancel: MoveOutCancelFlag, progress: @escaping (MoveOutProgress) -> Void) -> MoveOutResult {
         let fm = FileManager.default
         var result = MoveOutResult()
-        let sizes = urls.map { logicalSize($0) }
-        let total = sizes.reduce(0, +)
+        let count = urls.count
+        let throttle = ProgressThrottle(progress)
+        let firstName = urls.first?.lastPathComponent ?? ""
+        // 先判断哪些要真的搬数据（很快：只读磁盘编号），好让界面马上知道按字节还是按项目显示。
+        let crossVolume = urls.map { !sameVolume($0, folder) }
+        let copies = zip(urls, crossVolume).map { copyOnly || $0.1 }
+        let bytesMode = copies.contains(true)
+        throttle.send(MoveOutProgress(fileIndex: 0, fileCount: count, currentName: firstName, bytesDone: 0, bytesTotal: 0,
+                                      bytesMode: bytesMode), force: true)
+        // 要搬数据的统计字节数（进度、核对都要用）；同一块盘上移动的文件只读一下大小，文件夹不遍历。
+        var sizes: [Int64] = []
+        sizes.reserveCapacity(count)
+        for (index, url) in urls.enumerated() {
+            if cancel.isCancelled { break }
+            if copies[index] {
+                sizes.append(logicalSize(url))
+            } else {
+                let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey])
+                sizes.append(values?.isDirectory == true ? (knownSizes[url.path] ?? 0) : Int64(values?.fileSize ?? 0))
+            }
+        }
+        if sizes.count < count {
+            result.cancelled = true
+            return result
+        }
+        let total = zip(sizes, copies).reduce(Int64(0)) { $0 + ($1.1 ? $1.0 : 0) }
         var done: Int64 = 0
         for (index, url) in urls.enumerated() {
             if cancel.isCancelled {
@@ -412,19 +440,21 @@ enum MoveOutEngine {
                 break
             }
             let size = sizes[index]
+            let counts = copies[index]
             let name = url.lastPathComponent
-            progress(MoveOutProgress(fileIndex: index, fileCount: urls.count, currentName: name, bytesDone: done, bytesTotal: total))
+            throttle.send(MoveOutProgress(fileIndex: index, fileCount: count, currentName: name, bytesDone: done,
+                                          bytesTotal: total, bytesMode: bytesMode))
             if !copyOnly, url.deletingLastPathComponent().standardizedFileURL == folder.standardizedFileURL {
                 result.skipped.append(name)
-                done += size
+                if counts { done += size }
                 continue
             }
             let target = OrganizeEngine.uniqueURL(for: name, in: folder)
-            let cross = !sameVolume(url, folder)
+            let cross = crossVolume[index]
             let base = done
             let onBytes: (Int64) -> Void = { bytes in
-                progress(MoveOutProgress(fileIndex: index, fileCount: urls.count, currentName: name,
-                                         bytesDone: base + min(bytes, size), bytesTotal: total))
+                throttle.send(MoveOutProgress(fileIndex: index, fileCount: count, currentName: name,
+                                              bytesDone: base + min(bytes, size), bytesTotal: total, bytesMode: bytesMode))
             }
             var ok = false
             if copyOnly {
@@ -446,7 +476,7 @@ enum MoveOutEngine {
                     AppLog.shelf.error("Shelf move failed: \(AppLog.describe(error), privacy: .public)")
                 }
             }
-            done += size
+            if counts { done += size }
             if ok {
                 result.moved.append(MovedFile(name: name, from: url.path, to: target.path, size: size, aliasPath: nil, crossVolume: cross))
             } else if cancel.isCancelled {
@@ -456,8 +486,24 @@ enum MoveOutEngine {
                 result.failed.append(name)
             }
         }
-        progress(MoveOutProgress(fileIndex: urls.count, fileCount: urls.count, currentName: "", bytesDone: done, bytesTotal: total))
+        throttle.send(MoveOutProgress(fileIndex: count, fileCount: count, currentName: "", bytesDone: done, bytesTotal: total,
+                                      bytesMode: bytesMode), force: true)
         return result
+    }
+
+    /// 进度回调限流（只在搬文件的那条后台线程上用）。
+    private final class ProgressThrottle {
+        private var throttle = MoveProgressLogic.Throttle(interval: 0.1)
+        private let emit: (MoveOutProgress) -> Void
+
+        init(_ emit: @escaping (MoveOutProgress) -> Void) {
+            self.emit = emit
+        }
+
+        func send(_ value: MoveOutProgress, force: Bool = false) {
+            guard throttle.shouldEmit(now: Date(), force: force) else { return }
+            emit(value)
+        }
     }
 }
 

@@ -274,23 +274,25 @@ struct FolderStatsCache {
         }
     }
 
+    /// 某个路径变了（磁盘监视、拾掇自己的移动 / 改名）：它自己、它里面的、它所有上层文件夹的结果标成过期——
+    /// lookup 不再认它们（会重算），但 peek 还能拿到旧值：按大小排序时别因为「暂时不知道」而让文件夹跳来跳去。
+    mutating func markStale(around path: String) {
+        let normalized = path.hasSuffix("/") && path.count > 1 ? String(path.dropLast()) : path
+        for key in entries.keys where PathLogic.isSameOrInside(normalized, key) || PathLogic.isSameOrInside(key, normalized) {
+            entries[key]?.computedAt = .distantPast
+        }
+    }
+
+    /// 有没有新鲜的结果（和 lookup 的条件一样，但不删、不算使用）。
+    func isFresh(_ path: String, stamp: FileStamp, now: Date = Date()) -> Bool {
+        guard let entry = entries[path] else { return false }
+        return stamp.exists && entry.stamp == stamp && now.timeIntervalSince(entry.computedAt) < maxAge
+    }
+
     mutating func removeAll() { entries = [:] }
 
     /// 只看一眼（不校验修改时间、不算使用、不删过期的）：按大小排序时用，旧一点的值也比 0 强。
     func peek(_ path: String) -> FolderStats? { entries[path]?.stats }
-}
-
-/// 按大小排序：文件夹 / 包用后台算出的大小（还没算出来的按已知大小，通常是 0），大小一样时按名称排，结果稳定。
-enum SizeSortLogic {
-    static func sorted<T>(_ items: [T], ascending: Bool, size: (T) -> Int64, name: (T) -> String) -> [T] {
-        let keyed = items.map { (item: $0, size: size($0), name: name($0)) }
-        return keyed.sorted { a, b in
-            if a.size != b.size { return ascending ? a.size < b.size : a.size > b.size }
-            let order = a.name.localizedStandardCompare(b.name)
-            if order != .orderedSame { return order == .orderedAscending }
-            return false
-        }.map(\.item)
-    }
 }
 
 /// 列表、网格里显示的文字（不含“计算中…”这种状态）。

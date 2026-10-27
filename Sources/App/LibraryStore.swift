@@ -830,6 +830,10 @@ final class LibraryStore: ObservableObject {
 
     /// 正在看的文件夹（固定文件夹、位置、外接磁盘、任意文件夹）有变化时悄悄重读。
     private lazy var folderWatcher = FolderWatcher { [weak self] in self?.refreshQuietly() }
+    /// 正在看的文件夹里（所有层级）的变化：子文件夹的大小作废、及时重算（列表本身仍由 folderWatcher 刷新）。
+    private lazy var treeWatcher = FolderTreeWatcher { paths in
+        FolderSizeStore.shared.noteChanged(paths, fromDiskWatcher: true)
+    }
     private var quietTask: Task<Void, Never>?
     private var lastActivationRefresh = Date.distantPast
 
@@ -925,7 +929,10 @@ final class LibraryStore: ObservableObject {
 
     /// 只在文件夹页面监视当前文件夹。
     private func updateFolderWatch() {
-        folderWatcher.watch(Demo.isOn || activeQuery != nil ? nil : currentFolder)
+        let folder = Demo.isOn || activeQuery != nil ? nil : currentFolder
+        folderWatcher.watch(folder)
+        treeWatcher.watch(folder)
+        FolderSizeStore.shared.watchedRoot = folder
     }
 
     /// 是不是一个能进去浏览的文件夹（.app 等文件包不算）。
@@ -1426,6 +1433,10 @@ final class LibraryStore: ObservableObject {
         -> (restored: [String], failed: [String], pairs: [(original: String, restored: String)], taken: [String]) {
         let outcome = await CleanupHistory.shared.restore(records, skipIfTaken: skipIfTaken)
         if !outcome.restored.isEmpty {
+            // 放回去的位置和原来待的位置（废纸篓、搬去的文件夹）大小都变了。
+            let restoredOriginals = Set(outcome.pairs.map(\.original))
+            FolderSizeStore.shared.noteChanged(outcome.pairs.map(\.restored)
+                + records.filter { restoredOriginals.contains($0.originalPath) }.compactMap(\.currentPath))
             // 自动整理规则移走的文件被放回后，不要在下一轮又被同一条规则移走。
             organizer.ignore(outcome.restored)
             organizer.markRestored(records.filter { record in outcome.pairs.contains { $0.original == record.originalPath } })
@@ -2054,6 +2065,7 @@ final class LibraryStore: ObservableObject {
     func renamed(_ done: [(old: URL, new: URL)]) {
         reload()
         guard !done.isEmpty else { return }
+        FolderSizeStore.shared.noteChanged(done.flatMap { [$0.old.path, $0.new.path] })
         FileUndoCenter.shared.relocate(done.map { FileUndoLogic.PathPair(from: $0.old.path, to: $0.new.path) })
         FileUndoCenter.shared.registerRename(done, toast: String(localized: "已重命名 \(done.count) 个文件"))
     }
@@ -2082,6 +2094,8 @@ final class LibraryStore: ObservableObject {
     /// 文件被移走后，从各个列表和扫描结果里拿掉。文件夹被移走时，里面的文件也一起拿掉。
     func forget(paths moved: Set<String>) {
         guard !moved.isEmpty else { return }
+        // 原来所在的文件夹（和往上各层）的大小变了。
+        FolderSizeStore.shared.noteChanged(Array(moved))
         let removed = PathLogic.Removed(moved)
         let gone: (String) -> Bool = { removed.contains($0) }
         items.removeAll { gone($0.path) }
