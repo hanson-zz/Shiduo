@@ -225,6 +225,15 @@ private struct FileMenuItems<Extra: View>: View {
             }
         }
         OpenWithMenu(urls: urls)
+        if items.count == 1, let archive = items.first, !archive.isDirectory, ArchiveKind.isBrowsable(name: archive.name) {
+            // 拾掇 Pro：像文件夹一样看压缩包里有什么，不用先解压。
+            Button {
+                let url = archive.url
+                inMain { store.browseArchive(url) }
+            } label: {
+                proLabel(String(localized: "浏览压缩包内容"))
+            }
+        }
         Button("在访达中显示") { FileActions.reveal(items) }
         Button("在终端打开") { ExternalApps.openInTerminal(items) }
         Button("在编辑器打开") { ExternalApps.openInEditor(items) }
@@ -303,6 +312,15 @@ private struct FileMenuItems<Extra: View>: View {
                 } else {
                     inMain { store.beginRename(list) }
                 }
+            }
+        }
+        if !files.isEmpty, files.count == items.count {
+            // 拾掇 Pro：新建文件模板。拷一份到模板文件夹，以后在「新建文件 ▸」里就有它。
+            Button {
+                let list = files.map(\.url)
+                if isPro { FileTemplateStore.shared.saveAsTemplates(list) } else { showPaywall() }
+            } label: {
+                proLabel(String(localized: "把所选存为模板"))
             }
         }
         if !folders.isEmpty, folders.count == items.count {
@@ -420,6 +438,7 @@ struct FolderBackgroundMenu: View {
             let folder = URL(fileURLWithPath: path, isDirectory: true)
             Button("新建文件夹") { DispatchQueue.main.async { store.newFolderInCurrent() } }
                 .keyboardShortcut(.newFolder)
+            NewFileMenu()
             Divider()
             let count = FileClipboard.fileCount
             Button(count > 1 ? String(localized: "粘贴 \(count) 个项目") : String(localized: "粘贴")) {

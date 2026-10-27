@@ -31374,6 +31374,1686 @@
           }
         }
       }
+    },
+    "Python 脚本 .py": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Python script .py"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Python 脚本 .py"
+          }
+        }
+      }
+    },
+    "Shell 脚本 .sh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shell script .sh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shell 脚本 .sh"
+          }
+        }
+      }
+    },
+    "纯文本 .txt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plain text .txt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纯文本 .txt"
+          }
+        }
+      }
+    },
+    "富文本 .rtf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rich text .rtf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "富文本 .rtf"
+          }
+        }
+      }
+    },
+    "网页 .html": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web page .html"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网页 .html"
+          }
+        }
+      }
+    },
+    "Markdown .md": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markdown .md"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markdown .md"
+          }
+        }
+      }
+    },
+    "JSON .json": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JSON .json"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JSON .json"
+          }
+        }
+      }
+    },
+    "%lld 个文件没能存为模板（可能没有权限）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld files couldn’t be saved as templates (permission denied?)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个文件没能存为模板（可能没有权限）。"
+          }
+        }
+      }
+    },
+    "先打开一个文件夹，再新建文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a folder first, then create a file"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先打开一个文件夹，再新建文件"
+          }
+        }
+      }
+    },
+    "全部大写": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UPPERCASE"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部大写"
+          }
+        }
+      }
+    },
+    "全部小写": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lowercase"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部小写"
+          }
+        }
+      }
+    },
+    "全部解压": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract All"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部解压"
+          }
+        }
+      }
+    },
+    "全部解压到…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract All To…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部解压到…"
+          }
+        }
+      }
+    },
+    "关闭压缩包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Archive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭压缩包"
+          }
+        }
+      }
+    },
+    "创建日期": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date Created"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创建日期"
+          }
+        }
+      }
+    },
+    "删除这条规则": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this rule"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除这条规则"
+          }
+        }
+      }
+    },
+    "删除预设": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Preset"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除预设"
+          }
+        }
+      }
+    },
+    "加了密码": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password protected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加了密码"
+          }
+        }
+      }
+    },
+    "加了密码的压缩包暂时打不开；预览和打开用的文件放在系统临时文件夹里，一天后自动清掉。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password-protected archives aren’t supported yet. Files opened or previewed are kept in the system temporary folder and cleared after a day."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加了密码的压缩包暂时打不开；预览和打开用的文件放在系统临时文件夹里，一天后自动清掉。"
+          }
+        }
+      }
+    },
+    "加序号": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Number"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加序号"
+          }
+        }
+      }
+    },
+    "加日期": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Date"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加日期"
+          }
+        }
+      }
+    },
+    "区分大小写": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match case"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "区分大小写"
+          }
+        }
+      }
+    },
+    "压缩包浏览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse Archives"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩包浏览"
+          }
+        }
+      }
+    },
+    "压缩后": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compressed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩后"
+          }
+        }
+      }
+    },
+    "去掉「副本」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove “copy”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去掉「副本」"
+          }
+        }
+      }
+    },
+    "去掉「副本」/「 2」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove “copy” / “ 2”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去掉「副本」/「 2」"
+          }
+        }
+      }
+    },
+    "去掉名字末尾的「副本」「 copy」「 (1)」「 2」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removes “ copy”, “ (1)” or “ 2” at the end of the name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去掉名字末尾的「副本」「 copy」「 (1)」「 2」"
+          }
+        }
+      }
+    },
+    "去掉空格": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove spaces"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去掉空格"
+          }
+        }
+      }
+    },
+    "双击 zip、tar.gz 像文件夹一样看里面有什么，空格预览，只解压需要的几个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-click a zip or tar.gz to look inside like a folder, preview with Space, and extract only what you need"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双击 zip、tar.gz 像文件夹一样看里面有什么，空格预览，只解压需要的几个"
+          }
+        }
+      }
+    },
+    "双击压缩包时在拾掇里浏览（不解压）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-click an archive to browse it in Shiduo (without extracting)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双击压缩包时在拾掇里浏览（不解压）"
+          }
+        }
+      }
+    },
+    "右键「新建文件 ▸」：文本、Markdown、脚本……模板文件夹里放什么就能新建什么": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right-click “New File ▸”: text, Markdown, scripts… plus anything you put in the Templates folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右键「新建文件 ▸」：文本、Markdown、脚本……模板文件夹里放什么就能新建什么"
+          }
+        }
+      }
+    },
+    "右键可以重命名或删除这个预设": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right-click to rename or delete this preset"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右键可以重命名或删除这个预设"
+          }
+        }
+      }
+    },
+    "名字不能用：不能为空、不能有「/」「:」、不能以「.」开头": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid name: it can’t be empty, contain “/” or “:”, or start with “.”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字不能用：不能为空、不能有「/」「:」、不能以「.」开头"
+          }
+        }
+      }
+    },
+    "和已有文件重名，会自动加 (1)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same name as an existing file; “(1)” will be added"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "和已有文件重名，会自动加 (1)"
+          }
+        }
+      }
+    },
+    "和这一批里的其他文件重名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same name as another file in this batch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "和这一批里的其他文件重名"
+          }
+        }
+      }
+    },
+    "大小写": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Case"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大小写"
+          }
+        }
+      }
+    },
+    "存为预设": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as Preset"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存为预设"
+          }
+        }
+      }
+    },
+    "存为预设…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as Preset…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存为预设…"
+          }
+        }
+      }
+    },
+    "存好": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存好"
+          }
+        }
+      }
+    },
+    "实时预览，改名后 ⌘Z 一次全部撤销；可以存成预设下次直接用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live preview. ⌘Z undoes the whole batch; save it as a preset to reuse next time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时预览，改名后 ⌘Z 一次全部撤销；可以存成预设下次直接用"
+          }
+        }
+      }
+    },
+    "已存为模板：%lld 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved as templates: %lld files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已存为模板：%lld 个文件"
+          }
+        }
+      }
+    },
+    "已存为模板：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved as template: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已存为模板：%@"
+          }
+        }
+      }
+    },
+    "已存为预设：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved as preset: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已存为预设：%@"
+          }
+        }
+      }
+    },
+    "已解压 %lld 项到「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extracted %1$lld items to “%2$@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已解压 %1$lld 项到「%2$@」"
+          }
+        }
+      }
+    },
+    "已解压到「%@」：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extracted to “%1$@”: %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已解压到「%1$@」：%2$@"
+          }
+        }
+      }
+    },
+    "常用预设": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presets"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "常用预设"
+          }
+        }
+      }
+    },
+    "常用预设一点就用、存自己的预设，正则查找替换（$1 引用），重名和非法名字先标红": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-click presets, your own saved presets, regex find & replace ($1 groups), with duplicates and invalid names flagged in red"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "常用预设一点就用、存自己的预设，正则查找替换（$1 引用），重名和非法名字先标红"
+          }
+        }
+      }
+    },
+    "序号 / 日期和原名之间的连接符，可以留空": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separator between the number / date and the name (can be empty)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "序号 / 日期和原名之间的连接符，可以留空"
+          }
+        }
+      }
+    },
+    "序号 001 前缀": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number prefix 001"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "序号 001 前缀"
+          }
+        }
+      }
+    },
+    "开头": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开头"
+          }
+        }
+      }
+    },
+    "批量改名增强": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced Batch Rename"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批量改名增强"
+          }
+        }
+      }
+    },
+    "把所选存为模板": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Selection as Template"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把所选存为模板"
+          }
+        }
+      }
+    },
+    "拍摄日期": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date Taken"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拍摄日期"
+          }
+        }
+      }
+    },
+    "拍摄日期前缀": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date taken prefix"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拍摄日期前缀"
+          }
+        }
+      }
+    },
+    "拷贝名称": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝名称"
+          }
+        }
+      }
+    },
+    "拾掇读不了这个压缩包（文件可能损坏，或者系统不支持这种格式）。可以用「打开方式」交给其他 App。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo can’t read this archive (it may be damaged, or macOS doesn’t support the format). Use “Open With” to open it in another app."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇读不了这个压缩包（文件可能损坏，或者系统不支持这种格式）。可以用「打开方式」交给其他 App。"
+          }
+        }
+      }
+    },
+    "支持 zip、tar、tar.gz（7z、rar 系统能读的也行）。空格快速查看、双击打开、拖出来就解压到放下的位置，压缩包本身不动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supports zip, tar and tar.gz (and 7z / rar when macOS can read them). Space to Quick Look, double-click to open, drag out to extract where you drop. The archive itself is never changed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持 zip、tar、tar.gz（7z、rar 系统能读的也行）。空格快速查看、双击打开、拖出来就解压到放下的位置，压缩包本身不动。"
+          }
+        }
+      }
+    },
+    "新建上一次用的模板": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New from Last Template"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建上一次用的模板"
+          }
+        }
+      }
+    },
+    "新建文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New File"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建文件"
+          }
+        }
+      }
+    },
+    "新建文件模板": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New File Templates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建文件模板"
+          }
+        }
+      }
+    },
+    "日期": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日期"
+          }
+        }
+      }
+    },
+    "日期前缀 yyyy-MM-dd": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date prefix yyyy-MM-dd"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日期前缀 yyyy-MM-dd"
+          }
+        }
+      }
+    },
+    "替换为（$1 = 第 1 个括号）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace with ($1 = first group)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换为（$1 = 第 1 个括号）"
+          }
+        }
+      }
+    },
+    "有 %lld 个名字有问题（标红的），改好才能改名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld names have problems (in red). Fix them to rename"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %lld 个名字有问题（标红的），改好才能改名"
+          }
+        }
+      }
+    },
+    "未命名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名"
+          }
+        }
+      }
+    },
+    "查找替换": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find & Replace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查找替换"
+          }
+        }
+      }
+    },
+    "查找（正则，例如 IMG_(\\d+)）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find (regex, e.g. IMG_(\\d+))"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查找（正则，例如 IMG_(\\d+)）"
+          }
+        }
+      }
+    },
+    "正则": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regex"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正则"
+          }
+        }
+      }
+    },
+    "正则表达式写得不对，请检查括号、方括号和转义符。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The regular expression isn’t valid. Check the parentheses, brackets and escapes."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正则表达式写得不对，请检查括号、方括号和转义符。"
+          }
+        }
+      }
+    },
+    "正则表达式有错，改好才能改名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fix the regular expression to rename"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正则表达式有错，改好才能改名"
+          }
+        }
+      }
+    },
+    "正在准备「%@」…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing “%@”…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在准备「%@」…"
+          }
+        }
+      }
+    },
+    "正在浏览压缩包 · 只读 · %lld 个文件 · 解压后 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browsing archive · Read-only · %1$lld files · %2$@ extracted"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在浏览压缩包 · 只读 · %1$lld 个文件 · 解压后 %2$@"
+          }
+        }
+      }
+    },
+    "正在浏览压缩包 · 只读 · %lld 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browsing archive · Read-only · %lld files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在浏览压缩包 · 只读 · %lld 个文件"
+          }
+        }
+      }
+    },
+    "正在解压…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extracting…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在解压…"
+          }
+        }
+      }
+    },
+    "正在解压，请稍等": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extracting, please wait"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在解压，请稍等"
+          }
+        }
+      }
+    },
+    "正在读取压缩包…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading archive…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取压缩包…"
+          }
+        }
+      }
+    },
+    "正在读取照片的拍摄日期…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading photo capture dates…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取照片的拍摄日期…"
+          }
+        }
+      }
+    },
+    "步长 %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步长 %lld"
+          }
+        }
+      }
+    },
+    "每个词首字母大写": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capitalize Words"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个词首字母大写"
+          }
+        }
+      }
+    },
+    "浏览压缩包内容": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse Archive Contents"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览压缩包内容"
+          }
+        }
+      }
+    },
+    "添加规则": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Rule"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加规则"
+          }
+        }
+      }
+    },
+    "用默认 App 打开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with Default App"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用默认 App 打开"
+          }
+        }
+      }
+    },
+    "空格换成 -": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaces to -"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格换成 -"
+          }
+        }
+      }
+    },
+    "空格换成 .": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaces to ."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格换成 ."
+          }
+        }
+      }
+    },
+    "空格换成 _": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaces to _"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格换成 _"
+          }
+        }
+      }
+    },
+    "管理模板…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage Templates…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理模板…"
+          }
+        }
+      }
+    },
+    "结尾": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结尾"
+          }
+        }
+      }
+    },
+    "规则 · Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules · Pro"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "规则 · Pro"
+          }
+        }
+      }
+    },
+    "规则从上往下依次生效": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules apply from top to bottom"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "规则从上往下依次生效"
+          }
+        }
+      }
+    },
+    "规则组合、正则和预设是拾掇 Pro 的功能": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules, regex and presets are Shiduo Pro features"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "规则组合、正则和预设是拾掇 Pro 的功能"
+          }
+        }
+      }
+    },
+    "规则组合（序号、日期、大小写、正则查找替换……）和预设是拾掇 Pro 的功能，可以先免费试用。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combining rules (numbers, dates, case, regex find & replace…) and presets are Shiduo Pro features. You can try them free first."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "规则组合（序号、日期、大小写、正则查找替换……）和预设是拾掇 Pro 的功能，可以先免费试用。"
+          }
+        }
+      }
+    },
+    "解压 %lld 项到…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract %lld Items To…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解压 %lld 项到…"
+          }
+        }
+      }
+    },
+    "解压到…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract To…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解压到…"
+          }
+        }
+      }
+    },
+    "解压到压缩包旁边": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract next to the archive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解压到压缩包旁边"
+          }
+        }
+      }
+    },
+    "解压到这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract Here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解压到这里"
+          }
+        }
+      }
+    },
+    "解压失败。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extraction failed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解压失败。"
+          }
+        }
+      }
+    },
+    "解压失败：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extraction failed: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解压失败：%@"
+          }
+        }
+      }
+    },
+    "解压所选…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract Selected…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解压所选…"
+          }
+        }
+      }
+    },
+    "起始 %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "起始 %lld"
+          }
+        }
+      }
+    },
+    "这个压缩包加了密码，拾掇暂时解不开。可以用「打开方式」交给「归档实用工具」或其他 App。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This archive is password protected, which Shiduo can’t open yet. Use “Open With” to open it in Archive Utility or another app."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个压缩包加了密码，拾掇暂时解不开。可以用「打开方式」交给「归档实用工具」或其他 App。"
+          }
+        }
+      }
+    },
+    "这个压缩包是空的。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This archive is empty."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个压缩包是空的。"
+          }
+        }
+      }
+    },
+    "连接符": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separator"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接符"
+          }
+        }
+      }
+    },
+    "重命名预设": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Preset"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名预设"
+          }
+        }
+      }
+    },
+    "重命名预设…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Preset…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名预设…"
+          }
+        }
+      }
+    },
+    "预设名称，例如「活动照片」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preset name, e.g. “Event Photos”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预设名称，例如「活动照片」"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

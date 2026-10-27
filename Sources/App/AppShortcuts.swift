@@ -57,6 +57,8 @@ enum AppShortcut: String, CaseIterable, Identifiable {
     case makeAlias
     case deleteImmediately
     case duplicate
+    // 拾掇 Pro：新建文件模板（访达的 ⌥⌘N 是「新建智能文件夹」，拾掇没有这一项，按效果图用它）
+    case newFromLastTemplate
 
     var id: String { rawValue }
 
@@ -104,6 +106,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .makeAlias: return "a"
         case .deleteImmediately: return .delete
         case .duplicate: return "d"
+        case .newFromLastTemplate: return "n"
         }
     }
 
@@ -114,7 +117,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
             return .command
         case .newFolder, .showPreview, .homeFolder, .desktop, .documents, .downloadSources, .goToFolder:
             return [.command, .shift]
-        case .toggleToolbar, .togglePathBar, .refresh, .downloads, .pasteAndMove, .copyPath, .deleteImmediately:
+        case .toggleToolbar, .togglePathBar, .refresh, .downloads, .pasteAndMove, .copyPath, .deleteImmediately, .newFromLastTemplate:
             return [.command, .option]
         case .addToFolderWall, .imageTools, .copyText, .addToShelf, .toggleSidebar, .home, .duplicates, .cleanup, .commandPalette,
              .newFolderWithSelection, .makeAlias:
@@ -167,6 +170,7 @@ enum AppShortcut: String, CaseIterable, Identifiable {
         case .makeAlias: return String(localized: "制作替身")
         case .deleteImmediately: return String(localized: "直接删除…")
         case .duplicate: return String(localized: "复制")
+        case .newFromLastTemplate: return String(localized: "新建上一次用的模板")
         }
     }
 

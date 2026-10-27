@@ -40,6 +40,9 @@ enum ProFeature: CaseIterable, Identifiable {
     case mediaTools
     case uninstaller
     case imageTools
+    case archiveBrowse
+    case renamePlus
+    case fileTemplates
 
     var id: Self { self }
 
@@ -60,6 +63,9 @@ enum ProFeature: CaseIterable, Identifiable {
         case .mediaTools: return String(localized: "拖进来就转换")
         case .uninstaller: return String(localized: "卸载 App 连残留一起清")
         case .imageTools: return String(localized: "图片工具：拼图、美化、标注、抠图、AI 放大")
+        case .archiveBrowse: return String(localized: "压缩包浏览")
+        case .renamePlus: return String(localized: "批量改名增强")
+        case .fileTemplates: return String(localized: "新建文件模板")
         }
     }
 
@@ -80,6 +86,9 @@ enum ProFeature: CaseIterable, Identifiable {
         case .mediaTools: return String(localized: "压缩视频、做 GIF、剪片段、多个文件合并成 PDF，全在本机")
         case .uninstaller: return String(localized: "列出 App 留在资源库里的偏好、缓存和数据，一起移到废纸篓，可恢复")
         case .imageTools: return String(localized: "长截图自动去重叠拼接，宫格、瀑布流、水印；本机去背景；截图加渐变背景和阴影")
+        case .archiveBrowse: return String(localized: "双击 zip、tar.gz 像文件夹一样看里面有什么，空格预览，只解压需要的几个")
+        case .renamePlus: return String(localized: "常用预设一点就用、存自己的预设，正则查找替换（$1 引用），重名和非法名字先标红")
+        case .fileTemplates: return String(localized: "右键「新建文件 ▸」：文本、Markdown、脚本……模板文件夹里放什么就能新建什么")
         }
     }
 
@@ -100,6 +109,9 @@ enum ProFeature: CaseIterable, Identifiable {
         case .mediaTools: return "film.stack"
         case .uninstaller: return "xmark.app"
         case .imageTools: return "wand.and.rays"
+        case .archiveBrowse: return "doc.zipper"
+        case .renamePlus: return "character.cursor.ibeam"
+        case .fileTemplates: return "doc.badge.plus"
         }
     }
 
@@ -120,6 +132,9 @@ enum ProFeature: CaseIterable, Identifiable {
         case .mediaTools: return .purple
         case .uninstaller: return .red
         case .imageTools: return .pink
+        case .archiveBrowse: return .purple
+        case .renamePlus: return .green
+        case .fileTemplates: return .blue
         }
     }
 }

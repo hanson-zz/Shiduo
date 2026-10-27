@@ -42,6 +42,12 @@ struct ShiduoApp: App {
                 Button("新建文件夹") { store.newFolderInCurrent() }
                     .keyboardShortcut(.newFolder)
                     .disabled(store.currentFolder == nil || store.activeQuery != nil || renaming)
+                // 拾掇 Pro：新建文件模板（没解锁时点了弹升级面板）。
+                NewFileMenu()
+                    .disabled(store.currentFolder == nil || store.activeQuery != nil || store.archiveSession != nil || renaming)
+                Button("新建上一次用的模板") { FileTemplateStore.shared.createLast(in: store) }
+                    .keyboardShortcut(.newFromLastTemplate)
+                    .disabled(store.currentFolder == nil || store.activeQuery != nil || store.archiveSession != nil || renaming)
                 // 和访达的「添加到边栏」（⌃⌘T）一个意思：选中了文件夹就直接放上墙，否则选一个。
                 Button("添加到文件夹墙…") { store.addSelectionToFolderWall() }
                     .keyboardShortcut(.addToFolderWall)

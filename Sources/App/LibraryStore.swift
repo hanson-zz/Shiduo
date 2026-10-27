@@ -100,6 +100,7 @@ final class LibraryStore: ObservableObject {
             if selection == .duplicates { duplicatesTab = .exact }
             browsePath = nil
             librarySub = nil
+            archiveSession = nil
             if !navigating { history.reset() }
             reload()
         }
@@ -109,6 +110,8 @@ final class LibraryStore: ObservableObject {
 
     /// 固定文件夹 / 外接磁盘 / 任意文件夹里，当前进到了哪一层子文件夹（nil = 根目录）。
     @Published private(set) var browsePath: String?
+    /// 拾掇 Pro：正在浏览的压缩包（非空时内容区显示压缩包里的文件，见 ArchiveBrowser.swift）。
+    @Published var archiveSession: ArchiveSession?
     /// 「返回 ⌘[ / 前进 ⌘]」用的历史：之前的页面和子文件夹。
     @Published private(set) var history = NavigationHistory<BrowseLocation>()
     private var navigating = false
@@ -129,11 +132,12 @@ final class LibraryStore: ObservableObject {
     /// 正在看的文件夹。
     var currentFolder: String? { browseRoot.map { browsePath ?? $0 } }
 
-    var canGoBack: Bool { history.canGoBack }
+    var canGoBack: Bool { archiveSession != nil || history.canGoBack }
     var canGoForward: Bool { history.canGoForward }
     private var here: BrowseLocation { BrowseLocation(selection: selection, browsePath: browsePath) }
 
     var canGoUp: Bool {
+        if archiveSession != nil { return true }
         guard let current = currentFolder, current != "/" else { return false }
         if browsePath != nil { return true }
         if case .folder = selection { return true }
@@ -143,6 +147,7 @@ final class LibraryStore: ObservableObject {
     /// 在拾掇里打开一个文件夹，不跳到访达。
     /// 在当前根目录里就进子文件夹；落在某个固定文件夹 / 外接磁盘里就切过去；都不是就当「任意文件夹」打开。
     func openFolder(_ url: URL) {
+        archiveSession = nil
         let path = url.standardizedFileURL.path
         let here = BrowseLocation(selection: selection, browsePath: browsePath)
         if activeQuery != nil {
@@ -189,6 +194,10 @@ final class LibraryStore: ObservableObject {
         guard selection == item else {
             selection = item
             return
+        }
+        if archiveSession != nil {
+            archiveSession = nil
+            if browsePath == nil, activeQuery == nil { return }
         }
         guard browsePath != nil || activeQuery != nil else { return }
         if browsePath != nil {
@@ -274,6 +283,7 @@ final class LibraryStore: ObservableObject {
 
     /// 回到上一层文件夹（⌘↑）。
     func goUp() {
+        if archiveGoUp() { return }
         guard canGoUp, let root = browseRoot, let current = currentFolder else { return }
         let parent = (current as NSString).deletingLastPathComponent
         if browsePath != nil {
@@ -287,6 +297,7 @@ final class LibraryStore: ObservableObject {
 
     /// 返回上一个位置（⌘[）。
     func goBack() {
+        if archiveGoUp() { return }
         guard let last = history.goBack(from: here) else { return }
         go(to: last)
     }
@@ -298,6 +309,7 @@ final class LibraryStore: ObservableObject {
     }
 
     private func go(to last: BrowseLocation) {
+        archiveSession = nil
         navigating = true
         if selection != last.selection { selection = last.selection }
         navigating = false
@@ -1545,6 +1557,9 @@ final class LibraryStore: ObservableObject {
             openFolder(item.url)
         } else if item.category == .music {
             player.play(item, in: list)
+        } else if license.isPro, ArchivePrefs.browseOnDoubleClick, ArchiveKind.isBrowsable(name: item.name) {
+            // 拾掇 Pro：双击压缩包在拾掇里浏览（设置里可以关掉，关掉后和以前一样交给默认 App）。
+            browseArchive(item.url)
         } else {
             NSWorkspace.shared.open(item.url)
         }

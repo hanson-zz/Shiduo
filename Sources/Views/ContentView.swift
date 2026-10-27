@@ -270,7 +270,11 @@ struct DetailView: View {
 
     @ViewBuilder
     private var content: some View {
-        if store.activeQuery != nil {
+        if let archive = store.archiveSession, store.activeQuery == nil {
+            // 拾掇 Pro：压缩包像文件夹一样浏览（只读）。
+            ArchiveBrowserView(session: archive)
+                .id(archive.id)
+        } else if store.activeQuery != nil {
             BrowserView(title: String(localized: "搜索结果"), showsOCRTools: false)
         } else {
             switch store.selection ?? .home {

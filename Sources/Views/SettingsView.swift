@@ -32,6 +32,7 @@ struct SettingsView: View {
     @AppStorage(MenuBarLabel.showReclaimableKey) private var menuBarShowsReclaimable = true
     @State private var floatingHotKeyAvailable = true
     @AppStorage(CleanupReminder.enabledKey) private var reminderEnabled = false
+    @AppStorage(ArchivePrefs.browseOnDoubleClickKey) private var archiveBrowseOnDoubleClick = true
     @AppStorage(CleanupReminder.weekdayKey) private var reminderWeekday = 7
     @AppStorage(CleanupReminder.hourKey) private var reminderHour = 10
     @State private var language = AppLanguage.current
@@ -484,6 +485,8 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
+            Toggle("双击压缩包时在拾掇里浏览（不解压）", isOn: $archiveBrowseOnDoubleClick)
+                .disabled(!license.isPro)
         } header: {
             HStack(spacing: 6) {
                 Text("拾掇 Pro 功能")
