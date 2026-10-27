@@ -7,14 +7,28 @@ import Foundation
 /// - 大小一样时按名称（名字里的数字按数值，和访达一样），再一样时保持原来的先后，结果稳定。
 enum SizeSortLogic {
     static func sorted<T>(_ items: [T], ascending: Bool, size: (T) -> Int64?, name: (T) -> String) -> [T] {
-        let keyed = items.enumerated().map { (index: $0.offset, item: $0.element, size: size($0.element), name: name($0.element)) }
-        return keyed.sorted { a, b in
-            switch compare(a.size, a.name, b.size, b.name, ascending: ascending) {
+        // 大小和名称每项只取一次；名称预先转成 NSString（几万次比较不用每次都转换字符串）。比较规则和 compare(...) 一样。
+        let sizes = items.map(size)
+        let names = items.map { NameKey(name($0)) }
+        let order = items.indices.sorted { i, j in
+            let result: ComparisonResult
+            switch (sizes[i], sizes[j]) {
+            case let (a?, b?) where a != b:
+                result = (ascending ? a < b : a > b) ? .orderedAscending : .orderedDescending
+            case (.some, .none):
+                result = .orderedAscending
+            case (.none, .some):
+                result = .orderedDescending
+            default:
+                result = names[i].compare(names[j])
+            }
+            switch result {
             case .orderedAscending: return true
             case .orderedDescending: return false
-            case .orderedSame: return a.index < b.index
+            case .orderedSame: return i < j
             }
-        }.map(\.item)
+        }
+        return order.map { items[$0] }
     }
 
     /// 两项的先后：orderedAscending 表示 a 排在 b 前面。

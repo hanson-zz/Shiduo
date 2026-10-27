@@ -442,8 +442,6 @@ struct FileCollectionView: View {
 
     private var sorted: [FileItem] { sortedItems }
 
-    private var sortOrder: [KeyPathComparator<FileItem>] { sortKey.comparators(ascending: sortAscending) }
-
     /// 列表表头用：点表头换排序时写回 UserDefaults。
     private var sortBinding: Binding<[KeyPathComparator<FileItem>]> {
         Binding(
@@ -480,18 +478,7 @@ struct FileCollectionView: View {
             // 不在屏幕上的文件夹也在后台算（不然永远不知道大小，排不对）。
             sizes.prefetch(Array(items.lazy.filter(\.needsComputedSize).prefix(Self.sizePrefetchLimit).map(\.path)))
         } else if items.count > sortedInput.count, !sortedInput.isEmpty, items.starts(with: sortedInput) {
-            let order = sortOrder
-            let appended = items[sortedInput.count...].sorted(using: order)
-            next = SortMerge.merge(sortedItems, appended) { a, b in
-                for comparator in order {
-                    switch comparator.compare(a, b) {
-                    case .orderedAscending: return true
-                    case .orderedDescending: return false
-                    case .orderedSame: continue
-                    }
-                }
-                return false
-            }
+            next = sortKey.merge(sorted: sortedItems, appended: Array(items[sortedInput.count...]), ascending: sortAscending)
         } else {
             next = sortKey.sort(items, ascending: sortAscending)
         }

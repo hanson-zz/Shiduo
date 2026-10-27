@@ -48,9 +48,22 @@ struct FileItem: Identifiable, Hashable {
 
     var kindText: String {
         if isScreenshot { return String(localized: "kind.screenshot", defaultValue: "截图") }
-        if let type = contentType.flatMap({ UTType($0) }), let desc = type.localizedDescription {
-            return desc
-        }
+        return kindTextFrom(typeDescription: contentType.flatMap({ UTType($0) })?.localizedDescription)
+    }
+
+    /// 同一种类型的说明只查一次（按种类排序时几万个文件只有几十种类型）。结果和 kindText 一样。
+    func memoizedKindText(_ descriptions: inout [String: String?]) -> String {
+        if isScreenshot { return String(localized: "kind.screenshot", defaultValue: "截图") }
+        guard let contentType else { return kindTextFrom(typeDescription: nil) }
+        if let cached = descriptions[contentType] { return kindTextFrom(typeDescription: cached) }
+        let description = UTType(contentType)?.localizedDescription
+        descriptions[contentType] = .some(description)
+        return kindTextFrom(typeDescription: description)
+    }
+
+    /// 不是截图时：有类型说明用说明，没有再看是不是文件夹、大类、扩展名。
+    private func kindTextFrom(typeDescription: String?) -> String {
+        if let desc = typeDescription { return desc }
         if isDirectory { return String(localized: "文件夹") }
         if let category { return category.title }
         return ext.isEmpty ? String(localized: "kind.file", defaultValue: "文件") : ext.uppercased()
@@ -109,19 +122,33 @@ extension FileItem {
             || (tree.contains("public.directory") && !tree.contains("com.apple.application-bundle"))
     }
 
+    /// 直接从磁盘读取要用到的属性。读文件夹时把它传给 contentsOfDirectory 预先取好，逐个构造时就不用再问一次系统。
+    static let diskKeys: [URLResourceKey] = [
+        .fileSizeKey, .contentModificationDateKey, .creationDateKey,
+        .contentTypeKey, .isDirectoryKey, .addedToDirectoryDateKey, .isPackageKey,
+    ]
+    private static let diskKeySet = Set(diskKeys)
+    private static let metadataNames = [
+        "kMDItemLastUsedDate", "kMDItemWhereFroms", "kMDItemIsScreenCapture", "kMDItemCFBundleIdentifier",
+    ] as CFArray
+
     /// 直接从磁盘读取（用于固定文件夹）。
     init?(url: URL) {
-        let keys: Set<URLResourceKey> = [
-            .fileSizeKey, .contentModificationDateKey, .creationDateKey,
-            .contentTypeKey, .isDirectoryKey, .addedToDirectoryDateKey, .isPackageKey,
-        ]
-        guard let values = try? url.resourceValues(forKeys: keys) else { return nil }
+        self.init(url: url, screenshotFolders: ScreenshotFolders.current, typeTrees: nil)
+    }
+
+    /// screenshotFolders：一次读文件夹时先取好的截图工具文件夹；
+    /// typeTrees：同一次读文件夹里共用的「类型 → 类型树」缓存（同一种类型只展开一次父类型）。
+    init?(url: URL, screenshotFolders: [ScreenshotSourceLogic.Folder], typeTrees: TypeTreeCache?) {
+        guard let values = try? url.resourceValues(forKeys: Self.diskKeySet) else { return nil }
         var tree: [String] = []
         if let type = values.contentType {
-            tree = [type.identifier] + type.supertypes.map(\.identifier)
+            tree = typeTrees?.tree(for: type) ?? TypeTreeCache.expand(type)
         }
-        self.path = url.path
-        self.name = url.lastPathComponent
+        let path = url.path
+        let name = url.lastPathComponent
+        self.path = path
+        self.name = name
         self.size = Int64(values.fileSize ?? 0)
         self.contentType = values.contentType?.identifier
         self.typeTree = tree
@@ -134,20 +161,39 @@ extension FileItem {
         var whereFroms: [String] = []
         var isScreenshot = false
         var bundleID: String?
-        if let md = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL) {
-            lastUsed = MDItemCopyAttribute(md, "kMDItemLastUsedDate" as CFString) as? Date
-            whereFroms = MDItemCopyAttribute(md, "kMDItemWhereFroms" as CFString) as? [String] ?? []
-            isScreenshot = (MDItemCopyAttribute(md, "kMDItemIsScreenCapture" as CFString) as? NSNumber)?.boolValue ?? false
-            bundleID = MDItemCopyAttribute(md, "kMDItemCFBundleIdentifier" as CFString) as? String
+        // 四个 Spotlight 属性一次取回（逐个取要问四次）。
+        if let md = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL),
+           let attrs = MDItemCopyAttributes(md, Self.metadataNames) as? [String: Any] {
+            lastUsed = attrs["kMDItemLastUsedDate"] as? Date
+            whereFroms = attrs["kMDItemWhereFroms"] as? [String] ?? []
+            isScreenshot = (attrs["kMDItemIsScreenCapture"] as? NSNumber)?.boolValue ?? false
+            bundleID = attrs["kMDItemCFBundleIdentifier"] as? String
         }
         self.lastUsed = lastUsed
         // Spotlight 没有下载地址时直接读扩展属性；还没有就看隔离标记里下载它的 App。
-        if whereFroms.isEmpty { whereFroms = ExtendedAttributes.whereFroms(atPath: url.path) }
-        if whereFroms.isEmpty { self.quarantineAgent = ExtendedAttributes.quarantineAgent(atPath: url.path) }
+        if whereFroms.isEmpty { whereFroms = ExtendedAttributes.whereFroms(atPath: path) }
+        if whereFroms.isEmpty { self.quarantineAgent = ExtendedAttributes.quarantineAgent(atPath: path) }
         self.whereFroms = whereFroms
-        self.isScreenshot = ScreenshotNameRules.isScreenshot(name: url.lastPathComponent, typeTree: tree, systemFlag: isScreenshot,
-                                                             path: url.path, folders: ScreenshotFolders.current)
+        self.isScreenshot = ScreenshotNameRules.isScreenshot(name: name, typeTree: tree, systemFlag: isScreenshot,
+                                                             path: path, folders: screenshotFolders)
         self.bundleID = bundleID
+    }
+}
+
+/// 「类型 → 类型树」（自己 + 所有父类型的标识符）缓存。一次读文件夹里大多数文件是同几种类型，
+/// 不用每个文件都把父类型展开一遍。不加锁：每个线程用自己的一份。
+final class TypeTreeCache {
+    private var trees: [String: [String]] = [:]
+
+    func tree(for type: UTType) -> [String] {
+        if let hit = trees[type.identifier] { return hit }
+        let tree = Self.expand(type)
+        trees[type.identifier] = tree
+        return tree
+    }
+
+    static func expand(_ type: UTType) -> [String] {
+        [type.identifier] + type.supertypes.map(\.identifier)
     }
 }
 

@@ -154,6 +154,14 @@ final class PerfBenchmarkTests: XCTestCase {
             }
             XCTAssertGreaterThan(count, 0)
             print("PERF|listing|\(n)|entries=\(count)")
+            // 原来的写法（不预取属性、单线程逐个 FileItem(url:)），同一台机器上对照。50,000 太慢，只看第一次 CI 的基线。
+            if n <= 10_000 {
+                measureMs("listing", n, "reference(old)", runs: n >= 10_000 ? 1 : 3) {
+                    let urls = (try? FileManager.default.contentsOfDirectory(
+                        at: URL(fileURLWithPath: path), includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
+                    _ = urls.compactMap { FileItem(url: $0) }
+                }
+            }
         }
     }
 
@@ -194,6 +202,23 @@ final class PerfBenchmarkTests: XCTestCase {
                 }
             }
         }
+        measureMs("breakdown", n, "MDItemCreate only") {
+            for u in urls { _ = MDItemCreateWithURL(kCFAllocatorDefault, u as CFURL) }
+        }
+        let names = ["kMDItemLastUsedDate", "kMDItemWhereFroms", "kMDItemIsScreenCapture", "kMDItemCFBundleIdentifier"] as CFArray
+        measureMs("breakdown", n, "MDItemCreate+CopyAttributes(1 call)") {
+            for u in urls {
+                if let md = MDItemCreateWithURL(kCFAllocatorDefault, u as CFURL) { _ = MDItemCopyAttributes(md, names) }
+            }
+        }
+        measureMs("breakdown", n, "MDItemCreate+CopyAttributes parallel") {
+            DispatchQueue.concurrentPerform(iterations: (urls.count + 127) / 128) { b in
+                for i in (b * 128)..<min(urls.count, (b + 1) * 128) {
+                    if let md = MDItemCreateWithURL(kCFAllocatorDefault, urls[i] as CFURL) { _ = MDItemCopyAttributes(md, names) }
+                }
+            }
+        }
+        print("PERF|breakdown|\(n)|cpu=\(ProcessInfo.processInfo.activeProcessorCount)")
         measureMs("breakdown", n, "xattr whereFroms+quarantine") {
             for u in urls {
                 _ = ExtendedAttributes.whereFroms(atPath: u.path)
@@ -210,6 +235,9 @@ final class PerfBenchmarkTests: XCTestCase {
         measureMs("breakdown", n, "FileItem(url:) all") {
             for u in urls { _ = FileItem(url: u) }
         }
+        measureMs("breakdown", n, "FolderListing.makeItems(no prefetch)") {
+            _ = FolderListing.makeItems(urls.map { URL(fileURLWithPath: $0.path) })
+        }
     }
 
     // MARK: 2. 排序（浏览器网格 / 列表）
@@ -225,6 +253,13 @@ final class PerfBenchmarkTests: XCTestCase {
                     }
                 }
             }
+            // 原来的写法：KeyPathComparator，每次比较现取键。种类排序太慢（10,000 个要十几秒），只在 1,000 时对照。
+            for key in [FileSortKey.date, .name, .kind] where key != .kind || n <= 1_000 {
+                let ascending = key.defaultAscending
+                measureMs("sort", n, "\(key.rawValue)\(ascending ? "↑" : "↓")reference(old)", runs: n >= 50_000 ? 1 : 3) {
+                    _ = list.sorted(using: key.comparators(ascending: ascending))
+                }
+            }
             // 按大小：文件夹用后台算好的大小（这里假装一半已经算出来）。
             var known: [String: Int64] = [:]
             for (i, item) in list.enumerated() where item.isDirectory && i % 2 == 0 { known[item.path] = Int64(i * 1000) }
@@ -232,7 +267,29 @@ final class PerfBenchmarkTests: XCTestCase {
                 _ = SizeSortLogic.sorted(list, ascending: false,
                                          size: { $0.isDirectory ? known[$0.path] : Optional($0.size) }, name: \.name)
             }
+            measureMs("sort", n, "size↓reference(old)", runs: n >= 50_000 ? 1 : 3) {
+                _ = Self.referenceSizeSort(list, ascending: false,
+                                           size: { $0.isDirectory ? known[$0.path] : Optional($0.size) }, name: \.name)
+            }
+            // 主线程上每次重排后还会做的：比较新旧顺序、生成 URL 列表（给快速查看左右翻页用）。
+            let copy = list.map { $0 }
+            var same = false
+            measureMs("mainThread", n, "[FileItem] == (different buffers)") { same = list == copy }
+            XCTAssertTrue(same)
+            measureMs("mainThread", n, "map(\\.url)") { _ = list.map(\.url) }
         }
+    }
+
+    /// 原来的 SizeSortLogic.sorted（优化前的写法），对照用。
+    private static func referenceSizeSort<T>(_ items: [T], ascending: Bool, size: (T) -> Int64?, name: (T) -> String) -> [T] {
+        let keyed = items.enumerated().map { (index: $0.offset, item: $0.element, size: size($0.element), name: name($0.element)) }
+        return keyed.sorted { a, b in
+            switch SizeSortLogic.compare(a.size, a.name, b.size, b.name, ascending: ascending) {
+            case .orderedAscending: return true
+            case .orderedDescending: return false
+            case .orderedSame: return a.index < b.index
+            }
+        }.map(\.item)
     }
 
     // MARK: 3. 文件夹大小（FolderSizeStore 后台用的 FolderWalker）
