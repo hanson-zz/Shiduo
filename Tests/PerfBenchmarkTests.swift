@@ -218,6 +218,25 @@ final class PerfBenchmarkTests: XCTestCase {
                 }
             }
         }
+        // 试验：一批 128 个一次问 Spotlight（MDItemsCreateWithURLs + MDItemsCopyAttributes）。
+        func batch(_ b: Int) -> Int {
+            let slice = Array(urls[(b * 128)..<min(urls.count, (b + 1) * 128)])
+            guard let created = MDItemsCreateWithURLs(kCFAllocatorDefault, slice as NSArray as CFArray) as? [AnyObject] else { return 0 }
+            let valid = created.filter { !($0 is NSNull) }
+            guard !valid.isEmpty else { return 0 }
+            let values = MDItemsCopyAttributes(valid as NSArray as CFArray, names) as? [AnyObject] ?? []
+            return values.count
+        }
+        let batches = (urls.count + 127) / 128
+        var batchCount = 0
+        measureMs("breakdown", n, "MDItems batch(128)") {
+            batchCount = 0
+            for b in 0..<batches { batchCount += batch(b) }
+        }
+        measureMs("breakdown", n, "MDItems batch(128) parallel") {
+            DispatchQueue.concurrentPerform(iterations: batches) { b in _ = batch(b) }
+        }
+        print("PERF|breakdown|\(n)|batchValues=\(batchCount)")
         print("PERF|breakdown|\(n)|cpu=\(ProcessInfo.processInfo.activeProcessorCount)")
         measureMs("breakdown", n, "xattr whereFroms+quarantine") {
             for u in urls {
@@ -277,6 +296,13 @@ final class PerfBenchmarkTests: XCTestCase {
             measureMs("mainThread", n, "[FileItem] == (different buffers)") { same = list == copy }
             XCTAssertTrue(same)
             measureMs("mainThread", n, "map(\\.url)") { _ = list.map(\.url) }
+            let urls = list.map(\.url)
+            let resorted = FileSortKey.name.sort(list, ascending: true)
+            var reused: [URL] = []
+            measureMs("mainThread", n, "SortedURLs.make(after resort)") {
+                reused = SortedURLs.make(for: resorted, previous: list, previousURLs: urls)
+            }
+            XCTAssertEqual(reused, resorted.map(\.url))
         }
     }
 

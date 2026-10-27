@@ -141,6 +141,18 @@ final class PerfEquivalenceTests: XCTestCase {
         }
     }
 
+    func testSortedURLsReuseMatches() {
+        let list = referenceListing()
+        let urls = list.map(\.url)
+        var changed = FileSortKey.name.sort(list, ascending: false)
+        changed[0].size += 1 // 变了的文件重新生成
+        changed.append(FileItem(path: dir.appendingPathComponent("Folder").path, name: "Folder", size: 0, contentType: nil,
+                                typeTree: [], modified: nil, created: nil, lastUsed: nil, added: nil, whereFroms: [],
+                                isScreenshot: false, bundleID: nil, isDirectory: true))
+        XCTAssertEqual(SortedURLs.make(for: changed, previous: list, previousURLs: urls), changed.map(\.url))
+        XCTAssertEqual(SortedURLs.make(for: changed, previous: [], previousURLs: []), changed.map(\.url))
+    }
+
     func testKindTextMemoMatches() {
         var memo: [String: String?] = [:]
         for item in referenceListing() {
