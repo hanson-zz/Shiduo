@@ -84,10 +84,24 @@ enum SmartCleanupLogic {
     }
 
     /// 同一个文件只出现在一张卡片里：按传入顺序，先出现的卡片拿走。
+    /// 已经被认领的文件夹里面的东西也算被认领（比如邮件附件文件夹里的大视频，不会再出现在大视频卡片里）。
     static func dedupe<K>(_ groups: [(K, [String])]) -> [(K, [String])] {
         var seen = Set<String>()
+        func claimed(_ path: String) -> Bool {
+            if seen.contains(path) { return true }
+            var parent = (path as NSString).deletingLastPathComponent
+            while parent.count > 1 {
+                if seen.contains(parent) { return true }
+                parent = (parent as NSString).deletingLastPathComponent
+            }
+            return false
+        }
         return groups.map { key, paths in
-            let kept = paths.filter { seen.insert($0).inserted }
+            var kept: [String] = []
+            for path in paths where !claimed(path) {
+                kept.append(path)
+                seen.insert(path)
+            }
             return (key, kept)
         }
     }

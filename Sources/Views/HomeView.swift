@@ -275,7 +275,8 @@ struct CleanupTile: View {
         CompactCleanupTile(
             symbol: card.kind.symbol, tint: card.kind.tint, title: card.kind.title,
             value: card.bytes.byteText, detail: String(localized: "\(card.items.count) 个项目"),
-            reason: showsReason ? card.kind.detail : ""
+            reason: showsReason ? card.kind.detail : "",
+            isNew: showsReason && card.kind.isNew
         )
     }
 }
@@ -288,15 +289,20 @@ struct CompactCleanupTile: View {
     var detail: String = ""
     var progress: Double? = nil
     var reason: String = ""
+    /// 标题旁显示「新」（智能清理进阶新加的卡片，只在清理页上显示）。
+    var isNew = false
 
     var body: some View {
         HStack(spacing: 12) {
             TintedIcon(symbol: symbol, tint: tint, size: 34)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.callout.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(.callout.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    if isNew { NewBadge() }
+                }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(value)
                         .font(.system(size: 20, weight: .bold, design: .rounded))

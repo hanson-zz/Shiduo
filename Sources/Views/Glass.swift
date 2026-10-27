@@ -269,6 +269,10 @@ extension CleanupKind {
         case .bigOldVideos: return Color(red: 0.55, green: 0.45, blue: 0.95)
         case .unusedApps: return Color(red: 0.16, green: 0.70, blue: 0.55)
         case .chatFiles: return Color(red: 0.20, green: 0.75, blue: 0.35)
+        case .devCaches: return Color(red: 0.50, green: 0.45, blue: 0.95)
+        case .mailDownloads: return Color(red: 0.25, green: 0.62, blue: 0.95)
+        case .appLeftovers: return Color(red: 0.55, green: 0.57, blue: 0.65)
+        case .oldNodeModules: return Color(red: 0.35, green: 0.70, blue: 0.40)
         }
     }
 }

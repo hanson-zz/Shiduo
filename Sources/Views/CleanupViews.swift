@@ -6,9 +6,13 @@ struct CleanupView: View {
     @EnvironmentObject private var scanner: CleanupScanner
     @EnvironmentObject private var duplicates: DuplicateScanner
 
-    /// 放心清里被用户取消勾选的卡片（默认全部勾选）。
-    @State private var uncheckedSafe: Set<CleanupKind> = []
+    /// 放心清里用户改过勾选的卡片（没改过的按卡片自己的默认：开发缓存 / 已装应用的安装包勾，邮件附件副本不勾）。
+    @State private var safeOverrides: [CleanupKind: Bool] = [:]
+    /// 放心清里「重复文件的多余副本」：默认不勾，用户自己勾。
+    @State private var duplicatesChecked = false
     @State private var confirmSafe: [FileItem] = []
+    @State private var confirmDuplicates: [FileGroup] = []
+    @State private var showConfirmSafe = false
 
     private var cards: [CleanupCard] {
         scanner.cards.filter { !$0.items.isEmpty && $0.bytes > 0 }.sorted { $0.bytes > $1.bytes }
@@ -16,9 +20,22 @@ struct CleanupView: View {
 
     private var safeCards: [CleanupCard] { cards.filter { $0.kind.group == .safe } }
     private var reviewCards: [CleanupCard] { cards.filter { $0.kind.group == .review } }
-    private var checkedSafe: [CleanupCard] { safeCards.filter { !uncheckedSafe.contains($0.kind) } }
+    private func isChecked(_ kind: CleanupKind) -> Bool { safeOverrides[kind] ?? kind.defaultChecked }
+    private var checkedSafe: [CleanupCard] { safeCards.filter { isChecked($0.kind) } }
     private var checkedSafeItems: [FileItem] { checkedSafe.flatMap(\.items) }
-    private var checkedSafeBytes: Int64 { checkedSafe.reduce(0) { $0 + $1.bytes } }
+    /// 重复文件：扫描过、有多余副本时才在放心清里出现一行（扫描中也显示进度）。
+    private var showsDuplicateRow: Bool {
+        duplicates.isRunning || (duplicates.hasScanned && duplicates.reclaimable > 0)
+    }
+    private var duplicatesIncluded: Bool {
+        duplicatesChecked && duplicates.hasScanned && !duplicates.isRunning && duplicates.reclaimable > 0
+    }
+    private var confirmSafeCount: Int {
+        confirmSafe.count + confirmDuplicates.reduce(0) { $0 + max($1.items.count - 1, 0) }
+    }
+    private var checkedSafeBytes: Int64 {
+        checkedSafe.reduce(0) { $0 + $1.bytes } + (duplicatesIncluded ? duplicates.reclaimable : 0)
+    }
 
     private var total: Int64 { scanner.totalBytes + duplicates.reclaimable }
 
@@ -32,7 +49,10 @@ struct CleanupView: View {
         }
         .navigationTitle("清理")
         .task {
-            if !Demo.isOn, !scanner.hasScanned, !scanner.isRunning { await scanner.scan() }
+            guard !Demo.isOn else { return }
+            // 重复文件在后台另外比对（「重复文件」页上可以停止）。
+            if !duplicates.hasScanned, !duplicates.isRunning { duplicates.start() }
+            if !scanner.hasScanned, !scanner.isRunning { await scanner.scan() }
         }
     }
 
@@ -48,16 +68,23 @@ struct CleanupView: View {
                     }
                     Spacer()
                     Button {
-                        Task { await scanner.scan() }
+                        if scanner.isRunning {
+                            scanner.cancel()
+                        } else {
+                            Task { await scanner.scan() }
+                        }
                     } label: {
                         HStack(spacing: 6) {
-                            if scanner.isRunning { ProgressView().controlSize(.small) }
-                            Label("重新扫描", systemImage: "arrow.clockwise")
+                            if scanner.isRunning {
+                                ProgressView().controlSize(.small)
+                                Label("停止扫描", systemImage: "stop.fill")
+                            } else {
+                                Label("重新扫描", systemImage: "arrow.clockwise")
+                            }
                         }
                         .glassCapsule()
                     }
                     .buttonStyle(.plain)
-                    .disabled(scanner.isRunning)
                 }
 
                 FreeUpHero(bytes: total, scanning: scanner.isRunning || duplicates.isRunning)
@@ -70,7 +97,7 @@ struct CleanupView: View {
                     subtitle: String(localized: "确认用过或能重新下载的，默认勾选"),
                     symbol: "checkmark.seal.fill", tint: .green
                 )
-                if safeCards.isEmpty {
+                if safeCards.isEmpty && !showsDuplicateRow {
                     Text(scanner.isRunning ? String(localized: "正在找…") : String(localized: "这一组没有要清的"))
                         .foregroundStyle(.secondary)
                         .padding(.leading, 4)
@@ -80,13 +107,17 @@ struct CleanupView: View {
                             SafeCleanupRow(
                                 card: card,
                                 checked: Binding(
-                                    get: { !uncheckedSafe.contains(card.kind) },
-                                    set: { on in
-                                        if on { uncheckedSafe.remove(card.kind) } else { uncheckedSafe.insert(card.kind) }
-                                    }
+                                    get: { isChecked(card.kind) },
+                                    set: { safeOverrides[card.kind] = $0 }
                                 ),
                                 open: { store.cleanupReview = card.kind }
                             )
+                        }
+                        if showsDuplicateRow {
+                            DuplicateSafeRow(checked: $duplicatesChecked) {
+                                store.duplicatesTab = .exact
+                                store.selection = .duplicates
+                            }
                         }
                     }
                     HStack {
@@ -100,7 +131,7 @@ struct CleanupView: View {
                         .buttonStyle(.borderedProminent)
                         .tint(.green)
                         .controlSize(.large)
-                        .disabled(checkedSafeItems.isEmpty)
+                        .disabled(checkedSafeItems.isEmpty && !duplicatesIncluded)
                     }
                 }
 
@@ -112,8 +143,14 @@ struct CleanupView: View {
                 )
                 .padding(.top, 6)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 16)], spacing: 16) {
-                    Button { store.selection = .duplicates } label: { DuplicatesTile() }
-                        .buttonStyle(.plain)
+                    // 重复文件扫描过、有多余副本时在上面「放心清」里（默认不勾）；还没扫描 / 没有时留在这里当入口。
+                    if !showsDuplicateRow {
+                        Button {
+                            store.duplicatesTab = .exact
+                            store.selection = .duplicates
+                        } label: { DuplicatesTile() }
+                            .buttonStyle(.plain)
+                    }
                     ForEach(reviewCards) { card in
                         Button { store.cleanupReview = card.kind } label: { CleanupTile(card: card, showsReason: true) }
                             .buttonStyle(.plain)
@@ -137,16 +174,21 @@ struct CleanupView: View {
         }
         .scrollContentBackground(.hidden)
         .confirmationDialog(
-            "将 \(confirmSafe.count) 个项目移到废纸篓？",
-            isPresented: Binding(get: { !confirmSafe.isEmpty }, set: { if !$0 { confirmSafe = [] } }),
+            "将 \(confirmSafeCount) 个项目移到废纸篓？",
+            isPresented: $showConfirmSafe,
             titleVisibility: .visible
         ) {
             Button("移到废纸篓", role: .destructive) {
                 let list = confirmSafe
+                let dups = confirmDuplicates
                 confirmSafe = []
-                moveSafe(list)
+                confirmDuplicates = []
+                moveSafe(list, duplicates: dups)
             }
-            Button("取消", role: .cancel) { confirmSafe = [] }
+            Button("取消", role: .cancel) {
+                confirmSafe = []
+                confirmDuplicates = []
+            }
         } message: {
             Text("随时可以从废纸篓里恢复。只在 iCloud 云端的文件会被跳过。")
         }
@@ -155,18 +197,31 @@ struct CleanupView: View {
     /// 少量直接移到废纸篓（小提示上可以撤销）；大批量（≥100 个或 ≥5 GB）先确认。
     private func trashSafe() {
         let list = checkedSafeItems
-        guard !list.isEmpty else { return }
-        let size = LibraryStore.trashSize(list)
-        if TrashConfirm.needsConfirm(count: list.count, bytes: size.bytes, unknownFolderSize: size.unknownFolder) {
+        let dups = duplicatesIncluded ? duplicates.groups : []
+        guard !list.isEmpty || !dups.isEmpty else { return }
+        let size = cleanupTrashSize(list)
+        let dupCount = dups.reduce(0) { $0 + max($1.items.count - 1, 0) }
+        let dupBytes = dups.reduce(Int64(0)) { $0 + ($1.items.first?.size ?? 0) * Int64(max($1.items.count - 1, 0)) }
+        if TrashConfirm.needsConfirm(count: list.count + dupCount, bytes: size.bytes + dupBytes, unknownFolderSize: size.unknownFolder) {
             confirmSafe = list
+            confirmDuplicates = dups
+            showConfirmSafe = true
         } else {
-            moveSafe(list)
+            moveSafe(list, duplicates: dups)
         }
     }
 
-    private func moveSafe(_ list: [FileItem]) {
-        store.moveToTrash(list) { moved in
-            scanner.remove(paths: moved)
+    private func moveSafe(_ list: [FileItem], duplicates groups: [FileGroup]) {
+        if !list.isEmpty {
+            store.moveToTrash(list) { moved in
+                scanner.remove(paths: moved)
+            }
+        }
+        if !groups.isEmpty {
+            // 每组留第一份（建议保留：最近打开过的），其余移走；移之前核对保留的那份还在、没变。
+            store.trashDuplicateExtras(groups.map { (kept: Array($0.items.prefix(1)), extras: Array($0.items.dropFirst())) },
+                                       exact: true)
+            duplicatesChecked = false
         }
     }
 }
@@ -191,6 +246,91 @@ private struct CleanupGroupHeader: View {
     }
 }
 
+/// 清理卡片要移到废纸篓的总大小：文件夹先用 FolderSizeStore 里算好的，没有就用扫描时算好的大小。
+@MainActor
+func cleanupTrashSize(_ list: [FileItem]) -> (bytes: Int64, unknownFolder: Bool) {
+    var bytes: Int64 = 0
+    var unknown = false
+    for item in list {
+        if item.isDirectory {
+            if let known = FolderSizeStore.shared.knownSize(item.path) {
+                bytes += known
+            } else if item.size > 0 {
+                bytes += item.size
+            } else {
+                unknown = true
+            }
+        } else {
+            bytes += item.size
+        }
+    }
+    return (bytes, unknown)
+}
+
+/// 标题旁的「新」小标签（智能清理进阶新加的卡片）。
+struct NewBadge: View {
+    var body: some View {
+        Text("新")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(Color.green))
+    }
+}
+
+/// 放心清里「重复文件的多余副本」一行：默认不勾；勾上后「清理勾选的」会把每组建议保留以外的副本移到废纸篓。
+private struct DuplicateSafeRow: View {
+    @EnvironmentObject private var duplicates: DuplicateScanner
+    @Binding var checked: Bool
+    let open: () -> Void
+
+    private let tint = Color(red: 0.95, green: 0.45, blue: 0.45)
+    private var extraCopies: Int { duplicates.groups.reduce(0) { $0 + max($1.items.count - 1, 0) } }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Toggle("重复文件的多余副本", isOn: $checked)
+                .toggleStyle(.checkbox)
+                .labelsHidden()
+                .disabled(duplicates.isRunning)
+            TintedIcon(symbol: "doc.on.doc", tint: tint, size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text("重复文件的多余副本")
+                        .font(.headline)
+                    NewBadge()
+                }
+                Text("每组保留最近打开的一份，其余移到废纸篓；默认不勾，可以点「查看」逐组挑")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 12)
+            VStack(alignment: .trailing, spacing: 2) {
+                if duplicates.isRunning {
+                    ProgressView(value: duplicates.progress)
+                        .frame(width: 80)
+                    Text("正在比对…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(duplicates.reclaimable.byteText)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                    Text("\(extraCopies) 个多余副本")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Button("查看", action: open)
+                .buttonStyle(.bordered)
+        }
+        .padding(14)
+        .glassCard(tint: tint, radius: 16)
+        .opacity(checked ? 1 : 0.6)
+    }
+}
+
 /// 放心清的一行：勾选框、原因、能腾出的空间，「查看」进审阅页。
 private struct SafeCleanupRow: View {
     let card: CleanupCard
@@ -204,8 +344,11 @@ private struct SafeCleanupRow: View {
                 .labelsHidden()
             TintedIcon(symbol: card.kind.symbol, tint: card.kind.tint, size: 34)
             VStack(alignment: .leading, spacing: 2) {
-                Text(card.kind.title)
-                    .font(.headline)
+                HStack(spacing: 6) {
+                    Text(card.kind.title)
+                        .font(.headline)
+                    if card.kind.isNew { NewBadge() }
+                }
                 Text(card.kind.detail)
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -510,7 +653,7 @@ struct CleanupReviewPage: View {
                     } else {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
                             ForEach(items) { item in
-                                ReviewCell(item: item, selected: selected.contains(item.id))
+                                ReviewCell(item: item, selected: selected.contains(item.id), label: card?.labels[item.path])
                                     .onTapGesture(count: 2) { store.openItems([item]) }
                                     .onTapGesture { toggle(item) }
                                     .contextMenu { FileContextMenu(items: [item]) }
@@ -534,16 +677,18 @@ struct CleanupReviewPage: View {
                 Text(selected.isEmpty ? String(localized: "点缩略图选择要移到废纸篓的文件") : String(localized: "已选 \(selected.count) 项 · \(selectedBytes.byteText)"))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button {
-                    store.requestMoveOut(selected.isEmpty ? items : selectedItems)
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(selected.isEmpty ? String(localized: "全部大文件搬家…") : String(localized: "大文件搬家…"))
-                        ProBadge()
+                if kind.allowsMoveOut {
+                    Button {
+                        store.requestMoveOut(selected.isEmpty ? items : selectedItems)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(selected.isEmpty ? String(localized: "全部大文件搬家…") : String(localized: "大文件搬家…"))
+                            ProBadge()
+                        }
                     }
+                    .disabled(items.isEmpty)
+                    .help("搬到移动硬盘、NAS 或网盘，不删除")
                 }
-                .disabled(items.isEmpty)
-                .help("搬到移动硬盘、NAS 或网盘，不删除")
                 Button("把所选移到废纸篓") { trash(selectedItems) }
                     .disabled(selected.isEmpty)
                 Button {
@@ -584,7 +729,7 @@ struct CleanupReviewPage: View {
     /// 少量的直接移到废纸篓（小提示上可以撤销）；大批量（≥100 个或 ≥5 GB）先确认。
     private func trash(_ list: [FileItem]) {
         guard !list.isEmpty else { return }
-        let size = LibraryStore.trashSize(list)
+        let size = cleanupTrashSize(list)
         if TrashConfirm.needsConfirm(count: list.count, bytes: size.bytes, unknownFolderSize: size.unknownFolder) {
             confirm = list
         } else {
@@ -601,6 +746,8 @@ struct CleanupReviewPage: View {
 struct ReviewCell: View {
     let item: FileItem
     let selected: Bool
+    /// 换个显示名字（node_modules 显示项目名、残留显示 Bundle ID……）；nil 用文件名。
+    var label: CleanupItemLabel? = nil
 
     var body: some View {
         VStack(spacing: 6) {
@@ -612,15 +759,24 @@ struct ReviewCell: View {
                     .foregroundStyle(selected ? Color.accentColor : Color.secondary)
                     .background(Circle().fill(.background).padding(2))
             }
-            Text(item.name)
+            Text(label?.title ?? item.name)
                 .font(.callout)
                 .lineLimit(2)
                 .truncationMode(.middle)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 140)
-            Text("\(item.sizeText) · \(item.relativeDateText)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if let label {
+                Text(verbatim: "\(item.sizeText) · \(label.subtitle)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: 140)
+            } else {
+                Text("\(item.sizeText) · \(item.relativeDateText)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(10)
         .frame(maxWidth: .infinity)

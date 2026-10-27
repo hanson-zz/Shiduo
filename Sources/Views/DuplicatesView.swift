@@ -2,13 +2,16 @@ import SwiftUI
 
 /// 重复文件页：顶部大横幅（可腾出多少 + 全部移到废纸篓），“完全相同 / 相似照片”两个标签，
 /// 每组一张卡片，大缩略图上标着“保留 / 废纸篓”，点一下就换。
+/// 完全相同：默认一份都不勾，第一份标「建议保留」（最近打开过的那份），用户自己点要移走的副本，或者点「按建议勾选」。
 struct DuplicatesView: View {
     @EnvironmentObject private var store: LibraryStore
     @EnvironmentObject private var exact: DuplicateScanner
     @EnvironmentObject private var similar: SimilarPhotoScanner
 
-    /// 每组保留哪些文件（没记录时保留最新的一份）。
+    /// 相似照片：每组保留哪些文件（没记录时保留最新的一份）。
     @State private var keep: [String: Set<String>] = [:]
+    /// 完全相同：每组用户勾了要移到废纸篓的副本（默认都不勾）。
+    @State private var marked: [String: Set<String>] = [:]
     @State private var confirmAll = false
 
     private var tab: DuplicatesTab { store.duplicatesTab }
@@ -19,6 +22,10 @@ struct DuplicatesView: View {
     private var status: String { tab == .exact ? exact.status : similar.status }
 
     private func kept(_ group: FileGroup) -> Set<String> {
+        if tab == .exact {
+            let m = marked[group.id] ?? []
+            return Set(group.items.map(\.id).filter { !m.contains($0) })
+        }
         if let set = keep[group.id], !set.isEmpty, group.items.contains(where: { set.contains($0.id) }) {
             return set
         }
@@ -32,6 +39,9 @@ struct DuplicatesView: View {
 
     private var allExtras: [FileItem] { groups.flatMap(extras) }
     private var freeBytes: Int64 { allExtras.reduce(0) { $0 + $1.size } }
+    /// 完全相同：每组只留建议的一份时能腾出多少（横幅上显示）。
+    private var suggestedBytes: Int64 { exact.reclaimable }
+    private var suggestedCount: Int { exact.groups.reduce(0) { $0 + max($1.items.count - 1, 0) } }
 
     var body: some View {
         ScrollView {
@@ -90,6 +100,7 @@ struct DuplicatesView: View {
 
     private func rescan() {
         keep = [:]
+        marked = [:]
         if tab == .exact { exact.start() } else { similar.start() }
     }
 
@@ -111,6 +122,22 @@ struct DuplicatesView: View {
                         .frame(maxWidth: 280)
                     Text(status)
                         .foregroundStyle(.white.opacity(0.7))
+                } else if hasScanned && tab == .exact {
+                    Text("可腾出 \(suggestedBytes.byteText)")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                    Text(groups.isEmpty
+                         ? String(localized: "没有发现多余的副本，很整齐")
+                         : (allExtras.isEmpty
+                            ? String(localized: "\(suggestedCount) 个多余的副本，共 \(groups.count) 组 · 默认不勾，点副本勾选")
+                            : String(localized: "已勾选 \(allExtras.count) 个副本 · \(freeBytes.byteText)")))
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text("完全相同 · SHA-256 指纹校验")
+                        .font(.caption.weight(.bold))
+                        .tracking(0.8)
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Color.white))
                 } else if hasScanned {
                     Text("可腾出 \(freeBytes.byteText)")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
@@ -133,6 +160,19 @@ struct DuplicatesView: View {
             .foregroundStyle(.white)
             Spacer()
             VStack(alignment: .trailing, spacing: 10) {
+                if tab == .exact && hasScanned && !isRunning && !groups.isEmpty {
+                    Button {
+                        markSuggested()
+                    } label: {
+                        Label("按建议勾选", systemImage: "checkmark.circle")
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(Color.white.opacity(0.16)))
+                    }
+                    .buttonStyle(.plain)
+                    .help("每组只留最近打开的一份，其余都勾上（还没移走，可以再改）")
+                }
                 Button {
                     // 少量的直接移（小提示上可以撤销）；大批量（≥100 个或 ≥5 GB）先确认。
                     if TrashConfirm.needsConfirm(count: allExtras.count, bytes: freeBytes) {
@@ -141,7 +181,7 @@ struct DuplicatesView: View {
                         safeTrash(groups)
                     }
                 } label: {
-                    Label("全部移到废纸篓", systemImage: "trash")
+                    Label(tab == .exact ? String(localized: "移走勾选的副本") : String(localized: "全部移到废纸篓"), systemImage: "trash")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.red)
                         .padding(.horizontal, 18)
@@ -245,6 +285,7 @@ struct DuplicatesView: View {
                         group: group,
                         kept: kept(group),
                         isSimilar: tab == .similar,
+                        suggested: tab == .exact ? group.items.first?.id : nil,
                         toggle: { toggle($0, in: group) },
                         trashExtras: { trashExtras(group) }
                     )
@@ -253,12 +294,33 @@ struct DuplicatesView: View {
         }
     }
 
+    /// 完全相同：每组只留第一份（建议保留），其余都勾上。
+    private func markSuggested() {
+        var next: [String: Set<String>] = [:]
+        for group in exact.groups {
+            next[group.id] = Set(group.items.dropFirst().map(\.id))
+        }
+        marked = next
+    }
+
     private func toggle(_ item: FileItem, in group: FileGroup) {
-        var set = kept(group)
         if tab == .exact {
-            // 完全相同的文件只需要留一份：点哪份就留哪份。
-            set = [item.id]
-        } else if set.contains(item.id) {
+            // 完全相同：点一下勾上 / 取消要移走的副本；每组至少留一份。
+            var m = marked[group.id] ?? []
+            if m.contains(item.id) {
+                m.remove(item.id)
+            } else {
+                guard group.items.filter({ !m.contains($0.id) }).count > 1 else {
+                    store.showToast(String(localized: "每组至少保留一份"))
+                    return
+                }
+                m.insert(item.id)
+            }
+            marked[group.id] = m
+            return
+        }
+        var set = kept(group)
+        if set.contains(item.id) {
             guard set.count > 1 else {
                 store.showToast(String(localized: "每组至少保留一张"))
                 return
@@ -275,21 +337,27 @@ struct DuplicatesView: View {
         safeTrash([group])
     }
 
-    /// 移到废纸篓前先核对每组「保留」的那份还在、没被改过（扫描之后可能在访达里动过）。
-    /// 对不上的组跳过，免得把这个文件的所有副本都删掉。
     private func safeTrash(_ list: [FileGroup]) {
-        let exactTab = tab == .exact
-        let plans = list.map { group -> (extras: [FileItem], check: DuplicateSafety.Group) in
+        let plans = list.map { group -> (kept: [FileItem], extras: [FileItem]) in
             let k = kept(group)
-            let keptItems = group.items.filter { k.contains($0.id) }
-            let extraItems = group.items.filter { !k.contains($0.id) }
+            return (group.items.filter { k.contains($0.id) }, group.items.filter { !k.contains($0.id) })
+        }
+        store.trashDuplicateExtras(plans, exact: tab == .exact)
+    }
+}
+
+extension LibraryStore {
+    /// 把重复文件每组多余的副本移到废纸篓。移之前先核对每组「保留」的那份还在、没被改过（扫描之后可能在访达里动过）；
+    /// 对不上的组跳过，免得把这个文件的所有副本都删掉。重复文件页和清理页「放心清」共用。
+    func trashDuplicateExtras(_ list: [(kept: [FileItem], extras: [FileItem])], exact: Bool) {
+        let plans = list.filter { !$0.extras.isEmpty && !$0.kept.isEmpty }.map { plan -> (extras: [FileItem], check: DuplicateSafety.Group) in
             let check = DuplicateSafety.Group(
-                kept: keptItems.map { .init(path: $0.path, size: $0.size) },
-                extras: extraItems.map { .init(path: $0.path, size: $0.size) },
-                exact: exactTab
+                kept: plan.kept.map { .init(path: $0.path, size: $0.size) },
+                extras: plan.extras.map { .init(path: $0.path, size: $0.size) },
+                exact: exact
             )
-            return (extraItems, check)
-        }.filter { !$0.extras.isEmpty }
+            return (plan.extras, check)
+        }
         guard !plans.isEmpty else { return }
         let checks = plans.map(\.check)
         Task {
@@ -298,9 +366,9 @@ struct DuplicatesView: View {
             }.value
             let toTrash = zip(plans, safe).filter { $0.1 }.flatMap { $0.0.extras }
             let changed = safe.filter { !$0 }.count
-            if !toTrash.isEmpty { store.moveToTrash(toTrash) }
+            if !toTrash.isEmpty { moveToTrash(toTrash) }
             if changed > 0 {
-                store.alertMessage = String(localized: "\(changed) 组在扫描之后有变化（保留的文件被移走、删除或改过），这几组没有动。请重新扫描。")
+                alertMessage = String(localized: "\(changed) 组在扫描之后有变化（保留的文件被移走、删除或改过），这几组没有动。请重新扫描。")
             }
         }
     }
@@ -310,6 +378,8 @@ struct DuplicateGroupCard: View {
     let group: FileGroup
     let kept: Set<String>
     let isSimilar: Bool
+    /// 完全相同：建议保留的那份（最近打开过的）。
+    var suggested: String? = nil
     let toggle: (FileItem) -> Void
     let trashExtras: () -> Void
 
@@ -326,7 +396,9 @@ struct DuplicateGroupCard: View {
                         .truncationMode(.middle)
                     Text(isSimilar
                          ? String(localized: "\(group.items.count) 张 · 可腾出 \(freeBytes.byteText)")
-                         : String(localized: "\(group.items.count) 份完全相同 · 可腾出 \(freeBytes.byteText)"))
+                         : (extraItems.isEmpty
+                            ? String(localized: "\(group.items.count) 份完全相同 · 每份 \(group.items.first?.sizeText ?? "") · 点副本勾选要移走的")
+                            : String(localized: "\(group.items.count) 份完全相同 · 可腾出 \(freeBytes.byteText)")))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -337,11 +409,13 @@ struct DuplicateGroupCard: View {
                 .buttonStyle(.plain)
                 .disabled(extraItems.isEmpty)
                 .help("把标着“废纸篓”的文件移到废纸篓")
+                .opacity(extraItems.isEmpty ? 0.5 : 1)
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 14) {
                     ForEach(group.items) { item in
-                        DuplicateItemCard(item: item, isKept: kept.contains(item.id), showsName: isSimilar)
+                        DuplicateItemCard(item: item, isKept: kept.contains(item.id), showsName: isSimilar,
+                                          isSuggested: item.id == suggested, plainKeep: !isSimilar && item.id != suggested)
                             .onTapGesture { toggle(item) }
                             .contextMenu { FileContextMenu(items: [item]) }
                             .onDrag { InAppDrag.copyOnlyProvider(item.url) }
@@ -360,6 +434,10 @@ struct DuplicateItemCard: View {
     let item: FileItem
     let isKept: Bool
     var showsName = false
+    /// 建议保留的那份（标「建议保留」）。
+    var isSuggested = false
+    /// 没勾、也不是建议保留的副本：标灰色「保留」、不加绿框（完全相同默认都不勾）。
+    var plainKeep = false
 
     private let keepColor = Color(red: 0.13, green: 0.68, blue: 0.42)
     private let trashColor = Color(red: 0.92, green: 0.28, blue: 0.28)
@@ -371,12 +449,12 @@ struct DuplicateItemCard: View {
                     .frame(width: 180, height: 128)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .opacity(isKept ? 1 : 0.75)
-                Text(isKept ? String(localized: "保留") : String(localized: "废纸篓"))
+                Text(!isKept ? String(localized: "废纸篓") : (isSuggested ? String(localized: "建议保留") : String(localized: "保留")))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 3)
-                    .background(Capsule().fill(isKept ? keepColor : trashColor))
+                    .background(Capsule().fill(!isKept ? trashColor : (plainKeep ? Color.gray : keepColor)))
                     .padding(8)
             }
             if showsName {
@@ -398,11 +476,11 @@ struct DuplicateItemCard: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(isKept ? keepColor.opacity(0.08) : Color.primary.opacity(0.04))
+                .fill(isKept && !plainKeep ? keepColor.opacity(0.08) : Color.primary.opacity(0.04))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(isKept ? keepColor : Color.clear, lineWidth: 2)
+                .strokeBorder(!isKept ? ((isSuggested || plainKeep) ? trashColor.opacity(0.7) : Color.clear) : (plainKeep ? Color.clear : keepColor), lineWidth: 2)
         )
         .contentShape(Rectangle())
         .animation(.easeOut(duration: 0.15), value: isKept)

@@ -121,7 +121,8 @@ final class DuplicateScanner: ObservableObject {
         if Task.isCancelled { return }
 
         groups = found.enumerated().map { index, items in
-            let sorted = items.sorted { $0.sortDate > $1.sortDate }
+            // 第一份是建议保留的：最近打开过的那份（没有打开记录看修改时间）。
+            let sorted = DuplicateKeepLogic.ordered(items)
             let size = sorted.first?.sizeText ?? ""
             return FileGroup(id: "dup-\(index)-\(sorted.first?.path ?? "")",
                              title: String(localized: "\(sorted.count) 份相同的文件 · 每份 \(size)"),
@@ -151,40 +152,16 @@ final class DuplicateScanner: ObservableObject {
     }
 
     nonisolated static func findDuplicates(_ items: [FileItem], progress: (Double) -> Void) -> [[FileItem]] {
-        var bySize: [Int64: [FileItem]] = [:]
-        for item in items where item.size > 0 {
-            bySize[item.size, default: []].append(item)
-        }
-        let sizeGroups = bySize.values.filter { $0.count > 1 }
-        let total = max(sizeGroups.reduce(0) { $0 + $1.count }, 1)
-        var done = 0
-        var result: [[FileItem]] = []
-
-        for group in sizeGroups {
-            if Task.isCancelled { break }
-            let local = group.filter { FileActions.isLocal($0.url) }
-            var byPartial: [String: [FileItem]] = [:]
-            for item in local {
-                if let hash = sha256(of: item.url, limit: 65_536) {
-                    byPartial[hash, default: []].append(item)
-                }
-            }
-            for partial in byPartial.values where partial.count > 1 {
-                if Task.isCancelled { break }
-                var byFull: [String: [FileItem]] = [:]
-                for item in partial {
-                    if let hash = sha256(of: item.url, limit: nil) {
-                        byFull[hash, default: []].append(item)
-                    }
-                }
-                result.append(contentsOf: byFull.values.filter { $0.count > 1 })
-            }
-            done += group.count
-            progress(Double(done) / Double(total))
-        }
-        return result.sorted {
-            ($0.first?.size ?? 0) * Int64($0.count - 1) > ($1.first?.size ?? 0) * Int64($1.count - 1)
-        }
+        // iCloud 里只在云端的文件不读（会触发下载）。
+        let local = items.filter { $0.size > 0 && FileActions.isLocal($0.url) }
+        let byPath = Dictionary(local.map { ($0.path, $0) }, uniquingKeysWith: { a, _ in a })
+        let groups = DuplicateGrouping.group(
+            local.map { DuplicateGrouping.Candidate(path: $0.path, size: $0.size) },
+            hash: { path, limit in sha256(of: URL(fileURLWithPath: path), limit: limit) },
+            isCancelled: { Task.isCancelled },
+            progress: progress
+        )
+        return groups.map { $0.compactMap { byPath[$0.path] } }.filter { $0.count > 1 }
     }
 }
 
@@ -389,6 +366,8 @@ final class SimilarPhotoScanner: ObservableObject {
 // MARK: - 清理建议
 
 enum CleanupKind: String, CaseIterable, Identifiable {
+    case devCaches
+    case mailDownloads
     case installers
     case otherInstallers
     case screenRecordings
@@ -398,19 +377,49 @@ enum CleanupKind: String, CaseIterable, Identifiable {
     case bigFiles
     case unusedApps
     case chatFiles
+    case appLeftovers
+    case oldNodeModules
 
     var id: String { rawValue }
+
+    /// 智能清理进阶新加的卡片（标题旁显示「新」）。
+    var isNew: Bool {
+        switch self {
+        case .devCaches, .mailDownloads, .appLeftovers, .oldNodeModules: return true
+        default: return false
+        }
+    }
+
+    /// 放心清里默认勾不勾：开发缓存和已装应用的安装包默认勾；邮件附件副本默认不勾（谨慎起见）。
+    var defaultChecked: Bool {
+        switch self {
+        case .installers, .devCaches: return true
+        default: return false
+        }
+    }
+
+    /// 审阅页上能不能「大文件搬家」（缓存、残留这类搬走没意义）。
+    var allowsMoveOut: Bool {
+        switch self {
+        case .devCaches, .mailDownloads, .appLeftovers, .oldNodeModules: return false
+        default: return true
+        }
+    }
 
     /// 放心清：确认用过、能重新下载的，默认勾选；其余你来决定，默认不勾。
     var group: CleanupGroup {
         switch self {
-        case .installers: return .safe
+        case .installers, .devCaches, .mailDownloads: return .safe
         default: return .review
         }
     }
 
     var title: String {
         switch self {
+        case .devCaches: return String(localized: "开发缓存")
+        case .mailDownloads: return String(localized: "邮件附件副本")
+        case .appLeftovers: return String(localized: "已删 App 的残留")
+        case .oldNodeModules: return String(localized: "旧项目的 node_modules")
         case .installers: return String(localized: "已安装应用的安装包")
         case .otherInstallers: return String(localized: "其他旧安装包")
         case .screenRecordings: return String(localized: "旧录屏")
@@ -426,6 +435,10 @@ enum CleanupKind: String, CaseIterable, Identifiable {
     /// 为什么建议清：显示在卡片和审阅页上。
     var detail: String {
         switch self {
+        case .devCaches: return String(localized: "Xcode DerivedData、模拟器、npm、Homebrew、pip、Yarn、CocoaPods 等，只认白名单里的位置，用到时会自动重新生成")
+        case .mailDownloads: return String(localized: "“邮件”打开附件时存的副本，原邮件里还能再打开")
+        case .appLeftovers: return String(localized: "已经删掉的应用留下的设置、缓存和数据；苹果自己的和拿不准的不列出")
+        case .oldNodeModules: return String(localized: "90 天没改动的项目里的 node_modules，需要时 npm install 就回来")
         case .installers: return String(localized: "对应的应用已经装在“应用程序”里，安装包用完了；要重装可以再下载")
         case .otherInstallers: return String(localized: "“下载”和桌面上超过 7 天的 .dmg / .pkg，没找到对应的已装应用，可能还没装")
         case .screenRecordings: return String(localized: "30 天以前录的屏幕录像，通常只用一次")
@@ -440,6 +453,10 @@ enum CleanupKind: String, CaseIterable, Identifiable {
 
     var symbol: String {
         switch self {
+        case .devCaches: return "hammer.fill"
+        case .mailDownloads: return "paperclip"
+        case .appLeftovers: return "square.dashed"
+        case .oldNodeModules: return "folder.badge.gearshape"
         case .installers: return "shippingbox"
         case .otherInstallers: return "shippingbox.circle"
         case .screenRecordings: return "record.circle"
@@ -456,6 +473,8 @@ enum CleanupKind: String, CaseIterable, Identifiable {
 struct CleanupCard: Identifiable {
     let kind: CleanupKind
     var items: [FileItem]
+    /// 文件名看不出是什么的项目换个显示名字（路径 → 名字）。
+    var labels: [String: CleanupItemLabel] = [:]
     var id: String { kind.rawValue }
     var bytes: Int64 { items.reduce(0) { $0 + $1.size } }
 }
@@ -467,6 +486,32 @@ final class CleanupScanner: ObservableObject {
     @Published var hasScanned = false
 
     var totalBytes: Int64 { cards.reduce(0) { $0 + $1.bytes } }
+
+    private var current: Task<Void, Never>?
+    /// 每次扫描加一；被取消或被新扫描取代的旧扫描不再改界面。
+    private var generation = 0
+
+    /// 停止正在进行的扫描（已有的卡片保留）。
+    func cancel() {
+        current?.cancel()
+        current = nil
+        generation += 1
+        isRunning = false
+    }
+
+    /// 扫描一遍。可以 await 等它结束；cancel() 或再次调用会让这一次提前结束、不改结果。
+    func scan() async {
+        current?.cancel()
+        generation += 1
+        let gen = generation
+        let task = Task { await run(gen) }
+        current = task
+        await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
 
     func remove(paths: Set<String>) {
         remove { paths.contains($0) }
@@ -480,11 +525,13 @@ final class CleanupScanner: ObservableObject {
         }
     }
 
-    func scan() async {
+    private func run(_ gen: Int) async {
         isRunning = true
         defer {
-            isRunning = false
-            hasScanned = true
+            if generation == gen {
+                isRunning = false
+                if !Task.isCancelled { hasScanned = true }
+            }
         }
         let now = Date()
         func daysAgo(_ n: Int) -> Date { Calendar.current.date(byAdding: .day, value: -n, to: now) ?? now }
@@ -499,6 +546,7 @@ final class CleanupScanner: ObservableObject {
             predicate: P.type("com.apple.application-bundle"), scopes: Scopes.apps,
             maxItems: 3000, sortKey: "kMDItemFSName", ascending: true
         ).items.map(\.name)
+        if Task.isCancelled { return }
         var installedInstallers: [FileItem] = []
         var otherInstallers: [FileItem] = []
         for item in installerHits {
@@ -533,6 +581,7 @@ final class CleanupScanner: ObservableObject {
         let videos = await SpotlightSearch.run(
             predicate: FileCategory.videos.predicate(), scopes: Scopes.home, maxItems: 5000, sortKey: "kMDItemFSSize"
         ).items
+        if Task.isCancelled { return }
         let recordings = videos.filter {
             SmartCleanupLogic.isScreenRecording(name: $0.name) && ($0.created ?? $0.modified ?? now) < daysAgo(30)
         }
@@ -573,9 +622,28 @@ final class CleanupScanner: ObservableObject {
             }
         }.value
 
+        if Task.isCancelled { return }
+
+        // 智能清理进阶：开发缓存、邮件附件副本、已删 App 的残留、旧 node_modules（后台读磁盘，可取消）。
+        let home = NSHomeDirectory()
+        let fda = FullDiskAccess.isGranted
+        let ownID2 = ownID
+        let advancedWork = Task.detached(priority: .utility) {
+            AdvancedCleanupScan.run(home: home, fullDiskAccess: fda, ownBundleID: ownID2)
+        }
+        let advanced = await withTaskCancellationHandler {
+            await advancedWork.value
+        } onCancel: {
+            advancedWork.cancel()
+        }
+        if Task.isCancelled || generation != gen { return }
+
         let local: ([FileItem]) -> [FileItem] = { $0.filter { FileActions.isLocal($0.url) } }
-        // 顺序就是归属优先级：一个文件只出现在第一张认领它的卡片里，总量不会重复算。
+        // 顺序就是归属优先级：一个文件只出现在第一张认领它的卡片里（在已认领的文件夹里面也算），总量不会重复算。
         let ordered: [(CleanupKind, [FileItem])] = [
+            (.devCaches, advanced.devCaches.sorted { $0.size > $1.size }),
+            (.mailDownloads, advanced.mailDownloads.sorted { $0.size > $1.size }),
+            (.oldNodeModules, local(advanced.nodeModules).sorted { $0.size > $1.size }),
             (.installers, local(installedInstallers)),
             (.otherInstallers, local(otherInstallers)),
             (.screenRecordings, local(recordings)),
@@ -584,11 +652,12 @@ final class CleanupScanner: ObservableObject {
             (.oldDownloads, local(oldDownloads)),
             (.bigFiles, local(bigFiles)),
             (.unusedApps, apps.sorted { $0.size > $1.size }),
+            (.appLeftovers, advanced.appLeftovers.sorted { $0.size > $1.size }),
         ]
         let kept = SmartCleanupLogic.dedupe(ordered.map { ($0.0, $0.1.map(\.path)) })
         cards = zip(ordered, kept).map { pair, keep in
             let paths = Set(keep.1)
-            return CleanupCard(kind: pair.0, items: pair.1.filter { paths.contains($0.path) })
+            return CleanupCard(kind: pair.0, items: pair.1.filter { paths.contains($0.path) }, labels: advanced.labels)
         }
         updateChatCard()
     }

@@ -28230,6 +28230,510 @@
           }
         }
       }
+    },
+    "Xcode 半年前的归档": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode 半年前的归档"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode archives older than 6 months"
+          }
+        }
+      }
+    },
+    "模拟器缓存": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模拟器缓存"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulator caches"
+          }
+        }
+      }
+    },
+    "Go 编译缓存": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go 编译缓存"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go build cache"
+          }
+        }
+      }
+    },
+    "应用容器": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用容器"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App containers"
+          }
+        }
+      }
+    },
+    "网络缓存": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络缓存"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP storage"
+          }
+        }
+      }
+    },
+    "网页数据": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网页数据"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WebKit data"
+          }
+        }
+      }
+    },
+    "邮件附件": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "邮件附件"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail attachment"
+          }
+        }
+      }
+    },
+    "%lld 天没改动": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 天没改动"
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Untouched for %lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Untouched for %lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "开发缓存": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发缓存"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developer caches"
+          }
+        }
+      }
+    },
+    "邮件附件副本": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "邮件附件副本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail attachment copies"
+          }
+        }
+      }
+    },
+    "已删 App 的残留": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删 App 的残留"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leftovers from deleted apps"
+          }
+        }
+      }
+    },
+    "旧项目的 node_modules": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧项目的 node_modules"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "node_modules in old projects"
+          }
+        }
+      }
+    },
+    "Xcode DerivedData、模拟器、npm、Homebrew、pip、Yarn、CocoaPods 等，只认白名单里的位置，用到时会自动重新生成": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode DerivedData、模拟器、npm、Homebrew、pip、Yarn、CocoaPods 等，只认白名单里的位置，用到时会自动重新生成"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode DerivedData, simulators, npm, Homebrew, pip, Yarn, CocoaPods and more — only known safe locations, rebuilt automatically when needed"
+          }
+        }
+      }
+    },
+    "“邮件”打开附件时存的副本，原邮件里还能再打开": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“邮件”打开附件时存的副本，原邮件里还能再打开"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copies Mail saved when you opened attachments; they're still in the original emails"
+          }
+        }
+      }
+    },
+    "已经删掉的应用留下的设置、缓存和数据；苹果自己的和拿不准的不列出": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经删掉的应用留下的设置、缓存和数据；苹果自己的和拿不准的不列出"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings, caches and data left by apps you deleted; Apple's own items and anything uncertain are left out"
+          }
+        }
+      }
+    },
+    "90 天没改动的项目里的 node_modules，需要时 npm install 就回来": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "90 天没改动的项目里的 node_modules，需要时 npm install 就回来"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "node_modules in projects untouched for 90 days; npm install brings them back"
+          }
+        }
+      }
+    },
+    "停止扫描": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止扫描"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Scan"
+          }
+        }
+      }
+    },
+    "新": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New"
+          }
+        }
+      }
+    },
+    "重复文件的多余副本": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重复文件的多余副本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra copies of duplicate files"
+          }
+        }
+      }
+    },
+    "每组保留最近打开的一份，其余移到废纸篓；默认不勾，可以点「查看」逐组挑": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每组保留最近打开的一份，其余移到废纸篓；默认不勾，可以点「查看」逐组挑"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps the most recently opened copy in each group and moves the rest to the Trash. Off by default — click View to pick group by group"
+          }
+        }
+      }
+    },
+    "正在比对…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在比对…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparing…"
+          }
+        }
+      }
+    },
+    "%lld 个多余副本": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个多余副本"
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld extra copy"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld extra copies"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld 个多余的副本，共 %lld 组 · 默认不勾，点副本勾选": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个多余的副本，共 %lld 组 · 默认不勾，点副本勾选"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld extra copies in %2$lld groups · nothing selected yet, click copies to select"
+          }
+        }
+      }
+    },
+    "已勾选 %lld 个副本 · %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已勾选 %lld 个副本 · %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld copies selected · %2$@"
+          }
+        }
+      }
+    },
+    "按建议勾选": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按建议勾选"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select Suggested"
+          }
+        }
+      }
+    },
+    "每组只留最近打开的一份，其余都勾上（还没移走，可以再改）": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每组只留最近打开的一份，其余都勾上（还没移走，可以再改）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select every copy except the most recently opened one in each group (nothing is moved yet; you can still change it)"
+          }
+        }
+      }
+    },
+    "移走勾选的副本": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移走勾选的副本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Selected Copies to Trash"
+          }
+        }
+      }
+    },
+    "每组至少保留一份": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每组至少保留一份"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep at least one copy in each group"
+          }
+        }
+      }
+    },
+    "%lld 份完全相同 · 每份 %@ · 点副本勾选要移走的": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 份完全相同 · 每份 %@ · 点副本勾选要移走的"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld identical copies · %2$@ each · click copies to select the ones to remove"
+          }
+        }
+      }
+    },
+    "建议保留": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建议保留"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
