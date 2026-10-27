@@ -22,7 +22,7 @@ final class CommandPaletteLogicTests: XCTestCase {
 
     func testPinyinKey() {
         let key = PaletteMatcher.key(for: "智能清理")
-        XCTAssertEqual(key.initials, "zncl")
+        XCTAssertEqual(key.initials, "znql")
         XCTAssertEqual(key.pinyin, "zhinengqingli")
         XCTAssertEqual(PaletteMatcher.key(for: "压缩为 ZIP").initials, "yswz")
         // 缓存：第二次拿到一样的
@@ -30,11 +30,11 @@ final class CommandPaletteLogicTests: XCTestCase {
     }
 
     func testInitialsFindChineseTitle() {
-        XCTAssertEqual(PaletteMatcher.rank(items, query: "zncl").first?.id, "smart")
+        XCTAssertEqual(PaletteMatcher.rank(items, query: "znql").first?.id, "smart")
         let ys = PaletteMatcher.rank(items, query: "ys").map(\.id)
         XCTAssertEqual(Array(ys.prefix(2)).sorted(), ["zip", "zipEncrypt"])
         XCTAssertEqual(PaletteMatcher.rank(items, query: "xjwjj").first?.id, "newFolder")
-        XCTAssertEqual(PaletteMatcher.rank(items, query: "ZNCL").first?.id, "smart", "不分大小写")
+        XCTAssertEqual(PaletteMatcher.rank(items, query: "ZNQL").first?.id, "smart", "不分大小写")
     }
 
     func testFullPinyin() {
@@ -62,8 +62,8 @@ final class CommandPaletteLogicTests: XCTestCase {
         let c = PaletteMatcher.score("下载", title: "打开下载文件夹")!
         XCTAssertGreaterThan(a, b)
         XCTAssertGreaterThan(b, c)
-        let initials = PaletteMatcher.score("zncl", title: "智能清理")!
-        let subsequence = PaletteMatcher.score("zncl", title: "zone clear")!
+        let initials = PaletteMatcher.score("znql", title: "智能清理")!
+        let subsequence = PaletteMatcher.score("znql", title: "zone quality")!
         XCTAssertGreaterThan(initials, subsequence)
     }
 

@@ -18,7 +18,7 @@ struct PaletteItem: Identifiable, Equatable, Sendable {
     var keywords: [String] = []
 }
 
-/// 命令面板的匹配和排序：不分大小写 / 重音；中文标题可以打全拼或拼音首字母（「zncl」→「智能清理」、「ys」→「压缩」）；
+/// 命令面板的匹配和排序：不分大小写 / 重音；中文标题可以打全拼或拼音首字母（「znql」→「智能清理」、「ys」→「压缩」）；
 /// 也可以跳着打（「xjwj」→「新建文件夹」）。
 enum PaletteMatcher {
     /// 一个标题预先算好的几种写法（建索引时算一次，按标题缓存）。
@@ -27,7 +27,7 @@ enum PaletteMatcher {
         let folded: String
         /// 全拼连在一起（「zhinengqingli」），英文原样。
         let pinyin: String
-        /// 每个字 / 每个英文单词的首字母（「zncl」）。
+        /// 每个字 / 每个英文单词的首字母（「znql」）。
         let initials: String
     }
 

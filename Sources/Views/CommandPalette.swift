@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - 命令面板状态
 
 /// 命令面板（⌃⌘P）：一个搜索框搜所有菜单命令、页面、排序、清理卡片、设置页、收藏和最近去过的文件夹。
-/// 中文标题可以打拼音首字母（zncl = 智能清理）。免费。
+/// 中文标题可以打拼音首字母（znql = 智能清理）。免费。
 @MainActor
 final class CommandPaletteModel: ObservableObject {
     static let shared = CommandPaletteModel()
@@ -394,7 +394,7 @@ struct CommandPaletteView: View {
                 Text("↑↓ 选择")
                 Text("↩ 执行")
                 Text("Esc 关闭")
-                Text("拼音首字母也能搜（zncl = 智能清理）")
+                Text("拼音首字母也能搜（znql = 智能清理）")
                 Spacer(minLength: 0)
             }
             .font(.caption)

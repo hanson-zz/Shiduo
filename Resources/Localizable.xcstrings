@@ -29631,18 +29631,18 @@
         }
       }
     },
-    "拼音首字母也能搜（zncl = 智能清理）": {
+    "拼音首字母也能搜（znql = 智能清理）": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pinyin initials work too (e.g. zncl)"
+            "value": "Pinyin initials work too (e.g. znql)"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "拼音首字母也能搜（zncl = 智能清理）"
+            "value": "拼音首字母也能搜（znql = 智能清理）"
           }
         }
       }
