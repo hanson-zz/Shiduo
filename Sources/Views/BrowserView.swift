@@ -1502,7 +1502,7 @@ struct FolderPathBar: View {
 
     /// 平时的样子：一层层可点的路径；点空白处或最后一层进入输入。
     private var crumbBar: some View {
-        HStack(spacing: 0) {
+        GeometryReader { geo in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 2) {
                     let list = crumbs
