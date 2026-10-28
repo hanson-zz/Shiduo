@@ -154,7 +154,7 @@ struct HomeView: View {
                             .accessibilityElement(children: .combine)
                             .accessibilityAddTraits(store.selectedIDs.contains(item.id) ? [.isButton, .isSelected] : .isButton)
                             .accessibilityAction { store.openItems([item]) }
-                            .contextMenu { FileContextMenu(items: [item]) }
+                            .stableContextMenu { FileContextMenu(items: [item]) }
                             .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                             .help(item.path)
                     }
@@ -419,7 +419,7 @@ struct ShelfView: View {
                         .accessibilityElement(children: .combine)
                         .accessibilityAddTraits(store.selectedIDs.contains(item.id) ? [.isButton, .isSelected] : .isButton)
                         .accessibilityAction { store.openItems([item]) }
-                        .contextMenu { FileContextMenu(items: [item]) }
+                        .stableContextMenu { FileContextMenu(items: [item]) }
                         .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                         .help(item.path)
                     }

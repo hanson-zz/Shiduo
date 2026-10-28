@@ -1065,7 +1065,7 @@ struct NotchShelfView: View {
             LibraryStore.openFromOutside(item.url)
         }
         .onTapGesture { controller.selectedIndex = index }
-        .contextMenu {
+        .stableContextMenu {
             switch controller.tab {
             case .shelf:
                 // 和主窗口同一套右键菜单，刘海里多一项「投进篮筐」。

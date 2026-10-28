@@ -97,7 +97,7 @@ private struct TabChip: View {
             dropFiles: { [tabs] urls, target, copy in tabs.activeStore.transferDropped(urls, into: target, copy: copy) },
             moveTab: { [tabs] id, target in tabs.move(id, onto: target) }
         ))
-        .contextMenu {
+        .stableContextMenu {
             Button("新建标签页") { tabs.newTab() }
             Button("关闭标签页") { tabs.close(tab) }
             Button("关闭其他标签页") { tabs.closeOthers(than: tab) }

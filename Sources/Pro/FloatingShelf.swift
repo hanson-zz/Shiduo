@@ -467,7 +467,7 @@ struct FloatingShelfView: View {
                             .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                             .onTapGesture(count: 2) { LibraryStore.openFromOutside(item.url) }
                             // 和主窗口同一套右键菜单（清理记录、⌘Z 撤销、音效都一样）。
-                            .contextMenu {
+                            .stableContextMenu {
                                 FileContextMenu(items: [item], context: FileMenuContext(
                                     onShelf: true, outsideMainWindow: true, trashOrigin: controller.window))
                             }

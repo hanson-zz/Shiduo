@@ -35,8 +35,15 @@ jobs:
         run: |
           VERSION="${TAG#v}"
           IFS=. read -r MAJOR MINOR PATCH <<< "${VERSION%%-*}"
+          # 只按 主.次.补丁 算出来的号：同一版本的所有 beta 都一样（0.14.1-beta.* 全是 1401）。
+          # project.yml 的 CURRENT_PROJECT_VERSION（每个 beta 递增，例如 beta.5 = 1405）更大时用它，构建号才对得上、只增不减。
+          FORMULA=$(( ${MAJOR:-0} * 10000 + ${MINOR:-0} * 100 + ${PATCH:-0} ))
+          PROJECT_BUILD="$(sed -nE 's/^[[:space:]]*CURRENT_PROJECT_VERSION:[[:space:]]*"?([0-9]+)"?.*/\1/p' project.yml | head -1)"
+          BUILD="$FORMULA"
+          if [ -n "$PROJECT_BUILD" ] && [ "$PROJECT_BUILD" -gt "$FORMULA" ]; then BUILD="$PROJECT_BUILD"; fi
+          echo "构建号：公式 $FORMULA，project.yml ${PROJECT_BUILD:-无}，用 $BUILD"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "BUILD=$(( ${MAJOR:-0} * 10000 + ${MINOR:-0} * 100 + ${PATCH:-0} ))" >> "$GITHUB_ENV"
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
 
       - name: 构建 Release（通用二进制）
         run: |

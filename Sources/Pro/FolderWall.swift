@@ -751,7 +751,7 @@ struct FolderCard: View {
             // 光标：按 ⌥ 显示拷贝，不按显示移动（和实际一致）。
             .onDrop(of: [.fileURL, .plainText], delegate: dropDelegate)
             .help(summary.path)
-            .contextMenu { menu }
+            .stableContextMenu { menu }
             .onChange(of: renamingPath) {
                 guard renamingPath == summary.path else { return }
                 renamingPath = nil

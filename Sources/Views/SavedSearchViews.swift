@@ -132,7 +132,7 @@ struct SavedSearchesSidebarSection: View {
                     }
                     .help(search.text)
                     .tag(SidebarItem.savedSearch(search.id))
-                    .contextMenu {
+                    .stableContextMenu {
                         Button("重命名…") { saved.renamingID = search.id }
                         Button("编辑搜索") {
                             store.editSavedSearch(search)

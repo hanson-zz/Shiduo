@@ -169,7 +169,7 @@ struct TodayAddedPopover: View {
             close()
             store.openItems([item])
         }
-        .contextMenu { FileContextMenu(items: [item]) }
+        .stableContextMenu { FileContextMenu(items: [item]) }
         .onDrag { InAppDrag.copyOnlyProvider(item.url) }
         .help(item.path)
     }

@@ -111,7 +111,7 @@ struct MenuBarContent: View {
             ForEach(recent) { item in
                 RecentDownloadRow(item: item)
                     // 和主窗口同一套右键菜单（清理记录、⌘Z 撤销、音效都一样）。
-                    .contextMenu {
+                    .stableContextMenu {
                         FileContextMenu(items: [item], context: FileMenuContext(
                             outsideMainWindow: true,
                             afterTrash: { moved in recent.removeAll { moved.contains($0.path) } }))

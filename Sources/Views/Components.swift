@@ -170,11 +170,13 @@ extension FileContextMenu where Extra == EmptyView {
 private struct FileMenuItems<Extra: View>: View {
     let store: LibraryStore
     let windowTabs: WindowTabs?
-    @ObservedObject var favorites = FavoritesStore.shared
+    // 只读、不订阅（不用 @ObservedObject）：菜单开着的时候这几个单例发变化，SwiftUI 会重算菜单内容、
+    // 往正在跟踪的 NSMenu 里 setItemArray，macOS 27 上直接崩（beta.5 真机崩溃）。菜单每次右键时现取一份。
+    var favorites: FavoritesStore { FavoritesStore.shared }
     /// 拾掇 Pro：自定义右键菜单（顺序、隐藏、分组）。免费用户是默认菜单。
-    @ObservedObject var menus = MenuLayoutStore.shared
+    var menus: MenuLayoutStore { MenuLayoutStore.shared }
     /// 拾掇 Pro：自定义快捷键（菜单项旁边显示的组合键跟着换）。
-    @ObservedObject var shortcuts = ShortcutStore.shared
+    var shortcuts: ShortcutStore { ShortcutStore.shared }
     let items: [FileItem]
     let context: FileMenuContext
     @ViewBuilder let extra: () -> Extra
@@ -646,8 +648,8 @@ private struct FileMenuItems<Extra: View>: View {
 /// 拾掇 Pro 可以在设置「菜单与快捷键」里改顺序、隐藏、分组。
 struct FolderBackgroundMenu: View {
     @Environment(\.paneStore) private var paneStore
-    @ObservedObject private var menus = MenuLayoutStore.shared
-    @ObservedObject private var shortcuts = ShortcutStore.shared
+    // 只读、不订阅：理由同 FileMenuItems（菜单开着时不能重算内容）。
+    private var menus: MenuLayoutStore { MenuLayoutStore.shared }
 
     var body: some View {
         if let store = paneStore ?? LibraryStore.shared, store.activeQuery == nil, let path = store.currentFolder {

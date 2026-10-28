@@ -245,7 +245,7 @@ struct ShelfPageView: View {
                                     }
                                 }
                             ))
-                            .contextMenu { menu(for: item) }
+                            .stableContextMenu { menu(for: item) }
                             .help(item.path)
                     }
                 }

@@ -667,7 +667,7 @@ struct CleanupReviewPage: View {
                                 ReviewCell(item: item, selected: selected.contains(item.id), label: card?.labels[item.path])
                                     .onTapGesture(count: 2) { store.openItems([item]) }
                                     .onTapGesture { toggle(item) }
-                                    .contextMenu { FileContextMenu(items: [item]) }
+                                    .stableContextMenu { FileContextMenu(items: [item]) }
                                     .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                                     .help(item.path)
                             }

@@ -679,7 +679,7 @@ struct FileCollectionView: View {
                         hoverPreview: true,
                         onOpenFolderMenu: item.isDirectory ? { openFolderMenu(item) } : nil
                     )
-                        .contextMenu {
+                        .stableContextMenu {
                             FileContextMenu(items: targets(for: item), preview: { preview($0) })
                         }
                         .help(item.path)
@@ -710,7 +710,7 @@ struct FileCollectionView: View {
                     .contentShape(Rectangle())
                     .gesture(marqueeGesture)
                     // 空白处右键：新建文件夹、粘贴、在终端 / 编辑器打开当前文件夹。
-                    .contextMenu { FolderBackgroundMenu() }
+                    .stableContextMenu { FolderBackgroundMenu() }
             )
             .overlay(alignment: .topLeading) { MarqueeOverlay(model: marquee) }
             .background(EnclosingScrollViewReader { marquee.scrollView = $0 })

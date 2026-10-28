@@ -300,7 +300,7 @@ struct QuickSearchView: View {
                                 .onTapGesture { model.selected = index }
                                 .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                                 // 和主窗口同一套右键菜单。搜索框一直在输入状态，⌘⌫ 留给它删到行首；这里用右键移到废纸篓。
-                                .contextMenu {
+                                .stableContextMenu {
                                     FileContextMenu(items: [item], context: FileMenuContext(
                                         outsideMainWindow: true,
                                         trashOrigin: QuickSearchController.shared.window,

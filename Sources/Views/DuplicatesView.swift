@@ -417,7 +417,7 @@ struct DuplicateGroupCard: View {
                         DuplicateItemCard(item: item, isKept: kept.contains(item.id), showsName: isSimilar,
                                           isSuggested: item.id == suggested, plainKeep: !isSimilar && item.id != suggested)
                             .onTapGesture { toggle(item) }
-                            .contextMenu { FileContextMenu(items: [item]) }
+                            .stableContextMenu { FileContextMenu(items: [item]) }
                             .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                             .help("点一下切换“保留 / 废纸篓”\n\(item.path)")
                     }

@@ -113,7 +113,7 @@ struct VolumesSidebarSection: View {
                     .help("\(volume.path) · 可用 \(volume.availableBytes.byteText)")
                     .tag(SidebarItem.volume(volume.path))
                     .simultaneousGesture(TapGesture().onEnded { store.reselect(.volume(volume.path)) })
-                    .contextMenu {
+                    .stableContextMenu {
                         Button("在访达中显示") {
                             NSWorkspace.shared.activateFileViewerSelecting([volume.url])
                         }

@@ -246,7 +246,7 @@ struct SidebarView: View {
                         tagDot(FinderTag.color(tag.color))
                     }
                     .tag(SidebarItem.tag(tag.name))
-                    .contextMenu {
+                    .stableContextMenu {
                         Button("重命名…") { Task { await TagSync.rename(tag.name, store: store) } }
                         Button("改颜色…") { Task { await TagSync.recolor(tag.name, store: store) } }
                         Divider()
@@ -417,7 +417,7 @@ struct FavoritesSidebarSection: View {
         .tag(SidebarItem.pinned(path))
         // 在子文件夹里再点一次这一行：回到收藏的那一层。
         .simultaneousGesture(TapGesture().onEnded { store.reselect(.pinned(path)) })
-        .contextMenu {
+        .stableContextMenu {
             Button("打开") { store.goToRoot(path) }
             Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)]) }
             Divider()
