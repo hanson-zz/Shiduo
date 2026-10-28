@@ -91,8 +91,9 @@ extension View {
 
 /// 备选应用图标（Pro）：两处一起换——
 /// 1. 运行时的程序坞图标，马上生效：applicationIconImage + dockTile.contentView（图片视图）+ dockTile.display()。
-///    交出去的图先用 AppIconImage.normalized 重新画成 RGBA 位图——设计师定稿的大多是 256 色调色板 PNG，
-///    beta.5 只设 applicationIconImage、直接给调色板图，真机上程序坞图标不变；
+///    beta.5 只设了 applicationIconImage，用户真机上程序坞图标不变（选择、Pro 判断、读图这几步代码上都没问题，
+///    见 report）；现在直接把图放进 dockTile 的视图里并要求重画（Ghostty 等在 macOS 26 上也这么做），
+///    交出去的图先用 AppIconImage.normalized 重画成标准 RGBA 位图（防御性）；
 /// 2. 安装包本身的自定义图标（NSWorkspace.setIcon 写到 拾掇.app 根目录的「Icon\r」+ FinderInfo 标记），
 ///    这样「应用程序」文件夹（访达）里、以及退出后的程序坞里也是这款。还原成默认（选了默认 / Pro 到期 / 文件不在了）
 ///    时用 setIcon(nil) 去掉自定义图标。写进安装包的是哪款记在 UserDefaults「appliedBundleIconID」，启动时不重复写；
@@ -187,7 +188,7 @@ enum AltAppIcons {
     /// 控制台（Console.app）里搜「appicon」能看到每次换图标的经过：选的是哪款、实际用哪款、isPro、图片尺寸、写安装包的结果。
     nonisolated static let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "io.github.hanson-zz.shiduo", category: "appicon")
 
-    /// 交给程序坞 / setIcon 的图：重新画成标准 RGBA 位图（AppIconImage.normalized；调色板 PNG 直接给程序坞不可靠）。
+    /// 交给程序坞 / setIcon 的图：重新画成标准 RGBA 位图（AppIconImage.normalized，防御性）。
     private static var dockImageCache: [String: NSImage] = [:]
 
     static func dockImage(for id: String) -> NSImage? {
@@ -201,7 +202,7 @@ enum AltAppIcons {
     /// 启动时、选了别的图标时、Pro 状态变了时调用。nil = 还原成安装包里的图标。
     ///
     /// 程序坞两条路都走：applicationIconImage（菜单栏浮窗、引导页也读它）+ dockTile.contentView 放一个图片视图再 display()。
-    /// 只设 applicationIconImage、而且给的是调色板 PNG 时，真机上程序坞图标不变（beta.5 用户反馈）。
+    /// beta.5 只设 applicationIconImage，真机上程序坞图标不变（用户反馈）；日志里能看到每一步，还不换就看 Console。
     static func apply() {
         guard !Demo.isOn else {
             log.info("apply skipped: demo mode")

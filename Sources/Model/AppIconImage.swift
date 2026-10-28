@@ -1,11 +1,11 @@
 import AppKit
 
-/// 备选应用图标的图片整理：把 AltAppIcons 里的 PNG 重新画成一张标准的 32 位 RGBA 位图再交给程序坞 / setIcon。
+/// 备选应用图标的图片整理：把 AltAppIcons 里的 PNG 重新画成一张标准的 sRGB RGBA 位图（像素尺寸 = 点尺寸）
+/// 再交给程序坞（applicationIconImage / dockTile）和 NSWorkspace.setIcon。
 ///
-/// 为什么：设计师定稿导入时，大多数图标为了体积量化成了 256 色的「调色板 PNG」（索引色 + tRNS 透明）。
-/// 设置里的缩略图是 SwiftUI 直接画出来的，没问题；但交给程序坞（applicationIconImage / dockTile）和
-/// NSWorkspace.setIcon 时要转成程序坞 / icns 用的格式，索引色图片在这一步不可靠（可能什么都不换）。
-/// 重新画成 RGBA、固定像素尺寸、尺寸（点）= 像素，两条路都只拿到最普通的位图。
+/// 防御性的一步：28 款里 24 款为了体积量化成了 256 色调色板 PNG。CI（macOS 15）上验证过，
+/// 通过 cgImage 读出来已经是 RGB、原图直接 setIcon 也能成功，所以这不是 beta.5 程序坞不换的确定原因；
+/// 但交出去的是最普通的位图、带固定像素尺寸，少一个变量。
 enum AppIconImage {
     /// 程序坞和 icns 用的边长（像素）。原图小于这个（几款渐变图 640–768px）就按原尺寸画，不放大。
     static let maxSide = 1024

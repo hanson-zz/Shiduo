@@ -1,7 +1,7 @@
 import AppKit
 import XCTest
 
-/// 备选应用图标交给程序坞 / setIcon 之前的整理：调色板 PNG → 标准 RGBA 位图，透明边保留、尺寸不变。
+/// 备选应用图标交给程序坞 / setIcon 之前的整理：重画成标准 RGBA 位图，透明边保留、尺寸不变。
 /// 顺带打印一行诊断（PERF|APPICON …，CI 日志里能看到）：原图是不是索引色、原图和整理后的图各自能不能被 setIcon 写进一个临时文件夹。
 final class AppIconImageTests: XCTestCase {
     private func iconURL(_ id: String) -> URL {
