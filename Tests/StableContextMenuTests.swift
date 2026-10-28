@@ -56,6 +56,8 @@ final class StableContextMenuTests: XCTestCase {
         XCTAssertEqual(view.builtCount, 1)
         spin()
         let before = titles(menu)
+        // CI 只把带「PERF|」的行打到日志里：借这个前缀说明快照测试是真跑了还是跳过了（不是性能数据）。
+        print("PERF| 右键菜单快照测试（非性能）：NSHostingMenu 生成了 \(before.count) 项 \(before)")
         if before.isEmpty { throw XCTSkip("这个环境里 NSHostingMenu 没有生成菜单项（无窗口服务器）") }
         XCTAssertEqual(before, ["项目 1", "另一项"])
         let itemsBefore = menu.items
