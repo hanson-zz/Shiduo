@@ -24,8 +24,6 @@ struct SettingsView: View {
     @AppStorage(UnlockCelebrationWindow.soundKey) private var celebrationSound = true
     @State private var reminderDenied = false
     @AppStorage("menuBarEnabled") private var menuBarEnabled = false
-    @AppStorage(AppAppearance.key) private var appearance: AppAppearance = .system
-    @AppStorage(FolderWallIconStyle.key) private var folderWallIconStyle: FolderWallIconStyle = .shiduo
     @AppStorage(FloatingShelfController.enabledKey) private var floatingShelfEnabled = false
     @AppStorage(FloatingShelfHotKey.enabledKey) private var floatingShelfHotKey = true
     @AppStorage(FloatingShelfHotKey.choiceKey) private var floatingShelfHotKeyChoice: FloatingShelfHotKey = .controlOptionS
@@ -44,7 +42,7 @@ struct SettingsView: View {
 
     /// 设置分成几个标签页：常用的在前，Pro 放最后（免费用户打开设置先看到的是能用的设置）。
     enum Tab: String, Hashable {
-        case general, shelf, search, menus, updates, pro
+        case general, appearance, shelf, search, menus, updates, pro
     }
 
     @AppStorage("settings.tab") private var tab: Tab = .general
@@ -61,6 +59,10 @@ struct SettingsView: View {
             }
                 .tabItem { Label("通用", systemImage: "gearshape") }
                 .tag(Tab.general)
+            // 浅色 / 深色、主题色、应用图标、字号、边栏、缩略图、透视文件夹、文件夹图标风格。
+            page { AppearanceSettingsSections() }
+                .tabItem { Label("外观", systemImage: "paintbrush") }
+                .tag(Tab.appearance)
             page { shelfTab }
                 .tabItem { Label("暂存架", systemImage: "tray.full") }
                 .tag(Tab.shelf)
@@ -78,7 +80,9 @@ struct SettingsView: View {
                 .tabItem { Label("Pro", systemImage: "sparkles") }
                 .tag(Tab.pro)
         }
-        .frame(width: tab == .menus ? 820 : 600, height: tab == .menus ? 640 : 620)
+        .frame(width: tab == .menus ? 820 : 640, height: tab == .menus ? 640 : 620)
+        // 设置 › 外观 › 主题色。
+        .appAccent()
     }
 
     private func revealLibraryScope(_ proxy: ScrollViewProxy) {
@@ -146,15 +150,7 @@ struct SettingsView: View {
 
         ExternalToolsSection()
 
-        // 全局的文件夹图标（以前只管文件夹墙，键名沿用，旧的选择保留）。
-        Section("文件夹图标") {
-            Picker("文件夹图标", selection: $folderWallIconStyle) {
-                ForEach(FolderWallIconStyle.allCases) { Text($0.title).tag($0) }
-            }
-            Text("「拾掇风格」：拾掇里看到的文件夹都是拾掇文件夹，上过色的保留颜色和图案，有自定义图标的把它放在文件夹上。「系统图标」：和访达里一样。")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
+        // 「文件夹图标」风格、浅色 / 深色挪到了「外观」页。
 
         Section("悬停预览") {
             Toggle("悬停预览", isOn: $hoverPreviewEnabled)
@@ -354,10 +350,6 @@ struct SettingsView: View {
                     Button("立即重新打开") { AppLanguage.relaunch() }
                 }
             }
-            Picker("外观", selection: $appearance) {
-                ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
-            }
-            .onChange(of: appearance) { appearance.apply() }
         }
     }
 

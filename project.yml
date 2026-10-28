@@ -33,8 +33,14 @@ targets:
         excludes:
           - "Info.plist"
           - "ThemeIcons/**"
+          - "AltAppIcons/**"
       # 「文件夹换装」的主题图标：整个文件夹原样拷进 App（ThemeIcons/<分类>/<名字>.png）。
       - path: Resources/ThemeIcons
+        type: folder
+        buildPhase: resources
+      # 设置 › 外观 › 应用图标（Pro）：备选程序坞图标，整个文件夹原样拷进 App（AltAppIcons/<id>.png）。
+      # 放一张新的 PNG 进去就多一款，不用改代码（规格见 notes/todo.md）。
+      - path: Resources/AltAppIcons
         type: folder
         buildPhase: resources
     settings:
@@ -123,6 +129,8 @@ targets:
       - path: Sources/Pro/FileTemplateLogic.swift
       # 字体管理：路径安全规则、重复 / 多版本分组、停用清单、字体集绑定、中文字体判断。
       - path: Sources/Model/FontLogic.swift
+      # 外观：设置存取（容错解码）、字号范围、主题色、缩略图规则、透视文件夹挑最新几张、备选应用图标排序。
+      - path: Sources/Model/AppearanceLogic.swift
       # 性能实测（Perf* 测试）用到的真实代码：读文件夹、排序、缩略图、性能打点。
       - path: Sources/Model/FileItem.swift
       - path: Sources/Model/FileSortKey.swift

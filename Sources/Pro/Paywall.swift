@@ -47,6 +47,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case fontArchive
     case fontSets
     case customMenus
+    case appIcons
 
     var id: Self { self }
 
@@ -74,6 +75,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontArchive: return String(localized: "字体压缩存放 / 搬到移动硬盘")
         case .fontSets: return String(localized: "字体集与项目绑定")
         case .customMenus: return String(localized: "自定义右键菜单与快捷键")
+        case .appIcons: return String(localized: "备选应用图标")
         }
     }
 
@@ -101,6 +103,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontArchive: return String(localized: "停用的字体打成 zip 省一半空间，或搬到移动硬盘，清单记着，随时取回")
         case .fontSets: return String(localized: "按客户、品牌建字体集，一键临时启用（注销后自动停用）；绑定项目文件夹，打开项目就启用")
         case .customMenus: return String(localized: "右键菜单留哪些、什么顺序、收进子菜单由你定；菜单快捷键随便改，撞键当场提示，可一键交换")
+        case .appIcons: return String(localized: "程序坞里的拾掇图标换一款：紫色、深蓝、亮蓝，设置 › 外观 里点一下就换")
         }
     }
 
@@ -128,6 +131,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontArchive: return "archivebox"
         case .fontSets: return "textformat"
         case .customMenus: return "contextualmenu.and.cursorarrow"
+        case .appIcons: return "app.badge"
         }
     }
 
@@ -155,6 +159,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontArchive: return .brown
         case .fontSets: return .indigo
         case .customMenus: return .mint
+        case .appIcons: return .cyan
         }
     }
 }

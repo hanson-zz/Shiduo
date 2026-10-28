@@ -10,8 +10,12 @@ struct ThumbnailView: View {
     var modified: Date? = nil
     /// 是不是普通文件夹（传 item.isDirectory；.app 这类包不算）。nil = 不知道，后台查一次并缓存。
     var isFolder: Bool? = nil
-    /// 设置 › 通用 › 文件夹图标：拾掇风格 / 系统图标。
+    /// 设置 › 外观 › 文件夹图标：拾掇风格 / 系统图标。
     @AppStorage(FolderWallIconStyle.key) private var folderIconStyle: FolderWallIconStyle = .shiduo
+    /// 设置 › 外观 › 图标：总是预览图片和视频、缩略图起始尺寸。
+    @ObservedObject private var appearance = AppearanceStore.shared
+    /// 当前列表有多少项（大文件夹里可以只用通用图标）。
+    @Environment(\.fileListItemCount) private var listItemCount
     @State private var image: NSImage?
     /// 缓存被清掉（比如文件夹刚上色）时加一，触发重新取图
     @State private var version = 0
@@ -23,10 +27,15 @@ struct ThumbnailView: View {
 
     var body: some View {
         if folderIconStyle == .shiduo && folder {
-            ShiduoFolderIcon(path: url.standardizedFileURL.path, side: size)
+            ShiduoFolderIcon(path: url.standardizedFileURL.path, side: size, modified: modified)
         } else {
             systemImage
         }
+    }
+
+    private var loadsThumbnail: Bool {
+        ThumbnailPolicy.loadsThumbnail(isMedia: PeekFolderLogic.isMediaName(url.lastPathComponent), iconSide: Double(size),
+                                       folderItemCount: listItemCount, settings: appearance.settings)
     }
 
     private var systemImage: some View {
@@ -49,7 +58,7 @@ struct ThumbnailView: View {
             image = nil
             version += 1
         }
-        .task(id: "\(url.path)#\(Int(size))#\(version)#\(modified?.timeIntervalSince1970 ?? 0)#\(folderIconStyle.rawValue)") {
+        .task(id: "\(url.path)#\(Int(size))#\(version)#\(modified?.timeIntervalSince1970 ?? 0)#\(folderIconStyle.rawValue)#\(loadsThumbnail)") {
             // 拾掇风格下先弄清是不是文件夹：是的话换成拾掇文件夹，不再取系统图标。
             if folderIconStyle == .shiduo && isFolder == nil && checkedFolder == nil {
                 let result = await ShiduoFolderArtCache.shared.isFolder(url)
@@ -57,12 +66,29 @@ struct ThumbnailView: View {
                 if result { return }
             }
             if folderIconStyle == .shiduo && folder { return }
+            // 图标太小 / 大文件夹里不生成预览图：显示通用图标（文件夹、App 的通用图标就是它们自己的图标）。
+            guard loadsThumbnail else {
+                image = nil
+                return
+            }
             if let cached = ThumbnailService.shared.cached(for: url, size: size) {
                 image = cached
                 return
             }
             image = await ThumbnailService.shared.thumbnail(for: url, size: size)
         }
+    }
+}
+
+private struct FileListItemCountKey: EnvironmentKey {
+    static let defaultValue = 0
+}
+
+extension EnvironmentValues {
+    /// 文件列表（网格 / 列表）里有多少项：缩略图据此决定大文件夹里要不要生成预览图。别处是 0（不算大文件夹）。
+    var fileListItemCount: Int {
+        get { self[FileListItemCountKey.self] }
+        set { self[FileListItemCountKey.self] = newValue }
     }
 }
 

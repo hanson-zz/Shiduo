@@ -14,7 +14,7 @@ enum FolderLook: Equatable {
     case plain
 }
 
-/// 文件夹图标：拾掇风格 / 系统图标。全局设置（设置 › 通用 › 文件夹图标、文件夹墙右下角都能改，存在 UserDefaults），
+/// 文件夹图标：拾掇风格 / 系统图标。全局设置（设置 › 外观 › 文件夹图标、文件夹墙右下角都能改，存在 UserDefaults），
 /// 主窗口网格 / 列表、简介、搜索、暂存架、文件夹墙里所有文件夹都跟着它。键名沿用以前文件夹墙的，旧的选择保留。
 enum FolderWallIconStyle: String, CaseIterable, Identifiable {
     /// 拾掇自己画的文件夹（文件夹墙上探出照片、文稿……，别处是不探出内容的同款文件夹）。

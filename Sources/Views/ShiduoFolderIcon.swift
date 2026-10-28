@@ -5,7 +5,7 @@ import SwiftUI
 // 和文件夹墙卡片同一个造型（GlassFolderMetrics 的后片 / 前片 / 高光 / 白线），但不探出照片、不读文件夹内容：
 // 文件夹本体按「颜色 + 像素档位 + 深浅色」栅格化一次放进缓存，几百个文件夹共用几张图；
 // 叠加层（系统文件夹的符号、上色时选的 emoji / 图片、别处设置的自定义图标）单独叠在前片上。
-// 设置 › 通用 › 文件夹图标 选「系统图标」时，一切照旧显示访达的图标。
+// 设置 › 外观 › 文件夹图标 选「系统图标」时，一切照旧显示访达的图标。
 
 extension FolderWallIconStyle {
     /// 现在的设置（不在视图里时用）。
@@ -99,18 +99,18 @@ final class ShiduoFolderArtCache {
     }
 
     /// 文件夹本体已经画好了就直接给（视图 body 里只读缓存，不在 body 里栅格化）。
-    func cachedBase(hex: String, pixels: Int, dark: Bool) -> CGImage? {
-        bases[FolderArtLogic.cacheKey(hex: hex, pixels: pixels, dark: dark)]
+    func cachedBase(hex: String, pixels: Int, dark: Bool, part: ShiduoFolderDrawing.Part = .full) -> CGImage? {
+        bases[part.key(FolderArtLogic.cacheKey(hex: hex, pixels: pixels, dark: dark))]
     }
 
     // MARK: 文件夹本体
 
     /// 栅格化的文件夹本体（同一颜色、档位、深浅色只画一次）。
-    func base(hex: String, pixels: Int, dark: Bool) -> CGImage? {
-        let key = FolderArtLogic.cacheKey(hex: hex, pixels: pixels, dark: dark)
+    func base(hex: String, pixels: Int, dark: Bool, part: ShiduoFolderDrawing.Part = .full) -> CGImage? {
+        let key = part.key(FolderArtLogic.cacheKey(hex: hex, pixels: pixels, dark: dark))
         if let hit = bases[key] { return hit }
         let tint = FolderPalette.color(hex: hex.uppercased()) ?? FolderPalette.color(hex: ShiduoFolderVariant.defaultHex)!
-        let art = ShiduoFolderDrawing(tint: tint, dark: dark, detail: pixels >= 128)
+        let art = ShiduoFolderDrawing(tint: tint, dark: dark, detail: pixels >= 128, part: part)
             .frame(width: ShiduoFolderDrawing.canvas, height: ShiduoFolderDrawing.canvas)
             .environment(\.colorScheme, dark ? .dark : .light)
         let renderer = ImageRenderer(content: art)
@@ -238,7 +238,16 @@ final class ShiduoFolderArtCache {
 struct ShiduoFolderIcon: View {
     let path: String
     let side: CGFloat
+    /// 文件夹的修改时间（里面加了 / 删了文件会变）：透视文件夹据此重读。
+    var modified: Date? = nil
     @Environment(\.colorScheme) private var scheme
+    /// 设置 › 外观 › 透视文件夹。
+    @ObservedObject private var appearance = AppearanceStore.shared
+    /// 透视文件夹：探出来的几张图片 / 视频（没开、不适用时是空的）。
+    @State private var peek: [URL] = []
+    @State private var peekVersion = 0
+    @State private var renderedBack: CGImage?
+    @State private var renderedFront: CGImage?
     @Environment(\.displayScale) private var displayScale
     @State private var variant: ShiduoFolderVariant?
     /// 上色 / 还原后加一，重新查。
@@ -253,9 +262,22 @@ struct ShiduoFolderIcon: View {
         let v = variant ?? cache.cachedVariant(path) ?? ShiduoFolderVariant.placeholder(path)
         let dark = scheme == .dark
         let baseKey = FolderArtLogic.cacheKey(hex: v.hex, pixels: pixels, dark: dark)
+        let peeking = !peek.isEmpty && peekEligible(v)
         ZStack {
             if v.themed, let art = cache.badgeImage(path) {
                 Image(decorative: art, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
+            } else if peeking,
+                      let back = cache.cachedBase(hex: v.hex, pixels: pixels, dark: dark, part: .back) ?? renderedBack,
+                      let front = cache.cachedBase(hex: v.hex, pixels: pixels, dark: dark, part: .front) ?? renderedFront {
+                Image(decorative: back, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
+                PeekFolderCards(urls: peek, side: side)
+                Image(decorative: front, scale: 1)
                     .resizable()
                     .interpolation(.high)
                     .antialiased(true)
@@ -291,6 +313,35 @@ struct ShiduoFolderIcon: View {
             if Task.isCancelled { return }
             renderedBase = cache.base(hex: v.hex, pixels: pixels, dark: dark)
         }
+        // 透视文件夹：图标显示出来时才读文件夹（缓存按文件夹修改时间）。
+        .onReceive(NotificationCenter.default.publisher(for: PeekFolderCache.changed)) { _ in peekVersion += 1 }
+        .task(id: "\(path)#\(appearance.settings.peekFolders)#\(modified?.timeIntervalSince1970 ?? 0)#\(peekVersion)#\(version)#\(side >= CGFloat(PeekFolderLogic.minIconSide))") {
+            guard appearance.settings.peekFolders, Double(side) >= PeekFolderLogic.minIconSide else {
+                if !peek.isEmpty { peek = [] }
+                return
+            }
+            if peek.isEmpty, let cached = PeekFolderCache.shared.cached(path) { peek = cached }
+            let resolved = await cache.variant(path)
+            guard peekEligible(resolved), !Task.isCancelled else {
+                if !peek.isEmpty { peek = [] }
+                return
+            }
+            let urls = await PeekFolderCache.shared.previews(for: path)
+            if Task.isCancelled { return }
+            if urls != peek { peek = urls }
+            guard !urls.isEmpty else { return }
+            // 后片 / 前片：同一颜色、档位、深浅色只画一次。
+            renderedBack = cache.cachedBase(hex: resolved.hex, pixels: pixels, dark: dark, part: .back)
+                ?? cache.base(hex: resolved.hex, pixels: pixels, dark: dark, part: .back)
+            renderedFront = cache.cachedBase(hex: resolved.hex, pixels: pixels, dark: dark, part: .front)
+                ?? cache.base(hex: resolved.hex, pixels: pixels, dark: dark, part: .front)
+        }
+    }
+
+    /// 只透视普通文件夹：上色 / 换装过的、有自定义图标的、系统文件夹（带符号）保持原样。
+    private func peekEligible(_ v: ShiduoFolderVariant) -> Bool {
+        appearance.settings.peekFolders && !v.themed && !v.styled && v.badge == .none
+            && Double(side) >= PeekFolderLogic.minIconSide
     }
 }
 
@@ -377,23 +428,41 @@ struct ShiduoFolderDrawing: View {
         var badgeCenterY: CGFloat { frontTop + frontHeight * 0.55 }
     }
 
+    /// 整个文件夹，或者只画后片 / 前片（透视文件夹：照片夹在两片中间）。
+    enum Part {
+        case full, back, front
+
+        func key(_ base: String) -> String {
+            switch self {
+            case .full: return base
+            case .back: return base + "#back"
+            case .front: return base + "#front"
+            }
+        }
+    }
+
     let tint: NSColor
     let dark: Bool
     /// 大图（≥128 像素）才画接触阴影和两道白线，小图上糊成一片。
     let detail: Bool
+    var part: Part = .full
 
     var body: some View {
         let g = Geometry(side: Self.canvas)
         let m = GlassFolderMetrics(width: g.artWidth, tint: tint, dark: dark)
         ZStack(alignment: .topLeading) {
-            if detail { GlassContactShadow(m: m) }
-            m.backShape
-                .fill(LinearGradient(colors: [m.backTop, m.back], startPoint: .top, endPoint: .bottom))
-                .frame(width: m.width - m.backInset * 2, height: m.backHeight)
-                .offset(x: m.backInset, y: m.height * 0.12)
-            front(m)
-                .shadow(color: .black.opacity(dark ? 0.35 : 0.14), radius: 1.5, y: -0.5)
-                .offset(y: m.py)
+            if part != .front {
+                if detail { GlassContactShadow(m: m) }
+                m.backShape
+                    .fill(LinearGradient(colors: [m.backTop, m.back], startPoint: .top, endPoint: .bottom))
+                    .frame(width: m.width - m.backInset * 2, height: m.backHeight)
+                    .offset(x: m.backInset, y: m.height * 0.12)
+            }
+            if part != .back {
+                front(m)
+                    .shadow(color: .black.opacity(dark ? 0.35 : 0.14), radius: 1.5, y: -0.5)
+                    .offset(y: m.py)
+            }
         }
         .frame(width: m.width, height: m.height, alignment: .topLeading)
         .position(x: Self.canvas / 2, y: g.artTop + g.artHeight / 2)

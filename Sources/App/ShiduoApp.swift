@@ -41,6 +41,8 @@ struct ShiduoApp: App {
                 .environmentObject(appStore.organizer)
                 .environmentObject(appStore.volumes)
                 .environmentObject(appStore.photos)
+                // 设置 › 外观 › 主题色。
+                .appAccent()
                 .frame(minWidth: 760, minHeight: 560)
         }
         .commands {

@@ -1,6 +1,6 @@
 import AppKit
 
-/// 外观：跟随系统（默认）/ 浅色 / 深色。设置 › 通用 里切换，存在 UserDefaults「appearanceMode」。
+/// 外观：跟随系统（默认）/ 浅色 / 深色。设置 › 外观 里切换，存在 UserDefaults「appearanceMode」。
 /// 直接改 NSApp.appearance，所有窗口（主窗口、设置、付费页、图片工作室、暂存架、菜单栏浮窗、各种面板）都跟着变；
 /// 自己强制深色的部分（刘海暂存架）不受影响。演示模式用 --dark 时以演示为准，这里不改。
 enum AppAppearance: String, CaseIterable, Identifiable {

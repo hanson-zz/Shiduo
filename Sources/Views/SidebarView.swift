@@ -12,7 +12,19 @@ struct SidebarView: View {
     @ObservedObject private var customTags = CustomTagStore.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
     @ObservedObject private var fonts = FontLibrary.shared
+    /// 设置 › 外观 › 边栏：彩色图标、图标大小。
+    @ObservedObject private var appearance = AppearanceStore.shared
     @State private var shelfTargeted = false
+
+    private var colorIcons: Bool { appearance.settings.sidebarColorIcons }
+
+    private var rowSize: SidebarRowSize {
+        switch appearance.settings.sidebarIconSize {
+        case .small: return .small
+        case .medium: return .medium
+        case .large: return .large
+        }
+    }
 
     /// 常用位置，和访达侧边栏一样。
     private struct Location: Identifiable {
@@ -122,7 +134,7 @@ struct SidebarView: View {
                         Text(category.libraryTitle)
                     } icon: {
                         Image(systemName: category.symbol)
-                            .foregroundStyle(category.tint)
+                            .foregroundStyle(colorIcons ? category.tint : Color.secondary)
                     }
                     .badge(store.totals[category].map { Text("\($0.count)") })
                     .tag(SidebarItem.category(category))
@@ -177,7 +189,7 @@ struct SidebarView: View {
                             Text(app.name)
                         } icon: {
                             Image(systemName: app.symbol)
-                                .foregroundStyle(app == .wechat ? Color.green : Color.blue)
+                                .foregroundStyle(colorIcons ? (app == .wechat ? Color.green : Color.blue) : Color.secondary)
                         }
                         // 聊天文件占用的空间；没有完全磁盘访问权限时读不全，不显示。
                         .badge(fullDiskAccess.granted && chat.sidebarBytes(app) > 0 ? Text(chat.sidebarBytes(app).byteText) : nil)
@@ -195,7 +207,13 @@ struct SidebarView: View {
                     Label {
                         Text(location.name)
                     } icon: {
-                        BadgeIcon(symbol: location.symbol, colors: location.colors)
+                        if colorIcons {
+                            BadgeIcon(symbol: location.symbol, colors: location.colors,
+                                      size: CGFloat(appearance.settings.sidebarIconSize.badgeSide))
+                        } else {
+                            Image(systemName: location.symbol)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .help(location.path)
                     .tag(SidebarItem.pinned(location.path))
@@ -268,6 +286,7 @@ struct SidebarView: View {
             // 以前这里还有一组「固定文件夹」：和「文件夹墙」是同一份数据，现在只留文件夹墙这一个入口。
         }
         .listStyle(.sidebar)
+        .environment(\.sidebarRowSize, rowSize)
         .modifier(SavedSearchRenameAlert())
     }
 

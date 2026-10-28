@@ -37102,6 +37102,406 @@
           }
         }
       }
+    },
+    "主题色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accent color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主题色"
+          }
+        }
+      }
+    },
+    "亮蓝": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright Blue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "亮蓝"
+          }
+        }
+      }
+    },
+    "列表视图的文字和小图标跟着变大；图标视图里的文件名比它小一号。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text and small icons in list view scale with it; file names in icon view are one size smaller."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "列表视图的文字和小图标跟着变大；图标视图里的文件名比它小一号。"
+          }
+        }
+      }
+    },
+    "只换程序坞里的拾掇图标，不改安装包（签名保持有效）。拾掇没打开时，程序坞和访达里显示的仍是原来的图标。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only changes Shiduo’s icon in the Dock; the app itself isn’t modified, so its signature stays valid. When Shiduo isn’t running, the Dock and Finder show the original icon."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只换程序坞里的拾掇图标，不改安装包（签名保持有效）。拾掇没打开时，程序坞和访达里显示的仍是原来的图标。"
+          }
+        }
+      }
+    },
+    "图标比这个尺寸小时只显示通用图标，不生成预览图。关掉上面的开关后，图片和视频也按这个尺寸来，并且超过 %lld 项的文件夹一律用通用图标，翻大文件夹更快。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icons smaller than this show a generic icon instead of a preview. With the switch above off, images and videos follow this size too, and folders with more than %lld items use generic icons, so big folders scroll faster."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图标比这个尺寸小时只显示通用图标，不生成预览图。关掉上面的开关后，图片和视频也按这个尺寸来，并且超过 %lld 项的文件夹一律用通用图标，翻大文件夹更快。"
+          }
+        }
+      }
+    },
+    "备选应用图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternate app icons"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备选应用图标"
+          }
+        }
+      }
+    },
+    "应用图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Icon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用图标"
+          }
+        }
+      }
+    },
+    "开关、按钮、选中框这些拾掇里的强调色跟着变；「默认」跟随系统设置里的强调色。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switches, buttons and selection outlines in Shiduo use this color. “Default” follows the accent color in System Settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开关、按钮、选中框这些拾掇里的强调色跟着变；「默认」跟随系统设置里的强调色。"
+          }
+        }
+      }
+    },
+    "彩色图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colorful icons"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "彩色图标"
+          }
+        }
+      }
+    },
+    "总是预览图片和视频缩略图": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always show thumbnails for images and videos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "总是预览图片和视频缩略图"
+          }
+        }
+      }
+    },
+    "文件列表": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File List"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件列表"
+          }
+        }
+      }
+    },
+    "文件夹图标上探出里面最新的 3 张图片或视频，找素材一眼就知道是哪个文件夹。只在「拾掇风格」文件夹图标、图标不太小时显示；换装、上过色和有自定义图标的文件夹保持原样。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The 3 newest images or videos peek out of each folder icon, so you can spot the right folder of assets at a glance. Shown with Shiduo-style folder icons when icons aren’t too small; themed, colored and custom-icon folders keep their look."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹图标上探出里面最新的 3 张图片或视频，找素材一眼就知道是哪个文件夹。只在「拾掇风格」文件夹图标、图标不太小时显示；换装、上过色和有自定义图标的文件夹保持原样。"
+          }
+        }
+      }
+    },
+    "橙色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "橙色"
+          }
+        }
+      }
+    },
+    "深蓝": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深蓝"
+          }
+        }
+      }
+    },
+    "石墨色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graphite"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "石墨色"
+          }
+        }
+      }
+    },
+    "程序坞里的拾掇图标换一款：紫色、深蓝、亮蓝，设置 › 外观 里点一下就换": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give Shiduo a different Dock icon: violet, navy or bright blue, one click in Settings › Appearance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "程序坞里的拾掇图标换一款：紫色、深蓝、亮蓝，设置 › 外观 里点一下就换"
+          }
+        }
+      }
+    },
+    "粉色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粉色"
+          }
+        }
+      }
+    },
+    "紫色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purple"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紫色"
+          }
+        }
+      }
+    },
+    "红色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "红色"
+          }
+        }
+      }
+    },
+    "绿色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绿色"
+          }
+        }
+      }
+    },
+    "缩略图起始尺寸": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thumbnails from size"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缩略图起始尺寸"
+          }
+        }
+      }
+    },
+    "蓝色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "蓝色"
+          }
+        }
+      }
+    },
+    "边栏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sidebar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "边栏"
+          }
+        }
+      }
+    },
+    "透视文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peek into folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透视文件夹"
+          }
+        }
+      }
+    },
+    "黄色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yellow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "黄色"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

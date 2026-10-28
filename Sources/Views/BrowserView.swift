@@ -427,6 +427,8 @@ struct FileCollectionView: View {
     @AppStorage(ViewPrefs.sortAscendingKey) private var sortAscending = false
     @AppStorage(ViewPrefs.showExtensionsKey) private var showExtensions = true
     @AppStorage(ViewPrefs.showItemInfoKey) private var showItemInfo = true
+    /// 设置 › 外观：文件列表字号。
+    @ObservedObject private var appearance = AppearanceStore.shared
     /// 排好序的列表：只在文件或排序方式变了时重排，框选拖动时不会每帧重排几千个文件。
     @State private var sortedItems: [FileItem]
     @State private var sortedURLs: [URL]
@@ -546,6 +548,8 @@ struct FileCollectionView: View {
                 table
             }
         }
+        // 缩略图：大文件夹里可以只用通用图标（设置 › 外观 › 图标）。超过门槛后值不再变，翻页加载时格子不用跟着重画。
+        .environment(\.fileListItemCount, min(sortedItems.count, ThumbnailPolicy.bigFolderCount + 1))
         .nativeQuickLook($previewURL, in: sortedURLs, forwardsArrowKeys: true)
         // 「文件」菜单的 ⌘⌫：焦点在侧边栏、搜索框旁边、简介栏，或者开着快速查看时也能把选中的移到废纸篓。
         .trashContext(ids: store.selectedIDs) { resolve(store.selectedIDs) }
@@ -646,6 +650,7 @@ struct FileCollectionView: View {
                 ForEach(sorted) { item in
                     FileGridCell(
                         item: item, size: CGFloat(thumbnailSize), selected: store.selectedIDs.contains(item.id),
+                        nameFontSize: CGFloat(ListFontSize.gridNameSize(appearance.settings.listFontSize)),
                         copyText: TextExtractor.canExtract(item) ? { store.copyText(targets(for: item)) } : nil,
                         // 左键点按、双击和拖动交给 AppKit：拖动选中的格子时一次带上所有选中的文件（macOS 14 起都行）。
                         mouseArea: FileCellMouseArea(
@@ -892,6 +897,7 @@ struct FileCollectionView: View {
             TableColumn("名称", value: \FileItem.name) { item in
                 FileListNameCell(
                     item: item, showsExtension: showExtensions,
+                    iconSide: CGFloat(ListFontSize.listIconSide(appearance.settings.listFontSize)),
                     renaming: store.inlineRenamePath == item.path,
                     onRename: { store.commitInlineRename(item, to: $0) },
                     onOpenFolderMenu: item.isDirectory ? { openFolderMenu(item) } : nil
@@ -926,6 +932,8 @@ struct FileCollectionView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        // 设置 › 外观 › 文件列表字号（11–16，默认 13）。
+        .font(.system(size: CGFloat(appearance.settings.listFontSize)))
         .contextMenu(forSelectionType: String.self) { ids in
             if ids.isEmpty {
                 FolderBackgroundMenu()
@@ -1311,6 +1319,8 @@ struct FileGridCell: View {
     let item: FileItem
     let size: CGFloat
     let selected: Bool
+    /// 名字的字号（设置 › 外观 › 文件列表字号，比列表小一号）。
+    var nameFontSize: CGFloat = 12
     /// 图片和 PDF：鼠标移上去显示“拷贝文字”。
     var copyText: (() -> Void)?
     /// 盖在格子上处理点按、双击和拖出的 AppKit 视图（可以一次拖出多个文件）。
@@ -1341,7 +1351,7 @@ struct FileGridCell: View {
                 // 访达标签的小圆点跟在名字后面（和访达的图标视图一样）。
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(item.shownName(extensions: showsExtension))
-                        .font(.callout)
+                        .font(.system(size: nameFontSize))
                         .lineLimit(2)
                         .truncationMode(.middle)
                         .multilineTextAlignment(.center)
@@ -1428,6 +1438,8 @@ struct FileGridCell: View {
 struct FileListNameCell: View {
     let item: FileItem
     let showsExtension: Bool
+    /// 名字前面小图标的边长（跟着文件列表字号变，13 号时 20）。
+    var iconSide: CGFloat = 20
     let renaming: Bool
     let onRename: (String?) -> Void
     var onOpenFolderMenu: (() -> Void)? = nil
@@ -1437,7 +1449,7 @@ struct FileListNameCell: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            ThumbnailView(url: item.url, size: 20, modified: item.modified, isFolder: item.isPlainFolder)
+            ThumbnailView(url: item.url, size: iconSide, modified: item.modified, isFolder: item.isPlainFolder)
                 .quickLookSource(item.url)
             if renaming {
                 InlineRenameField(item: item, onDone: onRename)
