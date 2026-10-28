@@ -451,8 +451,7 @@ private struct FileMenuItems<Extra: View>: View {
         case "tagColors":
             TagPaletteRow(store: store, items: items)
         case "tags":
-            TagMenu(items: items)
-                .environmentObject(store)
+            TagMenu(store: store, items: items)
         case "shelf":
             if context.onShelf {
                 Button("从暂存架移除") { ShelfStore.shared.remove(paths: Set(items.map(\.path))) }
@@ -681,7 +680,8 @@ struct FolderBackgroundMenu: View {
             Button("新建文件夹") { DispatchQueue.main.async { store.newFolderInCurrent() } }
                 .keyboardShortcut(.newFolder)
         case "newFile":
-            NewFileMenu()
+            // 右键菜单里用不订阅的版本，作用在点右键的这一栏（双栏时不一定是当前栏）。
+            NewFileMenuContent(store: store)
         case "paste":
             let count = FileClipboard.fileCount
             Button(count > 1 ? String(localized: "粘贴 \(count) 个项目") : String(localized: "粘贴")) {
@@ -709,13 +709,15 @@ struct FolderBackgroundMenu: View {
 
 /// 右键菜单里的项目全被隐藏了：留这一项，点了打开设置「菜单与快捷键」。
 struct CustomizeMenuButton: View {
-    @Environment(\.openSettings) private var openSettings
-
     var body: some View {
         Button("自定义菜单…") {
             UserDefaults.standard.set(SettingsView.Tab.menus.rawValue, forKey: "settings.tab")
             NSApp.activate(ignoringOtherApps: true)
-            openSettings()
+            // 右键菜单是一棵单独的视图树（NSHostingMenu），环境里的 openSettings 不一定能用：
+            // 交给主窗口去开（和刘海暂存架「暂存架设置…」同一条路）。
+            MainWindow.show {
+                NotificationCenter.default.post(name: ShelfSettingsOpener.notification, object: nil)
+            }
         }
     }
 }

@@ -756,7 +756,9 @@ struct NotchShelfView: View {
         }
         .environment(\.colorScheme, .dark)
         // 原来「…」按钮里的操作都搬到面板的右键菜单（卡片上右键还是卡片自己的菜单）。
-        .contextMenu { panelMenu }
+        // 面板右键菜单快照（macOS 15+ 不走 SwiftUI 的 .contextMenu：面板一直在变——悬停、拖放高亮、选中——
+        // 菜单开着时被重写会在 macOS 27 断言崩溃）。卡片上右键还是卡片自己的菜单。
+        .stablePanelContextMenu { panelMenu }
         .focusable()
         .focusEffectDisabled()
         .focused($focused)

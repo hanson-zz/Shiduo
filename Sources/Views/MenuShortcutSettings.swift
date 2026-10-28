@@ -178,7 +178,7 @@ struct ContextMenuEditor: View {
         switch entry.kind {
         case .item:
             itemRow(entry.id, inGroup: nil)
-                .contextMenu { itemMenu(entry.id) }
+                .stableContextMenu { itemMenu(entry.id) }
         case .separator:
             HStack(spacing: 8) {
                 Image(systemName: "line.3.horizontal")

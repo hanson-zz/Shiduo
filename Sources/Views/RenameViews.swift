@@ -377,7 +377,7 @@ struct RenameSheet: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .help("右键可以重命名或删除这个预设")
-                    .contextMenu {
+                    .stableContextMenu {
                         Button("重命名预设…") { renamePreset(preset) }
                         Button("删除预设", role: .destructive) { deletePreset(preset) }
                     }

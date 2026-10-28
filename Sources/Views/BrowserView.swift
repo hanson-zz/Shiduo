@@ -903,21 +903,25 @@ struct FileCollectionView: View {
                     onOpenFolderMenu: item.isDirectory ? { openFolderMenu(item) } : nil
                 )
                 .help(item.path)
+                .modifier(rowMenu(item))
                 // 资料库类别：最后一行出现时加载下一页。
                 .onAppear { if item.id == sortedItems.last?.id { store.loadMore() } }
             }
             .width(min: 180, ideal: 320)
             TableColumn("修改日期", value: \FileItem.sortDate) { item in
                 Text(item.sortDate == .distantPast ? "--" : item.sortDate.shortText)
+                    .modifier(rowMenu(item))
             }
             .width(min: 110, ideal: 150)
             TableColumn("大小", value: \FileItem.size) { item in
                 ItemSizeText(item: item)
                     .lineLimit(1)
+                    .modifier(rowMenu(item))
             }
             .width(min: 60, ideal: 120)
             TableColumn("种类", value: \FileItem.kindText) { item in
                 Text(item.kindText)
+                    .modifier(rowMenu(item))
             }
             .width(min: 80, ideal: 120)
         } rows: {
@@ -934,8 +938,13 @@ struct FileCollectionView: View {
         .scrollContentBackground(.hidden)
         // 设置 › 外观 › 文件列表字号（11–16，默认 13）。
         .font(.system(size: CGFloat(appearance.settings.listFontSize)))
+        // 右键菜单：macOS 15 起不走表格自己的 SwiftUI 菜单（菜单开着时宿主一重画就往 NSMenu 里 setItemArray，
+        // macOS 27 断言崩溃）：行上的菜单挂在每个单元格上（rowMenu），空白处由下面的透明层接。
+        // 这里只留双击 / 回车的 primaryAction；macOS 14 照旧由它弹菜单。
         .contextMenu(forSelectionType: String.self) { ids in
-            if ids.isEmpty {
+            if #available(macOS 15.0, *) {
+                EmptyView()
+            } else if ids.isEmpty {
                 FolderBackgroundMenu()
             } else {
                 FileContextMenu(items: resolve(ids), preview: { preview($0) })
@@ -959,6 +968,8 @@ struct FileCollectionView: View {
                 store.openItems(list)
             }
         }
+        // 列表空白处右键（macOS 15+）：新建文件夹、粘贴…（只在点到没有行的地方时接）。
+        .stableTableBackgroundContextMenu { FolderBackgroundMenu() }
         .onKeyPress(.space) {
             // 正在原地改名：空格留给输入框。
             guard !store.isInlineRenaming else { return .ignored }
@@ -984,6 +995,12 @@ struct FileCollectionView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { keepSelectionVisible(proxy) }
         }
         }
+    }
+
+    /// 列表视图一行的右键菜单（挂在这一行的每个单元格上，单元格撑满列宽）：
+    /// 右键的那一行在选中里 → 作用在全部选中；不在 → 只作用在这一行（和表格自己的菜单一样）。
+    private func rowMenu(_ item: FileItem) -> TableRowMenu {
+        TableRowMenu { FileContextMenu(items: targets(for: item), preview: { preview($0) }) }
     }
 
     // MARK: 选择
@@ -1720,5 +1737,17 @@ struct FileMoveDropDelegate: DropDelegate {
         let providers = info.itemProviders(for: types)
         if let other, other(providers) { return true }
         return FileDrop.load(providers) { urls in perform(urls, copy) }
+    }
+}
+
+/// 列表视图单元格：撑满列宽（右键点在名字后面的空白也算这一行），挂上右键菜单快照。
+struct TableRowMenu: ViewModifier {
+    let menu: () -> FileContextMenu<EmptyView>
+
+    func body(content: Content) -> some View {
+        content
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .stableContextMenu { menu() }
     }
 }

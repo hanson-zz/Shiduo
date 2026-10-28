@@ -102,6 +102,8 @@ final class TrashCommandCenter: ObservableObject {
         guard let context = current, let store = LibraryStore.shared else { return }
         let list = context.items()
         guard !list.isEmpty else { return }
+        // 系统需要的文件夹：先拦下来，不弹「直接删除」确认框（deleteImmediately 里还会再拦一次）。
+        if store.refuseProtected(list.map(\.path)) { return }
         let window = context.window
         let entries = list.map { (url: $0.url, isDirectory: $0.isDirectory, size: $0.size,
                                   known: FolderSizeStore.shared.knownSize($0.path)) }

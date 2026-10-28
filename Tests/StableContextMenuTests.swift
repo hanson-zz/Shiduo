@@ -146,4 +146,107 @@ final class StableContextMenuTests: XCTestCase {
             XCTAssertFalse(header.contains("@StateObject"), "\(marker) 不能订阅会变的单例")
         }
     }
+
+    // MARK: 4. 2026-10-28 复查补的：列表视图 / 压缩包 / 刘海面板 / 其他零散菜单
+
+    /// 除了 StableContextMenu.swift 自己（macOS 14 退路），源码里不再有 SwiftUI 的 `.contextMenu {`；
+    /// 列表视图 / 压缩包浏览的 contextMenu(forSelectionType:) 只留 primaryAction，macOS 15+ 菜单内容是空的。
+    func testNoSwiftUIContextMenusLeft() throws {
+        var offenders: [String] = []
+        for (name, text) in try swiftSources() where name != "StableContextMenu.swift" {
+            let lines = text.components(separatedBy: "\n")
+            for (i, line) in lines.enumerated() {
+                let code = line.components(separatedBy: "//").first ?? line
+                if code.contains(".contextMenu {") { offenders.append("\(name):\(i + 1)") }
+                if code.contains(".contextMenu(forSelectionType") {
+                    let window = lines[i..<min(lines.count, i + 4)].joined(separator: "\n")
+                    if !window.contains("#available(macOS 15.0, *)") { offenders.append("\(name):\(i + 1) forSelectionType") }
+                }
+            }
+        }
+        XCTAssertEqual(offenders, [], "这些地方还在用 SwiftUI 的右键菜单，菜单开着时内容会被重写（macOS 27 崩溃）")
+    }
+
+    /// 右键菜单里会用到的子菜单也不能订阅、不能要环境对象（NSHostingMenu 那棵树里没有，取不到直接崩）。
+    func testSubmenusUsedInsideMenusDoNotObserve() throws {
+        let sources = Dictionary(try swiftSources(), uniquingKeysWith: { a, _ in a })
+        let checks: [(file: String, marker: String)] = [
+            ("TagViews.swift", "private struct TagMenuContent"),
+            ("TagViews.swift", "struct TagMenu: View"),
+            ("FileTemplates.swift", "struct NewFileMenuContent"),
+            ("Components.swift", "struct CustomizeMenuButton"),
+        ]
+        for check in checks {
+            let text = try XCTUnwrap(sources[check.file], check.file)
+            let start = try XCTUnwrap(text.range(of: check.marker), check.marker)
+            let rest = text[start.upperBound...]
+            let end = rest.range(of: "var body: some View")?.lowerBound ?? rest.endIndex
+            let header = rest[..<end]
+            for wrapper in ["@ObservedObject", "@StateObject", "@EnvironmentObject", "@Environment("] {
+                XCTAssertFalse(header.contains(wrapper), "\(check.marker) 不能用 \(wrapper)")
+            }
+        }
+    }
+
+    private final class RowsSource: NSObject, NSTableViewDataSource {
+        let rows: Int
+        init(rows: Int) { self.rows = rows }
+        func numberOfRows(in tableView: NSTableView) -> Int { rows }
+        func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? { "\(row)" }
+    }
+
+    /// 列表视图空白处的透明层：点在行上、表头上不接（交给行自己的菜单），点在最后一行下面才接；没有表格时不判断。
+    func testTableEmptyAreaDetection() throws {
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 300), styleMask: [.titled],
+                              backing: .buffered, defer: true)
+        let root = NSView(frame: NSRect(x: 0, y: 0, width: 300, height: 300))
+        window.contentView = root
+        let scroll = NSScrollView(frame: root.bounds)
+        let table = NSTableView(frame: scroll.bounds)
+        table.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("name")))
+        table.rowHeight = 20
+        let source = RowsSource(rows: 3)
+        table.dataSource = source
+        scroll.documentView = table
+        root.addSubview(scroll)
+        table.reloadData()
+        root.layoutSubtreeIfNeeded()
+
+        let first = table.rect(ofRow: 0)
+        let onRow = table.convert(NSPoint(x: first.midX, y: first.midY), to: nil)
+        XCTAssertEqual(StableTableHitLogic.isEmptyArea(in: root, windowPoint: onRow), false)
+
+        let last = table.rect(ofRow: 2)
+        // 表格是翻转坐标：maxY 往下。
+        let below = table.convert(NSPoint(x: last.midX, y: last.maxY + 60), to: nil)
+        XCTAssertTrue(scroll.convert(scroll.bounds, to: nil).contains(below))
+        XCTAssertEqual(StableTableHitLogic.isEmptyArea(in: root, windowPoint: below), true)
+
+        if let header = table.headerView, header.window != nil {
+            let onHeader = header.convert(NSPoint(x: header.bounds.midX, y: header.bounds.midY), to: nil)
+            XCTAssertEqual(StableTableHitLogic.isEmptyArea(in: root, windowPoint: onHeader), false)
+        }
+        XCTAssertNil(StableTableHitLogic.isEmptyArea(in: root, windowPoint: NSPoint(x: 900, y: 900)))
+        withExtendedLifetime(source) {}
+    }
+
+    /// 刘海面板这种「整块面板」的菜单：点到卡片（更小的菜单层）上让给卡片，点到空地方自己接。
+    func testPanelMenuDefersToInnerMenus() throws {
+        guard #available(macOS 15.0, *) else { throw XCTSkip("StableContextMenuView 需要 macOS 15") }
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 300), styleMask: [.titled],
+                              backing: .buffered, defer: true)
+        let root = NSView(frame: NSRect(x: 0, y: 0, width: 300, height: 300))
+        window.contentView = root
+        let card = StableContextMenuView(frame: NSRect(x: 10, y: 10, width: 60, height: 60))
+        let panel = StableContextMenuView(frame: root.bounds)
+        panel.claim = .deferToInner
+        root.addSubview(card)
+        root.addSubview(panel)
+        let onCard = card.convert(NSPoint(x: 30, y: 30), to: nil)
+        let empty = root.convert(NSPoint(x: 200, y: 200), to: nil)
+        XCTAssertTrue(StableInnerMenuLogic.hasInnerMenu(in: root, windowPoint: onCard, excluding: panel))
+        XCTAssertFalse(StableInnerMenuLogic.hasInnerMenu(in: root, windowPoint: empty, excluding: panel))
+        // 卡片自己不会让给更大的面板。
+        XCTAssertFalse(StableInnerMenuLogic.hasInnerMenu(in: root, windowPoint: onCard, excluding: card))
+    }
 }

@@ -286,22 +286,35 @@ enum FolderBackupLogic {
         return (1..<parts.count).map { parts[0..<$0].joined(separator: "/") }
     }
 
+    /// 比对用的键：Unicode 统一成预组合形式、不分大小写。Mac 的 APFS 和 exFAT / FAT 移动硬盘默认都不分大小写，
+    /// 名字的 Unicode 写法（é 是一个字符还是 e + 重音）也可能两边不一样；不统一的话同一个文件会被当成
+    /// 「新文件」+「只在硬盘上」，打开镜像时会把刚拷过去的那份移进废纸篓。
+    static func matchKey(_ path: String) -> String {
+        path.precomposedStringWithCanonicalMapping.lowercased()
+    }
+
     /// 比较两边，得出要做的事。只读，什么都不改。
     static func plan(mac: [String: BackupEntry], drive: [String: BackupEntry], leftoverTemps: [String] = []) -> BackupPlan {
         var plan = BackupPlan()
         var conflictSet = Set<String>()
         func underConflict(_ path: String) -> Bool {
-            conflictSet.contains(path) || ancestors(of: path).contains { conflictSet.contains($0) }
+            conflictSet.contains(matchKey(path)) || ancestors(of: path).contains { conflictSet.contains(matchKey($0)) }
         }
+        // 硬盘那边按比对键找（只差大小写 / Unicode 写法的算同一项）。
+        var driveByKey: [String: BackupEntry] = [:]
+        for path in drive.keys.sorted() where driveByKey[matchKey(path)] == nil {
+            driveByKey[matchKey(path)] = drive[path]
+        }
+        let macKeys = Set(mac.keys.map(matchKey))
 
         // 排序后上级一定在下级前面（"a" 比 "a/b" 短，前缀相同时短的在前）。
         for path in mac.keys.sorted() {
             guard let m = mac[path], !underConflict(path) else { continue }
-            if let d = drive[path] {
+            if let d = drive[path] ?? driveByKey[matchKey(path)] {
                 if (m.kind == .folder) != (d.kind == .folder) {
                     // 一边是文件夹、一边是文件：要删掉一边才能对上，默认不删，跳过并列出来。
                     plan.conflicts.append(path)
-                    conflictSet.insert(path)
+                    conflictSet.insert(matchKey(path))
                     continue
                 }
                 if m.kind == .folder { continue }
@@ -315,7 +328,7 @@ enum FolderBackupLogic {
 
         // 只在硬盘上的：只列最上面一层（文件夹里面的不再一个个列），另外数一下文件个数。
         var topOnly = Set<String>()
-        for path in drive.keys.sorted() where mac[path] == nil {
+        for path in drive.keys.sorted() where mac[path] == nil && !macKeys.contains(matchKey(path)) {
             guard let d = drive[path], !underConflict(path) else { continue }
             if ancestors(of: path).contains(where: { topOnly.contains($0) }) {
                 if d.kind != .folder { plan.onlyOnDriveFileCount += 1 }
@@ -648,6 +661,7 @@ enum BackupExecutor {
         }
 
         var state = BackupProgress()
+        var macHasContent: Bool?
         for step in steps {
             if case .copy(_, let size) = step {
                 state.fileCount += 1
@@ -708,6 +722,14 @@ enum BackupExecutor {
 
             case .trash(let rel):
                 guard allowDeletes, let url = roots.target(rel), roots.isWritable(url) else { continue }
+                // 再保险两次（预览之后情况可能变了）：
+                // 1. Mac 文件夹里现在是空的（被清空 / 换成了空文件夹 / 没挂好）：一项都不删，免得把整份备份清掉；
+                // 2. Mac 那边现在又有这一项了（扫描后放回来的）：不删。
+                if macHasContent == nil { macHasContent = Self.hasContent(roots.mac) }
+                if macHasContent != true || Self.exists(roots.source(rel)) {
+                    result.trashFailed.append(rel)
+                    continue
+                }
                 do {
                     try io.trashItem(url)
                     result.trashed += 1
@@ -725,6 +747,18 @@ enum BackupExecutor {
     }
 
     private enum CopyOutcome { case copied, failed }
+
+    /// 文件夹里有没有不是系统杂项的东西（读不了当作没有，这样就不删）。
+    static func hasContent(_ folder: String) -> Bool {
+        guard let names = try? FileManager.default.contentsOfDirectory(atPath: folder) else { return false }
+        return names.contains { !BackupJunk.isJunk($0) }
+    }
+
+    /// 这一项在不在（不跟随最后一层的符号链接）。
+    private static func exists(_ url: URL?) -> Bool {
+        guard let url else { return false }
+        return (try? FileManager.default.attributesOfItem(atPath: url.path)) != nil
+    }
 
     /// 拷一个文件：先拷成同目录下的临时文件，带上原来的修改时间，再改名替换（旧版本到最后一刻都还在，拔盘也不会只剩半个文件）。
     private static func copyOne(_ rel: String, roots: BackupRoots, io: BackupIO, onBytes: @escaping (Int64) -> Void) -> CopyOutcome {

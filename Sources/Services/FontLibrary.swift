@@ -934,11 +934,13 @@ enum FontPreviewCache {
     nonisolated(unsafe) private static var descriptors: [String: [CTFontDescriptor]] = [:]
 
     static func font(for face: FontFace, size: CGFloat) -> NSFont? {
-        guard !face.isDamaged, face.location != .archived, FileManager.default.fileExists(atPath: face.path) else { return nil }
+        guard !face.isDamaged, face.location != .archived else { return nil }
         lock.lock()
         var list = descriptors[face.path]
         lock.unlock()
+        // 读过的直接用（列表每次重画、拖字号滑块都会走到这里，不再每次去磁盘上看文件在不在）。
         if list == nil {
+            guard FileManager.default.fileExists(atPath: face.path) else { return nil }
             list = (CTFontManagerCreateFontDescriptorsFromURL(URL(fileURLWithPath: face.path) as CFURL) as? [CTFontDescriptor]) ?? []
             lock.lock()
             descriptors[face.path] = list

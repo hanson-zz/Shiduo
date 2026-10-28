@@ -18,10 +18,24 @@ extension View {
     func stableContextMenu<MenuContent: View>(@ViewBuilder _ menu: @escaping () -> MenuContent) -> some View {
         modifier(StableContextMenuModifier(menu: menu))
     }
+
+    /// 整块面板的菜单（刘海暂存架面板）：透明层盖在最上面，但点到的地方底下还有卡片、格子自己的
+    /// stableContextMenu 时让给它们（和 SwiftUI 里层菜单优先一样）。不垫在下面，是因为面板背景里有
+    /// NSVisualEffectView 这类 AppKit 视图，会先把右键吃掉。
+    func stablePanelContextMenu<MenuContent: View>(@ViewBuilder _ menu: @escaping () -> MenuContent) -> some View {
+        modifier(StableContextMenuModifier(menu: menu, placement: .panel))
+    }
+
+    /// 列表视图（SwiftUI Table）空白处的右键菜单：盖一层透明层，只在点到表格里没有行的地方时接右键，
+    /// 点在行上照样交给表格（行自己的菜单在单元格上用 stableContextMenu）。找不到表格时不接（退回表格自己的菜单）。
+    func stableTableBackgroundContextMenu<MenuContent: View>(@ViewBuilder _ menu: @escaping () -> MenuContent) -> some View {
+        modifier(StableContextMenuModifier(menu: menu, placement: .tableEmptyArea))
+    }
 }
 
 private struct StableContextMenuModifier<MenuContent: View>: ViewModifier {
     let menu: () -> MenuContent
+    var placement: StableContextMenuPlacement = .overlay
     /// 宿主所在那一栏 / 窗口的标签页：NSHostingMenu 是一棵新的视图树，环境要手动带过去。
     @Environment(\.paneStore) private var paneStore
     @Environment(\.windowTabs) private var windowTabs
@@ -31,20 +45,25 @@ private struct StableContextMenuModifier<MenuContent: View>: ViewModifier {
             let paneStore = paneStore
             let windowTabs = windowTabs
             let menu = menu
-            content.overlay(
-                StableContextMenuCatcher {
-                    AnyView(
-                        menu()
-                            .environment(\.paneStore, paneStore)
-                            .environment(\.windowTabs, windowTabs)
-                    )
-                }
-            )
+            let claim: StableMenuClaim = placement == .tableEmptyArea ? .tableEmptyArea : (placement == .panel ? .deferToInner : .always)
+            let catcher = StableContextMenuCatcher(claim: claim) {
+                AnyView(
+                    menu()
+                        .environment(\.paneStore, paneStore)
+                        .environment(\.windowTabs, windowTabs)
+                )
+            }
+            content.overlay(catcher)
+        } else if placement == .tableEmptyArea {
+            // macOS 14：表格空白处照旧用表格自己的 contextMenu(forSelectionType:)。
+            content
         } else {
             content.contextMenu { StableMenuLegacyObserver(content: menu) }
         }
     }
 }
+
+private enum StableContextMenuPlacement: Equatable { case overlay, panel, tableEmptyArea }
 
 /// macOS 14：FileMenuItems 不再订阅这几个单例，这里替它订阅，菜单内容保持最新（老系统不受那次崩溃影响）。
 private struct StableMenuLegacyObserver<Content: View>: View {

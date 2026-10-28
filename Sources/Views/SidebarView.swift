@@ -283,10 +283,10 @@ struct SidebarView: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .contextMenu { importFinderTagsButton }
+                .stableContextMenu { importFinderTagsButton }
             } header: {
                 Text("标签")
-                    .contextMenu { importFinderTagsButton }
+                    .stableContextMenu { importFinderTagsButton }
             }
 
             // 以前这里还有一组「固定文件夹」：和「文件夹墙」是同一份数据，现在只留文件夹墙这一个入口。

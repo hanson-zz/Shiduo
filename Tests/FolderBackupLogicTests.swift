@@ -339,6 +339,52 @@ final class FolderBackupLogicTests: XCTestCase {
         XCTAssertTrue(exists("x.txt", in: drive), "移不进废纸篓就留着，不直接删")
     }
 
+    // MARK: - 2026-10-28 复查补的删除保险
+
+    /// 只差大小写 / Unicode 写法（exFAT 盘、别的电脑拷过来的）：算同一个文件，不能既「新文件」又「只在硬盘上」——
+    /// 不然镜像时会把刚拷过去的那份移进废纸篓。
+    func testCaseAndUnicodeVariantsAreTheSameEntry() {
+        let nfd = "Cafe\u{301}.txt"           // é = e + 组合重音
+        let nfc = "Caf\u{E9}.txt"             // é 一个字符
+        let mac = entries([entry("Report.PDF"), entry(nfc), entry("Docs", .folder), entry("Docs/a.txt")])
+        let drive = entries([entry("report.pdf"), entry(nfd), entry("docs", .folder), entry("docs/a.txt"), entry("真的只在硬盘.txt")])
+        let plan = FolderBackupLogic.plan(mac: mac, drive: drive)
+        XCTAssertEqual(plan.newFiles, [])
+        XCTAssertEqual(plan.foldersToCreate, [])
+        XCTAssertEqual(plan.changed, [])
+        XCTAssertEqual(plan.onlyOnDrive.map(\.path), ["真的只在硬盘.txt"])
+    }
+
+    /// Mac 文件夹是空的（被清空、换成了空文件夹、外接盘没挂好留下的空目录）：镜像一项都不删。
+    func testMirrorDeletesNothingWhenMacFolderIsEmpty() throws {
+        try write("backup", "a.txt", in: drive)
+        try write("backup", "b/c.txt", in: drive)
+        try write("junk", ".DS_Store", in: mac)
+        let trash = base.appendingPathComponent("trash")
+        let (plan, result) = backup(includeDeletes: true, io: fakeTrashIO(into: trash))
+        XCTAssertEqual(plan.onlyOnDrive.count, 2)
+        XCTAssertEqual(result.trashed, 0)
+        XCTAssertEqual(Set(result.trashFailed), ["a.txt", "b"])
+        XCTAssertTrue(exists("a.txt", in: drive))
+        XCTAssertTrue(exists("b/c.txt", in: drive))
+    }
+
+    /// 预览之后 Mac 那边又有了这一项（放回来了）：不删硬盘上的那份。
+    func testMirrorSkipsItemsThatCameBackOnMac() throws {
+        try write("keep", "keep.txt", in: mac)
+        try write("keep", "keep.txt", in: drive)
+        try write("old", "back.txt", in: drive)
+        let plan = FolderBackupLogic.plan(mac: BackupScanner.scan(mac.path).entries, drive: BackupScanner.scan(drive.path).entries)
+        XCTAssertEqual(plan.onlyOnDrive.map(\.path), ["back.txt"])
+        try write("restored", "back.txt", in: mac)
+        let trash = base.appendingPathComponent("trash")
+        let result = BackupExecutor.run(plan.steps(includeDeletes: true), roots: roots, allowDeletes: true,
+                                        io: fakeTrashIO(into: trash), cancel: BackupCancelFlag()) { _ in }
+        XCTAssertEqual(result.trashed, 0)
+        XCTAssertEqual(result.trashFailed, ["back.txt"])
+        XCTAssertTrue(exists("back.txt", in: drive))
+    }
+
     // MARK: - 意外
 
     func testDriveUnpluggedMidCopy() throws {

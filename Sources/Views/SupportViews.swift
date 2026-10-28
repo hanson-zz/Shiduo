@@ -53,15 +53,15 @@ struct SupportSections: View {
         Section {
             LabeledContent("官网") {
                 Link("shiduo.app", destination: Support.websiteURL)
-                    .contextMenu { Button("拷贝链接") { Support.copy(Support.websiteURL.absoluteString) } }
+                    .stableContextMenu { Button("拷贝链接") { Support.copy(Support.websiteURL.absoluteString) } }
             }
             LabeledContent("GitHub") {
                 Link("hanson-zz/Shiduo", destination: Support.repoURL)
-                    .contextMenu { Button("拷贝链接") { Support.copy(Support.repoURL.absoluteString) } }
+                    .stableContextMenu { Button("拷贝链接") { Support.copy(Support.repoURL.absoluteString) } }
             }
             LabeledContent("邮箱") {
                 Link(Support.email, destination: Support.mailURL(subject: String(localized: "关于拾掇")))
-                    .contextMenu { Button("拷贝邮箱") { Support.copy(Support.email) } }
+                    .stableContextMenu { Button("拷贝邮箱") { Support.copy(Support.email) } }
             }
         } header: {
             Text("联系我们")

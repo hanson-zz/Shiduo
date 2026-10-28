@@ -415,17 +415,19 @@ enum TagSync {
 
 /// 右键菜单里的「标签」子菜单。
 struct TagMenu: View {
+    let store: LibraryStore
     let items: [FileItem]
 
     var body: some View {
         // 读文件标签的活放在子视图里：只有菜单真的展开时才做。
-        Menu("标签") { TagMenuContent(items: items) }
+        Menu("标签") { TagMenuContent(store: store, items: items) }
     }
 }
 
+/// 只读、不订阅（不用 @EnvironmentObject / 观察包装）：右键菜单是 NSHostingMenu 快照（StableContextMenu.swift），
+/// 那棵视图树里没有 LibraryStore 环境对象（取不到会直接崩），订阅了的话菜单开着时店里一有变化就会重写菜单（macOS 27 崩溃）。
 private struct TagMenuContent: View {
-    @EnvironmentObject private var store: LibraryStore
-    @ObservedObject private var custom = CustomTagStore.shared
+    let store: LibraryStore
     let items: [FileItem]
 
     var body: some View {

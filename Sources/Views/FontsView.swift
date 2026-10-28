@@ -262,7 +262,7 @@ private struct FontLibraryTab: View {
                             if expanded.contains(family.id) { expanded.remove(family.id) } else { expanded.insert(family.id) }
                         }
                         .tag(family.id)
-                        .contextMenu { menu(for: family) }
+                        .stableContextMenu { menu(for: family) }
                     }
                 }
                 .listStyle(.inset)

@@ -233,10 +233,33 @@ extension LibraryStore {
     }
 }
 
-/// 「新建文件 ▸」子菜单（空白处右键、文件菜单共用）。没解锁 Pro 时标题带「· Pro」和小锁，点哪一项都弹升级面板。
+/// 「新建文件 ▸」子菜单（「文件」菜单栏用）。没解锁 Pro 时标题带「· Pro」和小锁，点哪一项都弹升级面板。
+/// 菜单栏里的菜单要跟着模板列表 / 授权变，所以这里订阅；右键菜单用下面不订阅的 NewFileMenuContent。
 struct NewFileMenu: View {
     @ObservedObject private var templates = FileTemplateStore.shared
     @ObservedObject private var license = LicenseManager.shared
+
+    var body: some View {
+        // 把会变的值当参数传进去：内容视图本身不订阅，参数变了它才会重画。
+        NewFileMenuContent(store: nil, userTemplates: templates.userTemplates, isPro: license.isPro)
+    }
+}
+
+/// 「新建文件 ▸」的内容：只读、不订阅（右键菜单是 NSHostingMenu 快照，菜单开着时不能被重写）。
+/// store：在哪一栏新建（右键空白处那一栏）；nil = 当前那一栏。
+struct NewFileMenuContent: View {
+    let store: LibraryStore?
+    /// 右键那一刻的模板列表和授权（快照）。
+    let userTemplates: [UserTemplate]
+    let isPro: Bool
+
+    init(store: LibraryStore?, userTemplates: [UserTemplate]? = nil, isPro: Bool? = nil) {
+        self.store = store
+        self.userTemplates = userTemplates ?? FileTemplateStore.shared.userTemplates
+        self.isPro = isPro ?? LicenseManager.shared.isPro
+    }
+
+    private var templates: FileTemplateStore { FileTemplateStore.shared }
 
     var body: some View {
         Menu {
@@ -247,9 +270,9 @@ struct NewFileMenu: View {
                     Label(template.title, systemImage: template.symbol)
                 }
             }
-            if !templates.userTemplates.isEmpty {
+            if !userTemplates.isEmpty {
                 Divider()
-                ForEach(templates.userTemplates) { template in
+                ForEach(userTemplates) { template in
                     Button {
                         run { templates.create(.user(template), in: $0) }
                     } label: {
@@ -259,12 +282,12 @@ struct NewFileMenu: View {
             }
             Divider()
             Button {
-                if license.isPro { templates.manage() } else { showPaywall() }
+                if isPro { templates.manage() } else { showPaywall() }
             } label: {
                 Label("管理模板…", systemImage: "gearshape")
             }
         } label: {
-            if license.isPro {
+            if isPro {
                 Text("新建文件")
             } else {
                 Label {
@@ -277,11 +300,11 @@ struct NewFileMenu: View {
     }
 
     private func run(_ action: @escaping @MainActor (LibraryStore) -> Void) {
-        guard license.isPro else {
+        guard isPro else {
             showPaywall()
             return
         }
-        guard let store = LibraryStore.shared else { return }
+        guard let store = store ?? LibraryStore.shared else { return }
         // 等菜单收起、焦点回到列表再建（要原地改名）。
         DispatchQueue.main.async { action(store) }
     }

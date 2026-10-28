@@ -55,7 +55,7 @@ struct CleanupHistoryView: View {
                             ForEach(group.records) { record in
                                 HistoryRow(record: record, status: status(record), restore: { restore([record]) })
                                     .tag(record.id)
-                                    .contextMenu { rowMenu(record) }
+                                    .stableContextMenu { rowMenu(record) }
                             }
                         }
                     }

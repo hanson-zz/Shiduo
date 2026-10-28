@@ -161,7 +161,7 @@ struct ImageStudioList: View {
                 ForEach(Array(studio.items.enumerated()), id: \.element.id) { index, item in
                     row(item, index: index)
                         .tag(item.id)
-                        .contextMenu {
+                        .stableContextMenu {
                             Button("移除") { requestRemove(item.id) }
                             if item.cropStart > 0 || item.cropEnd > 0 {
                                 Button("取消裁剪") { studio.setCrop(item.id, start: 0, end: 0) }

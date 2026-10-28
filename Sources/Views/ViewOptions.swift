@@ -277,7 +277,7 @@ private struct PathBarCrumbs: View {
             }
         }
         .help(crumb)
-        .contextMenu {
+        .stableContextMenu {
             Button("拷贝路径") { FileActions.copy(crumb) }
             Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: crumb)]) }
         }

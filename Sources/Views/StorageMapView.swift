@@ -284,7 +284,7 @@ struct StorageMapView: View {
             .onTapGesture {
                 if node.isDirectory { model.enter(node.url) }
             }
-            .contextMenu {
+            .stableContextMenu {
                 if node.isDirectory { Button("打开这个文件夹的占用图") { model.enter(node.url) } }
                 Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([node.url]) }
                 Button("拷贝路径") { FileActions.copy(node.url.path) }

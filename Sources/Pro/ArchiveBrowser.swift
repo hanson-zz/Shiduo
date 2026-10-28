@@ -431,6 +431,12 @@ struct ArchiveBrowserView: View {
                 List(selection: $session.selection) {
                     ForEach(session.nodes) { node in
                         row(node)
+                            .contentShape(Rectangle())
+                            // 右键菜单快照（macOS 15+ 不走列表自己的 SwiftUI 菜单，见 StableContextMenu.swift）：
+                            // 右键的这一项在选中里 → 作用在全部选中，否则只作用在这一项。
+                            .stableContextMenu {
+                                menu(for: session.selection.contains(node.id) ? session.selection : [node.id])
+                            }
                             .tag(node.id)
                             .onDrag { session.dragProvider(for: node) }
                     }
@@ -438,8 +444,14 @@ struct ArchiveBrowserView: View {
                 .listStyle(.inset)
                 .scrollContentBackground(.hidden)
                 .focused($listFocused)
+                // 空白处右键：「全部解压到…」。
+                .stableTableBackgroundContextMenu { menu(for: []) }
                 .contextMenu(forSelectionType: String.self) { ids in
-                    menu(for: ids)
+                    if #available(macOS 15.0, *) {
+                        EmptyView()
+                    } else {
+                        menu(for: ids)
+                    }
                 } primaryAction: { ids in
                     guard ids.count == 1, let id = ids.first, let node = session.nodes.first(where: { $0.id == id }) else { return }
                     session.open(node, store: store)

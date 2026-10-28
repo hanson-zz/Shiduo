@@ -2140,7 +2140,8 @@ final class LibraryStore: ObservableObject {
     /// 「直接删除…」（⌥⌘⌫，调用前已经确认过）：真的删掉，不进废纸篓、不能撤销，也不记进清理记录。
     /// 只在 iCloud 云端的文件照样跳过（删掉会连云端一起没）。删除在后台线程做。
     func deleteImmediately(_ list: [FileItem]) {
-        guard !list.isEmpty else { return }
+        // 和移到废纸篓一样：macOS 需要的文件夹（桌面、文稿、下载、资源库……）一律不动，直接删除更不行。
+        guard !list.isEmpty, !refuseProtected(list.map(\.path)) else { return }
         let urls = list.map(\.url)
         trashingCount += list.count
         Task {
