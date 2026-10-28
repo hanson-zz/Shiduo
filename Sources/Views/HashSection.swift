@@ -15,8 +15,13 @@ final class HashModel: ObservableObject {
     @Published private(set) var hashes: [HashAlgorithm: String] = [:]
     @Published var compareText = ""
     private var task: Task<Void, Never>?
-    private var worker: Task<Result<[HashAlgorithm: String], Error>, Never>?
+    /// nonisolated(unsafe)：deinit 里要取消（简介关掉后模型没了，结果没人要，别让后台把几十 GB 的文件读完）。
+    nonisolated(unsafe) private var worker: Task<Result<[HashAlgorithm: String], Error>, Never>?
     private var path: String?
+
+    deinit {
+        worker?.cancel()
+    }
 
     /// 换了一个文件：停下正在算的，清空结果（粘贴的比较值也清掉）。
     func reset(_ path: String) {

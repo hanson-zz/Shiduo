@@ -69,6 +69,26 @@ enum ArchivePathLogic {
         return (parts.joined(separator: "/"), isDirectory)
     }
 
+    /// 压缩包里的符号链接指向的位置还在压缩包里面吗（只按字面算：从链接所在的文件夹出发，一层层走 destination，
+    /// 「..」退到根目录外面、或者是绝对路径就算跑出去了）。跑出去的链接不建：不然后面一项「链接/文件」
+    /// 会顺着链接写到解压文件夹外面（经典的 zip-slip）。
+    static func symlinkStaysInside(entryPath: String, destination: String) -> Bool {
+        guard !destination.isEmpty, !destination.hasPrefix("/"), !destination.contains("\0") else { return false }
+        var stack = entryPath.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
+        guard !stack.isEmpty else { return false }
+        stack.removeLast()  // 链接自己的名字
+        for part in destination.split(separator: "/", omittingEmptySubsequences: true) {
+            if part == "." { continue }
+            if part == ".." {
+                guard !stack.isEmpty else { return false }
+                stack.removeLast()
+            } else {
+                stack.append(String(part))
+            }
+        }
+        return true
+    }
+
     /// 访达压缩时夹带的「__MACOSX」、「._xxx」资源分支和 .DS_Store：不显示。
     static func isJunk(_ path: String) -> Bool {
         let parts = path.split(separator: "/")

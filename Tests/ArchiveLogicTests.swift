@@ -106,6 +106,18 @@ final class ArchiveLogicTests: XCTestCase {
         XCTAssertTrue(ArchivePathLogic.isInside("x", ""))
     }
 
+    /// 压缩包里的符号链接：指向包里面的才建；跑到外面去的（.. 退过根、绝对路径）不建，防 zip-slip。
+    func testSymlinkMustStayInsideArchive() {
+        XCTAssertTrue(ArchivePathLogic.symlinkStaysInside(entryPath: "App.framework/Current", destination: "A"))
+        XCTAssertTrue(ArchivePathLogic.symlinkStaysInside(entryPath: "a/b/link", destination: "../c/file.txt"))
+        XCTAssertTrue(ArchivePathLogic.symlinkStaysInside(entryPath: "a/link", destination: "./x/../y"))
+        XCTAssertFalse(ArchivePathLogic.symlinkStaysInside(entryPath: "link", destination: "../outside"))
+        XCTAssertFalse(ArchivePathLogic.symlinkStaysInside(entryPath: "a/b/link", destination: "../../../Users/me/Library"))
+        XCTAssertFalse(ArchivePathLogic.symlinkStaysInside(entryPath: "a/link", destination: "/etc/passwd"))
+        XCTAssertFalse(ArchivePathLogic.symlinkStaysInside(entryPath: "a/link", destination: ""))
+        XCTAssertFalse(ArchivePathLogic.symlinkStaysInside(entryPath: "a/link", destination: "x/../../.."))
+    }
+
     func testKinds() {
         XCTAssertEqual(ArchiveKind.kind(forName: "a.ZIP"), .zip)
         XCTAssertEqual(ArchiveKind.kind(forName: "a.tar.gz"), .tar)

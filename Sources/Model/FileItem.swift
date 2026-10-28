@@ -42,9 +42,11 @@ struct FileItem: Identifiable, Hashable {
     var category: FileCategory? { FileCategory.classify(typeTree: typeTree) }
 
     var isImage: Bool {
-        typeTree.contains("public.image")
-            || ["png", "jpg", "jpeg", "heic", "heif", "gif", "tif", "tiff", "bmp", "webp"].contains(ext)
+        typeTree.contains("public.image") || Self.imageExtensions.contains(ext)
     }
+
+    /// 常见图片扩展名（放成静态集合：isImage 会在几万个文件上逐个调用，不每次新建数组）。
+    private static let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "heic", "heif", "gif", "tif", "tiff", "bmp", "webp"]
 
     var kindText: String {
         if isScreenshot { return String(localized: "kind.screenshot", defaultValue: "截图") }

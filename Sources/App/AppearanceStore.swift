@@ -265,10 +265,15 @@ enum AltAppIcons {
     private static func syncBundleIcon(_ id: String?) {
         bundleGeneration += 1
         let generation = bundleGeneration
-        let box = AltIconImageBox(image: id.flatMap { dockImage(for: $0) })
+        // 交给后台的是不可变的 CGImage（线程安全），后台自己再包一个 NSImage：
+        // 同一个 NSImage 程序坞的图片视图、设置里的缩略图正在主线程上画，不能同时拿到后台去画（NSImage 不是线程安全的）。
+        let source = id.flatMap { dockImage(for: $0) }
+        let box = AltIconImageBox(cgImage: source?.cgImage(forProposedRect: nil, context: nil, hints: nil),
+                                  size: source?.size ?? .zero)
         let path = Bundle.main.bundlePath
         bundleQueue.async {
-            let outcome = AltAppIcons.performBundleSync(id: id, image: box.image, path: path)
+            let image = box.cgImage.map { NSImage(cgImage: $0, size: box.size) }
+            let outcome = AltAppIcons.performBundleSync(id: id, image: image, path: path)
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
                     AltAppIcons.finishBundleSync(outcome, generation: generation)
@@ -346,7 +351,8 @@ enum AltAppIcons {
 }
 
 private struct AltIconImageBox: @unchecked Sendable {
-    let image: NSImage?
+    let cgImage: CGImage?
+    let size: NSSize
 }
 
 /// 安装包图标写入结果：设置 › 外观 › 应用图标 下面那行小字看这个。

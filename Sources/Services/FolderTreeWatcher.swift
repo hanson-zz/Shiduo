@@ -6,7 +6,8 @@ import Foundation
 /// 系统本身每秒合并一次事件（latency 1 秒）；回调在主线程。
 @MainActor
 final class FolderTreeWatcher {
-    private var stream: FSEventStreamRef?
+    /// nonisolated(unsafe)：deinit 里要停掉它（回调拿的是不持有的 self 指针，对象没了流还开着就会访问已释放的内存）。
+    nonisolated(unsafe) private var stream: FSEventStreamRef?
     private(set) var path: String?
     private let onChange: @MainActor ([String]) -> Void
 
@@ -41,13 +42,21 @@ final class FolderTreeWatcher {
     }
 
     func stop() {
-        if let stream {
-            FSEventStreamStop(stream)
-            FSEventStreamInvalidate(stream)
-            FSEventStreamRelease(stream)
-        }
+        Self.tearDown(stream)
         stream = nil
         path = nil
+    }
+
+    /// 浏览状态没走 retire() 就被释放（比如某个窗口 / 标签异常关闭）时兜底：先停掉流，回调就不会再来。
+    deinit {
+        Self.tearDown(stream)
+    }
+
+    nonisolated private static func tearDown(_ stream: FSEventStreamRef?) {
+        guard let stream else { return }
+        FSEventStreamStop(stream)
+        FSEventStreamInvalidate(stream)
+        FSEventStreamRelease(stream)
     }
 
     private func deliver(_ paths: [String]) {

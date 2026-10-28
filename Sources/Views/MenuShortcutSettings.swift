@@ -438,12 +438,16 @@ private let shortcutSections: [ShortcutSection] = {
 @MainActor
 final class ShortcutRecorder: ObservableObject {
     @Published var target: AppShortcut?
-    private var monitor: Any?
+    /// nonisolated(unsafe)：deinit 里也要拿掉（监听器吃掉所有按键，漏拿掉的话整个 App 打不了字）。
+    nonisolated(unsafe) private var monitor: Any?
 
     func start(_ shortcut: AppShortcut, onKey: @escaping (NSEvent) -> Void) {
         stop()
         target = shortcut
+        // 只录设置窗口里的按键：录着的时候切到主窗口打字，按键照常给主窗口。
+        let window = NSApp.keyWindow
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if let window, event.window !== window { return event }
             onKey(event)
             return nil
         }
@@ -453,6 +457,10 @@ final class ShortcutRecorder: ObservableObject {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
         target = nil
+    }
+
+    deinit {
+        if let monitor { NSEvent.removeMonitor(monitor) }
     }
 }
 

@@ -137,13 +137,21 @@ enum ZipExtractor {
         let fm = FileManager.default
         let handle = try FileHandle(forReadingFrom: archive)
         defer { try? handle.close() }
+        let root = staging.resolvingSymlinksInPath().standardizedFileURL.path
+        /// 写之前核对：顺着已经建好的链接解析后，目标的上一层还在解压文件夹里（防 zip-slip）。
+        func insideStaging(_ url: URL) -> Bool {
+            let parent = url.deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL.path
+            return parent == root || parent.hasPrefix(root + "/")
+        }
         for entry in entries {
             let target = staging.appendingPathComponent(entry.path, isDirectory: entry.isDirectory)
+            guard insideStaging(target) else { continue }
             if entry.isDirectory {
                 try fm.createDirectory(at: target, withIntermediateDirectories: true)
                 continue
             }
             try fm.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+            guard insideStaging(target) else { continue }
             try handle.seek(toOffset: entry.localHeaderOffset)
             let header = [UInt8](try handle.read(upToCount: 30) ?? Data())
             guard header.count == 30, ByteReader(header).u32(0) == ZipDirectoryReader.localSignature else {
@@ -158,7 +166,7 @@ enum ZipExtractor {
                 var data = Data()
                 try copy(handle, packed: packed, method: entry.method) { data.append($0) }
                 let destination = String(decoding: data, as: UTF8.self)
-                if !destination.hasPrefix("/"), !destination.isEmpty {
+                if ArchivePathLogic.symlinkStaysInside(entryPath: entry.path, destination: destination) {
                     try? fm.removeItem(at: target)
                     try? fm.createSymbolicLink(atPath: target.path, withDestinationPath: destination)
                 }

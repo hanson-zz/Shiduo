@@ -21,6 +21,7 @@ struct BrowserView: View {
     @State private var sourceFilter: String?
     /// 图片筛选：尺寸 / 方向 / 主色（免费）。
     @State private var imageFilter = ImageFilter()
+    @State private var itemsHaveImages = false
     @ObservedObject private var imageMeta = ImageMetaStore.shared
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
 
@@ -75,7 +76,7 @@ struct BrowserView: View {
                 Divider()
             }
             // 设了来源筛选时菜单一直显示，免得列表里没有下载文件时没法清掉筛选。图片筛选同理。
-            let showsImageFilter = imageFilter.isActive || store.items.contains(where: \.isImage)
+            let showsImageFilter = imageFilter.isActive || itemsHaveImages
             if showsOCRTools || !sourceGroups.isEmpty || sourceFilter != nil || showsImageFilter {
                 HStack(spacing: 12) {
                     if showsOCRTools { ocrBar }
@@ -107,6 +108,8 @@ struct BrowserView: View {
         // 开始筛图片、或者列表变了：在后台分析还没算过的图片。
         .onChange(of: imageFilter) { if imageFilter.isActive { imageMeta.analyze(store.items) } }
         .onChange(of: store.items) { if imageFilter.isActive { imageMeta.analyze(store.items) } }
+        // 列表里有没有图片（决定显示图片筛选按钮）：列表变了才数一次，不在每次重画时把几万个文件过一遍。
+        .onChange(of: store.items, initial: true) { itemsHaveImages = store.items.contains(where: \.isImage) }
         .navigationTitle(title)
         .navigationSubtitle(subtitle(shown))
     }
