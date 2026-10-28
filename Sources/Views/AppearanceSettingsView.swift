@@ -250,22 +250,31 @@ private struct AppIconPicker: View {
     let choose: (String?) -> Void
     @Environment(\.isEnabled) private var isEnabled
 
+    /// 28 款一行放不下：可滚动的网格，缩略图下面是名字。
+    private let columns = [GridItem(.adaptive(minimum: 76, maximum: 92), spacing: 8, alignment: .top)]
+
     var body: some View {
         let ids = AltAppIcons.available
-        HStack(spacing: 14) {
-            tile(id: nil, image: AltAppIcons.defaultImage, title: String(localized: "默认"))
-            ForEach(ids, id: \.self) { id in
-                if let image = AltAppIcons.image(for: id) {
-                    tile(id: id, image: image, title: AltAppIcons.title(for: id))
+        // 存着的是已经删掉的旧款（早先的占位 violet / navy / cobalt）→ 当成默认，选中框落在「默认」上。
+        let current = selected.flatMap { ids.contains($0) ? $0 : nil }
+        ScrollView(.vertical) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
+                tile(id: nil, image: AltAppIcons.defaultImage, title: String(localized: "默认"), current: current)
+                ForEach(ids, id: \.self) { id in
+                    if let image = AltAppIcons.image(for: id) {
+                        tile(id: id, image: image, title: AltAppIcons.title(for: id), current: current)
+                    }
                 }
             }
-            Spacer(minLength: 0)
+            .padding(.vertical, 4)
+            .padding(.trailing, 6)
         }
+        .frame(height: 300)
         .opacity(isEnabled ? 1 : 0.55)
     }
 
-    private func tile(id: String?, image: NSImage, title: String) -> some View {
-        let isSelected = selected == id
+    private func tile(id: String?, image: NSImage, title: String, current: String?) -> some View {
+        let isSelected = current == id
         return Button {
             choose(id)
         } label: {
@@ -284,12 +293,18 @@ private struct AppIconPicker: View {
                             .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
                     )
                 Text(title)
-                    .font(.caption.weight(isSelected ? .semibold : .regular))
+                    .font(.caption2.weight(isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(title)
+        .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

@@ -221,10 +221,40 @@ enum PeekFolderLogic {
     }
 }
 
-/// 备选应用图标：App 里 AltAppIcons 文件夹的 <id>.png，几款内置的按固定顺序排，设计师新放进来的按名字排在后面。
+/// 备选应用图标：App 里 AltAppIcons 文件夹的 <id>.png，内置的按固定顺序排，以后新放进来的按名字排在后面。
 enum AltAppIconLogic {
-    /// 内置几款的顺序。
-    static let builtInOrder = ["violet", "navy", "cobalt"]
+    /// 内置几款的顺序：小熊猫日常色 → 带 Pro 角标的 → 节日 → 笑脸小电脑。
+    /// 早先的占位 violet / navy / cobalt 已经删了：存着这几个的用户 resolve 时文件不在 → 自动回到默认图标。
+    static let builtInOrder = [
+        "panda-cream",
+        "panda-night",
+        "panda-royal-pro",
+        "panda-gold-pro",
+        "panda-ruby-pro",
+        "panda-prism-pro",
+        "panda-blue-pro",
+        "panda-yellow-pro",
+        "panda-red-pro",
+        "panda-purple-pro",
+        "panda-rainbow-pro",
+        "panda-navy-pro",
+        "panda-bronze-pro",
+        "panda-wine-pro",
+        "panda-grape-pro",
+        "panda-aurora-pro",
+        "panda-halloween",
+        "panda-christmas",
+        "mac-cream",
+        "mac-teal",
+        "mac-sky-pro",
+        "mac-navy",
+        "mac-red-pro",
+        "mac-rainbow-pro",
+        "mac-leaf",
+        "mac-lavender",
+        "mac-halloween",
+        "mac-christmas",
+    ]
 
     /// id 只许小写字母、数字、- 和 _（文件名就是 id，免得怪名字）。
     static func isValidID(_ id: String?) -> Bool {

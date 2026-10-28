@@ -170,8 +170,8 @@ final class AppearanceLogicTests: XCTestCase {
     // MARK: 备选应用图标
 
     func testAltIconIDsOrderAndFiltering() {
-        let names = ["cobalt.png", "zebra.png", "navy.png", "violet.png", "Bad Name.png", "default.png", "notes.txt", "alpha.PNG", "navy.png"]
-        XCTAssertEqual(AltAppIconLogic.ids(fromFileNames: names), ["violet", "navy", "cobalt", "alpha", "zebra"])
+        let names = ["mac-cream.png", "zebra.png", "panda-night.png", "panda-cream.png", "Bad Name.png", "default.png", "notes.txt", "alpha.PNG", "panda-night.png", "panda-halloween.png"]
+        XCTAssertEqual(AltAppIconLogic.ids(fromFileNames: names), ["panda-cream", "panda-night", "panda-halloween", "mac-cream", "alpha", "zebra"])
     }
 
     func testAltIconValidIDs() {
@@ -193,6 +193,21 @@ final class AppearanceLogicTests: XCTestCase {
     }
 
     func testBundledAltIconsMatchBuiltInOrder() {
-        XCTAssertEqual(AltAppIconLogic.ids(fromFileNames: ["navy.png", "cobalt.png", "violet.png"]), AltAppIconLogic.builtInOrder)
+        let order = AltAppIconLogic.builtInOrder
+        XCTAssertEqual(order.count, 28)
+        XCTAssertEqual(Set(order).count, order.count, "不能重复")
+        XCTAssertTrue(order.allSatisfy { AltAppIconLogic.isValidID($0) })
+        XCTAssertEqual(AltAppIconLogic.ids(fromFileNames: order.reversed().map { $0 + ".png" }), order)
+        XCTAssertEqual(Array(order.prefix(2)), ["panda-cream", "panda-night"], "小熊猫日常色排最前")
+        XCTAssertEqual(order.last, "mac-christmas")
+    }
+
+    func testOldPlaceholderAltIconFallsBackToDefault() {
+        let available = AltAppIconLogic.builtInOrder
+        for old in ["violet", "navy", "cobalt"] {
+            XCTAssertFalse(available.contains(old))
+            XCTAssertNil(AltAppIconLogic.resolve(old, available: available, isPro: true), "早先的占位图标删了，存着的选择回到默认")
+        }
+        XCTAssertEqual(AltAppIconLogic.resolve("panda-gold-pro", available: available, isPro: true), "panda-gold-pro")
     }
 }

@@ -90,7 +90,8 @@ extension View {
 
 /// 备选 Dock 图标：只换运行时的程序坞图标（NSApplication.applicationIconImage），不改安装包里的文件，签名保持有效。
 /// 图放在 App 里的 AltAppIcons 文件夹：<id>.png，正方形、建议 1024×1024（至少 512），四周留和系统图标一样的透明边。
-/// 往 Resources/AltAppIcons 里放一张新的 PNG 就多一款，不用改代码。
+/// 往 Resources/AltAppIcons 里放一张新的 PNG 就多一款，不用改代码（中文名在 title(for:) 里加一行）。
+/// 现在 28 款（2026-10 设计师定稿）：小熊猫日常色、Pro 角标款、节日款、笑脸小电脑；渐变很重的几款是 640–768px 无损，其余 1024px。
 /// 拾掇没在运行时，程序坞和访达里显示的仍是安装包自带的图标（系统限制）。
 @MainActor
 enum AltAppIcons {
@@ -123,9 +124,34 @@ enum AltAppIcons {
 
     static func title(for id: String) -> String {
         switch id {
-        case "violet": return String(localized: "紫")
-        case "navy": return String(localized: "深蓝")
-        case "cobalt": return String(localized: "亮蓝")
+        case "panda-cream": return String(localized: "奶油白")
+        case "panda-night": return String(localized: "夜色")
+        case "panda-royal-pro": return String(localized: "宝蓝金")
+        case "panda-gold-pro": return String(localized: "鎏金")
+        case "panda-ruby-pro": return String(localized: "红宝石")
+        case "panda-prism-pro": return String(localized: "棱镜")
+        case "panda-blue-pro": return String(localized: "晴空蓝")
+        case "panda-yellow-pro": return String(localized: "柠檬黄")
+        case "panda-red-pro": return String(localized: "樱桃红")
+        case "panda-purple-pro": return String(localized: "丁香紫")
+        case "panda-rainbow-pro": return String(localized: "彩虹")
+        case "panda-navy-pro": return String(localized: "藏青")
+        case "panda-bronze-pro": return String(localized: "古铜")
+        case "panda-wine-pro": return String(localized: "酒红")
+        case "panda-grape-pro": return String(localized: "葡萄紫")
+        case "panda-aurora-pro": return String(localized: "极光")
+        case "panda-halloween": return String(localized: "小熊猫·万圣节")
+        case "panda-christmas": return String(localized: "小熊猫·圣诞")
+        case "mac-cream": return String(localized: "小电脑·奶白")
+        case "mac-teal": return String(localized: "小电脑·青绿")
+        case "mac-sky-pro": return String(localized: "小电脑·天蓝")
+        case "mac-navy": return String(localized: "小电脑·深蓝")
+        case "mac-red-pro": return String(localized: "小电脑·绯红")
+        case "mac-rainbow-pro": return String(localized: "小电脑·彩虹")
+        case "mac-leaf": return String(localized: "小电脑·青叶")
+        case "mac-lavender": return String(localized: "小电脑·薰衣草")
+        case "mac-halloween": return String(localized: "小电脑·万圣节")
+        case "mac-christmas": return String(localized: "小电脑·圣诞")
         default: return id
         }
     }

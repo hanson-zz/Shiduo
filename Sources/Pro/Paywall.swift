@@ -103,7 +103,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontArchive: return String(localized: "停用的字体打成 zip 省一半空间，或搬到移动硬盘，清单记着，随时取回")
         case .fontSets: return String(localized: "按客户、品牌建字体集，一键临时启用（注销后自动停用）；绑定项目文件夹，打开项目就启用")
         case .customMenus: return String(localized: "右键菜单留哪些、什么顺序、收进子菜单由你定；菜单快捷键随便改，撞键当场提示，可一键交换")
-        case .appIcons: return String(localized: "程序坞里的拾掇图标换一款：紫色、深蓝、亮蓝，设置 › 外观 里点一下就换")
+        case .appIcons: return String(localized: "程序坞里的拾掇图标换一款：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换")
         }
     }
 

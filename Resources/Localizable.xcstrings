@@ -37119,22 +37119,6 @@
         }
       }
     },
-    "亮蓝": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bright Blue"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "亮蓝"
-          }
-        }
-      }
-    },
     "列表视图的文字和小图标跟着变大；图标视图里的文件名比它小一号。": {
       "localizations": {
         "en": {
@@ -37311,22 +37295,6 @@
         }
       }
     },
-    "深蓝": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Navy"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "深蓝"
-          }
-        }
-      }
-    },
     "石墨色": {
       "localizations": {
         "en": {
@@ -37339,22 +37307,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "石墨色"
-          }
-        }
-      }
-    },
-    "程序坞里的拾掇图标换一款：紫色、深蓝、亮蓝，设置 › 外观 里点一下就换": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Give Shiduo a different Dock icon: violet, navy or bright blue, one click in Settings › Appearance"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "程序坞里的拾掇图标换一款：紫色、深蓝、亮蓝，设置 › 外观 里点一下就换"
           }
         }
       }
@@ -37499,6 +37451,470 @@
           "stringUnit": {
             "state": "translated",
             "value": "黄色"
+          }
+        }
+      }
+    },
+    "奶油白": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cream"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "奶油白"
+          }
+        }
+      }
+    },
+    "夜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夜色"
+          }
+        }
+      }
+    },
+    "宝蓝金": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Royal Blue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "宝蓝金"
+          }
+        }
+      }
+    },
+    "鎏金": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gilded"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鎏金"
+          }
+        }
+      }
+    },
+    "红宝石": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruby"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "红宝石"
+          }
+        }
+      }
+    },
+    "棱镜": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prism"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "棱镜"
+          }
+        }
+      }
+    },
+    "晴空蓝": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sky Blue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "晴空蓝"
+          }
+        }
+      }
+    },
+    "柠檬黄": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lemon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "柠檬黄"
+          }
+        }
+      }
+    },
+    "樱桃红": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cherry"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "樱桃红"
+          }
+        }
+      }
+    },
+    "丁香紫": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lilac"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "丁香紫"
+          }
+        }
+      }
+    },
+    "彩虹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rainbow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "彩虹"
+          }
+        }
+      }
+    },
+    "藏青": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "藏青"
+          }
+        }
+      }
+    },
+    "古铜": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronze"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "古铜"
+          }
+        }
+      }
+    },
+    "酒红": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wine"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "酒红"
+          }
+        }
+      }
+    },
+    "葡萄紫": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grape"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "葡萄紫"
+          }
+        }
+      }
+    },
+    "极光": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aurora"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "极光"
+          }
+        }
+      }
+    },
+    "小熊猫·万圣节": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panda · Halloween"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小熊猫·万圣节"
+          }
+        }
+      }
+    },
+    "小熊猫·圣诞": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panda · Christmas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小熊猫·圣诞"
+          }
+        }
+      }
+    },
+    "小电脑·奶白": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Cream"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·奶白"
+          }
+        }
+      }
+    },
+    "小电脑·青绿": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Teal"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·青绿"
+          }
+        }
+      }
+    },
+    "小电脑·天蓝": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Sky"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·天蓝"
+          }
+        }
+      }
+    },
+    "小电脑·深蓝": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Navy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·深蓝"
+          }
+        }
+      }
+    },
+    "小电脑·绯红": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Crimson"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·绯红"
+          }
+        }
+      }
+    },
+    "小电脑·彩虹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Rainbow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·彩虹"
+          }
+        }
+      }
+    },
+    "小电脑·青叶": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Leaf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·青叶"
+          }
+        }
+      }
+    },
+    "小电脑·薰衣草": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Lavender"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·薰衣草"
+          }
+        }
+      }
+    },
+    "小电脑·万圣节": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Halloween"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·万圣节"
+          }
+        }
+      }
+    },
+    "小电脑·圣诞": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer · Christmas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小电脑·圣诞"
+          }
+        }
+      }
+    },
+    "程序坞里的拾掇图标换一款：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give Shiduo's Dock icon a new look: 28 red panda, holiday and smiley computer icons. One click in Settings › Appearance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "程序坞里的拾掇图标换一款：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换"
           }
         }
       }
