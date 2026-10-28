@@ -37135,22 +37135,6 @@
         }
       }
     },
-    "只换程序坞里的拾掇图标，不改安装包（签名保持有效）。拾掇没打开时，程序坞和访达里显示的仍是原来的图标。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only changes Shiduo’s icon in the Dock; the app itself isn’t modified, so its signature stays valid. When Shiduo isn’t running, the Dock and Finder show the original icon."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "只换程序坞里的拾掇图标，不改安装包（签名保持有效）。拾掇没打开时，程序坞和访达里显示的仍是原来的图标。"
-          }
-        }
-      }
-    },
     "图标比这个尺寸小时只显示通用图标，不生成预览图。关掉上面的开关后，图片和视频也按这个尺寸来，并且超过 %lld 项的文件夹一律用通用图标，翻大文件夹更快。": {
       "localizations": {
         "en": {
@@ -37903,18 +37887,18 @@
         }
       }
     },
-    "程序坞里的拾掇图标换一款：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换": {
+    "拾掇的图标换一款，「应用程序」和程序坞里都跟着变：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Give Shiduo's Dock icon a new look: 28 red panda, holiday and smiley computer icons. One click in Settings › Appearance"
+            "value": "Give Shiduo a new icon, in Applications and the Dock: 28 red panda, holiday and smiley computer icons. One click in Settings › Appearance"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "程序坞里的拾掇图标换一款：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换"
+            "value": "拾掇的图标换一款，「应用程序」和程序坞里都跟着变：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换"
           }
         }
       }
@@ -39515,6 +39499,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "把 Mac 上的文件夹单向备份到移动硬盘；数字是插着的硬盘上待备份的文件个数"
+          }
+        }
+      }
+    },
+    "「应用程序」和程序坞里的图标都会换；退出后程序坞可能要过几秒才刷新": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes the icon in Applications and in the Dock. After you quit, the Dock may take a few seconds to catch up."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「应用程序」和程序坞里的图标都会换；退出后程序坞可能要过几秒才刷新"
+          }
+        }
+      }
+    },
+    "程序坞已换；「应用程序」里的图标没能改（没有写入权限）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Dock icon changed, but the icon in Applications couldn’t be changed (no write permission)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "程序坞已换；「应用程序」里的图标没能改（没有写入权限）"
+          }
+        }
+      }
+    },
+    "「应用程序」里的图标没能改回默认（没有写入权限）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t restore the default icon in Applications (no write permission)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「应用程序」里的图标没能改回默认（没有写入权限）"
           }
         }
       }

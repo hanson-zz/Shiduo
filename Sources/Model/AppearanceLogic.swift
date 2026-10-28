@@ -289,3 +289,48 @@ enum AltAppIconLogic {
         return chosen
     }
 }
+
+/// 备选应用图标写进安装包（/Applications/拾掇.app 的自定义图标，访达和退出后的程序坞都看这个）的决定逻辑。
+/// 纯函数：现在该用哪款（effective）、上次写进安装包的是哪款（applied，存在 UserDefaults）、
+/// 安装包现在有没有自定义图标（包根目录有没有「Icon\r」）→ 这次要写、要清、还是不动。
+enum BundleIconLogic {
+    /// 记着上次写进安装包的是哪款 id；还原成默认后删掉。
+    static let appliedKey = "appliedBundleIconID"
+
+    enum Action: Equatable {
+        case keep
+        case write(String)
+        case clear
+    }
+
+    /// 要不要把 effective 这款写进安装包：
+    /// 选了某款，而且（上次写的不是这款，或者安装包里的自定义图标没了——更新 / 重新拖进「应用程序」后 Icon\r 会消失）。
+    static func shouldWrite(effective: String?, applied: String?, bundleHasCustomIcon: Bool) -> Bool {
+        guard let effective else { return false }
+        return applied != effective || !bundleHasCustomIcon
+    }
+
+    /// 要不要清掉安装包的自定义图标：现在该用默认（选了默认 / Pro 到期 / 文件不在了），
+    /// 而且是拾掇自己写过的（applied 不为空）。没记录时不动——可能是用户自己在访达「显示简介」里换的。
+    static func shouldClear(effective: String?, applied: String?) -> Bool {
+        effective == nil && applied != nil
+    }
+
+    /// 启动时要不要重新写一遍：上次写过、现在也还选着同一款，但安装包里的自定义图标不见了（App 被更新或替换）。
+    static func shouldReapplyOnLaunch(effective: String?, applied: String?, bundleHasCustomIcon: Bool) -> Bool {
+        guard let effective, applied == effective else { return false }
+        return !bundleHasCustomIcon
+    }
+
+    /// 合在一起：这次 apply() 该做什么。启动、换选择、Pro 状态变化都走这里，同一款已经写好就不重复写。
+    static func action(effective: String?, applied: String?, bundleHasCustomIcon: Bool) -> Action {
+        if shouldWrite(effective: effective, applied: applied, bundleHasCustomIcon: bundleHasCustomIcon), let effective {
+            return .write(effective)
+        }
+        if shouldClear(effective: effective, applied: applied) { return .clear }
+        return .keep
+    }
+
+    /// 清掉后安装包里已经没有自定义图标（别人已经删了）时，只需要忘掉记录，不用再调 setIcon。
+    static func clearNeedsWork(bundleHasCustomIcon: Bool) -> Bool { bundleHasCustomIcon }
+}

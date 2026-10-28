@@ -210,4 +210,51 @@ final class AppearanceLogicTests: XCTestCase {
         }
         XCTAssertEqual(AltAppIconLogic.resolve("panda-gold-pro", available: available, isPro: true), "panda-gold-pro")
     }
+
+    // MARK: 应用图标写进安装包
+
+    func testBundleIconWriteWhenChosenAndNotYetWritten() {
+        XCTAssertEqual(BundleIconLogic.action(effective: "panda-gold-pro", applied: nil, bundleHasCustomIcon: false), .write("panda-gold-pro"))
+        XCTAssertTrue(BundleIconLogic.shouldWrite(effective: "panda-gold-pro", applied: nil, bundleHasCustomIcon: false))
+    }
+
+    func testBundleIconSwitchToAnotherAltIconRewrites() {
+        XCTAssertEqual(BundleIconLogic.action(effective: "mac-teal", applied: "panda-gold-pro", bundleHasCustomIcon: true), .write("mac-teal"))
+    }
+
+    func testBundleIconAlreadyWrittenIsNotRewritten() {
+        XCTAssertEqual(BundleIconLogic.action(effective: "mac-teal", applied: "mac-teal", bundleHasCustomIcon: true), .keep, "启动时不用每次都重写")
+        XCTAssertFalse(BundleIconLogic.shouldReapplyOnLaunch(effective: "mac-teal", applied: "mac-teal", bundleHasCustomIcon: true))
+    }
+
+    func testBundleIconReappliedWhenAppWasReplaced() {
+        // 更新 / 重新拖进「应用程序」：Icon\r 没了，记录还在 → 重新写。
+        XCTAssertTrue(BundleIconLogic.shouldReapplyOnLaunch(effective: "mac-teal", applied: "mac-teal", bundleHasCustomIcon: false))
+        XCTAssertEqual(BundleIconLogic.action(effective: "mac-teal", applied: "mac-teal", bundleHasCustomIcon: false), .write("mac-teal"))
+        XCTAssertFalse(BundleIconLogic.shouldReapplyOnLaunch(effective: nil, applied: "mac-teal", bundleHasCustomIcon: false))
+        XCTAssertFalse(BundleIconLogic.shouldReapplyOnLaunch(effective: "panda-cream", applied: nil, bundleHasCustomIcon: false))
+    }
+
+    func testBundleIconClearedWhenRevertingToDefault() {
+        // 选了默认 / Pro 到期 / 文件不在了：effective 都是 nil。
+        XCTAssertEqual(BundleIconLogic.action(effective: nil, applied: "mac-teal", bundleHasCustomIcon: true), .clear)
+        XCTAssertTrue(BundleIconLogic.shouldClear(effective: nil, applied: "mac-teal"))
+        XCTAssertTrue(BundleIconLogic.clearNeedsWork(bundleHasCustomIcon: true))
+        XCTAssertFalse(BundleIconLogic.clearNeedsWork(bundleHasCustomIcon: false), "图标已经没了，只忘掉记录")
+    }
+
+    func testBundleIconDoesNotTouchIconItDidNotWrite() {
+        // 没有记录：可能是用户自己在访达「显示简介」里换的，不清。
+        XCTAssertEqual(BundleIconLogic.action(effective: nil, applied: nil, bundleHasCustomIcon: true), .keep)
+        XCTAssertEqual(BundleIconLogic.action(effective: nil, applied: nil, bundleHasCustomIcon: false), .keep)
+        XCTAssertFalse(BundleIconLogic.shouldClear(effective: nil, applied: nil))
+    }
+
+    func testBundleIconProLapseFlowUsesResolve() {
+        let available = ["panda-gold-pro"]
+        let lapsed = AltAppIconLogic.resolve("panda-gold-pro", available: available, isPro: false)
+        XCTAssertEqual(BundleIconLogic.action(effective: lapsed, applied: "panda-gold-pro", bundleHasCustomIcon: true), .clear)
+        let missing = AltAppIconLogic.resolve("violet", available: available, isPro: true)
+        XCTAssertEqual(BundleIconLogic.action(effective: missing, applied: "violet", bundleHasCustomIcon: true), .clear)
+    }
 }

@@ -98,7 +98,7 @@ final class AppLifecycle {
     private func licenseChanged() {
         FloatingShelfController.shared.apply()
         // 设置 › 外观 › 应用图标（Pro）：启动时（授权状态第一次送到）套上；试用结束 / 解锁后跟着还原 / 换回来（选择一直留着）。
-        // 只换运行时的程序坞图标，不改安装包。
+        // 程序坞图标马上换；安装包（「应用程序」里的图标）在后台写 / 还原，同一款写过就不重复写，App 被更新后自动补上。
         AltAppIcons.apply()
         QuickPickController.shared.apply()
         FolderBackupStore.shared.licenseChanged()

@@ -5,10 +5,30 @@ import SwiftUI
 struct AppearanceSettingsSections: View {
     @EnvironmentObject private var license: LicenseManager
     @ObservedObject private var appearance = AppearanceStore.shared
+    @ObservedObject private var iconStatus = AppIconBundleStatus.shared
     @AppStorage(AppAppearance.key) private var mode: AppAppearance = .system
     @AppStorage(FolderWallIconStyle.key) private var folderIconStyle: FolderWallIconStyle = .shiduo
 
     private var settings: AppearanceSettings { appearance.settings }
+
+    /// 应用图标下面的小字：正常时说明两处都会换；写不进安装包时说明只换了程序坞。
+    @ViewBuilder
+    private var appIconNote: some View {
+        switch iconStatus.state {
+        case .ok:
+            Text("「应用程序」和程序坞里的图标都会换；退出后程序坞可能要过几秒才刷新")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        case .writeFailed:
+            Label("程序坞已换；「应用程序」里的图标没能改（没有写入权限）", systemImage: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(.orange)
+        case .clearFailed:
+            Label("「应用程序」里的图标没能改回默认（没有写入权限）", systemImage: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(.orange)
+        }
+    }
 
     var body: some View {
         Section("主题") {
@@ -47,9 +67,7 @@ struct AppearanceSettingsSections: View {
                 appearance.update { $0.appIcon = id }
             }
             .disabled(!license.isPro)
-            Text("只换程序坞里的拾掇图标，不改安装包（签名保持有效）。拾掇没打开时，程序坞和访达里显示的仍是原来的图标。")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            appIconNote
         } header: {
             HStack(spacing: 6) {
                 Text("应用图标")
