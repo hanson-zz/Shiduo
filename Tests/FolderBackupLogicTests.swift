@@ -161,9 +161,9 @@ final class FolderBackupLogicTests: XCTestCase {
 
     func testValidatePair() {
         let usb = BackupVolumeInfo(mountPath: "/Volumes/USB", uuid: "U-1", name: "USB", capacity: 9, isExternal: true)
-        let internal = BackupVolumeInfo(mountPath: "/", uuid: "R-1", name: "Macintosh HD", capacity: 9, isExternal: false)
+        let bootDisk = BackupVolumeInfo(mountPath: "/", uuid: "R-1", name: "Macintosh HD", capacity: 9, isExternal: false)
         XCTAssertNil(FolderBackupLogic.validate(macPath: "/Users/a/Docs", drivePath: "/Volumes/USB/Docs", driveVolume: usb))
-        XCTAssertEqual(FolderBackupLogic.validate(macPath: "/Users/a/Docs", drivePath: "/Users/a/Backup", driveVolume: internal), .driveNotExternal)
+        XCTAssertEqual(FolderBackupLogic.validate(macPath: "/Users/a/Docs", drivePath: "/Users/a/Backup", driveVolume: bootDisk), .driveNotExternal)
         XCTAssertEqual(FolderBackupLogic.validate(macPath: "/Users/a/Docs", drivePath: "/Volumes/USB/x", driveVolume: nil), .driveNotExternal)
         XCTAssertEqual(FolderBackupLogic.validate(macPath: "/Volumes/USB/x", drivePath: "/Volumes/USB/x/", driveVolume: usb), .sameFolder)
         XCTAssertEqual(FolderBackupLogic.validate(macPath: "/Volumes/USB", drivePath: "/Volumes/USB/backup", driveVolume: usb), .driveInsideMac)
