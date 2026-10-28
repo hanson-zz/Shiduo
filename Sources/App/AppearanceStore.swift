@@ -1,4 +1,5 @@
 import AppKit
+import os
 import SwiftUI
 
 /// 设置 › 外观 里新加的几项（主题色、文件列表字号、边栏、缩略图、透视文件夹、应用图标）。
@@ -89,7 +90,9 @@ extension View {
 // MARK: - 应用图标（Pro）
 
 /// 备选应用图标（Pro）：两处一起换——
-/// 1. 运行时的程序坞图标（NSApplication.applicationIconImage），马上生效；
+/// 1. 运行时的程序坞图标，马上生效：applicationIconImage + dockTile.contentView（图片视图）+ dockTile.display()。
+///    交出去的图先用 AppIconImage.normalized 重新画成 RGBA 位图——设计师定稿的大多是 256 色调色板 PNG，
+///    beta.5 只设 applicationIconImage、直接给调色板图，真机上程序坞图标不变；
 /// 2. 安装包本身的自定义图标（NSWorkspace.setIcon 写到 拾掇.app 根目录的「Icon\r」+ FinderInfo 标记），
 ///    这样「应用程序」文件夹（访达）里、以及退出后的程序坞里也是这款。还原成默认（选了默认 / Pro 到期 / 文件不在了）
 ///    时用 setIcon(nil) 去掉自定义图标。写进安装包的是哪款记在 UserDefaults「appliedBundleIconID」，启动时不重复写；
@@ -181,17 +184,74 @@ enum AltAppIcons {
         AltAppIconLogic.resolve(AppearanceStore.shared.settings.appIcon, available: available, isPro: LicenseManager.shared.isPro)
     }
 
+    /// 控制台（Console.app）里搜「appicon」能看到每次换图标的经过：选的是哪款、实际用哪款、isPro、图片尺寸、写安装包的结果。
+    nonisolated static let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "io.github.hanson-zz.shiduo", category: "appicon")
+
+    /// 交给程序坞 / setIcon 的图：重新画成标准 RGBA 位图（AppIconImage.normalized；调色板 PNG 直接给程序坞不可靠）。
+    private static var dockImageCache: [String: NSImage] = [:]
+
+    static func dockImage(for id: String) -> NSImage? {
+        if let hit = dockImageCache[id] { return hit }
+        guard let raw = image(for: id) else { return nil }
+        let prepared = AppIconImage.normalized(raw) ?? raw
+        dockImageCache[id] = prepared
+        return prepared
+    }
+
     /// 启动时、选了别的图标时、Pro 状态变了时调用。nil = 还原成安装包里的图标。
+    ///
+    /// 程序坞两条路都走：applicationIconImage（菜单栏浮窗、引导页也读它）+ dockTile.contentView 放一个图片视图再 display()。
+    /// 只设 applicationIconImage、而且给的是调色板 PNG 时，真机上程序坞图标不变（beta.5 用户反馈）。
     static func apply() {
-        guard !Demo.isOn else { return }
+        guard !Demo.isOn else {
+            log.info("apply skipped: demo mode")
+            return
+        }
+        let chosen = AppearanceStore.shared.settings.appIcon
+        let isPro = LicenseManager.shared.isPro
+        let ids = available
+        let id = AltAppIconLogic.resolve(chosen, available: ids, isPro: isPro)
         var bundleID: String?
-        if let id = effective, let image = image(for: id) {
-            NSApplication.shared.applicationIconImage = image
+        if let id, let dockIcon = dockImage(for: id) {
+            let rawIndexed = image(for: id).map(AppIconImage.isIndexedColor) ?? false
+            let width = Int(dockIcon.size.width)
+            let height = Int(dockIcon.size.height)
+            let chosenText = chosen ?? "nil"
+            log.notice("apply chosen=\(chosenText, privacy: .public) effective=\(id, privacy: .public) isPro=\(isPro, privacy: .public) image=\(width, privacy: .public)x\(height, privacy: .public) rawIndexed=\(rawIndexed, privacy: .public)")
+            setDockIcon(dockIcon)
             bundleID = id
         } else {
-            NSApplication.shared.applicationIconImage = nil
+            if let chosen, id == nil {
+                let inBundle = ids.contains(chosen)
+                let count = ids.count
+                log.notice("apply chosen=\(chosen, privacy: .public) effective=nil isPro=\(isPro, privacy: .public) inBundle=\(inBundle, privacy: .public) available=\(count, privacy: .public) -> default icon")
+            } else if let id {
+                let path = url(for: id)?.path ?? "nil"
+                log.error("apply effective=\(id, privacy: .public) but image failed to load (url=\(path, privacy: .public)) -> default icon")
+            } else {
+                log.notice("apply chosen=nil -> default icon")
+            }
+            setDockIcon(nil)
         }
         syncBundleIcon(bundleID)
+    }
+
+    /// 程序坞图标：有图 → applicationIconImage + dockTile 里放图片视图；nil → 两样都清掉，回到安装包里的图标。
+    private static func setDockIcon(_ image: NSImage?) {
+        let app = NSApplication.shared
+        let tile = app.dockTile
+        if let image {
+            app.applicationIconImage = image
+            let view = NSImageView(frame: NSRect(origin: .zero, size: tile.size))
+            view.image = image
+            view.imageScaling = .scaleProportionallyUpOrDown
+            view.imageAlignment = .alignCenter
+            tile.contentView = view
+        } else {
+            tile.contentView = nil
+            app.applicationIconImage = nil
+        }
+        tile.display()
     }
 
     // MARK: 安装包图标
@@ -204,7 +264,7 @@ enum AltAppIcons {
     private static func syncBundleIcon(_ id: String?) {
         bundleGeneration += 1
         let generation = bundleGeneration
-        let box = AltIconImageBox(image: id.flatMap { image(for: $0) })
+        let box = AltIconImageBox(image: id.flatMap { dockImage(for: $0) })
         let path = Bundle.main.bundlePath
         bundleQueue.async {
             let outcome = AltAppIcons.performBundleSync(id: id, image: box.image, path: path)
@@ -234,7 +294,9 @@ enum AltAppIcons {
         case .keep:
             return .unchanged
         case .write(let target):
-            guard let image, NSWorkspace.shared.setIcon(image, forFile: path, options: []) else { return .writeFailed }
+            let ok = image.map { NSWorkspace.shared.setIcon($0, forFile: path, options: []) } ?? false
+            log.notice("bundle setIcon id=\(target, privacy: .public) ok=\(ok, privacy: .public) path=\(path, privacy: .public)")
+            guard ok else { return .writeFailed }
             defaults.set(target, forKey: BundleIconLogic.appliedKey)
             nudgeFinderAndDock(path)
             return .wrote
@@ -243,7 +305,9 @@ enum AltAppIcons {
                 defaults.removeObject(forKey: BundleIconLogic.appliedKey)
                 return .cleared
             }
-            guard NSWorkspace.shared.setIcon(nil, forFile: path, options: []) else { return .clearFailed }
+            let ok = NSWorkspace.shared.setIcon(nil, forFile: path, options: [])
+            log.notice("bundle setIcon(nil) ok=\(ok, privacy: .public) path=\(path, privacy: .public)")
+            guard ok else { return .clearFailed }
             defaults.removeObject(forKey: BundleIconLogic.appliedKey)
             nudgeFinderAndDock(path)
             return .cleared
@@ -259,8 +323,8 @@ enum AltAppIcons {
             status.state = .ok
         case .cleared:
             status.state = .ok
-            // 去掉自定义图标后让程序坞重新读一遍安装包里原来的图标。
-            if effective == nil { NSApplication.shared.applicationIconImage = nil }
+            // 去掉自定义图标后让程序坞重新读一遍安装包里原来的图标（只在现在确实该用默认时；选着备选图标时绝不清）。
+            if effective == nil { setDockIcon(nil) }
         case .writeFailed:
             status.state = .writeFailed
         case .clearFailed:

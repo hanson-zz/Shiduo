@@ -64,7 +64,12 @@ struct AppearanceSettingsSections: View {
         Section {
             ProHintRow()
             AppIconPicker(selected: settings.appIcon) { id in
-                appearance.update { $0.appIcon = id }
+                // 点的就是已经选着的那款：设置没变、update 不会触发 apply，这里手动再套一次（程序坞没换过来时点一下能补上）。
+                if settings.appIcon == id {
+                    AltAppIcons.apply()
+                } else {
+                    appearance.update { $0.appIcon = id }
+                }
             }
             .disabled(!license.isPro)
             appIconNote

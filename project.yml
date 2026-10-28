@@ -131,6 +131,8 @@ targets:
       - path: Sources/Model/FontLogic.swift
       # 外观：设置存取（容错解码）、字号范围、主题色、缩略图规则、透视文件夹挑最新几张、备选应用图标排序。
       - path: Sources/Model/AppearanceLogic.swift
+      # 备选应用图标交给程序坞前重新画成 RGBA（调色板 PNG 直接给程序坞不可靠）。
+      - path: Sources/Model/AppIconImage.swift
       # 备份到硬盘（Pro）：配对存取、认盘、比较、方向（只 Mac → 硬盘）、删除闸门、执行器。
       - path: Sources/Model/FolderBackupLogic.swift
       # 性能实测（Perf* 测试）用到的真实代码：读文件夹、排序、缩略图、性能打点。
