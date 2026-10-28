@@ -291,7 +291,7 @@ enum MenuCatalog {
         "convertImage", "mediaTools", "zip", nil,
         "copyText", "ocr", "share", "airDrop", nil,
         "moveTo", "copyTo", nil,
-        "moveOut", "uninstall", nil,
+        "moveOut", "backupToDrive", "uninstall", nil,
         "trash",
     ]
 
@@ -387,6 +387,7 @@ enum MenuCatalog {
         case "moveTo": return String(localized: "移动到…")
         case "copyTo": return String(localized: "拷贝到…")
         case "moveOut": return String(localized: "大文件搬家…")
+        case "backupToDrive": return String(localized: "备份到硬盘…")
         case "uninstall": return String(localized: "卸载（连残留一起）…")
         case "trash": return String(localized: "移到废纸篓")
         case "newFolder": return String(localized: "新建文件夹")
@@ -411,7 +412,7 @@ enum MenuCatalog {
         case "quickLook": return String(localized: "文件列表里")
         case "computeHash": return String(localized: "单个文件")
         case "newFolderWithSelection": return String(localized: "同一文件夹里")
-        case "startFolder", "favorite", "libraryScope", "folderIcon": return String(localized: "文件夹")
+        case "startFolder", "favorite", "libraryScope", "folderIcon", "backupToDrive": return String(localized: "文件夹")
         case "restoreFolderIcon": return String(localized: "换过装的文件夹")
         case "saveAsTemplate": return String(localized: "文件")
         case "contextExtras": return String(localized: "文件夹墙等")

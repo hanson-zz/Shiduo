@@ -37918,6 +37918,1606 @@
           }
         }
       }
+    },
+    "备份到硬盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up to Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份到硬盘"
+          }
+        }
+      }
+    },
+    "备份位置要选移动硬盘、U 盘这类外接磁盘上的文件夹。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder on an external drive, such as a portable disk or USB stick, as the backup location."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份位置要选移动硬盘、U 盘这类外接磁盘上的文件夹。"
+          }
+        }
+      }
+    },
+    "Mac 文件夹和硬盘文件夹不能是同一个。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Mac folder and the drive folder can’t be the same folder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 文件夹和硬盘文件夹不能是同一个。"
+          }
+        }
+      }
+    },
+    "硬盘文件夹不能放在要备份的 Mac 文件夹里面。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The drive folder can’t be inside the Mac folder you’re backing up."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "硬盘文件夹不能放在要备份的 Mac 文件夹里面。"
+          }
+        }
+      }
+    },
+    "要备份的文件夹已经在这块硬盘的备份文件夹里面了。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder you want to back up is already inside the backup folder on this drive."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要备份的文件夹已经在这块硬盘的备份文件夹里面了。"
+          }
+        }
+      }
+    },
+    "已经有一组一样的配对了。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pair already exists."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经有一组一样的配对了。"
+          }
+        }
+      }
+    },
+    "有 %lld 个新文件/改动要备份到「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld new or changed files to back up to “%2$@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %1$lld 个新文件/改动要备份到「%2$@」"
+          }
+        }
+      }
+    },
+    "备份到硬盘…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up to Drive…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份到硬盘…"
+          }
+        }
+      }
+    },
+    "文件夹备份到硬盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder Backup to Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹备份到硬盘"
+          }
+        }
+      }
+    },
+    "Mac 文件夹配对移动硬盘，插上就提示有几个新文件要备份；先预览，只从 Mac 拷到硬盘，默认不删硬盘上的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair a Mac folder with an external drive and get a prompt with the number of new files when it’s plugged in; preview first, copy only from Mac to drive, nothing on the drive is deleted by default"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 文件夹配对移动硬盘，插上就提示有几个新文件要备份；先预览，只从 Mac 拷到硬盘，默认不删硬盘上的文件"
+          }
+        }
+      }
+    },
+    "备份": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份"
+          }
+        }
+      }
+    },
+    "以后": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以后"
+          }
+        }
+      }
+    },
+    "备份到硬盘：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up to Drive: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份到硬盘：%@"
+          }
+        }
+      }
+    },
+    "来自「%@」，只从 Mac 拷到硬盘，不会删除硬盘上的文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From “%@”. Files are only copied from the Mac to the drive; nothing on the drive is deleted."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自「%@」，只从 Mac 拷到硬盘，不会删除硬盘上的文件。"
+          }
+        }
+      }
+    },
+    "找不到这组配对": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pair can’t be found"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到这组配对"
+          }
+        }
+      }
+    },
+    "备份到硬盘是 Pro 功能": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up to Drive is a Pro feature"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份到硬盘是 Pro 功能"
+          }
+        }
+      }
+    },
+    "先打开这一组的开关": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn this pair on first"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先打开这一组的开关"
+          }
+        }
+      }
+    },
+    "Mac 上的文件夹找不到了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder on the Mac can’t be found"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 上的文件夹找不到了"
+          }
+        }
+      }
+    },
+    "硬盘没接上": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive not connected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "硬盘没接上"
+          }
+        }
+      }
+    },
+    "正在比较…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparing…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在比较…"
+          }
+        }
+      }
+    },
+    "正在备份另一组，请稍等": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another pair is being backed up. Please wait."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在备份另一组，请稍等"
+          }
+        }
+      }
+    },
+    "硬盘空间不够": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough space on the drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "硬盘空间不够"
+          }
+        }
+      }
+    },
+    "「%@」已经是最新的了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is already up to date"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」已经是最新的了"
+          }
+        }
+      }
+    },
+    "没有备份：Mac 上的「%@」找不到了，或者硬盘上的文件夹建不起来": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not backed up: “%@” can’t be found on the Mac, or the folder on the drive couldn’t be created"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有备份：Mac 上的「%@」找不到了，或者硬盘上的文件夹建不起来"
+          }
+        }
+      }
+    },
+    "「%@」被拔掉了：已拷好 %lld 个，剩下的下次插上再备份（硬盘上的旧版本没有被弄坏）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” was disconnected: %2$lld copied. The rest will be backed up next time it’s plugged in (older versions on the drive are intact)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」被拔掉了：已拷好 %2$lld 个，剩下的下次插上再备份（硬盘上的旧版本没有被弄坏）"
+          }
+        }
+      }
+    },
+    "已取消：拷好了 %lld 个文件，剩下的下次再备份": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled: %lld files copied. The rest will be backed up next time."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消：拷好了 %lld 个文件，剩下的下次再备份"
+          }
+        }
+      }
+    },
+    "已备份 %lld 个文件到「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backed up %1$lld files to “%2$@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已备份 %1$lld 个文件到「%2$@」"
+          }
+        }
+      }
+    },
+    "%lld 项移到了硬盘的废纸篓": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld items moved to the drive’s Trash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 项移到了硬盘的废纸篓"
+          }
+        }
+      }
+    },
+    "%lld 个没拷成（可能被占用或没有权限）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld couldn’t be copied (in use or no permission)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个没拷成（可能被占用或没有权限）"
+          }
+        }
+      }
+    },
+    "%lld 项没能移到废纸篓，留在了硬盘上": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld items couldn’t be moved to the Trash and were left on the drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 项没能移到废纸篓，留在了硬盘上"
+          }
+        }
+      }
+    },
+    "，": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", "
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "，"
+          }
+        }
+      }
+    },
+    "没能添加配对": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t Add Pair"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能添加配对"
+          }
+        }
+      }
+    },
+    "把 Mac 上的文件夹单向备份到移动硬盘：只从 Mac 拷到硬盘，从不把硬盘里的东西拷回 Mac；默认不删除硬盘上的文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up Mac folders to an external drive, one way: files are only copied from the Mac to the drive, never from the drive back to the Mac, and nothing on the drive is deleted by default."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把 Mac 上的文件夹单向备份到移动硬盘：只从 Mac 拷到硬盘，从不把硬盘里的东西拷回 Mac；默认不删除硬盘上的文件。"
+          }
+        }
+      }
+    },
+    "添加配对…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Pair…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加配对…"
+          }
+        }
+      }
+    },
+    "先选 Mac 上要备份的文件夹，再选移动硬盘上放备份的文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the Mac folder to back up, then the folder on the external drive to put the backup in"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先选 Mac 上要备份的文件夹，再选移动硬盘上放备份的文件夹"
+          }
+        }
+      }
+    },
+    "还没有配对": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Pairs Yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有配对"
+          }
+        }
+      }
+    },
+    "1. 接上移动硬盘，点右上角「添加配对…」，先选 Mac 上的文件夹，再选硬盘上的文件夹（也可以在文件夹上点右键「备份到硬盘…」）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Connect an external drive, click Add Pair… at the top right, choose a folder on the Mac, then a folder on the drive (or right-click a folder and choose Back Up to Drive…)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. 接上移动硬盘，点右上角「添加配对…」，先选 Mac 上的文件夹，再选硬盘上的文件夹（也可以在文件夹上点右键「备份到硬盘…」）。"
+          }
+        }
+      }
+    },
+    "2. 打开这一组的开关。开关默认是关的，打开以前什么都不会拷。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Turn the pair on. Pairs start off, and nothing is copied until you turn one on."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. 打开这一组的开关。开关默认是关的，打开以前什么都不会拷。"
+          }
+        }
+      }
+    },
+    "3. 以后每次插上这块硬盘，拾掇会提示「有 N 个新文件/改动要备份」，先预览、再点备份。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Each time you plug in the drive, Shiduo tells you how many new or changed files there are to back up. Preview them, then click Back Up."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. 以后每次插上这块硬盘，拾掇会提示「有 N 个新文件/改动要备份」，先预览、再点备份。"
+          }
+        }
+      }
+    },
+    "只从 Mac 拷到硬盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copies only from the Mac to the drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只从 Mac 拷到硬盘"
+          }
+        }
+      }
+    },
+    "已接上 · 剩余 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected · %@ free"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已接上 · 剩余 %@"
+          }
+        }
+      }
+    },
+    "打开后，插上这块硬盘时才会检查和提示；关着时什么都不拷": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When on, Shiduo checks and prompts when this drive is plugged in. When off, nothing is copied."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开后，插上这块硬盘时才会检查和提示；关着时什么都不拷"
+          }
+        }
+      }
+    },
+    "预览…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览…"
+          }
+        }
+      }
+    },
+    "立即备份": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up Now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即备份"
+          }
+        }
+      }
+    },
+    "把新文件和改动拷到硬盘（不删除硬盘上的文件）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy new and changed files to the drive (nothing on the drive is deleted)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把新文件和改动拷到硬盘（不删除硬盘上的文件）"
+          }
+        }
+      }
+    },
+    "重新检查": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新检查"
+          }
+        }
+      }
+    },
+    "在访达中显示 Mac 文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Mac Folder in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中显示 Mac 文件夹"
+          }
+        }
+      }
+    },
+    "在访达中显示硬盘文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Drive Folder in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中显示硬盘文件夹"
+          }
+        }
+      }
+    },
+    "移除配对…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Pair…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除配对…"
+          }
+        }
+      }
+    },
+    "插上就自动备份": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up automatically when plugged in"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插上就自动备份"
+          }
+        }
+      }
+    },
+    "插上这块硬盘后不再提示，直接把新文件和改动拷过去；自动备份从不删除硬盘上的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When this drive is plugged in, copy new and changed files without asking. Automatic backups never delete files on the drive."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插上这块硬盘后不再提示，直接把新文件和改动拷过去；自动备份从不删除硬盘上的文件"
+          }
+        }
+      }
+    },
+    "镜像：删除硬盘上 Mac 已删除的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mirror: delete files on the drive that were deleted on the Mac"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "镜像：删除硬盘上 Mac 已删除的文件"
+          }
+        }
+      }
+    },
+    "打开后，预览里可以把只在硬盘上的项目移到硬盘的废纸篓，每次都要再确认；插上自动备份、通知上的「备份」都不会删": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When on, you can move items that exist only on the drive to the drive’s Trash from the preview, with a confirmation every time. Automatic backups and Back Up in the notification never delete anything."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开后，预览里可以把只在硬盘上的项目移到硬盘的废纸篓，每次都要再确认；插上自动备份、通知上的「备份」都不会删"
+          }
+        }
+      }
+    },
+    "每次删除前都会用红色确认框列出个数；删掉的项目进硬盘自己的废纸篓，清倒以前还能找回。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A red confirmation shows the count before every deletion. Deleted items go to the drive’s own Trash and can be recovered until it’s emptied."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每次删除前都会用红色确认框列出个数；删掉的项目进硬盘自己的废纸篓，清倒以前还能找回。"
+          }
+        }
+      }
+    },
+    "移除这组配对？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove This Pair?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除这组配对？"
+          }
+        }
+      }
+    },
+    "只是不再备份，Mac 和硬盘上的文件都不会动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This only stops backing up. Files on the Mac and on the drive are not touched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只是不再备份，Mac 和硬盘上的文件都不会动。"
+          }
+        }
+      }
+    },
+    "Mac 上的文件夹找不到了，先把它放回原处": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder on the Mac can’t be found. Put it back where it was first."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 上的文件夹找不到了，先把它放回原处"
+          }
+        }
+      }
+    },
+    "已关闭：打开开关后才会检查和备份": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off: turn it on to check and back up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已关闭：打开开关后才会检查和备份"
+          }
+        }
+      }
+    },
+    "上次检查还有 %lld 个没备份": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld not backed up at last check"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次检查还有 %lld 个没备份"
+          }
+        }
+      }
+    },
+    "正在比较两边…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparing both sides…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在比较两边…"
+          }
+        }
+      }
+    },
+    "已是最新": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to date"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已是最新"
+          }
+        }
+      }
+    },
+    "待备份 %lld 个（%@）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld to back up (%2$@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待备份 %1$lld 个（%2$@）"
+          }
+        }
+      }
+    },
+    "只在硬盘上 %lld 项": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld only on the drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只在硬盘上 %lld 项"
+          }
+        }
+      }
+    },
+    "%lld 个只在 iCloud 里的文件跳过": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld iCloud-only files skipped"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个只在 iCloud 里的文件跳过"
+          }
+        }
+      }
+    },
+    "上次备份：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last backup: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次备份：%@"
+          }
+        }
+      }
+    },
+    "还没备份过": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never backed up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没备份过"
+          }
+        }
+      }
+    },
+    "备份预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup Preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份预览"
+          }
+        }
+      }
+    },
+    "「%@」→「%@」，只从 Mac 拷到硬盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” → “%2$@”, copying only from the Mac to the drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」→「%2$@」，只从 Mac 拷到硬盘"
+          }
+        }
+      }
+    },
+    "新文件 %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新文件 %lld"
+          }
+        }
+      }
+    },
+    "改动 %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改动 %lld"
+          }
+        }
+      }
+    },
+    "只在硬盘上 %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only on Drive %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只在硬盘上 %lld"
+          }
+        }
+      }
+    },
+    "类型不同 %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type Mismatch %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "类型不同 %lld"
+          }
+        }
+      }
+    },
+    "要拷贝 %@，硬盘剩余 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ to copy, %2$@ free on the drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要拷贝 %1$@，硬盘剩余 %2$@"
+          }
+        }
+      }
+    },
+    "硬盘空间不够：要 %@（另留一点余量），只剩 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough space on the drive: needs %1$@ (plus a little headroom), only %2$@ free"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "硬盘空间不够：要 %1$@（另留一点余量），只剩 %2$@"
+          }
+        }
+      }
+    },
+    "这次也把只在硬盘上的 %lld 项（含 %lld 个文件）移到硬盘的废纸篓": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also move the %1$lld items that exist only on the drive (%2$lld files) to the drive’s Trash this time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这次也把只在硬盘上的 %1$lld 项（含 %2$lld 个文件）移到硬盘的废纸篓"
+          }
+        }
+      }
+    },
+    "备份并删除…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up and Delete…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份并删除…"
+          }
+        }
+      }
+    },
+    "备份 %lld 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up %lld Files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份 %lld 个文件"
+          }
+        }
+      }
+    },
+    "把硬盘上的 %lld 项移到废纸篓？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %lld Items on the Drive to the Trash?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把硬盘上的 %lld 项移到废纸篓？"
+          }
+        }
+      }
+    },
+    "移到废纸篓并备份": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Trash and Back Up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到废纸篓并备份"
+          }
+        }
+      }
+    },
+    "这些项目在 Mac 上已经删掉了（共 %lld 个文件）。它们会被移到「%@」自己的废纸篓，清倒以前还能找回；Mac 上的文件不受影响。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These items were deleted on the Mac (%1$lld files in all). They’ll be moved to the Trash on “%2$@” and can be recovered until it’s emptied. Files on the Mac are not affected."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些项目在 Mac 上已经删掉了（共 %1$lld 个文件）。它们会被移到「%2$@」自己的废纸篓，清倒以前还能找回；Mac 上的文件不受影响。"
+          }
+        }
+      }
+    },
+    "关闭": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        }
+      }
+    },
+    "还没有比较结果": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not compared yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有比较结果"
+          }
+        }
+      }
+    },
+    "硬盘上那份更新，会被 Mac 上的覆盖": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The drive’s copy is newer and will be replaced by the Mac’s"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "硬盘上那份更新，会被 Mac 上的覆盖"
+          }
+        }
+      }
+    },
+    "一边是文件夹、一边是文件，跳过": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder on one side, file on the other: skipped"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一边是文件夹、一边是文件，跳过"
+          }
+        }
+      }
+    },
+    "没有只在硬盘上的项目": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing exists only on the drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有只在硬盘上的项目"
+          }
+        }
+      }
+    },
+    "没有": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有"
+          }
+        }
+      }
+    },
+    "Mac 上有、硬盘上没有的文件，会拷到硬盘上同样的位置。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files on the Mac that aren’t on the drive. They’ll be copied to the same place on the drive."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 上有、硬盘上没有的文件，会拷到硬盘上同样的位置。"
+          }
+        }
+      }
+    },
+    "大小或修改时间不一样的文件：用 Mac 上的版本替换硬盘上的（先拷完整再替换，中途拔盘旧版本也还在）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files whose size or modification date differ: the Mac’s version replaces the drive’s (the full copy is made before replacing, so the old version survives if the drive is unplugged)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大小或修改时间不一样的文件：用 Mac 上的版本替换硬盘上的（先拷完整再替换，中途拔盘旧版本也还在）。"
+          }
+        }
+      }
+    },
+    "这些只在硬盘上（Mac 上已删除或从没有过）。镜像已打开：勾选下面一项才会移到硬盘的废纸篓；不会拷回 Mac。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These exist only on the drive (deleted on the Mac or never there). Mirror is on: they’re moved to the drive’s Trash only if you tick the option below. They’re never copied back to the Mac."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些只在硬盘上（Mac 上已删除或从没有过）。镜像已打开：勾选下面一项才会移到硬盘的废纸篓；不会拷回 Mac。"
+          }
+        }
+      }
+    },
+    "这些只在硬盘上（Mac 上已删除或从没有过）。不会删除，也不会拷回 Mac。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These exist only on the drive (deleted on the Mac or never there). They won’t be deleted or copied back to the Mac."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些只在硬盘上（Mac 上已删除或从没有过）。不会删除，也不会拷回 Mac。"
+          }
+        }
+      }
+    },
+    "同一个名字一边是文件夹、一边是文件，要删掉一边才能对上，所以跳过不动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The same name is a folder on one side and a file on the other. Matching them would mean deleting one, so they’re left alone."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同一个名字一边是文件夹、一边是文件，要删掉一边才能对上，所以跳过不动。"
+          }
+        }
+      }
+    },
+    "没有找到接着的移动硬盘：先把硬盘接上，再选硬盘上的文件夹。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No external drive found. Connect the drive first, then choose a folder on it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有找到接着的移动硬盘：先把硬盘接上，再选硬盘上的文件夹。"
+          }
+        }
+      }
+    },
+    "选择要备份的 Mac 文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the Mac folder to back up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择要备份的 Mac 文件夹"
+          }
+        }
+      }
+    },
+    "选这个文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose This Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选这个文件夹"
+          }
+        }
+      }
+    },
+    "选择移动硬盘上放「%@」备份的文件夹（可以新建一个）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the folder on the external drive for the “%@” backup (you can create a new one)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择移动硬盘上放「%@」备份的文件夹（可以新建一个）"
+          }
+        }
+      }
+    },
+    "备份到这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up Here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份到这里"
+          }
+        }
+      }
+    },
+    "已添加配对「%@」。打开它的开关后才会检查和备份。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added pair “%@”. Turn it on to start checking and backing up."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已添加配对「%@」。打开它的开关后才会检查和备份。"
+          }
+        }
+      }
+    },
+    "正在备份 %lld 个文件到「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backing up %1$lld files to “%2$@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在备份 %1$lld 个文件到「%2$@」"
+          }
+        }
+      }
+    },
+    "停下还没拷的文件；已经拷好的留在硬盘上，没拷完的那个不会替换掉旧版本": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop copying the remaining files. Files already copied stay on the drive; the one in progress won’t replace the old version."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停下还没拷的文件；已经拷好的留在硬盘上，没拷完的那个不会替换掉旧版本"
+          }
+        }
+      }
+    },
+    "把 Mac 上的文件夹单向备份到移动硬盘；数字是插着的硬盘上待备份的文件个数": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up Mac folders one way to an external drive; the number is how many files are waiting to be backed up on connected drives"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把 Mac 上的文件夹单向备份到移动硬盘；数字是插着的硬盘上待备份的文件个数"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

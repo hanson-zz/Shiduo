@@ -34,6 +34,8 @@ enum SidebarItem: Hashable {
     case savedSearch(UUID)
     /// 字体管理：字体库、样张、停用 / 启用、问题字体（免费）；压缩存放、字体集（Pro）。
     case fonts
+    /// Pro：文件夹备份到硬盘（Mac 文件夹 ↔ 移动硬盘文件夹，只单向 Mac → 硬盘）。
+    case folderBackup
 }
 
 enum DuplicatesTab: String, Hashable {
@@ -1124,7 +1126,7 @@ final class LibraryStore: ObservableObject {
         case .home:
             await refreshDashboard()
             return
-        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf, .folderWall, .cleanupHistory, .fonts:
+        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf, .folderWall, .cleanupHistory, .fonts, .folderBackup:
             items = []
             return
         case .category(let c) where c.usesLibraryScope:
@@ -2394,6 +2396,7 @@ extension LibraryStore {
         case .autoOrganize: return "autoOrganize"
         case .cleanupHistory: return "cleanupHistory"
         case .fonts: return "fonts"
+        case .folderBackup: return "folderBackup"
         case .category(let c): return "category:" + c.rawValue
         case .tag(let name): return "tag:" + name
         case .chat(let app): return "chat:" + app.rawValue
@@ -2407,7 +2410,7 @@ extension LibraryStore {
             "shelf": .shelf, "reminders": .reminders, "folderWall": .folderWall, "largeFiles": .largeFiles,
             "screenshots": .screenshots, "downloads": .downloads, "duplicates": .duplicates,
             "similarPhotos": .similarPhotos, "cleanup": .cleanup, "storageMap": .storageMap,
-            "autoOrganize": .autoOrganize, "cleanupHistory": .cleanupHistory, "fonts": .fonts,
+            "autoOrganize": .autoOrganize, "cleanupHistory": .cleanupHistory, "fonts": .fonts, "folderBackup": .folderBackup,
         ]
         if let item = simple[key] { return item }
         let parts = key.split(separator: ":", maxSplits: 1).map(String.init)
@@ -2442,6 +2445,7 @@ extension LibraryStore {
         case .autoOrganize: return String(localized: "自动整理规则")
         case .cleanupHistory: return String(localized: "清理记录")
         case .fonts: return String(localized: "字体")
+        case .folderBackup: return String(localized: "备份到硬盘")
         case .tag(let name): return String(localized: "标签：\(name)")
         case .chat(let app): return String(localized: "\(app.name)文件")
         case .savedSearch(let id): return SavedSearchStore.shared.search(id)?.name ?? String(localized: "保存的搜索")
@@ -2467,6 +2471,7 @@ extension LibraryStore {
         case .storageMap: return "chart.pie"
         case .autoOrganize: return "wand.and.stars"
         case .fonts: return "textformat"
+        case .folderBackup: return "externaldrive.badge.timemachine"
         case .tag: return "tag"
         case .chat: return "bubble.left.and.bubble.right"
         case .savedSearch: return "folder.badge.gearshape"

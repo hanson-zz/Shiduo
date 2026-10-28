@@ -12,6 +12,8 @@ struct SidebarView: View {
     @ObservedObject private var customTags = CustomTagStore.shared
     @ObservedObject private var fullDiskAccess = FullDiskAccessMonitor.shared
     @ObservedObject private var fonts = FontLibrary.shared
+    /// 备份到硬盘（Pro）：数字是待备份的文件个数。
+    @ObservedObject private var backups = FolderBackupStore.shared
     /// 设置 › 外观 › 边栏：彩色图标、图标大小。
     @ObservedObject private var appearance = AppearanceStore.shared
     @State private var shelfTargeted = false
@@ -180,6 +182,10 @@ struct SidebarView: View {
                     .badge(fonts.actionableIssueCount > 0 ? Text("\(fonts.actionableIssueCount)") : nil)
                     .tag(SidebarItem.fonts)
                     .help("装了哪些字体、中文样张预览，停用不常用的，查重复和损坏的字体")
+                Label("备份到硬盘", systemImage: "externaldrive.badge.timemachine")
+                    .badge(license.isPro && backups.totalPending > 0 ? Text("\(backups.totalPending)") : nil)
+                    .tag(SidebarItem.folderBackup)
+                    .help("把 Mac 上的文件夹单向备份到移动硬盘；数字是插着的硬盘上待备份的文件个数")
             }
 
             if !chat.installedApps.isEmpty {

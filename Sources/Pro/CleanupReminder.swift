@@ -116,6 +116,17 @@ final class CleanupReminderDelegate: NSObject, UNUserNotificationCenterDelegate 
             Task { @MainActor in
                 ReminderStore.shared.handle(action: action, id: uuid)
             }
+        } else if id.hasPrefix(FolderBackupStore.idPrefix) {
+            // 备份到硬盘：「有 N 个新文件/改动要备份」的预览 / 备份 / 以后；做完的结果通知点了打开那一页。
+            let action = response.actionIdentifier
+            let uuid = UUID(uuidString: String(id.dropFirst(FolderBackupStore.idPrefix.count)))
+            Task { @MainActor in
+                if let uuid {
+                    FolderBackupStore.shared.handleNotification(action: action, pairID: uuid)
+                } else {
+                    MainWindow.show { LibraryStore.shared?.selection = .folderBackup }
+                }
+            }
         } else if id == cleanupReminderID {
             Task { @MainActor in
                 CleanupReminder.shared.openCleanup()

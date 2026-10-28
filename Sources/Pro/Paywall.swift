@@ -48,6 +48,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case fontSets
     case customMenus
     case appIcons
+    case folderBackup
 
     var id: Self { self }
 
@@ -76,6 +77,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontSets: return String(localized: "字体集与项目绑定")
         case .customMenus: return String(localized: "自定义右键菜单与快捷键")
         case .appIcons: return String(localized: "备选应用图标")
+        case .folderBackup: return String(localized: "文件夹备份到硬盘")
         }
     }
 
@@ -104,6 +106,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontSets: return String(localized: "按客户、品牌建字体集，一键临时启用（注销后自动停用）；绑定项目文件夹，打开项目就启用")
         case .customMenus: return String(localized: "右键菜单留哪些、什么顺序、收进子菜单由你定；菜单快捷键随便改，撞键当场提示，可一键交换")
         case .appIcons: return String(localized: "程序坞里的拾掇图标换一款：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换")
+        case .folderBackup: return String(localized: "Mac 文件夹配对移动硬盘，插上就提示有几个新文件要备份；先预览，只从 Mac 拷到硬盘，默认不删硬盘上的文件")
         }
     }
 
@@ -132,6 +135,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontSets: return "textformat"
         case .customMenus: return "contextualmenu.and.cursorarrow"
         case .appIcons: return "app.badge"
+        case .folderBackup: return "externaldrive.badge.timemachine"
         }
     }
 
@@ -160,6 +164,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fontSets: return .indigo
         case .customMenus: return .mint
         case .appIcons: return .cyan
+        case .folderBackup: return .green
         }
     }
 }

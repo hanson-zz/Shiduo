@@ -37,7 +37,10 @@ final class AppLifecycle {
         CleanupReminder.shared.installNotificationDelegate()
         if !Demo.isOn {
             ReminderStore.registerCategories()
+            FolderBackupStore.registerCategories()
         }
+        // 备份到硬盘（Pro）：主窗口关着也盯着硬盘插拔。
+        FolderBackupStore.shared.start()
 
         let license = LicenseManager.shared
         license.$state
@@ -98,6 +101,7 @@ final class AppLifecycle {
         // 只换运行时的程序坞图标，不改安装包。
         AltAppIcons.apply()
         QuickPickController.shared.apply()
+        FolderBackupStore.shared.licenseChanged()
         if LicenseManager.shared.isPro {
             ReminderStore.shared.resumeScheduled()
         } else {

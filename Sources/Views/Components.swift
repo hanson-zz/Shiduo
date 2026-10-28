@@ -307,6 +307,7 @@ private struct FileMenuItems<Extra: View>: View {
         case "copyText": return items.contains(where: TextExtractor.canExtract)
         case "ocr": return items.count == 1 && (items.first?.isImage ?? false)
         case "uninstall": return items.count == 1 && items.first?.ext == "app"
+        case "backupToDrive": return plainFolders.count == 1
         default: return true
         }
     }
@@ -573,6 +574,22 @@ private struct FileMenuItems<Extra: View>: View {
                 if isPro { inMain { store.requestMoveOut(list) } } else { showPaywall() }
             } label: {
                 proLabel(String(localized: "大文件搬家…"))
+            }
+        case "backupToDrive":
+            // 拾掇 Pro：这个文件夹 ↔ 移动硬盘上的一个文件夹，配对后插上硬盘就提示备份（只 Mac → 硬盘）。
+            if let folder = plainFolders.first {
+                Button {
+                    let url = folder.url
+                    if isPro {
+                        inMain {
+                            if let error = FolderBackupPicker.startPair(mac: url) { store.alertMessage = error }
+                        }
+                    } else {
+                        showPaywall()
+                    }
+                } label: {
+                    proLabel(String(localized: "备份到硬盘…"))
+                }
             }
         case "uninstall":
             if let app = items.first {

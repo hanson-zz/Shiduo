@@ -189,6 +189,10 @@ struct DetailView: View {
                     if store.selection != .shelf {
                         MoveProgressCard()
                     }
+                    // 备份到硬盘的进度（在「备份到硬盘」页里时页面自己显示）。
+                    if store.selection != .folderBackup {
+                        BackupProgressCard()
+                    }
                     // 压缩视频这类长任务：进度和取消。
                     MediaTaskBar()
                 }
@@ -308,6 +312,8 @@ struct PaneContent: View {
                 CleanupTabs { CleanupHistoryView() }
             case .fonts:
                 FontsView()
+            case .folderBackup:
+                FolderBackupView()
             case .savedSearch(let id):
                 SavedSearchPage(id: id)
                     .proGated(.savedSearch)
