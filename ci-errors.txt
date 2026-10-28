@@ -1,0 +1,31 @@
+run: 40643435333 commit: 10f99b8352302b881200391c298d7edb7b5a7783
+== build ==
+389:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:740:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+392:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:760:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+395:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:1129:52: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+448:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:430:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+451:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:446:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+553:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:178:44: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+556:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:251:50: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+565:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/NotchShelf.swift:770:59: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+592:/Users/runner/work/Shiduo/Shiduo/Sources/Views/ShelfPageView.swift:275:76: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+595:/Users/runner/work/Shiduo/Shiduo/Sources/Views/TopBar.swift:137:67: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+637:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:740:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+640:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:760:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+643:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:1129:52: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+696:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:430:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+699:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:446:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+801:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:178:44: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+804:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:251:50: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+813:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/NotchShelf.swift:770:59: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+840:/Users/runner/work/Shiduo/Shiduo/Sources/Views/ShelfPageView.swift:275:76: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+843:/Users/runner/work/Shiduo/Shiduo/Sources/Views/TopBar.swift:137:67: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+982:** BUILD SUCCEEDED **
+== test ==
+3126:2026-10-28 06:37:35.153840+0000 xctest[24971:68091] [files] Move out: removing source failed midway: 513
+3601:/Users/runner/work/Shiduo/Shiduo/Tests/StableContextMenuTests.swift:143: error: -[ShiduoTests.StableContextMenuTests testFileMenuItemsDoNotObserveSingletons] : XCTAssertFalse failed - private struct FileMenuItems 不能订阅会变的单例
+3602:Test Case '-[ShiduoTests.StableContextMenuTests testFileMenuItemsDoNotObserveSingletons]' failed (0.675 seconds).
+3611:Test Suite 'StableContextMenuTests' failed at 2026-10-28 06:40:38.307.
+3784:Test Suite 'ShiduoTests.xctest' failed at 2026-10-28 06:40:38.582.
+3786:Test Suite 'All tests' failed at 2026-10-28 06:40:38.583.
+3798:** TEST FAILED **
