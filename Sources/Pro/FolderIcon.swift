@@ -533,7 +533,10 @@ final class FolderIconService: ObservableObject {
     /// 把原来的自定义图标存成 icns。文件名每次随机（UUID），不同文件夹的备份不会互相覆盖——
     /// 记录里存着文件名，不靠路径找。失败返回 nil（调用方不会去改这个文件夹）。
     private func backupOriginal(_ url: URL) -> String? {
-        guard let icon = (try? url.resourceValues(forKeys: [.customIconKey]))?.customIcon else { return nil }
+        // iCloud 云盘里 App 自带的文件夹（如「Pages 文档」「Keynote 讲演」）有 Icon\r，但读不出 customIcon
+        // （图标在云端或由系统提供）。这时退而求其次：把访达现在显示的那个图标存下来，还原时一样能变回去。
+        let icon = (try? url.resourceValues(forKeys: [.customIconKey]))?.customIcon
+            ?? NSWorkspace.shared.icon(forFile: url.path)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let base = UUID().uuidString
         let name = base + ".icns"
