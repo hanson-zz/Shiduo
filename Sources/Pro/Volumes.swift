@@ -57,7 +57,9 @@ final class VolumeMonitor: ObservableObject {
                 name: v.volumeLocalizedName ?? v.volumeName ?? url.lastPathComponent,
                 totalBytes: Int64(v.volumeTotalCapacity ?? 0),
                 availableBytes: Int64(v.volumeAvailableCapacity ?? 0),
-                isEjectable: v.volumeIsEjectable == true || v.volumeIsRemovable == true
+                // 很多 USB/雷雳移动固态硬盘报告「不可移除、不可推出」，但访达照样给推出按钮。
+                // 所以只要不是内置盘，就显示 ⏏。
+                isEjectable: v.volumeIsEjectable == true || v.volumeIsRemovable == true || v.volumeIsInternal == false
             )
         }
         .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
