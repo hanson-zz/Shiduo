@@ -276,7 +276,13 @@ enum FolderThemeCatalog {
     static let categories: [Category] = [
         Category(id: "food", symbol: "fork.knife", items: ["cake", "donut", "matcha", "ramen", "sushi", "watermelon"]),
         Category(id: "animal", symbol: "pawprint.fill", items: ["cat", "dog", "bear", "panda", "rabbit", "fox",
-                                                                 "coral-fish", "jellyfish", "octopus", "turtle"]),
+                                                                 "coral-fish", "jellyfish", "octopus", "turtle",
+                                                                 // 毛绒款（2026-10-31）：6 只常见动物 + 十二生肖 + 大象
+                                                                 "plush-fox", "plush-panda", "plush-cat", "plush-bear",
+                                                                 "plush-rabbit", "plush-shiba", "plush-elephant",
+                                                                 "plush-mouse", "plush-ox", "plush-tiger", "plush-dragon",
+                                                                 "plush-snake", "plush-horse", "plush-goat", "plush-monkey",
+                                                                 "plush-rooster", "plush-puppy", "plush-pig"]),
         Category(id: "starry", symbol: "moon.stars.fill", items: ["aurora", "constellation", "galaxy", "galaxy-2", "moon", "moon-2",
                                                                    "shooting-star", "shooting-star-2", "stars"]),
         Category(id: "planet", symbol: "globe.asia.australia.fill", items: ["earth", "saturn", "jupiter", "mars", "ice", "pastel",
