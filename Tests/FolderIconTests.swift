@@ -49,9 +49,9 @@ final class FolderIconStyleTests: XCTestCase {
     }
 
     func testThemeCatalog() {
-        XCTAssertEqual(FolderThemeCatalog.categories.map(\.id), ["food", "animal", "starry", "planet", "plant", "material", "building"])
-        XCTAssertEqual(FolderThemeCatalog.allThemes.count, 70)
-        XCTAssertEqual(Set(FolderThemeCatalog.allThemes).count, 70)
+        XCTAssertEqual(FolderThemeCatalog.categories.map(\.id), ["food", "animal", "starry", "planet", "plant", "material", "building", "apple"])
+        XCTAssertEqual(FolderThemeCatalog.allThemes.count, 84)
+        XCTAssertEqual(Set(FolderThemeCatalog.allThemes).count, 84)
         for theme in FolderThemeCatalog.allThemes {
             XCTAssertEqual(FolderIconStyle.normalizedTheme(theme), theme)
         }

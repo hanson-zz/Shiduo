@@ -266,6 +266,7 @@ enum FolderThemeCatalog {
             case "plant": return String(localized: "植物")
             case "material": return String(localized: "材质")
             case "building": return String(localized: "建筑")
+            case "apple": return String(localized: "Apple")
             default: return id
             }
         }
@@ -292,6 +293,10 @@ enum FolderThemeCatalog {
                                                                              "marble", "metal", "wood"]),
         Category(id: "building", symbol: "building.columns.fill", items: ["eiffel", "big-ben", "liberty", "opera-house",
                                                                            "taj-mahal", "pyramids"]),
+        // Apple 致敬款（2026-10-31）：8 款经典机型 + 6 色笑脸小电脑
+        Category(id: "apple", symbol: "apple.logo", items: ["apple-ii", "macintosh", "powerbook", "imac-g3", "ibook", "cube",
+                                                            "imac-g4", "imac", "retro-rainbow", "retro-cream", "retro-blue",
+                                                            "retro-mint", "retro-navy", "retro-red"]),
     ]
 
     static var allThemes: [String] { categories.flatMap(\.themes) }
