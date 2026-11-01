@@ -320,7 +320,7 @@ struct FontIssueGroup: Identifiable, Hashable, Sendable {
 
 enum FontIssueLogic {
     /// 找重复、多版本、损坏。只看 ~/Library/Fonts 和 /Library/Fonts（系统字体和拾掇停用的不算）。
-    /// - 重复：PostScript 名字完全一样（TTC 按整组名字）、版本一样 → 留一份，其余建议停用。
+    /// - 重复：PostScript 名字完全一样（TTC 按整组名字）、版本一样、文件大小也一样 → 留一份，其余建议停用。
     /// - 多版本：名字一样、版本不同 → 留版本最高的。
     /// 留哪份：有拾掇动不了的（/Library/Fonts）就留它（反正动不了，留它不会少什么）；
     /// 否则在 ~/Library/Fonts 里留最新改过的一份；再一样就留路径短的。
@@ -332,7 +332,21 @@ enum FontIssueLogic {
             buckets[key, default: []].append(file)
         }
         var result: [FontIssueGroup] = []
-        for (_, group) in buckets where group.count > 1 {
+        for (_, bucket) in buckets where bucket.count > 1 {
+            let top = bucket.max { FontVersion.compare($0.version, $1.version) == .orderedAscending }!
+            if bucket.allSatisfy({ FontVersion.same($0.version, top.version) }) {
+                // 名字、版本都一样但文件大小不同：多半是改过的字体（比如粗体文件里写了常规体的名字），
+                // 删了会丢字重，所以只有大小也一样的才算重复。
+                let bySize = Dictionary(grouping: bucket, by: \.size)
+                for (_, same) in bySize where same.count > 1 {
+                    let keep = preferredKeep(same)
+                    let extras = same.filter { $0.path != keep.path }
+                        .sorted { ($0.location.rawValue, $0.path) < ($1.location.rawValue, $1.path) }
+                    result.append(FontIssueGroup(kind: .duplicate, title: keep.family, keep: keep, extras: extras))
+                }
+                continue
+            }
+            let group = bucket
             let highest = group.max { FontVersion.compare($0.version, $1.version) == .orderedAscending }!
             let allSame = group.allSatisfy { FontVersion.same($0.version, highest.version) }
             let candidates = group.filter { FontVersion.same($0.version, highest.version) }

@@ -75,6 +75,17 @@ final class FontLogicTests: XCTestCase {
         XCTAssertEqual(groups[0].actionableBytes, 1000)
     }
 
+    func testSameNameDifferentSizeIsNotDuplicate() {
+        // 网上流传的微软雅黑：粗体文件 msyhbd.ttf 里写的也是常规体的名字，大小不一样，删了会丢粗体。
+        let regular = file("/Users/designer/Library/Fonts/msyh.ttf", .user, ps: ["MicrosoftYaHei"], version: "Version 0.75", size: 15_000_000)
+        let bold = file("/Users/designer/Library/Fonts/msyhbd.ttf", .user, ps: ["MicrosoftYaHei"], version: "Version 0.75", size: 14_700_000)
+        XCTAssertTrue(FontIssueLogic.issues(files: [regular, bold], damaged: []).isEmpty)
+        let copy = file("/Users/designer/Library/Fonts/msyh copy.ttf", .user, ps: ["MicrosoftYaHei"], version: "0.75", size: 15_000_000)
+        let groups = FontIssueLogic.issues(files: [regular, bold, copy], damaged: [])
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(Set([groups[0].keep!.path] + groups[0].extras.map(\.path)), [regular.path, copy.path], "大小一样的才算重复")
+    }
+
     func testDuplicateKeepsLockedLocalCopy() {
         let user = file("/Users/designer/Library/Fonts/Brand.otf", .user, ps: ["Brand-Regular"], version: "1.0", modified: 300)
         let local = file("/Library/Fonts/Brand.otf", .local, ps: ["Brand-Regular"], version: "1.0", modified: 100)
