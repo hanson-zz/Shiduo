@@ -70,6 +70,14 @@ struct FontFace: Identifiable, Hashable, Sendable {
     var isDamaged: Bool = false
     /// 拾掇停用清单里的哪一条（停用 / 压缩 / 移动硬盘的才有）。
     var manifestID: UUID?
+    /// 字体文件里自带的授权说明（name 表第 13 条）和授权网址（第 14 条），没有就是空。
+    var licenseText: String = ""
+    var licenseURL: String = ""
+    /// 按字体属性自动分的类（衬线 / 无衬线 / 等宽 / 手写 / 装饰）。
+    var styleClass: FontStyleClass = .other
+
+    /// 按授权说明猜的能不能商用（只是提示，最终以字体厂商的授权为准）。
+    var licenseHint: FontLicenseHint { FontLicenseLogic.classify(license: licenseText, url: licenseURL) }
 
     var id: String { path + "#" + postScriptName }
     var fileName: String { (path as NSString).lastPathComponent }
@@ -108,6 +116,22 @@ struct FontFamily: Identifiable, Hashable, Sendable {
         return FontLocation.allCases.filter(set.contains)
     }
     var coversCJK: Bool { faces.contains(where: \.coversCJK) }
+    /// 家族的授权提示：有一个字形写着限制就算限制；否则有一个写着开源 / 免费商用就算可商用。
+    var licenseHint: FontLicenseHint {
+        let hints = faces.map(\.licenseHint)
+        if hints.contains(.restricted) { return .restricted }
+        if hints.contains(.open) { return .open }
+        return .unknown
+    }
+    /// 授权说明原文（第一个有写的字形）。
+    var licenseText: String { faces.first { !$0.licenseText.isEmpty }?.licenseText ?? "" }
+    var licenseURL: String { faces.first { !$0.licenseURL.isEmpty }?.licenseURL ?? "" }
+    /// 家族的自动分类：字形里最多的那一类（「其他」只在别的都没有时才算）。
+    var styleClass: FontStyleClass {
+        var counts: [FontStyleClass: Int] = [:]
+        for face in faces where face.styleClass != .other { counts[face.styleClass, default: 0] += 1 }
+        return counts.max { a, b in a.value != b.value ? a.value < b.value : a.key.order > b.key.order }?.key ?? .other
+    }
     var newestAdded: Date? { faces.compactMap { $0.added ?? $0.modified }.max() }
     /// 样张用的那一个字形：常规体优先，其次第一个。
     var representative: FontFace? {
@@ -126,7 +150,7 @@ enum FontSortKey: String, CaseIterable, Identifiable, Sendable {
 
 /// 字体库的筛选。
 enum FontFilter: String, CaseIterable, Identifiable, Sendable {
-    case all, cjk, user, local, system, stored
+    case all, cjk, user, local, system, stored, serif, sans, mono, script, decorative, favorites, commercial, notCommercial, licenseUnknown
     var id: String { rawValue }
 }
 
@@ -430,6 +454,18 @@ struct FontManifest: Codable, Equatable, Sendable {
     var sets: [FontSet] = []
     /// 压缩存放的位置（nil = 拾掇字体仓库里的 Archive）。
     var archiveFolder: String?
+    /// 用户给字体家族做的标记（常用 / 可商用），按家族名（FontFamily.name）记。
+    /// 可选：旧版本存的清单没有这一项也能读。
+    var marks: [String: FontMark]?
+
+    func mark(for family: String) -> FontMark { marks?[family] ?? FontMark() }
+
+    /// 改一个家族的标记；改完是空的就删掉这一条。
+    mutating func setMark(_ mark: FontMark, for family: String) {
+        var all = marks ?? [:]
+        if mark.isEmpty { all.removeValue(forKey: family) } else { all[family] = mark }
+        marks = all.isEmpty ? nil : all
+    }
 
     static func encode(_ manifest: FontManifest) throws -> Data {
         let encoder = JSONEncoder()
@@ -453,6 +489,197 @@ struct FontManifest: Codable, Equatable, Sendable {
             return FontStoreEntry(originalPath: (FontPathRules.userFonts(home: home) as NSString).appendingPathComponent(name),
                                   storedPath: path, size: 0, family: (name as NSString).deletingPathExtension)
         }
+    }
+}
+
+// MARK: - 常用 / 可商用标记、授权提示
+
+/// 用户给一个字体家族做的标记。
+struct FontMark: Codable, Equatable, Hashable, Sendable {
+    /// 标成「常用」。
+    var favorite: Bool?
+    /// 手动标的能不能商用：true 可商用、false 不可商用、nil 没标（看字体自带的授权说明）。
+    var commercial: Bool?
+
+    var isFavorite: Bool { favorite == true }
+    var isEmpty: Bool { favorite != true && commercial == nil }
+}
+
+/// 字体文件自带授权说明给的提示。
+enum FontLicenseHint: String, Codable, Sendable {
+    /// 写着开源授权（OFL、Apache、MIT……）或「免费商用」。
+    case open
+    /// 写着只限个人 / 非商业 / 试用。
+    case restricted
+    /// 没写，或看不出来。
+    case unknown
+}
+
+/// 一个家族最后算不算可商用：手动标的优先，没标就看授权说明。
+enum FontCommercialStatus: String, Sendable {
+    case yes, no, unknown
+}
+
+enum FontLicenseLogic {
+    /// 限制性的说法（先查这个：「仅供个人使用，商用请购买」这种句子里两种词都有）。
+    static let restrictedKeywords = [
+        "non-commercial", "noncommercial", "non commercial", "not for commercial", "personal use",
+        "personal, non", "for personal", "evaluation", "trial version", "demo version", "demo font",
+        "cc by-nc", "cc-by-nc", "by-nc",
+        "非商用", "非商业", "不可商用", "不得商用", "禁止商用", "不能商用", "个人使用", "个人学习", "仅供个人", "仅限个人", "试用",
+    ]
+    /// 开源 / 免费商用的说法。
+    static let openKeywords = [
+        "open font license", "sil ofl", "ofl-1.1", "ofl 1.1", "scripts.sil.org/ofl", "openfontlicense.org",
+        "apache license", "apache.org/licenses", "mit license", "opensource.org/licenses/mit",
+        "ubuntu font licence", "ubuntu font license", "free for commercial", "free for personal and commercial",
+        "commercial use is allowed", "creativecommons.org/publicdomain", "public domain", "cc0",
+        "免费商用", "免费可商用", "可免费商用", "可商用", "开源字体", "自由使用",
+    ]
+
+    static func classify(license: String, url: String) -> FontLicenseHint {
+        let text = (license + "\n" + url).lowercased()
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return .unknown }
+        if restrictedKeywords.contains(where: { text.contains($0) }) { return .restricted }
+        if openKeywords.contains(where: { text.contains($0) }) { return .open }
+        // 只写了 OFL 这几个字母（比如「Licensed under the OFL」），单独认一下，避免把别的单词里的 ofl 算进去。
+        let words = text.split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+        if words.contains("ofl") { return .open }
+        return .unknown
+    }
+
+    static func status(hint: FontLicenseHint, mark: FontMark) -> FontCommercialStatus {
+        if let manual = mark.commercial { return manual ? .yes : .no }
+        switch hint {
+        case .open: return .yes
+        case .restricted: return .no
+        case .unknown: return .unknown
+        }
+    }
+}
+
+// MARK: - 自动分类
+
+/// 字体按样子分的类。
+enum FontStyleClass: String, Codable, CaseIterable, Sendable {
+    case serif, sans, mono, script, decorative, other
+
+    var order: Int { Self.allCases.firstIndex(of: self) ?? 99 }
+}
+
+enum FontStyleClassLogic {
+    /// - classBits: Core Text 的 kCTFontClassMaskTrait 那 4 位（已经右移 28 位）。
+    /// - monospaced: 等宽（kCTFontMonoSpaceTrait）。
+    /// - names: 家族名、本地化名、PostScript 名（字体自己没写分类时按名字认，中文字体大多没写）。
+    static func classify(classBits: Int, monospaced: Bool, names: [String]) -> FontStyleClass {
+        let text = names.joined(separator: " ").lowercased()
+        // 中文字体有时会标成等宽（全角字宽一样），所以中文名字里明确是宋 / 黑 / 楷的先按名字认。
+        if let byHan = hanClass(text) { return byHan }
+        if monospaced || ["mono", "console", "courier", "menlo", "terminal"].contains(where: text.contains) { return .mono }
+        switch classBits {
+        case 1, 2, 3, 4, 5, 7: return .serif
+        case 8: return .sans
+        case 10: return .script
+        case 9, 12: return .decorative
+        default: break
+        }
+        if ["script", "hand", "brush", "callig", "signature"].contains(where: text.contains) { return .script }
+        if ["sans", "gothic", "grotesk", "grotesque", "helvetica", "arial"].contains(where: text.contains) { return .sans }
+        if ["serif", "roman", "times", "garamond", "baskerville", "didot", "georgia", "antiqua"].contains(where: text.contains) { return .serif }
+        if ["display", "deco", "ornament", "symbol", "dingbat", "emoji", "icon"].contains(where: text.contains) { return .decorative }
+        return .other
+    }
+
+    /// 中文名字 / 拼音里的常见说法。
+    private static func hanClass(_ text: String) -> FontStyleClass? {
+        if ["楷", "行书", "行楷", "草书", "隶", "手写", "手书", "毛笔", "kaiti", "xingkai", "xingshu", "caoshu", "lishu"].contains(where: text.contains) { return .script }
+        if ["宋", "明朝", "明體", "仿宋", "songti", "fangsong", "mincho"].contains(where: text.contains) { return .serif }
+        // 拼音只认完整的「heiti」「yuanti」这种，避免「their」这类英文单词误判。
+        if ["黑", "圆", "圓", "ゴシック", "heiti", "yuanti"].contains(where: text.contains) { return .sans }
+        if ["艺术", "综艺", "创意"].contains(where: text.contains) { return .decorative }
+        return nil
+    }
+}
+
+// MARK: - 下载里的字体
+
+/// 下载文件夹里找到的一个字体文件。
+struct FontDownloadItem: Identifiable, Hashable, Sendable {
+    var path: String
+    var size: Int64
+    var added: Date?
+    /// 文件里的字形（TTC 有好几个）。
+    var faces: [FontFace]
+    /// 文件里所有字形都已经装着（用户 / 本机 / 系统任一处有同名 PostScript）。
+    var alreadyInstalled: Bool
+
+    var id: String { path }
+    var fileName: String { (path as NSString).lastPathComponent }
+    var displayFamily: String { faces.first?.displayFamily ?? (fileName as NSString).deletingPathExtension }
+    var styles: [String] { faces.map { $0.style.isEmpty ? $0.postScriptName : $0.style } }
+    var coversCJK: Bool { faces.contains(where: \.coversCJK) }
+    var licenseHint: FontLicenseHint {
+        let hints = faces.map(\.licenseHint)
+        if hints.contains(.restricted) { return .restricted }
+        if hints.contains(.open) { return .open }
+        return .unknown
+    }
+}
+
+enum FontDownloadsLogic {
+    /// 往下找几层（解压出来的字体常在「XX字体/OTF/」这种两三层的文件夹里）。
+    static let maxDepth = 4
+    /// 最多看多少个字体文件（防止下载里有成千上万个）。
+    static let maxFiles = 2000
+
+    /// 这个文件的字形是不是都已经装着。没读出字形的（坏文件）不算装着。
+    static func isInstalled(_ postScriptNames: [String], installed: Set<String>) -> Bool {
+        !postScriptNames.isEmpty && postScriptNames.allSatisfy(installed.contains)
+    }
+
+    /// 排序：没装的在前，新下载的在前。
+    static func sorted(_ items: [FontDownloadItem]) -> [FontDownloadItem] {
+        items.sorted { a, b in
+            if a.alreadyInstalled != b.alreadyInstalled { return !a.alreadyInstalled }
+            let da = a.added ?? .distantPast
+            let db = b.added ?? .distantPast
+            if da != db { return da > db }
+            return a.fileName.localizedStandardCompare(b.fileName) == .orderedAscending
+        }
+    }
+
+    /// 同一批里要装的文件：PostScript 名字一样的只装一份（解压出来常有 OTF 和 TTF 两份），留第一个。
+    static func dedupe(_ items: [FontDownloadItem]) -> [FontDownloadItem] {
+        var seen = Set<String>()
+        return items.filter { item in
+            let names = item.faces.map(\.postScriptName)
+            guard !names.isEmpty else { return false }
+            if names.allSatisfy(seen.contains) { return false }
+            names.forEach { seen.insert($0) }
+            return true
+        }
+    }
+
+    /// 下载里这个路径能不能动（只认下载文件夹里的字体文件，防止拼出跳出去的路径）。
+    static func isInDownloads(_ path: String, downloads: String) -> Bool {
+        guard !FontPathRules.hasTraversal(path) else { return false }
+        let ext = (path as NSString).pathExtension.lowercased()
+        return FontFileFormat.extensions.contains(ext) && FontPathRules.isInside(path, folder: downloads)
+    }
+}
+
+// MARK: - 字体对比
+
+enum FontCompareLogic {
+    /// 最多同时对比几款。
+    static let maxCount = 8
+
+    /// 加入对比：已经在里面就不重复；满了把最早加的挤掉。
+    static func adding(_ ids: [String], to list: [String]) -> [String] {
+        var result = list
+        for id in ids where !result.contains(id) { result.append(id) }
+        if result.count > maxCount { result.removeFirst(result.count - maxCount) }
+        return result
     }
 }
 
@@ -519,8 +746,18 @@ enum FontLibraryLogic {
         return false
     }
 
-    static func passes(_ family: FontFamily, filter: FontFilter) -> Bool {
+    static func passes(_ family: FontFamily, filter: FontFilter, marks: [String: FontMark] = [:]) -> Bool {
+        let mark = marks[family.name] ?? FontMark()
         switch filter {
+        case .serif: return family.styleClass == .serif
+        case .sans: return family.styleClass == .sans
+        case .mono: return family.styleClass == .mono
+        case .script: return family.styleClass == .script
+        case .decorative: return family.styleClass == .decorative
+        case .favorites: return mark.isFavorite
+        case .commercial: return FontLicenseLogic.status(hint: family.licenseHint, mark: mark) == .yes
+        case .notCommercial: return FontLicenseLogic.status(hint: family.licenseHint, mark: mark) == .no
+        case .licenseUnknown: return FontLicenseLogic.status(hint: family.licenseHint, mark: mark) == .unknown
         case .all: return true
         case .cjk: return family.coversCJK
         case .user: return family.locations.contains(.user)

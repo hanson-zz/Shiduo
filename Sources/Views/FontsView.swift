@@ -14,8 +14,9 @@ struct FontsView: View {
     private var sort: FontSortKey { FontSortKey(rawValue: sortRaw) ?? .name }
 
     private var shownFamilies: [FontFamily] {
+        let marks = library.manifest.marks ?? [:]
         let list = library.families.filter {
-            FontLibraryLogic.passes($0, filter: filter) && FontLibraryLogic.matches($0, query: query)
+            FontLibraryLogic.passes($0, filter: filter, marks: marks) && FontLibraryLogic.matches($0, query: query)
         }
         return FontLibraryLogic.sorted(list, by: sort)
     }
@@ -31,7 +32,12 @@ struct FontsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .navigationTitle("字体")
-        .task { library.scanIfNeeded() }
+        .task {
+            library.scanIfNeeded()
+            // 字体库扫完后在后台顺便看一眼下载里有没有新字体（标签上显示个数）。
+            while !library.hasScanned, !Task.isCancelled { try? await Task.sleep(nanoseconds: 200_000_000) }
+            library.scanDownloadsIfNeeded()
+        }
     }
 
     private var header: some View {
@@ -68,7 +74,7 @@ struct FontsView: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .frame(maxWidth: 520)
+                .frame(maxWidth: 700)
                 Spacer()
                 if library.tab == .library || library.tab == .specimen {
                     TextField("搜索字体（中文名、英文名、拼音首字母）", text: $query)
@@ -82,8 +88,19 @@ struct FontsView: View {
                         Text("本机字体").tag(FontFilter.local.rawValue)
                         Text("系统字体").tag(FontFilter.system.rawValue)
                         Text("已停用").tag(FontFilter.stored.rawValue)
+                        Divider()
+                        Text("衬线 / 宋体").tag(FontFilter.serif.rawValue)
+                        Text("无衬线 / 黑体").tag(FontFilter.sans.rawValue)
+                        Text("等宽").tag(FontFilter.mono.rawValue)
+                        Text("手写 / 楷书").tag(FontFilter.script.rawValue)
+                        Text("装饰").tag(FontFilter.decorative.rawValue)
+                        Divider()
+                        Text("★ 常用").tag(FontFilter.favorites.rawValue)
+                        Text("可商用").tag(FontFilter.commercial.rawValue)
+                        Text("不可商用").tag(FontFilter.notCommercial.rawValue)
+                        Text("授权不明").tag(FontFilter.licenseUnknown.rawValue)
                     }
-                    .frame(width: 130)
+                    .frame(width: 140)
                     if library.tab == .library {
                         Picker("排序", selection: $sortRaw) {
                             Text("名称").tag(FontSortKey.name.rawValue)
@@ -104,6 +121,10 @@ struct FontsView: View {
             return tab.title + " \(library.actionableIssueCount)"
         case .stored where !library.manifest.entries.isEmpty:
             return tab.title + " \(library.manifest.entries.count)"
+        case .compare where !library.compareIDs.isEmpty:
+            return tab.title + " \(library.compareIDs.count)"
+        case .downloads where library.newDownloadCount > 0:
+            return tab.title + " \(library.newDownloadCount)"
         case .sets:
             return tab.title + " · PRO"
         default:
@@ -132,6 +153,8 @@ struct FontsView: View {
             switch library.tab {
             case .library: FontLibraryTab(families: shownFamilies)
             case .specimen: FontSpecimenTab(families: shownFamilies)
+            case .compare: FontCompareTab()
+            case .downloads: FontDownloadsTab()
             case .problems: FontProblemsTab()
             case .stored: FontStoredTab()
             case .sets: FontSetsTab().proGated(.fontSets)
@@ -197,6 +220,8 @@ struct FontSampleText: NSViewRepresentable {
     let text: String
     let size: CGFloat
     var lines: Int = 1
+    /// 文字颜色（叠放对比时用）；nil = 系统文字颜色。
+    var color: NSColor? = nil
 
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField(labelWithString: "")
@@ -213,7 +238,7 @@ struct FontSampleText: NSViewRepresentable {
         field.lineBreakMode = lines > 1 ? .byWordWrapping : .byTruncatingTail
         if let font = FontPreviewCache.font(for: face, size: size) {
             field.font = font
-            field.textColor = .labelColor
+            field.textColor = color ?? .labelColor
             field.stringValue = text
         } else {
             field.font = .systemFont(ofSize: 12)
@@ -258,7 +283,8 @@ private struct FontLibraryTab: View {
             } else {
                 List(selection: $selection) {
                     ForEach(families) { family in
-                        FontFamilyRow(family: family, expanded: expanded.contains(family.id)) {
+                        FontFamilyRow(family: family, mark: library.mark(for: family), status: library.commercialStatus(family),
+                                      expanded: expanded.contains(family.id)) {
                             if expanded.contains(family.id) { expanded.remove(family.id) } else { expanded.insert(family.id) }
                         }
                         .tag(family.id)
@@ -275,6 +301,12 @@ private struct FontLibraryTab: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                 Spacer()
+                if selection.count >= 2 {
+                    Button("对比所选（\(min(selection.count, FontCompareLogic.maxCount))）") {
+                        library.addToCompare(selectedFamilies)
+                        library.tab = .compare
+                    }
+                }
                 if !selectedStoredIDs.isEmpty {
                     Button("启用所选") {
                         let ids = selectedStoredIDs
@@ -319,6 +351,23 @@ private struct FontLibraryTab: View {
         if !storedIDs.isEmpty {
             Button("启用") { Task { await library.enable(entryIDs: storedIDs) } }
         }
+        Button("加入对比") { library.addToCompare(targets) }
+        if targets.count >= 2 {
+            Button("对比这 \(min(targets.count, FontCompareLogic.maxCount)) 款") {
+                library.addToCompare(targets)
+                library.tab = .compare
+            }
+        }
+        Divider()
+        let allFavorite = targets.allSatisfy { library.mark(for: $0).isFavorite }
+        Button(allFavorite ? LocalizedStringKey("取消常用") : LocalizedStringKey("标为常用")) { library.setFavorite(!allFavorite, for: targets) }
+        Menu("能不能商用") {
+            Button("标为可商用") { library.setCommercial(true, for: targets) }
+            Button("标为不可商用") { library.setCommercial(false, for: targets) }
+            Divider()
+            Button("按字体里的授权说明（自动）") { library.setCommercial(nil, for: targets) }
+        }
+        Divider()
         Button("在访达中显示") {
             let urls = targets.flatMap(\.paths).filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
             if !urls.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(urls) }
@@ -344,11 +393,14 @@ private struct FontLibraryTab: View {
 
 private struct FontFamilyRow: View {
     let family: FontFamily
+    let mark: FontMark
+    let status: FontCommercialStatus
     let expanded: Bool
     let toggle: () -> Void
 
     private var detail: String {
         var parts = [String(localized: "\(family.styleCount) 个样式")]
+        if family.styleClass != .other { parts.append(family.styleClass.title) }
         parts.append(family.formats.map(\.label).joined(separator: " / "))
         if family.isVariable { parts.append(String(localized: "可变字体")) }
         if family.faces.contains(where: \.isDamaged) { parts.append(String(localized: "已损坏")) }
@@ -377,6 +429,13 @@ private struct FontFamilyRow: View {
                                 .foregroundStyle(.red)
                                 .help("包含常用汉字")
                         }
+                        if mark.isFavorite {
+                            Image(systemName: "star.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.yellow)
+                                .help("常用")
+                        }
+                        FontCommercialBadge(status: status, manual: mark.commercial != nil)
                     }
                     Text(detail)
                         .font(.caption)
@@ -402,6 +461,7 @@ private struct FontFamilyRow: View {
                     ForEach(family.faces) { face in
                         FontFaceRow(face: face)
                     }
+                    FontLicenseLine(text: family.licenseText, url: family.licenseURL)
                 }
                 .padding(.leading, 24)
                 .padding(.bottom, 4)
@@ -1173,6 +1233,367 @@ private struct FontSetPicker: View {
 // MARK: - 清理页里的「字体」卡片 / 项目横幅
 
 /// 清理页「你来决定」里的字体卡片：点进去在字体页的「问题字体」里挑（默认不勾、默认停用）。
+
+// MARK: - 标记、授权说明
+
+extension FontStyleClass {
+    var title: String {
+        switch self {
+        case .serif: return String(localized: "衬线 / 宋体")
+        case .sans: return String(localized: "无衬线 / 黑体")
+        case .mono: return String(localized: "等宽")
+        case .script: return String(localized: "手写 / 楷书")
+        case .decorative: return String(localized: "装饰")
+        case .other: return String(localized: "其他")
+        }
+    }
+}
+
+/// 「可商用 / 不可商用」小标签；没写授权说明、也没手动标的不显示。
+struct FontCommercialBadge: View {
+    let status: FontCommercialStatus
+    /// 手动标的（不是从授权说明读的）。
+    var manual = false
+
+    var body: some View {
+        switch status {
+        case .yes: badge(String(localized: "可商用"), tint: .green)
+        case .no: badge(String(localized: "不可商用"), tint: .red)
+        case .unknown: EmptyView()
+        }
+    }
+
+    private func badge(_ text: String, tint: Color) -> some View {
+        Text(text)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(tint.opacity(0.14)))
+            .fixedSize()
+            .help(manual ? String(localized: "你手动标的") : String(localized: "按字体文件里写的授权说明判断，仅供参考，以字体厂商的授权为准"))
+    }
+}
+
+/// 展开后最后一行：字体文件里写的授权说明。
+private struct FontLicenseLine: View {
+    let text: String
+    let url: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("授权说明")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 140, alignment: .leading)
+            if text.isEmpty && url.isEmpty {
+                Text("字体文件里没有写")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            } else {
+                Text(text.isEmpty ? url : text)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+                    .textSelection(.enabled)
+                    .help(text)
+                if let link = URL(string: url), !url.isEmpty, link.scheme?.hasPrefix("http") == true {
+                    Link("打开授权网页", destination: link)
+                        .font(.caption)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 2)
+    }
+}
+
+// MARK: - 对比
+
+private struct FontCompareTab: View {
+    @ObservedObject private var library = FontLibrary.shared
+    @AppStorage("fonts.sampleText") private var sample = FontCoverage.defaultSample
+    @AppStorage("fonts.compareSize") private var size = 40.0
+    @AppStorage("fonts.compareOverlay") private var overlay = false
+
+    /// 叠放时每款用的颜色（轮着用）。
+    static let palette: [Color] = [.blue, .red, .green, .orange, .purple, .pink, .teal, .brown]
+
+    var body: some View {
+        let families = library.compareFamilies
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                TextField("对比用的文字", text: $sample)
+                    .textFieldStyle(.roundedBorder)
+                Picker("", selection: $overlay) {
+                    Text("并排").tag(false)
+                    Text("叠放").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 120)
+                Slider(value: $size, in: 14...160)
+                    .frame(width: 140)
+                Text("\(Int(size)) pt")
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(width: 50, alignment: .trailing)
+                Button("清空") { library.compareIDs = [] }
+                    .disabled(families.isEmpty)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            Divider()
+            if families.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "rectangle.split.2x1")
+                        .font(.largeTitle)
+                        .foregroundStyle(.secondary)
+                    Text("还没有要对比的字体")
+                        .font(.headline)
+                    Text("在「字体库」里选中几款点「对比所选」，或右键「加入对比」（最多 \(FontCompareLogic.maxCount) 款）。")
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if overlay {
+                overlayView(families)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(families) { family in
+                            row(family)
+                        }
+                    }
+                    .padding(20)
+                }
+            }
+        }
+    }
+
+    private var text: String { sample.isEmpty ? FontCoverage.defaultSample : sample }
+
+    private func row(_ family: FontFamily) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            header(family, color: nil)
+            if let face = family.representative {
+                FontSampleText(face: face, text: text, size: CGFloat(size), lines: 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard(radius: 14)
+    }
+
+    private func header(_ family: FontFamily, color: Color?) -> some View {
+        HStack(spacing: 6) {
+            if let color {
+                Circle().fill(color).frame(width: 9, height: 9)
+            }
+            Text(family.displayName)
+                .font(.callout.weight(.semibold))
+                .lineLimit(1)
+            if family.styleClass != .other {
+                Text(family.styleClass.title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            FontCommercialBadge(status: library.commercialStatus(family), manual: library.mark(for: family).commercial != nil)
+            Spacer(minLength: 4)
+            Text(family.totalBytes.byteText)
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+            Button {
+                library.removeFromCompare(family.id)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help("移出对比")
+        }
+    }
+
+    /// 叠放：每款一种颜色、半透明叠在同一个位置，看字面大小、基线、字重差多少。
+    private func overlayView(_ families: [FontFamily]) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(families.enumerated()), id: \.element.id) { index, family in
+                    if let face = family.representative {
+                        FontSampleText(face: face, text: text, size: CGFloat(size), lines: 2,
+                                       color: NSColor(Self.palette[index % Self.palette.count]).withAlphaComponent(0.55))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassCard(radius: 14)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(families.enumerated()), id: \.element.id) { index, family in
+                        header(family, color: Self.palette[index % Self.palette.count])
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
+// MARK: - 下载里的字体
+
+private struct FontDownloadsTab: View {
+    @ObservedObject private var library = FontLibrary.shared
+    @State private var checked: Set<String> = []
+    @AppStorage("fonts.trashAfterInstall") private var trashAfterInstall = false
+
+    private var items: [FontDownloadItem] { library.downloadItems }
+    private var newItems: [FontDownloadItem] { items.filter { !$0.alreadyInstalled } }
+    private var installedItems: [FontDownloadItem] { items.filter(\.alreadyInstalled) }
+    private var checkedNew: [FontDownloadItem] { newItems.filter { checked.contains($0.id) } }
+    private var checkedInstalled: [FontDownloadItem] { installedItems.filter { checked.contains($0.id) } }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Label("「下载」文件夹里（往下 \(FontDownloadsLogic.maxDepth) 层）的字体文件。安装 = 拷一份到 ~/Library/Fonts，可以撤销。",
+                      systemImage: "arrow.down.circle")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                Spacer()
+                Button {
+                    library.scanDownloads()
+                } label: {
+                    HStack(spacing: 6) {
+                        if library.isScanningDownloads { ProgressView().controlSize(.small) }
+                        Text("重新查找")
+                    }
+                }
+                .disabled(library.isScanningDownloads)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            Divider()
+            if !library.hasScannedDownloads {
+                VStack(spacing: 10) {
+                    ProgressView()
+                    Text("正在查找下载里的字体…").foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if items.isEmpty {
+                Text("下载里没有字体文件（压缩包要先解压）")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    if !newItems.isEmpty {
+                        Section {
+                            ForEach(newItems) { row($0) }
+                        } header: {
+                            HStack {
+                                Text("还没安装 · \(newItems.count) 个")
+                                Spacer()
+                                Button(checkedNew.count == newItems.count ? LocalizedStringKey("全不选") : LocalizedStringKey("全选")) {
+                                    if checkedNew.count == newItems.count {
+                                        newItems.forEach { checked.remove($0.id) }
+                                    } else {
+                                        newItems.forEach { checked.insert($0.id) }
+                                    }
+                                }
+                                .buttonStyle(.link)
+                            }
+                        }
+                    }
+                    if !installedItems.isEmpty {
+                        Section("已经装过 · \(installedItems.count) 个（下载里这份可以清掉）") {
+                            ForEach(installedItems) { row($0) }
+                        }
+                    }
+                }
+                .listStyle(.inset)
+            }
+            Divider()
+            HStack(spacing: 12) {
+                Toggle("装好后把下载里的原文件移到废纸篓", isOn: $trashAfterInstall)
+                    .toggleStyle(.checkbox)
+                Spacer()
+                if !checkedInstalled.isEmpty {
+                    Button("把已装过的移到废纸篓（\(checkedInstalled.count)）") {
+                        let list = checkedInstalled
+                        list.forEach { checked.remove($0.id) }
+                        library.trashDownloads(list)
+                    }
+                }
+                Button("安装所选（\(checkedNew.count)）") {
+                    let list = checkedNew
+                    list.forEach { checked.remove($0.id) }
+                    let trash = trashAfterInstall
+                    Task { await library.install(list, trashOriginals: trash) }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(checkedNew.isEmpty || library.busy != nil)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+        }
+        .task { library.scanDownloadsIfNeeded() }
+    }
+
+    private func row(_ item: FontDownloadItem) -> some View {
+        HStack(spacing: 10) {
+            Toggle("", isOn: Binding(
+                get: { checked.contains(item.id) },
+                set: { on in if on { checked.insert(item.id) } else { checked.remove(item.id) } }
+            ))
+            .toggleStyle(.checkbox)
+            .labelsHidden()
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(item.displayFamily)
+                        .font(.headline)
+                        .lineLimit(1)
+                    if item.coversCJK {
+                        Text("中")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.red)
+                    }
+                    FontCommercialBadge(status: FontLicenseLogic.status(hint: item.licenseHint, mark: FontMark()))
+                    if item.alreadyInstalled {
+                        Text("已安装")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Text("\(item.faces.count) 个样式 · \(item.fileName)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .frame(minWidth: 200, alignment: .leading)
+            if let face = item.faces.first {
+                FontSampleText(face: face, text: face.coversCJK ? "永和九年 Aa" : "Aa Bb 0123", size: 18)
+                    .frame(minWidth: 120, maxWidth: 260, alignment: .leading)
+            }
+            Spacer(minLength: 8)
+            Text(item.size.byteText)
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .frame(width: 80, alignment: .trailing)
+        }
+        .padding(.vertical, 3)
+        .contentShape(Rectangle())
+        .stableContextMenu {
+            Button("在访达中显示") {
+                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: item.path)])
+            }
+        }
+    }
+}
+
 struct FontsCleanupTile: View {
     @ObservedObject private var library = FontLibrary.shared
 

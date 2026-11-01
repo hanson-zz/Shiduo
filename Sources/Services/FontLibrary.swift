@@ -5,13 +5,15 @@ import OSLog
 
 /// 字体页的页内标签。
 enum FontsTab: String, CaseIterable, Identifiable {
-    case library, specimen, problems, stored, sets
+    case library, specimen, compare, downloads, problems, stored, sets
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .library: return String(localized: "字体库")
         case .specimen: return String(localized: "样张")
+        case .compare: return String(localized: "对比")
+        case .downloads: return String(localized: "下载里的")
         case .problems: return String(localized: "问题字体")
         case .stored: return String(localized: "已停用")
         case .sets: return String(localized: "字体集")
@@ -46,6 +48,12 @@ final class FontLibrary: ObservableObject {
     /// 这次登录里临时启用（.session）的文件。
     @Published private(set) var sessionActive: Set<String> = []
     @Published var projectBanner: FontProjectBanner?
+    /// 「对比」里的字体家族（FontFamily.id，按加入顺序）。只在这次运行里记。
+    @Published var compareIDs: [String] = []
+    /// 下载文件夹里找到的字体文件。
+    @Published private(set) var downloadItems: [FontDownloadItem] = []
+    @Published private(set) var isScanningDownloads = false
+    @Published private(set) var hasScannedDownloads = false
 
     /// 这次打开拾掇以后已经为哪些字体集问过 / 启用过（在项目里进进出出不反复提示）。
     private var handledSets: Set<UUID> = []
@@ -124,6 +132,127 @@ final class FontLibrary: ObservableObject {
             isScanning = false
             hasScanned = true
         }
+    }
+
+    // MARK: 常用 / 可商用标记（免费）
+
+    func mark(for family: FontFamily) -> FontMark { manifest.mark(for: family.name) }
+
+    func commercialStatus(_ family: FontFamily) -> FontCommercialStatus {
+        FontLicenseLogic.status(hint: family.licenseHint, mark: mark(for: family))
+    }
+
+    func setFavorite(_ on: Bool, for families: [FontFamily]) {
+        loadManifestIfNeeded()
+        for family in families {
+            var mark = manifest.mark(for: family.name)
+            mark.favorite = on ? true : nil
+            manifest.setMark(mark, for: family.name)
+        }
+        saveManifest()
+    }
+
+    /// commercial: true 可商用 / false 不可商用 / nil 清掉手动标记（回到看授权说明）。
+    func setCommercial(_ commercial: Bool?, for families: [FontFamily]) {
+        loadManifestIfNeeded()
+        for family in families {
+            var mark = manifest.mark(for: family.name)
+            mark.commercial = commercial
+            manifest.setMark(mark, for: family.name)
+        }
+        saveManifest()
+    }
+
+    // MARK: 对比（免费）
+
+    func addToCompare(_ families: [FontFamily]) {
+        compareIDs = FontCompareLogic.adding(families.map(\.id), to: compareIDs)
+    }
+
+    func removeFromCompare(_ id: String) { compareIDs.removeAll { $0 == id } }
+
+    var compareFamilies: [FontFamily] {
+        let byID = Dictionary(families.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        return compareIDs.compactMap { byID[$0] }
+    }
+
+    // MARK: 下载里的字体（免费）
+
+    nonisolated static var downloadsFolder: String {
+        FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?.path
+            ?? (home as NSString).appendingPathComponent("Downloads")
+    }
+
+    /// 现在装着（用户 / 本机 / 系统）的 PostScript 名字。
+    private var installedNames: Set<String> {
+        Set(faces.filter { $0.location.isInstalled && !$0.isDamaged }.map(\.postScriptName))
+    }
+
+    var newDownloadCount: Int { downloadItems.filter { !$0.alreadyInstalled }.count }
+
+    func scanDownloadsIfNeeded() {
+        guard !hasScannedDownloads, !isScanningDownloads else { return }
+        scanDownloads()
+    }
+
+    func scanDownloads() {
+        isScanningDownloads = true
+        let installed = installedNames
+        let folder = Self.downloadsFolder
+        Task {
+            let items = await Task.detached(priority: .userInitiated) {
+                FontScanner.scanDownloads(folder, installed: installed)
+            }.value
+            downloadItems = items
+            isScanningDownloads = false
+            hasScannedDownloads = true
+        }
+    }
+
+    /// 安装：拷进 ~/Library/Fonts（下载里的原文件不动，除非 trashOriginals）。可撤销（撤销 = 把装进去的移到废纸篓）。
+    func install(_ items: [FontDownloadItem], trashOriginals: Bool) async {
+        let picked = FontDownloadsLogic.dedupe(items.filter { !$0.alreadyInstalled })
+        guard !picked.isEmpty else { return }
+        let paths = picked.map(\.path)
+        let folder = Self.downloadsFolder
+        let home = Self.home
+        busy = String(localized: "正在安装…")
+        let outcome = await Task.detached(priority: .userInitiated) {
+            FontScanner.install(paths, downloads: folder, home: home)
+        }.value
+        busy = nil
+        // 新装的字体马上能在别的 App 里用：系统会自己发现 ~/Library/Fonts 里的新文件。
+        if !outcome.installed.isEmpty {
+            let installed = outcome.installed
+            let text = String(localized: "已安装 \(installed.count) 个字体文件")
+            FileUndoCenter.shared.registerCustom(name: String(localized: "安装字体"), toast: text, undo: {
+                FontLibrary.shared.trash(paths: installed)
+            }, redo: {
+                await FontLibrary.shared.install(items, trashOriginals: false)
+            })
+            if trashOriginals, let store {
+                let files = outcome.sources.compactMap { FileItem(url: URL(fileURLWithPath: $0)) }
+                if !files.isEmpty { store.moveToTrash(files) { _ in } }
+            }
+        }
+        if !outcome.failed.isEmpty {
+            store?.alertMessage = String(localized: "\(outcome.failed.count) 个没有安装（文件不在了，或没有权限）：\(FileUndoLogic.names(outcome.failed))")
+        }
+        scan()
+        // 字体库扫完再重新看下载里的（装过的会标成「已安装」）。
+        Task {
+            while isScanning { try? await Task.sleep(nanoseconds: 100_000_000) }
+            scanDownloads()
+        }
+    }
+
+    /// 下载里已经装过的字体文件：移到废纸篓（走拾掇统一的废纸篓，可撤销）。
+    func trashDownloads(_ items: [FontDownloadItem]) {
+        let folder = Self.downloadsFolder
+        let files = items.filter { FontDownloadsLogic.isInDownloads($0.path, downloads: folder) }
+            .compactMap { FileItem(url: URL(fileURLWithPath: $0.path)) }
+        guard let store, !files.isEmpty else { return }
+        store.moveToTrash(files) { [weak self] _ in self?.scanDownloads() }
     }
 
     // MARK: 停用 / 启用（免费）
@@ -608,6 +737,84 @@ enum FontScanner {
         }
     }
 
+    /// 从一个字形描述读出显示要用的信息（名字、样式、版本、可变、中文、授权说明、自动分类）。
+    static func makeFace(_ descriptor: CTFontDescriptor, url: URL, size: Int64, format: FontFileFormat, location: FontLocation,
+                         added: Date?, modified: Date?, manifestID: UUID?) -> FontFace {
+        let font = CTFontCreateWithFontDescriptor(descriptor, 24, nil)
+        let ps = CTFontCopyPostScriptName(font) as String
+        let fam = CTFontCopyFamilyName(font) as String
+        let localized = CTFontCopyLocalizedName(font, kCTFontFamilyNameKey, nil).map { $0 as String } ?? fam
+        let style = CTFontCopyName(font, kCTFontStyleNameKey).map { $0 as String } ?? ""
+        let ver = CTFontCopyName(font, kCTFontVersionNameKey).map { $0 as String } ?? ""
+        let license = CTFontCopyName(font, kCTFontLicenseNameKey).map { $0 as String } ?? ""
+        let licenseURL = CTFontCopyName(font, kCTFontLicenseURLNameKey).map { $0 as String } ?? ""
+        let axes = CTFontCopyVariationAxes(font) as? [Any]
+        let traits = CTFontGetSymbolicTraits(font).rawValue
+        let classBits = Int((traits & 0xF000_0000) >> 28)
+        let mono = traits & (1 << 10) != 0
+        let styleClass = FontStyleClassLogic.classify(classBits: classBits, monospaced: mono, names: [fam, localized, ps])
+        return FontFace(postScriptName: ps, family: fam, localizedFamily: localized, style: style, version: ver,
+                        path: url.path, fileSize: size, format: format, isVariable: !(axes ?? []).isEmpty,
+                        location: location, added: added, modified: modified,
+                        coversCJK: FontCoverage.coversCJK(font: font), manifestID: manifestID,
+                        licenseText: String(license.prefix(2000)), licenseURL: String(licenseURL.prefix(500)),
+                        styleClass: styleClass)
+    }
+
+    /// 下载文件夹里的字体文件（往下找几层，跳过 App 包和隐藏文件）。installed = 现在装着的 PostScript 名字。
+    static func scanDownloads(_ folder: String, installed: Set<String>) -> [FontDownloadItem] {
+        let root = URL(fileURLWithPath: folder, isDirectory: true)
+        guard let enumerator = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey],
+                                                              options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { return [] }
+        var items: [FontDownloadItem] = []
+        var count = 0
+        for case let file as URL in enumerator {
+            if enumerator.level > FontDownloadsLogic.maxDepth { enumerator.skipDescendants(); continue }
+            guard FontFileFormat.extensions.contains(file.pathExtension.lowercased()) else { continue }
+            count += 1
+            if count > FontDownloadsLogic.maxFiles { break }
+            let keys: Set<URLResourceKey> = [.fileSizeKey, .addedToDirectoryDateKey, .creationDateKey, .contentModificationDateKey]
+            let values = try? file.resourceValues(forKeys: keys)
+            let size = Int64(values?.fileSize ?? 0)
+            let added = values?.addedToDirectoryDate ?? values?.creationDate
+            let descriptors = (CTFontManagerCreateFontDescriptorsFromURL(file as CFURL) as? [CTFontDescriptor]) ?? []
+            guard !descriptors.isEmpty else { continue }
+            let faces = descriptors.map {
+                makeFace($0, url: file, size: size, format: FontFileFormat.from(extension: file.pathExtension), location: .user,
+                         added: added, modified: values?.contentModificationDate, manifestID: nil)
+            }
+            items.append(FontDownloadItem(path: file.path, size: size, added: added, faces: faces,
+                                          alreadyInstalled: FontDownloadsLogic.isInstalled(faces.map(\.postScriptName), installed: installed)))
+        }
+        return FontDownloadsLogic.sorted(items)
+    }
+
+    /// 把下载里的字体拷进 ~/Library/Fonts（同名换个名字，不覆盖）。返回装好的目标路径和失败的文件名。
+    static func install(_ paths: [String], downloads: String, home: String) -> (installed: [String], sources: [String], failed: [String]) {
+        let fm = FileManager.default
+        let target = FontPathRules.userFonts(home: home)
+        try? fm.createDirectory(atPath: target, withIntermediateDirectories: true)
+        var done: [String] = []
+        var sources: [String] = []
+        var failed: [String] = []
+        for path in paths {
+            let name = (path as NSString).lastPathComponent
+            guard FontDownloadsLogic.isInDownloads(path, downloads: downloads), fm.fileExists(atPath: path) else {
+                failed.append(name); continue
+            }
+            let unique = FontPathRules.uniqueName(name) { fm.fileExists(atPath: (target as NSString).appendingPathComponent($0)) }
+            let dest = (target as NSString).appendingPathComponent(unique)
+            do {
+                try fm.copyItem(atPath: path, toPath: dest)
+                done.append(dest)
+                sources.append(path)
+            } catch {
+                failed.append(name)
+            }
+        }
+        return (done, sources, failed)
+    }
+
     private static func read(_ url: URL, location: FontLocation, manifestID: UUID?, into result: inout Result) {
         let keys: Set<URLResourceKey> = [.fileSizeKey, .addedToDirectoryDateKey, .creationDateKey, .contentModificationDateKey]
         let values = try? url.resourceValues(forKeys: keys)
@@ -631,17 +838,12 @@ enum FontScanner {
         var version = ""
         var family = ""
         for descriptor in descriptors {
-            let font = CTFontCreateWithFontDescriptor(descriptor, 24, nil)
-            let ps = CTFontCopyPostScriptName(font) as String
-            let fam = CTFontCopyFamilyName(font) as String
-            let localized = CTFontCopyLocalizedName(font, kCTFontFamilyNameKey, nil).map { $0 as String } ?? fam
-            let style = CTFontCopyName(font, kCTFontStyleNameKey).map { $0 as String } ?? ""
-            let ver = CTFontCopyName(font, kCTFontVersionNameKey).map { $0 as String } ?? ""
-            let axes = CTFontCopyVariationAxes(font) as? [Any]
-            let face = FontFace(postScriptName: ps, family: fam, localizedFamily: localized, style: style, version: ver,
-                                path: url.path, fileSize: size, format: format, isVariable: !(axes ?? []).isEmpty,
-                                location: location, added: added, modified: modified,
-                                coversCJK: FontCoverage.coversCJK(font: font), manifestID: manifestID)
+            let face = makeFace(descriptor, url: url, size: size, format: format, location: location,
+                                added: added, modified: modified, manifestID: manifestID)
+            let ps = face.postScriptName
+            let ver = face.version
+            let fam = face.family
+            let localized = face.localizedFamily
             result.faces.append(face)
             names.append(ps)
             if version.isEmpty { version = ver }

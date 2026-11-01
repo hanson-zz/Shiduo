@@ -234,4 +234,125 @@ final class FontLogicTests: XCTestCase {
         XCTAssertEqual(families[0].representative?.style, "Regular")
         XCTAssertEqual(families[0].displayName, "宋")
     }
+
+    // MARK: 授权说明 / 常用 / 可商用（2026-11-01）
+
+    private func face(_ ps: String, family: String = "Brand", license: String = "", url: String = "",
+                      cls: FontStyleClass = .other, path: String = "/f.ttf") -> FontFace {
+        FontFace(postScriptName: ps, family: family, localizedFamily: "", style: "", version: "", path: path,
+                 fileSize: 10, format: .ttf, isVariable: false, location: .user, added: nil, modified: nil,
+                 coversCJK: false, licenseText: license, licenseURL: url, styleClass: cls)
+    }
+
+    func testLicenseClassification() {
+        XCTAssertEqual(FontLicenseLogic.classify(license: "This Font Software is licensed under the SIL Open Font License, Version 1.1.", url: ""), .open)
+        XCTAssertEqual(FontLicenseLogic.classify(license: "", url: "https://openfontlicense.org"), .open)
+        XCTAssertEqual(FontLicenseLogic.classify(license: "Licensed under the Apache License, Version 2.0", url: ""), .open)
+        XCTAssertEqual(FontLicenseLogic.classify(license: "Licensed under the OFL", url: ""), .open)
+        XCTAssertEqual(FontLicenseLogic.classify(license: "本字体可免费商用", url: ""), .open)
+        XCTAssertEqual(FontLicenseLogic.classify(license: "Free for personal use only. For commercial use please buy a license.", url: ""), .restricted,
+                       "两种说法都有时按限制算")
+        XCTAssertEqual(FontLicenseLogic.classify(license: "仅供个人学习使用，商用请联系作者", url: ""), .restricted)
+        XCTAssertEqual(FontLicenseLogic.classify(license: "Copyright Apple Inc.", url: ""), .unknown)
+        XCTAssertEqual(FontLicenseLogic.classify(license: "", url: ""), .unknown)
+        XCTAssertEqual(FontLicenseLogic.classify(license: "Woflang font", url: ""), .unknown, "单词里带 ofl 不算")
+    }
+
+    func testCommercialStatusManualWins() {
+        XCTAssertEqual(FontLicenseLogic.status(hint: .open, mark: FontMark()), .yes)
+        XCTAssertEqual(FontLicenseLogic.status(hint: .restricted, mark: FontMark()), .no)
+        XCTAssertEqual(FontLicenseLogic.status(hint: .unknown, mark: FontMark()), .unknown)
+        XCTAssertEqual(FontLicenseLogic.status(hint: .restricted, mark: FontMark(commercial: true)), .yes, "手动标的优先")
+        XCTAssertEqual(FontLicenseLogic.status(hint: .open, mark: FontMark(commercial: false)), .no)
+    }
+
+    func testFamilyLicenseHintRestrictedWins() {
+        let fam = FontFamily(name: "Brand", displayName: "Brand", faces: [
+            face("A", license: "SIL Open Font License"), face("B", license: "personal use only"),
+        ])
+        XCTAssertEqual(fam.licenseHint, .restricted)
+        let open = FontFamily(name: "Brand", displayName: "Brand", faces: [face("A", license: "SIL Open Font License"), face("B")])
+        XCTAssertEqual(open.licenseHint, .open)
+        XCTAssertEqual(open.licenseText, "SIL Open Font License")
+    }
+
+    func testMarksFilterAndManifestCompat() throws {
+        var manifest = FontManifest()
+        manifest.setMark(FontMark(favorite: true), for: "Brand")
+        XCTAssertTrue(manifest.mark(for: "Brand").isFavorite)
+        manifest.setMark(FontMark(), for: "Brand")
+        XCTAssertNil(manifest.marks, "空标记不留")
+        manifest.setMark(FontMark(favorite: true, commercial: false), for: "Brand")
+        let decoded = try XCTUnwrap(FontManifest.decode(try FontManifest.encode(manifest)))
+        XCTAssertEqual(decoded.mark(for: "Brand"), FontMark(favorite: true, commercial: false))
+        // 旧版本存的清单没有 marks 也能读。
+        let old = #"{"version":1,"entries":[],"sets":[]}"#.data(using: .utf8)!
+        XCTAssertNotNil(FontManifest.decode(old))
+
+        let fam = FontFamily(name: "Brand", displayName: "Brand", faces: [face("A", license: "SIL Open Font License")])
+        let marks = decoded.marks ?? [:]
+        XCTAssertTrue(FontLibraryLogic.passes(fam, filter: .favorites, marks: marks))
+        XCTAssertTrue(FontLibraryLogic.passes(fam, filter: .notCommercial, marks: marks), "手动标了不可商用")
+        XCTAssertFalse(FontLibraryLogic.passes(fam, filter: .commercial, marks: marks))
+        XCTAssertTrue(FontLibraryLogic.passes(fam, filter: .commercial), "没标时按授权说明")
+        XCTAssertFalse(FontLibraryLogic.passes(fam, filter: .favorites))
+    }
+
+    // MARK: 自动分类
+
+    func testStyleClassification() {
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 0, monospaced: false, names: ["Source Han Serif", "思源宋体"]), .serif)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 0, monospaced: true, names: ["PingFang SC", "苹方-简 黑体"]), .sans,
+                       "中文名字明确是黑体的不按等宽算")
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 0, monospaced: false, names: ["LXGW WenKai", "霞鹜文楷"]), .script)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 0, monospaced: true, names: ["SF Mono"]), .mono)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 0, monospaced: false, names: ["JetBrains Mono"]), .mono)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 2, monospaced: false, names: ["Times"]), .serif)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 8, monospaced: false, names: ["Avenir"]), .sans)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 10, monospaced: false, names: ["Snell Roundhand"]), .script)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 0, monospaced: false, names: ["Poppins"]), .other)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 0, monospaced: false, names: ["Their Brand"]), .other, "their 里的 hei 不算黑体")
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 0, monospaced: false, names: ["Open Sans"]), .sans)
+        XCTAssertEqual(FontStyleClassLogic.classify(classBits: 8, monospaced: false, names: ["Arial Unicode MS"]), .sans, "Unicode 不算等宽")
+    }
+
+    func testFamilyStyleClassMajority() {
+        let fam = FontFamily(name: "X", displayName: "X", faces: [face("a", cls: .sans), face("b", cls: .sans), face("c", cls: .other), face("d", cls: .serif)])
+        XCTAssertEqual(fam.styleClass, .sans)
+        XCTAssertEqual(FontFamily(name: "Y", displayName: "Y", faces: [face("a")]).styleClass, .other)
+        XCTAssertTrue(FontLibraryLogic.passes(fam, filter: .sans))
+        XCTAssertFalse(FontLibraryLogic.passes(fam, filter: .serif))
+    }
+
+    // MARK: 下载里的字体、对比
+
+    func testDownloadsRules() {
+        let dl = "/Users/designer/Downloads"
+        XCTAssertTrue(FontDownloadsLogic.isInDownloads("/Users/designer/Downloads/站酷/ZCOOL.ttf", downloads: dl))
+        XCTAssertFalse(FontDownloadsLogic.isInDownloads("/Users/designer/Downloads/../Library/Fonts/a.ttf", downloads: dl))
+        XCTAssertFalse(FontDownloadsLogic.isInDownloads("/Users/designer/Downloads/readme.txt", downloads: dl))
+        XCTAssertFalse(FontDownloadsLogic.isInDownloads("/Users/designer/DownloadsOld/a.ttf", downloads: dl))
+        XCTAssertTrue(FontDownloadsLogic.isInstalled(["A", "B"], installed: ["A", "B", "C"]))
+        XCTAssertFalse(FontDownloadsLogic.isInstalled(["A", "D"], installed: ["A", "B"]), "TTC 里有一个没装就算没装")
+        XCTAssertFalse(FontDownloadsLogic.isInstalled([], installed: ["A"]))
+    }
+
+    func testDownloadsDedupeAndSort() {
+        let now = Date()
+        let otf = FontDownloadItem(path: "/d/OTF/Brand.otf", size: 1, added: now, faces: [face("Brand-Regular")], alreadyInstalled: false)
+        let ttf = FontDownloadItem(path: "/d/TTF/Brand.ttf", size: 1, added: now, faces: [face("Brand-Regular")], alreadyInstalled: false)
+        let other = FontDownloadItem(path: "/d/Other.ttf", size: 1, added: now.addingTimeInterval(-100), faces: [face("Other")], alreadyInstalled: false)
+        let done = FontDownloadItem(path: "/d/Done.ttf", size: 1, added: now.addingTimeInterval(100), faces: [face("Done")], alreadyInstalled: true)
+        XCTAssertEqual(FontDownloadsLogic.dedupe([otf, ttf, other]).map(\.path), ["/d/OTF/Brand.otf", "/d/Other.ttf"], "同名字形只装一份")
+        let sorted = FontDownloadsLogic.sorted([done, other, otf])
+        XCTAssertEqual(sorted.map(\.path), ["/d/OTF/Brand.otf", "/d/Other.ttf", "/d/Done.ttf"], "没装的在前，新的在前")
+    }
+
+    func testCompareList() {
+        XCTAssertEqual(FontCompareLogic.adding(["a", "b"], to: ["a"]), ["a", "b"])
+        let many = (0..<10).map(String.init)
+        let list = FontCompareLogic.adding(many, to: [])
+        XCTAssertEqual(list.count, FontCompareLogic.maxCount)
+        XCTAssertEqual(list.last, "9", "满了挤掉最早的")
+    }
 }
