@@ -1,0 +1,31 @@
+run: 41406434317 commit: a64853c730beef154425d9876de6c0806dd6e675
+== build ==
+385:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:743:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+388:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:763:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+391:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:1149:52: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+444:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:430:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+447:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:446:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+549:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:178:44: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+552:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:251:50: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+561:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/NotchShelf.swift:772:59: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+588:/Users/runner/work/Shiduo/Shiduo/Sources/Views/ShelfPageView.swift:275:76: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+591:/Users/runner/work/Shiduo/Shiduo/Sources/Views/TopBar.swift:137:67: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+636:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:743:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+639:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:763:62: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+642:/Users/runner/work/Shiduo/Shiduo/Sources/Views/BrowserView.swift:1149:52: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+695:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:430:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+698:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/FolderWall.swift:446:70: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+800:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:178:44: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+803:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/MediaTools.swift:251:50: warning: 'exportPresets(compatibleWith:)' was deprecated in macOS 13.0
+812:/Users/runner/work/Shiduo/Shiduo/Sources/Pro/NotchShelf.swift:772:59: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+839:/Users/runner/work/Shiduo/Shiduo/Sources/Views/ShelfPageView.swift:275:76: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+842:/Users/runner/work/Shiduo/Shiduo/Sources/Views/TopBar.swift:137:67: warning: 'function' was deprecated in macOS 12.0: Function modifier is reserved for system applications
+981:** BUILD SUCCEEDED **
+== test ==
+2872:/Users/runner/work/Shiduo/Shiduo/Tests/FontInspectorLogicTests.swift:17: error: -[ShiduoTests.FontInspectorLogicTests testScalarsSkipInvisible] : XCTAssertEqual failed: ("[49, 65, 27704, 62976]") is not equal to ("[49, 65, 27704, 128512]") - 空格、换行、零宽字符不进格子；按码位排
+2873:Test Case '-[ShiduoTests.FontInspectorLogicTests testScalarsSkipInvisible]' failed (1.495 seconds).
+2882:Test Suite 'FontInspectorLogicTests' failed at 2026-11-02 07:41:42.649.
+3262:2026-11-02 07:41:43.271605+0000 xctest[26608:69618] [files] Move out: removing source failed midway: 513
+3925:Test Suite 'ShiduoTests.xctest' failed at 2026-11-02 07:45:54.716.
+3927:Test Suite 'All tests' failed at 2026-11-02 07:45:54.717.
+3939:** TEST FAILED **
