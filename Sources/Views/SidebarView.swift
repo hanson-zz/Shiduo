@@ -178,7 +178,8 @@ struct SidebarView: View {
                     .help("完全相同的副本，以及看起来差不多的照片；数字是上次扫描找到的可腾出空间")
                     .simultaneousGesture(TapGesture().onEnded { store.reselectDuplicates() })
                 // 字体管理：数字是问题字体（重复 / 旧版本 / 损坏）里可以停用的个数。
-                Label("字体", systemImage: "textformat")
+                // "textformat" 在中文系统上是本地化符号，会画成「格式」两个字；换成不随语言变的 f.cursive。
+                Label("字体", systemImage: "f.cursive")
                     .badge(fonts.actionableIssueCount > 0 ? Text("\(fonts.actionableIssueCount)") : nil)
                     .tag(SidebarItem.fonts)
                     .help("装了哪些字体、中文样张预览，停用不常用的，查重复和损坏的字体")

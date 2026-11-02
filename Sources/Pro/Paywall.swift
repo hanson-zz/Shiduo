@@ -132,7 +132,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .fileTemplates: return "doc.badge.plus"
         case .dualPane: return "rectangle.split.2x1"
         case .fontArchive: return "archivebox"
-        case .fontSets: return "textformat"
+        case .fontSets: return "f.cursive"
         case .customMenus: return "contextualmenu.and.cursorarrow"
         case .appIcons: return "app.badge"
         case .folderBackup: return "externaldrive.badge.timemachine"

@@ -2471,7 +2471,7 @@ extension LibraryStore {
         case .cleanup, .cleanupHistory: return "sparkles"
         case .storageMap: return "chart.pie"
         case .autoOrganize: return "wand.and.stars"
-        case .fonts: return "textformat"
+        case .fonts: return "f.cursive"
         case .folderBackup: return "externaldrive.badge.timemachine"
         case .tag: return "tag"
         case .chat: return "bubble.left.and.bubble.right"

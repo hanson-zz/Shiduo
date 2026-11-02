@@ -970,7 +970,7 @@ private struct FontSetsTab: View {
                 List(selection: $selectedID) {
                     ForEach(library.manifest.sets) { set in
                         HStack {
-                            Label(set.name, systemImage: "textformat")
+                            Label(set.name, systemImage: "f.cursive")
                             Spacer()
                             if library.isActive(set) {
                                 Circle().fill(Color.green).frame(width: 7, height: 7).help("已启用")
@@ -1000,7 +1000,7 @@ private struct FontSetsTab: View {
                     .id(set.id)
             } else {
                 VStack(spacing: 12) {
-                    Image(systemName: "textformat")
+                    Image(systemName: "f.cursive")
                         .font(.system(size: 40))
                         .foregroundStyle(.secondary)
                     Text("按客户或品牌建一个字体集，平时字体停用着，要用时一键临时启用；绑定项目文件夹后，在拾掇里打开项目就能自动启用。")
@@ -1624,7 +1624,7 @@ struct FontsCleanupTile: View {
 
     var body: some View {
         CompactCleanupTile(
-            symbol: "textformat", tint: .indigo, title: String(localized: "字体"),
+            symbol: "f.cursive", tint: .indigo, title: String(localized: "字体"),
             value: library.isScanning && !library.hasScanned ? String(localized: "扫描中…") : library.actionableIssueBytes.byteText,
             detail: library.hasScanned ? String(localized: "\(library.actionableIssueCount) 个") : "",
             reason: String(localized: "重复、旧版本和损坏的字体；默认是停用（不删除，随时可以启用）"),
@@ -1641,7 +1641,7 @@ struct FontProjectBannerView: View {
     var body: some View {
         if let banner = library.projectBanner, isActivePane {
             HStack(spacing: 10) {
-                Image(systemName: "textformat")
+                Image(systemName: "f.cursive")
                     .foregroundStyle(.indigo)
                 Text(banner.text)
                     .font(.callout.weight(.medium))
