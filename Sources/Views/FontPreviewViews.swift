@@ -796,11 +796,11 @@ struct FontDetailPanel: View {
                     case .body:
                         FontBodyTab(face: face, titleFace: faceID == nil ? (FontBodyLogic.titleFace(in: family.faces) ?? face) : face)
                     case .characters:
-                        FontInspectorPending(tab: tab).proGated(.fontInspector)
+                        FontCharactersTab(family: family, face: face).proGated(.fontInspector)
                     case .features:
-                        FontInspectorPending(tab: tab).proGated(.fontInspector)
+                        FontFeaturesTab(face: face).proGated(.fontInspector)
                     case .variations:
-                        FontInspectorPending(tab: tab).proGated(.fontInspector)
+                        FontVariationsTab(face: face).proGated(.fontInspector)
                     case .info:
                         FontInfoTab(family: family, face: face)
                     }
@@ -812,23 +812,6 @@ struct FontDetailPanel: View {
         }
         .padding(16)
         .task(id: family.id) { extras.load(family.faces) }
-    }
-}
-
-/// 字符 / 特性 / 可变：Pro 已解锁、但这一版还没有内容时的占位。
-struct FontInspectorPending: View {
-    let tab: FontDetailTab
-
-    var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "hammer")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text("「\(tab.title)」正在做，下一个版本提供。")
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

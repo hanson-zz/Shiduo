@@ -133,6 +133,8 @@ targets:
       - path: Sources/Model/FontLogic.swift
       # 字体预览：样张预设、字距、统一视觉大小、辅助线、列表排序、正文排版。
       - path: Sources/Model/FontPreviewLogic.swift
+      # 字体细节（Pro）：字符表分类 / 搜索、字形转 SVG、OpenType 特性表、fvar / name / CPAL 表、CSS。
+      - path: Sources/Model/FontInspectorLogic.swift
       # 外观：设置存取（容错解码）、字号范围、主题色、缩略图规则、透视文件夹挑最新几张、备选应用图标排序。
       - path: Sources/Model/AppearanceLogic.swift
       # 备选应用图标交给程序坞前重新画成 RGBA（调色板 PNG 直接给程序坞不可靠）。
