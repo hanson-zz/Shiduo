@@ -590,8 +590,13 @@ private struct FontProblemsTab: View {
     @State private var checked: Set<String> = []
     @State private var confirmTrash = false
 
+    /// 能勾的（含撞车组，手动勾）。
     private var actionablePaths: Set<String> {
         Set(library.issues.flatMap(\.actionableExtras).map(\.path))
+    }
+    /// 「按建议勾选」勾的（不含撞车组）。
+    private var suggestedPaths: Set<String> {
+        Set(library.issues.flatMap(\.suggestedExtras).map(\.path))
     }
     private var checkedPaths: [String] { checked.filter(actionablePaths.contains).sorted() }
     private var checkedBytes: Int64 {
@@ -616,6 +621,8 @@ private struct FontProblemsTab: View {
                                 subtitle: String(localized: "同一个字体装了好几份，版本也一样：留一份就够"))
                         section(.versions, title: String(localized: "多个版本"),
                                 subtitle: String(localized: "同一个字体装了不同版本，容易用错：建议留版本最高的"))
+                        section(.conflict, title: String(localized: "名字撞车"),
+                                subtitle: String(localized: "名字一样但内容不一样（比如粗体被写成常规体的名字）：系统只认其中一个。先看样式和字重再决定，不会帮你勾"))
                         section(.damaged, title: String(localized: "损坏的字体"),
                                 subtitle: String(localized: "系统读不出来（可能下载不完整或已损坏），装着也用不了"))
                     }
@@ -624,8 +631,8 @@ private struct FontProblemsTab: View {
             }
             Divider()
             HStack(spacing: 10) {
-                Button("按建议勾选") { checked = actionablePaths }
-                    .disabled(actionablePaths.isEmpty)
+                Button("按建议勾选") { checked = suggestedPaths }
+                    .disabled(suggestedPaths.isEmpty)
                 Button("全不勾") { checked = [] }
                     .disabled(checked.isEmpty)
                 Spacer()
@@ -720,7 +727,18 @@ private struct FontIssueCard: View {
             if let keep = group.keep, FontVersion.same(file.version, keep.version) { return String(localized: "多余的一份") }
             return String(localized: "旧版本")
         case .damaged: return String(localized: "读不出来")
+        case .conflict: return String(localized: "同名不同内容")
         }
+    }
+
+    /// 「Bold · 粗体 · 28,463 字」
+    private func lookText(_ file: FontFileInfo) -> String {
+        var parts: [String] = []
+        let styles = file.styles.filter { !$0.isEmpty }.uniqued()
+        if !styles.isEmpty { parts.append(styles.prefix(3).joined(separator: "/") + (styles.count > 3 ? "…" : "")) }
+        parts.append(file.weightTitle)
+        if file.glyphCount > 0 { parts.append(String(localized: "\(file.glyphCount.formatted()) 字")) }
+        return parts.joined(separator: " · ")
     }
 
     private func fileLine(_ file: FontFileInfo) -> some View {
@@ -732,6 +750,13 @@ private struct FontIssueCard: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .frame(maxWidth: 160, alignment: .leading)
+            }
+            if group.kind != .damaged {
+                Text(lookText(file))
+                    .font(.caption)
+                    .foregroundStyle(group.kind == .conflict ? .primary : .secondary)
+                    .lineLimit(1)
+                    .help("样式名 · 字重 · 字数")
             }
             Text(file.size.byteText)
                 .font(.caption.monospacedDigit())

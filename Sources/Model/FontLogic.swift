@@ -289,6 +289,20 @@ struct FontFileInfo: Hashable, Sendable, Identifiable {
     var postScriptNames: [String]
     var version: String
     var family: String
+    /// 文件里各字形的样式名（Regular、Bold……）。
+    var styles: [String] = []
+    /// 第一个字形的字重（Core Text 的 -1…1，0 = 常规，0.4 左右 = 粗体）。
+    var weight: Double = 0
+    /// 第一个字形有多少个字（字形数）。
+    var glyphCount: Int = 0
+    /// 文件内容的 SHA-256（只给「名字和大小都一样」的文件算，用来确认真是同一个文件）。
+    var contentHash: String?
+
+    /// 看起来是不是同一款：样式名、字重都一样（字数不算：新版本常会加字）。
+    var looksKey: String {
+        styles.map { $0.lowercased() }.joined(separator: ",") + "|" + String(Int((weight * 100).rounded()))
+    }
+    var weightTitle: String { FontWeightTitle.title(weight) }
 
     var id: String { path }
     var fileName: String { (path as NSString).lastPathComponent }
@@ -304,6 +318,8 @@ struct FontIssueGroup: Identifiable, Hashable, Sendable {
         case versions
         /// 系统读不出来的字体文件。
         case damaged
+        /// 名字一样、内容不一样（样式 / 字重不同，或同版本但文件不同）：系统只认其中一个，不建议直接删。
+        case conflict
     }
 
     var kind: Kind
@@ -314,46 +330,55 @@ struct FontIssueGroup: Identifiable, Hashable, Sendable {
     var extras: [FontFileInfo]
 
     var id: String { kind.rawValue + ":" + (keep?.path ?? extras.first?.path ?? title) }
+    /// 能手动勾的（~/Library/Fonts 里的）。
     var actionableExtras: [FontFileInfo] { extras.filter(\.isActionable) }
-    var actionableBytes: Int64 { actionableExtras.reduce(0) { $0 + $1.size } }
+    /// 「按建议勾选」会勾的：撞车的一个都不建议。
+    var suggestedExtras: [FontFileInfo] { kind == .conflict ? [] : actionableExtras }
+    var actionableBytes: Int64 { suggestedExtras.reduce(0) { $0 + $1.size } }
 }
 
 enum FontIssueLogic {
     /// 找重复、多版本、损坏。只看 ~/Library/Fonts 和 /Library/Fonts（系统字体和拾掇停用的不算）。
-    /// - 重复：PostScript 名字完全一样（TTC 按整组名字）、版本一样、文件大小也一样 → 留一份，其余建议停用。
-    /// - 多版本：名字一样、版本不同 → 留版本最高的。
+    /// - 重复：PostScript 名字完全一样（TTC 按整组名字）、版本一样、内容也一样（大小一样，指纹一样）→ 留一份，其余建议停用。
+    /// - 多版本：名字一样、样式字重一样、版本不同 → 留版本最高的。
+    /// - 撞车：名字一样但样式 / 字重不同，或同版本但内容不同 → 全列出来，不建议勾，让用户自己看。
     /// 留哪份：有拾掇动不了的（/Library/Fonts）就留它（反正动不了，留它不会少什么）；
     /// 否则在 ~/Library/Fonts 里留最新改过的一份；再一样就留路径短的。
     static func issues(files: [FontFileInfo], damaged: [FontFileInfo]) -> [FontIssueGroup] {
-        let considered = files.filter { $0.location == .user || $0.location == .local }
-        var buckets: [String: [FontFileInfo]] = [:]
-        for file in considered where !file.postScriptNames.isEmpty {
-            let key = file.postScriptNames.sorted().joined(separator: "|")
-            buckets[key, default: []].append(file)
-        }
         var result: [FontIssueGroup] = []
-        for (_, bucket) in buckets where bucket.count > 1 {
-            let top = bucket.max { FontVersion.compare($0.version, $1.version) == .orderedAscending }!
-            if bucket.allSatisfy({ FontVersion.same($0.version, top.version) }) {
-                // 名字、版本都一样但文件大小不同：多半是改过的字体（比如粗体文件里写了常规体的名字），
-                // 删了会丢字重，所以只有大小也一样的才算重复。
-                let bySize = Dictionary(grouping: bucket, by: \.size)
-                for (_, same) in bySize where same.count > 1 {
-                    let keep = preferredKeep(same)
-                    let extras = same.filter { $0.path != keep.path }
-                        .sorted { ($0.location.rawValue, $0.path) < ($1.location.rawValue, $1.path) }
-                    result.append(FontIssueGroup(kind: .duplicate, title: keep.family, keep: keep, extras: extras))
-                }
+        for (_, bucket) in buckets(files) where bucket.count > 1 {
+            // 1. 样式名 / 字重不一样：其实是不同的字体，只是名字写成一样（网上流传的改名字体常见），不能当重复删。
+            let looks = Dictionary(grouping: bucket, by: \.looksKey)
+            if looks.count > 1 {
+                result.append(conflictGroup(bucket))
                 continue
             }
-            let group = bucket
-            let highest = group.max { FontVersion.compare($0.version, $1.version) == .orderedAscending }!
-            let allSame = group.allSatisfy { FontVersion.same($0.version, highest.version) }
-            let candidates = group.filter { FontVersion.same($0.version, highest.version) }
+            let top = bucket.max { FontVersion.compare($0.version, $1.version) == .orderedAscending }!
+            if bucket.allSatisfy({ FontVersion.same($0.version, top.version) }) {
+                // 2. 同版本：内容完全一样（大小一样，算过的话指纹也一样）才算重复；
+                //    剩下内容不一样的放进撞车，让用户自己看。
+                let same = Dictionary(grouping: bucket, by: contentKey)
+                var leftovers: [FontFileInfo] = []
+                for (_, copies) in same {
+                    if copies.count > 1 {
+                        let keep = preferredKeep(copies)
+                        let extras = copies.filter { $0.path != keep.path }
+                            .sorted { ($0.location.rawValue, $0.path) < ($1.location.rawValue, $1.path) }
+                        result.append(FontIssueGroup(kind: .duplicate, title: keep.family, keep: keep, extras: extras))
+                        leftovers.append(keep)
+                    } else {
+                        leftovers.append(contentsOf: copies)
+                    }
+                }
+                if leftovers.count > 1 { result.append(conflictGroup(leftovers)) }
+                continue
+            }
+            // 3. 版本不同、样子一样：留版本最高的。
+            let candidates = bucket.filter { FontVersion.same($0.version, top.version) }
             let keep = preferredKeep(candidates)
-            let extras = group.filter { $0.path != keep.path }
+            let extras = bucket.filter { $0.path != keep.path }
                 .sorted { ($0.location.rawValue, $0.path) < ($1.location.rawValue, $1.path) }
-            result.append(FontIssueGroup(kind: allSame ? .duplicate : .versions, title: keep.family, keep: keep, extras: extras))
+            result.append(FontIssueGroup(kind: .versions, title: keep.family, keep: keep, extras: extras))
         }
         for file in damaged where file.location == .user || file.location == .local {
             result.append(FontIssueGroup(kind: .damaged, title: file.fileName, keep: nil, extras: [file]))
@@ -364,11 +389,46 @@ enum FontIssueLogic {
         }
     }
 
+    /// 按 PostScript 名字分组（TTC 按整组名字）。只看 ~/Library/Fonts 和 /Library/Fonts。
+    private static func buckets(_ files: [FontFileInfo]) -> [String: [FontFileInfo]] {
+        var buckets: [String: [FontFileInfo]] = [:]
+        for file in files where (file.location == .user || file.location == .local) && !file.postScriptNames.isEmpty {
+            buckets[file.postScriptNames.sorted().joined(separator: "|"), default: []].append(file)
+        }
+        return buckets
+    }
+
+    /// 判断「内容一样」用的：有指纹用指纹，没有就用大小。
+    private static func contentKey(_ file: FontFileInfo) -> String {
+        "\(file.size)|" + (file.contentHash ?? "")
+    }
+
+    /// 撞车组：没有「建议保留」，全部列出来，一个都不预先建议。
+    private static func conflictGroup(_ files: [FontFileInfo]) -> FontIssueGroup {
+        let sorted = files.sorted { a, b in
+            if a.location != b.location { return a.location.rawValue < b.location.rawValue }
+            return a.path.localizedStandardCompare(b.path) == .orderedAscending
+        }
+        return FontIssueGroup(kind: .conflict, title: sorted.first?.family ?? "", keep: nil, extras: sorted)
+    }
+
+    /// 需要算内容指纹的文件：名字一样、大小也一样的（只有这些才可能是真重复，别的不用读整个文件）。
+    static func pathsNeedingHash(_ files: [FontFileInfo]) -> [String] {
+        var paths: [String] = []
+        for (_, bucket) in buckets(files) where bucket.count > 1 {
+            for (_, same) in Dictionary(grouping: bucket, by: \.size) where same.count > 1 {
+                paths.append(contentsOf: same.map(\.path))
+            }
+        }
+        return paths.sorted()
+    }
+
     private static func order(_ kind: FontIssueGroup.Kind) -> Int {
         switch kind {
         case .duplicate: return 0
         case .versions: return 1
-        case .damaged: return 2
+        case .conflict: return 2
+        case .damaged: return 3
         }
     }
 
@@ -382,6 +442,23 @@ enum FontIssueLogic {
             if a.path.count != b.path.count { return a.path.count < b.path.count }
             return a.path < b.path
         }.first!
+    }
+}
+
+/// 字重的叫法（Core Text 的 -1…1 换成常见说法）。
+enum FontWeightTitle {
+    static func title(_ weight: Double) -> String {
+        switch weight {
+        case ..<(-0.6): return String(localized: "极细")
+        case ..<(-0.3): return String(localized: "细体")
+        case ..<(-0.1): return String(localized: "偏细")
+        case ..<0.1: return String(localized: "常规")
+        case ..<0.27: return String(localized: "中粗")
+        case ..<0.35: return String(localized: "半粗")
+        case ..<0.5: return String(localized: "粗体")
+        case ..<0.6: return String(localized: "特粗")
+        default: return String(localized: "超粗")
+        }
     }
 }
 

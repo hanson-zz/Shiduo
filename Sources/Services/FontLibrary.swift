@@ -1,3 +1,4 @@
+import CryptoKit
 import AppKit
 import CoreText
 import Foundation
@@ -69,7 +70,7 @@ final class FontLibrary: ObservableObject {
 
     var archiveFolder: String { manifest.archiveFolder ?? FontPathRules.archiveFolder(home: Self.home) }
 
-    var actionableIssueCount: Int { issues.reduce(0) { $0 + $1.actionableExtras.count } }
+    var actionableIssueCount: Int { issues.reduce(0) { $0 + $1.suggestedExtras.count } }
     var actionableIssueBytes: Int64 { issues.reduce(0) { $0 + $1.actionableBytes } }
 
     private var store: LibraryStore? { LibraryStore.shared }
@@ -119,7 +120,9 @@ final class FontLibrary: ObservableObject {
         let home = Self.home
         scanTask = Task {
             let result = await Task.detached(priority: .userInitiated) {
-                FontScanner.scan(home: home, entries: entries)
+                var scanned = FontScanner.scan(home: home, entries: entries)
+                scanned.files = FontScanner.fillHashes(scanned.files)
+                return scanned
             }.value
             guard !Task.isCancelled else { return }
             if !result.orphans.isEmpty {
@@ -835,8 +838,13 @@ enum FontScanner {
             return
         }
         var names: [String] = []
+        var styles: [String] = []
         var version = ""
         var family = ""
+        let first = CTFontCreateWithFontDescriptor(descriptors[0], 24, nil)
+        let traits = CTFontCopyTraits(first) as? [String: Any]
+        let weight = (traits?[kCTFontWeightTrait as String] as? NSNumber)?.doubleValue ?? 0
+        let glyphs = CTFontGetGlyphCount(first)
         for descriptor in descriptors {
             let face = makeFace(descriptor, url: url, size: size, format: format, location: location,
                                 added: added, modified: modified, manifestID: manifestID)
@@ -846,11 +854,38 @@ enum FontScanner {
             let localized = face.localizedFamily
             result.faces.append(face)
             names.append(ps)
+            styles.append(face.style)
             if version.isEmpty { version = ver }
             if family.isEmpty { family = localized.isEmpty ? fam : localized }
         }
         result.files.append(FontFileInfo(path: url.path, location: location, size: size, modified: modified,
-                                         postScriptNames: names, version: version, family: family))
+                                         postScriptNames: names, version: version, family: family,
+                                         styles: styles, weight: weight, glyphCount: glyphs))
+    }
+
+    /// 文件内容的 SHA-256（一次读 1 MB，不会一下子占很多内存）。
+    static func sha256(_ path: String) -> String? {
+        guard let handle = FileHandle(forReadingAtPath: path) else { return nil }
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while true {
+            let chunk = handle.readData(ofLength: 1 << 20)
+            if chunk.isEmpty { break }
+            hasher.update(data: chunk)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// 给名字和大小都一样的文件算指纹（确认是不是同一个文件）。
+    static func fillHashes(_ files: [FontFileInfo]) -> [FontFileInfo] {
+        let need = Set(FontIssueLogic.pathsNeedingHash(files))
+        guard !need.isEmpty else { return files }
+        return files.map { file in
+            guard need.contains(file.path) else { return file }
+            var copy = file
+            copy.contentHash = sha256(file.path)
+            return copy
+        }
     }
 }
 

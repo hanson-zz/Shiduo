@@ -75,15 +75,60 @@ final class FontLogicTests: XCTestCase {
         XCTAssertEqual(groups[0].actionableBytes, 1000)
     }
 
-    func testSameNameDifferentSizeIsNotDuplicate() {
+    func testSameNameDifferentContentIsConflict() {
         // 网上流传的微软雅黑：粗体文件 msyhbd.ttf 里写的也是常规体的名字，大小不一样，删了会丢粗体。
         let regular = file("/Users/designer/Library/Fonts/msyh.ttf", .user, ps: ["MicrosoftYaHei"], version: "Version 0.75", size: 15_000_000)
         let bold = file("/Users/designer/Library/Fonts/msyhbd.ttf", .user, ps: ["MicrosoftYaHei"], version: "Version 0.75", size: 14_700_000)
-        XCTAssertTrue(FontIssueLogic.issues(files: [regular, bold], damaged: []).isEmpty)
+        var groups = FontIssueLogic.issues(files: [regular, bold], damaged: [])
+        XCTAssertEqual(groups.map(\.kind), [.conflict])
+        XCTAssertNil(groups[0].keep)
+        XCTAssertTrue(groups[0].suggestedExtras.isEmpty, "撞车的不建议勾")
+        XCTAssertEqual(groups[0].actionableExtras.count, 2, "但可以手动勾")
+        XCTAssertEqual(groups[0].actionableBytes, 0, "不算进可以省的空间")
+
+        // 再多一份和常规体一模一样的：它算重复，常规体和粗体还是撞车。
         let copy = file("/Users/designer/Library/Fonts/msyh copy.ttf", .user, ps: ["MicrosoftYaHei"], version: "0.75", size: 15_000_000)
-        let groups = FontIssueLogic.issues(files: [regular, bold, copy], damaged: [])
-        XCTAssertEqual(groups.count, 1)
+        groups = FontIssueLogic.issues(files: [regular, bold, copy], damaged: [])
+        XCTAssertEqual(groups.map(\.kind), [.duplicate, .conflict])
         XCTAssertEqual(Set([groups[0].keep!.path] + groups[0].extras.map(\.path)), [regular.path, copy.path], "大小一样的才算重复")
+        XCTAssertEqual(groups[1].extras.count, 2)
+    }
+
+    func testStyleOrWeightDifferenceIsConflict() {
+        var regular = file("/Users/designer/Library/Fonts/A.ttf", .user, ps: ["Brand"], version: "1.0")
+        var bold = file("/Users/designer/Library/Fonts/B.ttf", .user, ps: ["Brand"], version: "2.0")
+        regular.styles = ["Regular"]
+        bold.styles = ["Regular"]
+        bold.weight = 0.4
+        XCTAssertEqual(FontIssueLogic.issues(files: [regular, bold], damaged: []).map(\.kind), [.conflict],
+                       "字重不同就算版本不同也不当旧版本删")
+    }
+
+    func testSameSizeDifferentHashIsConflict() {
+        var a = file("/Users/designer/Library/Fonts/A.ttf", .user, ps: ["Brand"], version: "1.0")
+        var b = file("/Users/designer/Library/Fonts/B.ttf", .user, ps: ["Brand"], version: "1.0")
+        let other = file("/Users/designer/Library/Fonts/C.ttf", .user, ps: ["Other"], version: "1.0")
+        XCTAssertEqual(FontIssueLogic.pathsNeedingHash([a, b, other]), [a.path, b.path], "只给名字和大小都一样的算指纹")
+        a.contentHash = "aaa"
+        b.contentHash = "bbb"
+        XCTAssertEqual(FontIssueLogic.issues(files: [a, b], damaged: []).map(\.kind), [.conflict])
+        b.contentHash = "aaa"
+        XCTAssertEqual(FontIssueLogic.issues(files: [a, b], damaged: []).map(\.kind), [.duplicate])
+    }
+
+    func testVersionsIgnoreGlyphCount() {
+        var old = file("/Users/designer/Library/Fonts/Brand-1.otf", .user, ps: ["Brand-Regular"], version: "1.0", size: 100)
+        var new = file("/Users/designer/Library/Fonts/Brand-2.otf", .user, ps: ["Brand-Regular"], version: "1.2", size: 200)
+        old.glyphCount = 7000
+        new.glyphCount = 9000
+        XCTAssertEqual(FontIssueLogic.issues(files: [old, new], damaged: []).map(\.kind), [.versions], "新版本加了字还是算多版本")
+    }
+
+    func testWeightTitles() {
+        XCTAssertEqual(FontWeightTitle.title(0), FontWeightTitle.title(0.05), "常规")
+        XCTAssertEqual(FontWeightTitle.title(0.4), FontWeightTitle.title(0.45), "粗体")
+        XCTAssertNotEqual(FontWeightTitle.title(0), FontWeightTitle.title(0.4))
+        XCTAssertNotEqual(FontWeightTitle.title(-0.4), FontWeightTitle.title(0))
     }
 
     func testDuplicateKeepsLockedLocalCopy() {
