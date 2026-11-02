@@ -13,7 +13,9 @@ final class FontInspectorLogicTests: XCTestCase {
     // MARK: 字符表
 
     func testScalarsSkipInvisible() {
-        let set = CharacterSet(charactersIn: "永A 1\n\u{1F600}\u{200B}")
+        // 用 insert 拼（CharacterSet(charactersIn:) 对 BMP 以外的字有已知问题，字体给的字符集是位图，不受影响）。
+        var set = CharacterSet()
+        for value: UInt32 in [0x6C38, 0x41, 0x20, 0x31, 0x0A, 0x1F600, 0x200B] { set.insert(Unicode.Scalar(value)!) }
         XCTAssertEqual(FontCharsetLogic.scalars(in: set), [0x31, 0x41, 0x6C38, 0x1F600], "空格、换行、零宽字符不进格子；按码位排")
     }
 
