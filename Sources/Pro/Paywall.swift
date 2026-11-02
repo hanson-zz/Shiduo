@@ -46,6 +46,7 @@ enum ProFeature: CaseIterable, Identifiable {
     case dualPane
     case fontArchive
     case fontSets
+    case fontInspector
     case customMenus
     case appIcons
     case folderBackup
@@ -75,6 +76,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .dualPane: return String(localized: "双栏浏览")
         case .fontArchive: return String(localized: "字体压缩存放 / 搬到移动硬盘")
         case .fontSets: return String(localized: "字体集与项目绑定")
+        case .fontInspector: return String(localized: "字体细节：字符表 / OpenType 特性 / 可变字体")
         case .customMenus: return String(localized: "自定义右键菜单与快捷键")
         case .appIcons: return String(localized: "备选应用图标")
         case .folderBackup: return String(localized: "文件夹备份到硬盘")
@@ -104,6 +106,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .dualPane: return String(localized: "左右双栏或上下排，两栏各走各的；拖过去就移动，一键拷贝 / 移动到另一栏")
         case .fontArchive: return String(localized: "停用的字体打成 zip 省一半空间，或搬到移动硬盘，清单记着，随时取回")
         case .fontSets: return String(localized: "按客户、品牌建字体集，一键临时启用（注销后自动停用）；绑定项目文件夹，打开项目就启用")
+        case .fontInspector: return String(localized: "看字体里有哪些字，搜索、拷贝、导出 SVG；开关连字、旧式数字、分数等 OpenType 特性；拖滑块调可变字体，一键复制 CSS；彩色字体换调色板")
         case .customMenus: return String(localized: "右键菜单留哪些、什么顺序、收进子菜单由你定；菜单快捷键随便改，撞键当场提示，可一键交换")
         case .appIcons: return String(localized: "拾掇的图标换一款，「应用程序」和程序坞里都跟着变：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换")
         case .folderBackup: return String(localized: "Mac 文件夹配对移动硬盘，插上就提示有几个新文件要备份；先预览，只从 Mac 拷到硬盘，默认不删硬盘上的文件")
@@ -133,6 +136,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .dualPane: return "rectangle.split.2x1"
         case .fontArchive: return "archivebox"
         case .fontSets: return "f.cursive"
+        case .fontInspector: return "rectangle.and.text.magnifyingglass"
         case .customMenus: return "contextualmenu.and.cursorarrow"
         case .appIcons: return "app.badge"
         case .folderBackup: return "externaldrive.badge.timemachine"
@@ -162,6 +166,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .dualPane: return .teal
         case .fontArchive: return .brown
         case .fontSets: return .indigo
+        case .fontInspector: return .purple
         case .customMenus: return .mint
         case .appIcons: return .cyan
         case .folderBackup: return .green

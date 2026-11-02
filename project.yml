@@ -131,6 +131,8 @@ targets:
       - path: Sources/Pro/FileTemplateLogic.swift
       # 字体管理：路径安全规则、重复 / 多版本分组、停用清单、字体集绑定、中文字体判断。
       - path: Sources/Model/FontLogic.swift
+      # 字体预览：样张预设、字距、统一视觉大小、辅助线、列表排序、正文排版。
+      - path: Sources/Model/FontPreviewLogic.swift
       # 外观：设置存取（容错解码）、字号范围、主题色、缩略图规则、透视文件夹挑最新几张、备选应用图标排序。
       - path: Sources/Model/AppearanceLogic.swift
       # 备选应用图标交给程序坞前重新画成 RGBA（调色板 PNG 直接给程序坞不可靠）。

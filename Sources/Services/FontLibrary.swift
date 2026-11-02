@@ -6,13 +6,12 @@ import OSLog
 
 /// 字体页的页内标签。
 enum FontsTab: String, CaseIterable, Identifiable {
-    case library, specimen, compare, downloads, problems, stored, sets
+    case library, compare, downloads, problems, stored, sets
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .library: return String(localized: "字体库")
-        case .specimen: return String(localized: "样张")
         case .compare: return String(localized: "对比")
         case .downloads: return String(localized: "下载里的")
         case .problems: return String(localized: "问题字体")
