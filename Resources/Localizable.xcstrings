@@ -43214,6 +43214,70 @@
           }
         }
       }
+    },
+    "底": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "底"
+          }
+        }
+      }
+    },
+    "贴纸白边": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sticker"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贴纸白边"
+          }
+        }
+      }
+    },
+    "圆底": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Circle"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圆底"
+          }
+        }
+      }
+    },
+    "拖动叠加层换位置，双击回到默认位置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the overlay to move it; double-click to reset"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动叠加层换位置，双击回到默认位置"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

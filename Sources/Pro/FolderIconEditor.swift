@@ -45,6 +45,14 @@ struct FolderIconEditor: View {
     @State private var emoji = "📁"
     @State private var imagePath: String?
     @State private var scale = FolderIconStyle.defaultScale
+    /// 叠加层的底（贴纸白边 / 圆底 / 无）。
+    @State private var backdrop: FolderIconStyle.Backdrop = .bare
+    /// 叠加层中心点（拖过才有，nil 是默认位置）。
+    @State private var overlayCenter: FolderIconStyle.Point?
+    /// 正在拖叠加层：按下时叠加层的中心点。
+    @State private var dragStart: FolderIconStyle.Point?
+    /// 这次按下不在叠加层上，整次拖动都不理。
+    @State private var dragIgnored = false
     @State private var symbolQuery = ""
     @State private var preview: NSImage?
     @State private var historyImages: [FolderIconStyle: NSImage] = [:]
@@ -60,6 +68,8 @@ struct FolderIconEditor: View {
         let start = saved ?? FolderIconStyle(color: seedColor ?? FolderPalette.hex(FolderPalette.colors[4].1))
         _color = State(initialValue: seedColor.flatMap(FolderIconStyle.normalizedHex) ?? start.color)
         _scale = State(initialValue: start.overlayScale)
+        _backdrop = State(initialValue: start.backdrop)
+        _overlayCenter = State(initialValue: start.overlayCenter)
         if let saved = start.theme {
             _mode = State(initialValue: .theme)
             _theme = State(initialValue: saved)
@@ -89,10 +99,40 @@ struct FolderIconEditor: View {
         case .image: overlay = imagePath.map { FolderIconStyle.Overlay.image($0) } ?? FolderIconStyle.Overlay.none
         }
         if mode == .theme {
-            return FolderIconStyle(color: color, overlay: overlay, overlayScale: scale, theme: theme, hue: hue)
+            return FolderIconStyle(color: color, overlay: overlay, overlayScale: scale, theme: theme, hue: hue,
+                                   backdrop: backdrop, overlayCenter: overlayCenter)
         }
-        return FolderIconStyle(color: color, overlay: overlay, overlayScale: scale)
+        return FolderIconStyle(color: color, overlay: overlay, overlayScale: scale,
+                               backdrop: backdrop, overlayCenter: overlayCenter)
     }
+
+    /// 换叠加类型时，底跟着换成这种叠加默认的样子（Emoji、图片是贴纸白边）。之后用户还可以自己改。
+    private var kindBinding: Binding<Kind> {
+        Binding(get: { kind }, set: { newKind in
+            guard newKind != kind else { return }
+            kind = newKind
+            backdrop = FolderIconStyle.defaultBackdrop(for: overlayFor(newKind), themed: mode == .theme)
+        })
+    }
+
+    private func overlayFor(_ kind: Kind) -> FolderIconStyle.Overlay {
+        switch kind {
+        case .off: return .none
+        case .symbol: return .symbol(symbol)
+        case .emoji: return .emoji(emoji.isEmpty ? "📁" : emoji)
+        case .image: return .image(imagePath ?? "")
+        }
+    }
+
+    /// 预览渲染的触发键：拖动时用小一点的图，跟手。
+    private struct PreviewKey: Hashable {
+        let style: FolderIconStyle
+        let dragging: Bool
+    }
+
+    /// 预览图的边长（点）：230 的框减去两边 14 的留白。
+    private static let previewSide: CGFloat = 202
+
 
     private var title: String {
         if folders.count == 1 { return String(localized: "给「\(folders[0].lastPathComponent)」换装") }
@@ -140,7 +180,9 @@ struct FolderIconEditor: View {
         .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
             FileDrop.load(providers) { urls in addFolders(urls) }
         }
-        .task(id: style) { preview = FolderIconRenderer.render(style, pixels: 512) }
+        .task(id: PreviewKey(style: style, dragging: dragStart != nil)) {
+            preview = FolderIconRenderer.render(style, pixels: dragStart != nil ? 256 : 512)
+        }
         .onAppear(perform: renderHistory)
         .alert("有些文件夹没改成", isPresented: Binding(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) {
             Button("好") {}
@@ -175,11 +217,37 @@ struct FolderIconEditor: View {
                     Image(nsImage: preview)
                         .resizable()
                         .interpolation(.high)
-                        .scaledToFit()
-                        .padding(14)
+                        .frame(width: Self.previewSide, height: Self.previewSide)
+                        .contentShape(Rectangle())
+                        .gesture(overlayDrag)
+                        .onTapGesture(count: 2) { location in
+                            // 双击叠加层：回到默认位置
+                            if overlayHit(location) { overlayCenter = nil }
+                        }
+                        .onContinuousHover { phase in
+                            switch phase {
+                            case .active(let location):
+                                if dragStart != nil {
+                                    NSCursor.closedHand.set()
+                                } else if overlayHit(location) {
+                                    NSCursor.openHand.set()
+                                } else {
+                                    NSCursor.arrow.set()
+                                }
+                            case .ended:
+                                if dragStart == nil { NSCursor.arrow.set() }
+                            }
+                        }
                 }
             }
             .frame(width: 230, height: 230)
+            if kind != .off, style.overlay != FolderIconStyle.Overlay.none {
+                Text("拖动叠加层换位置，双击回到默认位置")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 230)
+                    .multilineTextAlignment(.center)
+            }
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(folders, id: \.self) { url in
@@ -330,11 +398,24 @@ struct FolderIconEditor: View {
     private var overlaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle("叠加")
-            Picker("", selection: $kind) {
+            Picker("", selection: kindBinding) {
                 ForEach(Kind.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+
+            if kind != .off {
+                HStack(spacing: 8) {
+                    Text("底").font(.callout).foregroundStyle(.secondary)
+                    Picker("", selection: $backdrop) {
+                        ForEach(FolderIconStyle.Backdrop.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(width: 260)
+                    .controlSize(.small)
+                }
+            }
 
             switch kind {
             case .off:
@@ -506,6 +587,8 @@ struct FolderIconEditor: View {
             mode = .color
         }
         scale = item.overlayScale
+        backdrop = item.backdrop
+        overlayCenter = item.overlayCenter
         switch item.overlay {
         case .none: kind = .off
         case .symbol(let name): kind = .symbol; symbol = name
@@ -532,7 +615,48 @@ struct FolderIconEditor: View {
         }
         kind = .symbol
         symbol = FolderIconSymbols.all.randomElement() ?? "star.fill"
+        backdrop = FolderIconStyle.defaultBackdrop(for: .symbol(symbol), themed: false)
         scale = .random(in: 0.38...0.55)
+    }
+
+    // MARK: 拖动叠加层
+
+    private var themedPreview: Bool { mode == .theme }
+
+    /// 预览里的一个点（点坐标，原点左上）是不是落在叠加层上。
+    private func overlayHit(_ location: CGPoint) -> Bool {
+        guard style.overlay != FolderIconStyle.Overlay.none else { return false }
+        let p = FolderIconStyle.Point(x: location.x / Self.previewSide, y: location.y / Self.previewSide)
+        return style.overlayFrame(themed: themedPreview).contains(p)
+    }
+
+    /// 在预览里按住叠加层拖到任意位置；按下的地方不在叠加层上就不动。
+    private var overlayDrag: some Gesture {
+        DragGesture(minimumDistance: 2, coordinateSpace: .local)
+            .onChanged { value in
+                if dragIgnored { return }
+                if dragStart == nil {
+                    guard overlayHit(value.startLocation) else {
+                        dragIgnored = true
+                        return
+                    }
+                    dragStart = style.resolvedCenter(themed: themedPreview)
+                    NSCursor.closedHand.set()
+                }
+                guard let start = dragStart else { return }
+                let length = FolderIconStyle.overlayLength(scale: scale, themed: themedPreview)
+                overlayCenter = FolderIconStyle.dragged(from: start,
+                                                       dx: value.translation.width / Self.previewSide,
+                                                       dy: value.translation.height / Self.previewSide,
+                                                       length: length)
+            }
+            .onEnded { _ in
+                if dragStart != nil {
+                    NSCursor.openHand.set()
+                }
+                dragStart = nil
+                dragIgnored = false
+            }
     }
 
     private func renderHistory() {
@@ -571,6 +695,16 @@ struct FolderIconEditor: View {
             return
         }
         onDone(String(localized: "已导出「\(url.lastPathComponent)」"))
+    }
+}
+
+extension FolderIconStyle.Backdrop {
+    var title: String {
+        switch self {
+        case .sticker: return String(localized: "贴纸白边")
+        case .disc: return String(localized: "圆底")
+        case .bare: return String(localized: "无")
+        }
     }
 }
 

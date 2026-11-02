@@ -61,6 +61,110 @@ final class FolderIconStyleTests: XCTestCase {
     }
 }
 
+final class FolderIconOverlayTests: XCTestCase {
+    typealias P = FolderIconStyle.Point
+
+    func testNewOverlaysDefaultToSticker() {
+        XCTAssertEqual(FolderIconStyle(color: "123456", overlay: .emoji("🐼")).backdrop, .sticker)
+        XCTAssertEqual(FolderIconStyle(color: "123456", overlay: .image("/a.png")).backdrop, .sticker)
+        XCTAssertEqual(FolderIconStyle(color: "123456", overlay: .symbol("star.fill")).backdrop, .bare)
+        XCTAssertEqual(FolderIconStyle(color: "123456", overlay: .symbol("star.fill"), theme: "animal/cat").backdrop, .disc)
+        XCTAssertEqual(FolderIconStyle(color: "123456", overlay: .emoji("🐼"), theme: "animal/cat").backdrop, .sticker)
+        XCTAssertNil(FolderIconStyle(color: "123456", overlay: .emoji("🐼")).overlayCenter)
+    }
+
+    func testLegacyJSONKeepsOldLook() throws {
+        // 旧版本存的：没有 backdrop / overlayCenter
+        let themed = try JSONDecoder().decode(FolderIconStyle.self, from: Data(
+            #"{"color":"87B3EB","theme":"planet/saturn","hue":0,"overlayScale":0.4,"overlay":{"type":"emoji","value":"🤣"}}"#.utf8))
+        XCTAssertEqual(themed.backdrop, .disc)
+        XCTAssertNil(themed.overlayCenter)
+        let plain = try JSONDecoder().decode(FolderIconStyle.self, from: Data(
+            #"{"color":"87B3EB","overlayScale":0.4,"overlay":{"type":"emoji","value":"🤣"}}"#.utf8))
+        XCTAssertEqual(plain.backdrop, .bare)
+        XCTAssertNil(plain.overlayCenter)
+        // 不认识的 backdrop、坏掉的位置也按旧样子
+        let odd = try JSONDecoder().decode(FolderIconStyle.self, from: Data(
+            #"{"color":"87B3EB","backdrop":"glitter","overlayCenter":{"x":"a"},"overlay":{"type":"emoji","value":"🤣"}}"#.utf8))
+        XCTAssertEqual(odd.backdrop, .bare)
+        XCTAssertNil(odd.overlayCenter)
+    }
+
+    func testBackdropAndCenterRoundTrip() throws {
+        for backdrop in FolderIconStyle.Backdrop.allCases {
+            let style = FolderIconStyle(color: "EE8096", overlay: .emoji("🐼"), overlayScale: 0.5, theme: "animal/cat",
+                                        backdrop: backdrop, overlayCenter: P(x: 0.2, y: 0.3))
+            let data = try JSONEncoder().encode(style)
+            let decoded = try JSONDecoder().decode(FolderIconStyle.self, from: data)
+            XCTAssertEqual(decoded, style)
+            XCTAssertEqual(decoded.backdrop, backdrop)
+            XCTAssertEqual(decoded.overlayCenter, P(x: 0.2, y: 0.3))
+        }
+        let json = String(decoding: try JSONEncoder().encode(FolderIconStyle(color: "123456", overlay: .emoji("🐼"), backdrop: .bare)), as: UTF8.self)
+        XCTAssertTrue(json.contains(#""backdrop":"none""#))
+        // 存进去的位置超出 0…1 时读出来夹好
+        let wild = try JSONDecoder().decode(FolderIconStyle.self, from: Data(
+            #"{"color":"123456","overlayCenter":{"x":3,"y":-1}}"#.utf8))
+        XCTAssertEqual(wild.overlayCenter, P(x: 1, y: 0))
+    }
+
+    func testDefaultPositionsMatchOldLayout() {
+        // 主题图标：右下角，离边 7%，边长 = 比例 × 0.62
+        let themed = FolderIconStyle(color: "123456", overlay: .emoji("🐼"), overlayScale: 0.5, theme: "animal/cat")
+        let f = themed.overlayFrame(themed: true)
+        XCTAssertEqual(f.width, 0.31, accuracy: 1e-9)
+        XCTAssertEqual(f.x + f.width, 0.93, accuracy: 1e-9)
+        XCTAssertEqual(f.y + f.height, 0.93, accuracy: 1e-9)
+        // 普通上色：水平居中，中心离底 42%
+        let plain = FolderIconStyle(color: "123456", overlay: .emoji("🐼"), overlayScale: 0.4)
+        let g = plain.overlayFrame(themed: false)
+        XCTAssertEqual(g.width, 0.4, accuracy: 1e-9)
+        XCTAssertEqual(g.midX, 0.5, accuracy: 1e-9)
+        XCTAssertEqual(g.midY, 0.58, accuracy: 1e-9)
+    }
+
+    func testCustomCenterAndClamp() {
+        let style = FolderIconStyle(color: "123456", overlay: .emoji("🐼"), overlayScale: 0.4, overlayCenter: P(x: 0.3, y: 0.25))
+        let f = style.overlayFrame(themed: false)
+        XCTAssertEqual(f.midX, 0.3, accuracy: 1e-9)
+        XCTAssertEqual(f.midY, 0.25, accuracy: 1e-9)
+
+        // 拖到角落外面：中心夹在画布里，最多伸出自身边长的 25%
+        let corner = FolderIconStyle(color: "123456", overlay: .emoji("🐼"), overlayScale: 0.4, overlayCenter: P(x: 0, y: 1))
+        let c = corner.resolvedCenter(themed: false)
+        XCTAssertEqual(c.x, 0.1, accuracy: 1e-9)
+        XCTAssertEqual(c.y, 0.9, accuracy: 1e-9)
+        let frame = corner.overlayFrame(themed: false)
+        XCTAssertEqual(-frame.x, 0.4 * FolderIconStyle.maxOverhang, accuracy: 1e-9)
+        XCTAssertLessThan(frame.x, 0)                      // 可以伸出去一点
+        XCTAssertGreaterThan(frame.x + frame.width, 0)     // 但不会整个出去
+
+        XCTAssertEqual(FolderIconStyle.clampCenter(P(x: 0.5, y: 0.5), length: 0.3), P(x: 0.5, y: 0.5))
+        XCTAssertEqual(FolderIconStyle.clampCenter(P(x: 0.01, y: 0.99), length: 0), P(x: 0.01, y: 0.99))
+        XCTAssertEqual(FolderIconStyle.clampCenter(P(x: 0, y: 0), length: .nan), P(x: 0, y: 0))
+    }
+
+    func testDragMovesAndClamps() {
+        let start = P(x: 0.5, y: 0.5)
+        let moved = FolderIconStyle.dragged(from: start, dx: 0.2, dy: -0.1, length: 0.3)
+        XCTAssertEqual(moved.x, 0.7, accuracy: 1e-9)
+        XCTAssertEqual(moved.y, 0.4, accuracy: 1e-9)
+        let far = FolderIconStyle.dragged(from: start, dx: 5, dy: -5, length: 0.4)
+        XCTAssertEqual(far.x, 0.9, accuracy: 1e-9)
+        XCTAssertEqual(far.y, 0.1, accuracy: 1e-9)
+        let broken = FolderIconStyle.dragged(from: start, dx: .infinity, dy: .nan, length: 0.4)
+        XCTAssertEqual(broken, start)
+    }
+
+    func testFrameHitTest() {
+        let style = FolderIconStyle(color: "123456", overlay: .emoji("🐼"), overlayScale: 0.4, overlayCenter: P(x: 0.3, y: 0.3))
+        let f = style.overlayFrame(themed: false)
+        XCTAssertTrue(f.contains(P(x: 0.3, y: 0.3)))
+        XCTAssertTrue(f.contains(P(x: 0.11, y: 0.49)))
+        XCTAssertFalse(f.contains(P(x: 0.6, y: 0.3)))
+    }
+}
+
 final class FolderIconLedgerTests: XCTestCase {
     func testHistoryDeduplicatesAndKeepsNewestFirst() {
         var ledger = FolderIconLedger()

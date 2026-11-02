@@ -100,17 +100,12 @@ enum FolderIconRenderer {
         }
     }
 
-    /// 叠加层的位置：文件夹正面中心偏下（坐标原点在左下角）。
-    /// 主题图标的正面已经有插画，叠加层改成右下角的小角标，不挡住插画。
-    static func overlayRect(scale: Double, canvas: CGFloat, themed: Bool = false) -> NSRect {
-        if themed {
-            let length = canvas * CGFloat(FolderIconStyle.clampScale(scale)) * 0.62
-            let margin = canvas * 0.07
-            return NSRect(x: canvas - margin - length, y: margin, width: length, height: length)
-        }
-        let length = canvas * CGFloat(FolderIconStyle.clampScale(scale))
-        let center = NSPoint(x: canvas * 0.5, y: canvas * 0.42)
-        return NSRect(x: center.x - length / 2, y: center.y - length / 2, width: length, height: length)
+    /// 叠加层在位图里的方框（坐标原点在左下角）。位置 / 大小的计算在 FolderIconStyle 里（纯逻辑，有单元测试），
+    /// 预览里拖动的命中判断用的是同一套数，所以预览、导出 PNG、写进访达的图标位置都一样。
+    static func overlayRect(_ style: FolderIconStyle, canvas: CGFloat, themed: Bool) -> NSRect {
+        let f = style.overlayFrame(themed: themed)
+        return NSRect(x: CGFloat(f.x) * canvas, y: CGFloat(1 - f.y - f.height) * canvas,
+                      width: CGFloat(f.width) * canvas, height: CGFloat(f.height) * canvas)
     }
 
     // MARK: 主题图标
@@ -141,9 +136,11 @@ enum FolderIconRenderer {
     }
 
     private static func drawOverlay(_ style: FolderIconStyle, canvas: CGFloat, themed: Bool) {
-        var box = overlayRect(scale: style.overlayScale, canvas: canvas, themed: themed)
-        if themed, style.overlay != FolderIconStyle.Overlay.none {
-            // 主题图标上的角标：白色圆底 + 一点阴影，插画再花也看得清
+        if case .none = style.overlay { return }
+        let box = overlayRect(style, canvas: canvas, themed: themed)
+        switch style.backdrop {
+        case .disc:
+            // 白色圆底 + 一点阴影，底下再花也看得清（旧版本主题图标上的角标就是这样）
             NSGraphicsContext.saveGraphicsState()
             let shadow = NSShadow()
             shadow.shadowColor = NSColor.black.withAlphaComponent(0.22)
@@ -153,8 +150,74 @@ enum FolderIconRenderer {
             NSColor.white.withAlphaComponent(0.94).setFill()
             NSBezierPath(ovalIn: box).fill()
             NSGraphicsContext.restoreGraphicsState()
-            box = box.insetBy(dx: box.width * 0.16, dy: box.height * 0.16)
+            drawOverlayContent(style, in: box.insetBy(dx: box.width * 0.16, dy: box.height * 0.16), sticker: false)
+        case .bare:
+            drawOverlayContent(style, in: box, sticker: false)
+        case .sticker:
+            drawSticker(style, in: box)
         }
+    }
+
+    /// 贴纸白边：先把叠加层单独画进一张透明位图，再沿它的轮廓往外扩一圈（往一圈方向各挪一点叠起来）填成白色，
+    /// 带一点淡阴影画到图标上，最后把原来的叠加层盖在白边上面。白边宽度是叠加层边长的 6%。
+    private static func drawSticker(_ style: FolderIconStyle, in box: NSRect) {
+        let border = max(1, box.width * CGFloat(FolderIconStyle.stickerBorderRatio))
+        let pad = ceil(border * 2)
+        let pixels = Int(ceil(box.width + pad * 2))
+        let content = NSRect(x: pad + border, y: pad + border, width: box.width - border * 2, height: box.height - border * 2)
+        guard let art = offscreen(pixels, draw: { drawOverlayContent(style, in: content, sticker: true) }),
+              let outline = whiteOutline(art, radius: border) else {
+            drawOverlayContent(style, in: box, sticker: false)
+            return
+        }
+        let dest = CGRect(x: box.minX - pad, y: box.minY - pad, width: CGFloat(pixels), height: CGFloat(pixels))
+        guard let cg = NSGraphicsContext.current?.cgContext else { return }
+        cg.saveGState()
+        cg.setShadow(offset: CGSize(width: 0, height: -box.width * 0.025), blur: box.width * 0.07,
+                     color: NSColor.black.withAlphaComponent(0.25).cgColor)
+        cg.draw(outline, in: dest)
+        cg.restoreGState()
+        cg.draw(art, in: dest)
+    }
+
+    /// 一张 pixels×pixels 的透明位图，在里面用 AppKit 画（坐标原点左下，1 点 = 1 像素）。
+    private static func offscreen(_ pixels: Int, draw: () -> Void) -> CGImage? {
+        guard pixels > 0, let ctx = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8, bytesPerRow: 0,
+                                              space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        NSGraphicsContext.saveGraphicsState()
+        let context = NSGraphicsContext(cgContext: ctx, flipped: false)
+        context.imageInterpolation = .high
+        NSGraphicsContext.current = context
+        draw()
+        NSGraphicsContext.restoreGraphicsState()
+        return ctx.makeImage()
+    }
+
+    /// 把图片的不透明区域往外扩 radius 像素，填成白色（贴纸的白边）。
+    private static func whiteOutline(_ art: CGImage, radius: CGFloat) -> CGImage? {
+        let pixels = art.width
+        guard let ctx = CGContext(data: nil, width: pixels, height: art.height, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        let full = CGRect(x: 0, y: 0, width: art.width, height: art.height)
+        ctx.interpolationQuality = .high
+        // 两圈：外圈定宽度，内圈把细缝补上
+        for (ring, steps) in [(radius, 36), (radius * 0.5, 18)] {
+            for i in 0..<steps {
+                let angle = Double(i) / Double(steps) * 2 * .pi
+                ctx.draw(art, in: full.offsetBy(dx: ring * CGFloat(cos(angle)), dy: ring * CGFloat(sin(angle))))
+            }
+        }
+        ctx.draw(art, in: full)
+        ctx.setBlendMode(.sourceIn)
+        ctx.setFillColor(NSColor.white.cgColor)
+        ctx.fill(full)
+        return ctx.makeImage()
+    }
+
+    /// 叠加层本身（符号 / emoji / 图片），画在 box 里。sticker：贴纸模式下图片等比放进去（透明 PNG 沿轮廓出白边）。
+    private static func drawOverlayContent(_ style: FolderIconStyle, in box: NSRect, sticker: Bool) {
         switch style.overlay {
         case .none:
             return
@@ -178,12 +241,20 @@ enum FolderIconRenderer {
         case .image(let path):
             guard let picture = NSImage(contentsOf: URL(fileURLWithPath: path)), picture.size.width > 0, picture.size.height > 0 else { return }
             NSGraphicsContext.saveGraphicsState()
-            NSBezierPath(roundedRect: box, xRadius: box.width * 0.22, yRadius: box.width * 0.22).addClip()
-            // 等比填满（多出来的裁掉）
-            let ratio = max(box.width / picture.size.width, box.height / picture.size.height)
-            let drawn = NSSize(width: picture.size.width * ratio, height: picture.size.height * ratio)
-            picture.draw(in: NSRect(x: box.midX - drawn.width / 2, y: box.midY - drawn.height / 2, width: drawn.width, height: drawn.height),
-                         from: .zero, operation: .sourceOver, fraction: 1)
+            if sticker {
+                // 等比放进去，圆一点角；透明背景的 PNG 白边会沿着图案的轮廓走
+                let drawn = fit(picture.size, in: box)
+                NSBezierPath(roundedRect: drawn, xRadius: min(drawn.width, drawn.height) * 0.1,
+                             yRadius: min(drawn.width, drawn.height) * 0.1).addClip()
+                picture.draw(in: drawn, from: .zero, operation: .sourceOver, fraction: 1)
+            } else {
+                NSBezierPath(roundedRect: box, xRadius: box.width * 0.22, yRadius: box.width * 0.22).addClip()
+                // 等比填满（多出来的裁掉）
+                let ratio = max(box.width / picture.size.width, box.height / picture.size.height)
+                let drawn = NSSize(width: picture.size.width * ratio, height: picture.size.height * ratio)
+                picture.draw(in: NSRect(x: box.midX - drawn.width / 2, y: box.midY - drawn.height / 2, width: drawn.width, height: drawn.height),
+                             from: .zero, operation: .sourceOver, fraction: 1)
+            }
             NSGraphicsContext.restoreGraphicsState()
         }
     }

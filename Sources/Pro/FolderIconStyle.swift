@@ -11,6 +11,39 @@ struct FolderIconStyle: Codable, Hashable {
         case image(String)
     }
 
+    /// 叠加层的底：贴纸白边（沿字形 / 图片轮廓描一圈白边 + 淡阴影）、白色圆底、什么都不垫。
+    enum Backdrop: String, Codable, Hashable, CaseIterable {
+        case sticker
+        case disc
+        /// 不垫底（存成 "none"；不叫 .none，免得和 Optional.none 混淆）。
+        case bare = "none"
+    }
+
+    /// 叠加层中心点在图标画布里的位置，0…1，原点在左上角（和界面里拖动的坐标一致）。
+    struct Point: Codable, Hashable {
+        var x: Double
+        var y: Double
+        init(x: Double, y: Double) {
+            self.x = x.isFinite ? min(max(x, 0), 1) : 0.5
+            self.y = y.isFinite ? min(max(y, 0), 1) : 0.5
+        }
+
+        private enum CodingKeys: String, CodingKey { case x, y }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            self.init(x: try c.decode(Double.self, forKey: .x), y: try c.decode(Double.self, forKey: .y))
+        }
+    }
+
+    /// 0…1 画布里的一个方框，原点在左上角。
+    struct Frame: Equatable {
+        var x: Double, y: Double, width: Double, height: Double
+        var midX: Double { x + width / 2 }
+        var midY: Double { y + height / 2 }
+        func contains(_ p: Point) -> Bool { p.x >= x && p.x <= x + width && p.y >= y && p.y <= y + height }
+    }
+
     static let scaleRange: ClosedRange<Double> = 0.3...0.7
     static let defaultScale = 0.45
     /// 主题图标的色相调整，单位度。
@@ -25,15 +58,82 @@ struct FolderIconStyle: Codable, Hashable {
     var theme: String?
     /// 主题图标的色相调整（度，-180…180），0 是原样。
     var hue: Double
+    /// 叠加层的底。旧版本存的样式没有这个字段：主题图标上是白色圆底，普通上色什么都不垫（解码时照旧，图标不变样）。
+    var backdrop: Backdrop
+    /// 叠加层中心点（用户拖过的位置）；nil 是默认位置（普通上色在正面中间偏下，主题图标在右下角）。
+    var overlayCenter: Point?
 
     init(color: String, overlay: Overlay = .none, overlayScale: Double = FolderIconStyle.defaultScale,
-         theme: String? = nil, hue: Double = 0) {
+         theme: String? = nil, hue: Double = 0, backdrop: Backdrop? = nil, overlayCenter: Point? = nil) {
         self.color = FolderIconStyle.normalizedHex(color) ?? "87B3EB"
         self.overlay = overlay
         self.overlayScale = FolderIconStyle.clampScale(overlayScale)
         self.theme = FolderIconStyle.normalizedTheme(theme)
         self.hue = self.theme == nil ? 0 : FolderIconStyle.clampHue(hue)
+        self.backdrop = backdrop ?? FolderIconStyle.defaultBackdrop(for: overlay, themed: self.theme != nil)
+        self.overlayCenter = overlayCenter
     }
+
+    /// 新建叠加层时默认的底：Emoji、图片用贴纸白边；符号在普通上色上是同色系压印，不垫；在主题图标上垫白色圆底。
+    static func defaultBackdrop(for overlay: Overlay, themed: Bool) -> Backdrop {
+        switch overlay {
+        case .emoji, .image: return .sticker
+        case .symbol: return themed ? .disc : .bare
+        case .none: return themed ? .disc : .bare
+        }
+    }
+
+    /// 旧版本存的样式（没有 backdrop 字段）当时的样子：主题图标上是白色圆底，普通上色不垫。
+    static func legacyBackdrop(themed: Bool) -> Backdrop { themed ? .disc : .bare }
+
+    // MARK: 叠加层位置（纯计算，坐标都是 0…1，原点左上）
+
+    /// 叠加层边长占画布的比例。主题图标上是小角标，按 0.62 缩小。
+    static func overlayLength(scale: Double, themed: Bool) -> Double {
+        clampScale(scale) * (themed ? 0.62 : 1)
+    }
+
+    /// 默认位置：普通上色在正面中心偏下（离底 42%），主题图标在右下角（离边 7%）。
+    static func defaultCenter(scale: Double, themed: Bool) -> Point {
+        let length = overlayLength(scale: scale, themed: themed)
+        if themed {
+            let margin = 0.07
+            return Point(x: 1 - margin - length / 2, y: 1 - margin - length / 2)
+        }
+        return Point(x: 0.5, y: 1 - 0.42)
+    }
+
+    /// 叠加层最多伸出画布多少（占自身边长）。中心点始终在画布里，最多露出一小半在外面，不会整个拖没。
+    static let maxOverhang = 0.25
+
+    /// 把中心点夹在画布里：每边最多让叠加层伸出 maxOverhang 倍边长。
+    static func clampCenter(_ p: Point, length: Double) -> Point {
+        let length = length.isFinite ? min(max(length, 0), 1) : 0
+        let lo = min(0.5, max(0, length * (0.5 - maxOverhang)))
+        let hi = 1 - lo
+        return Point(x: min(max(p.x, lo), hi), y: min(max(p.y, lo), hi))
+    }
+
+    /// 这个样式实际画叠加层的中心点（自定义位置夹过，或默认位置）。
+    func resolvedCenter(themed: Bool) -> Point {
+        let length = Self.overlayLength(scale: overlayScale, themed: themed)
+        return Self.clampCenter(overlayCenter ?? Self.defaultCenter(scale: overlayScale, themed: themed), length: length)
+    }
+
+    /// 叠加层在 0…1 画布里的方框（原点左上）。预览拖动的命中判断和真正渲染都用它。
+    func overlayFrame(themed: Bool) -> Frame {
+        let length = Self.overlayLength(scale: overlayScale, themed: themed)
+        let c = resolvedCenter(themed: themed)
+        return Frame(x: c.x - length / 2, y: c.y - length / 2, width: length, height: length)
+    }
+
+    /// 拖动：从起点中心 start 开始，手指移动了 (dx, dy)（占画布的比例），得到新的中心点（夹好）。
+    static func dragged(from start: Point, dx: Double, dy: Double, length: Double) -> Point {
+        clampCenter(Point(x: start.x + (dx.isFinite ? dx : 0), y: start.y + (dy.isFinite ? dy : 0)), length: length)
+    }
+
+    /// 贴纸白边的宽度，占叠加层边长的比例。
+    static let stickerBorderRatio = 0.06
 
     static func clampHue(_ value: Double) -> Double {
         guard value.isFinite else { return 0 }
@@ -72,7 +172,7 @@ struct FolderIconStyle: Codable, Hashable {
 
     // MARK: Codable（叠加层写成 {"type": "symbol", "value": "star"}，好读也好迁移）
 
-    private enum CodingKeys: String, CodingKey { case color, overlay, overlayScale, theme, hue }
+    private enum CodingKeys: String, CodingKey { case color, overlay, overlayScale, theme, hue, backdrop, overlayCenter }
     private enum OverlayKeys: String, CodingKey { case type, value }
 
     init(from decoder: Decoder) throws {
@@ -93,7 +193,13 @@ struct FolderIconStyle: Codable, Hashable {
         }
         let theme = try c.decodeIfPresent(String.self, forKey: .theme)
         let hue = try c.decodeIfPresent(Double.self, forKey: .hue) ?? 0
-        self.init(color: hex, overlay: overlay, overlayScale: scale, theme: theme, hue: hue)
+        let themed = FolderIconStyle.normalizedTheme(theme) != nil
+        // 旧样式没有 backdrop：照旧的样子（主题上圆底、普通上色不垫），已经换装的图标不会突然变样。不认识的值也这样处理。
+        let backdrop = (try? c.decodeIfPresent(String.self, forKey: .backdrop)).flatMap(Backdrop.init(rawValue:))
+            ?? FolderIconStyle.legacyBackdrop(themed: themed)
+        let center = try? c.decodeIfPresent(Point.self, forKey: .overlayCenter)
+        self.init(color: hex, overlay: overlay, overlayScale: scale, theme: theme, hue: hue,
+                  backdrop: backdrop, overlayCenter: center)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -102,6 +208,8 @@ struct FolderIconStyle: Codable, Hashable {
         try c.encode(overlayScale, forKey: .overlayScale)
         try c.encodeIfPresent(theme, forKey: .theme)
         if theme != nil { try c.encode(hue, forKey: .hue) }
+        try c.encode(backdrop.rawValue, forKey: .backdrop)
+        try c.encodeIfPresent(overlayCenter, forKey: .overlayCenter)
         var o = c.nestedContainer(keyedBy: OverlayKeys.self, forKey: .overlay)
         switch overlay {
         case .none: try o.encode("none", forKey: .type)
