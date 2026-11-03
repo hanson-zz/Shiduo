@@ -453,6 +453,8 @@ struct ArchiveBrowserView: View {
                 .focused($listFocused)
                 // 空白处右键：「全部解压到…」。
                 .stableTableBackgroundContextMenu { menu(for: []) }
+                // 竖着拖动连选多行；横着拖动才把文件拖出去。
+                .tableDragSelect()
                 .contextMenu(forSelectionType: String.self) { ids in
                     if #available(macOS 15.0, *) {
                         EmptyView()

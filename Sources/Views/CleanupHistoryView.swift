@@ -116,15 +116,23 @@ struct CleanupHistoryView: View {
         .padding(.vertical, 10)
     }
 
+    /// 右键菜单：右键的这一条在选中里 → 作用在全部选中，否则只作用在这一条。
     @ViewBuilder
     private func rowMenu(_ record: CleanupRecord) -> some View {
-        if status(record) == .restorable {
-            Button("恢复") { restore([record]) }
+        let targets = selection.contains(record.id) && selection.count > 1
+            ? history.records.filter { selection.contains($0.id) } : [record]
+        let restorable = targets.filter { status($0) == .restorable }
+        let shown = targets.compactMap { r -> URL? in
+            guard let current = r.currentPath, status(r) == .restorable || status(r) == .restored else { return nil }
+            return URL(fileURLWithPath: current)
         }
-        if let current = record.currentPath, status(record) == .restorable || status(record) == .restored {
-            Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: current)]) }
+        if !restorable.isEmpty {
+            Button(targets.count > 1 ? String(localized: "恢复所选（\(restorable.count)）") : String(localized: "恢复")) { restore(restorable) }
         }
-        Button("拷贝原路径") { FileActions.copy(record.originalPath) }
+        if !shown.isEmpty {
+            Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting(shown) }
+        }
+        Button("拷贝原路径") { FileActions.copy(targets.map(\.originalPath).joined(separator: "\n")) }
     }
 
     private func dayTitle(_ day: Date) -> String {

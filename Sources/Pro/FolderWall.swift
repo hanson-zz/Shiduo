@@ -339,7 +339,12 @@ struct FolderWallView: View {
     @ObservedObject private var folderIcons = FolderIconService.shared
     @FocusState private var searchFocused: Bool
     @FocusState private var gridFocused: Bool
-    @State private var selectedPath: String?
+    /// 选中的卡片（点按、⌘ / ⇧ 点按、框选、⌘A）。
+    @State private var selection: Set<String> = []
+    /// ⇧ 连选的起点，也是回车改名 / ⌘O 打开 / 方向键的那一张。
+    @State private var anchor: String?
+    /// 可见区域的高度：空白处也能开始框选。
+    @State private var viewportHeight: CGFloat = 0
     @State private var renamingPath: String?
     @State private var gridWidth: CGFloat = 900
     @State private var wallTargeted = false
@@ -386,6 +391,12 @@ struct FolderWallView: View {
         }
     }
 
+    /// 回车改名、⌘O 打开、方向键从哪一张开始：连选起点在选中里就用它，否则用排在最前的选中的。
+    private var selectedPath: String? {
+        if let anchor, selection.contains(anchor) { return anchor }
+        return folders.first { selection.contains($0.path) }?.path
+    }
+
     /// 每行几张卡片（方向键上下用）。
     private var columns: Int {
         max(1, Int((gridWidth + 20) / (cardWidth + 32 + 20)))
@@ -405,13 +416,16 @@ struct FolderWallView: View {
                                        reminderCount: reminders.reminders.filter { $0.path.hasPrefix(s.path + "/") }.count,
                                        width: cardWidth,
                                        iconStyle: iconStyle,
-                                       selected: selectedPath == s.path,
+                                       selected: selection.contains(s.path),
+                                       group: selection.contains(s.path) && selection.count > 1
+                                           ? folders.map(\.path).filter(selection.contains) : [],
                                        renamingPath: $renamingPath,
                                        onSelect: {
-                                           selectedPath = s.path
+                                           select(s.path, flags: NSEvent.modifierFlags)
                                            gridFocused = true
                                        },
                                        onDropTile: { moved in reorder(moved, before: s.path) })
+                            .marqueeItem(s.path)
                         }
                     }
                     .background(GeometryReader { proxy in
@@ -422,7 +436,18 @@ struct FolderWallView: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 30)
                     .padding(.bottom, 44)
+                    .frame(maxWidth: .infinity, minHeight: viewportHeight, alignment: .top)
+                    // 空白处拖动框选（⇧ 加选，⌘ 反选，Esc 取消）；只点一下空白处取消选中。
+                    .marqueeSelection(ids: { folders.map(\.path) }, selection: $selection, hitInset: 10,
+                                      layoutKey: AnyHashable([AnyHashable(cardWidth), AnyHashable(gridWidth), AnyHashable(folders.map(\.path))]),
+                                      onBegin: { gridFocused = true },
+                                      onEnd: { anchor = MarqueeSelectionLogic.firstSelected(folders.map(\.path), in: selection) ?? anchor })
                 }
+                .background(GeometryReader { proxy in
+                    Color.clear
+                        .onAppear { viewportHeight = proxy.size.height }
+                        .onChange(of: proxy.size.height) { viewportHeight = proxy.size.height }
+                })
                 .focusable()
                 .focused($gridFocused)
                 .focusEffectDisabled()
@@ -448,10 +473,15 @@ struct FolderWallView: View {
                     return .handled
                 }
                 .onKeyPress(.escape) {
-                    guard selectedPath != nil else { return .ignored }
-                    selectedPath = nil
+                    guard !selection.isEmpty else { return .ignored }
+                    selection = []
                     return .handled
                 }
+                // ⌘A：选中墙上（搜索筛选后）显示的全部卡片。
+                .selectionKeyCommands(selectAll: {
+                    selection = Set(folders.map(\.path))
+                    anchor = folders.first?.path
+                })
             }
         }
         // 把文件夹从访达或拾掇的列表拖到墙上：放上墙；拖动卡片到空白处：排到最后。
@@ -622,10 +652,20 @@ struct FolderWallView: View {
     private func step(_ offset: Int) -> KeyPress.Result {
         let list = folders
         guard !list.isEmpty else { return .ignored }
-        let index = list.firstIndex { $0.path == selectedPath } ?? (offset > 0 ? -1 : list.count)
+        let current = selectedPath
+        let index = list.firstIndex { $0.path == current } ?? (offset > 0 ? -1 : list.count)
         let target = min(max(index + offset, 0), list.count - 1)
-        selectedPath = list[target].path
+        selection = [list[target].path]
+        anchor = list[target].path
         return .handled
+    }
+
+    /// 点按卡片：只选它；⌘ 加选 / 取消；⇧ 从上次点的那张连选到它（⇧⌘ 加到原来的选中上）。
+    private func select(_ path: String, flags: NSEvent.ModifierFlags) {
+        let result = MarqueeSelectionLogic.click(path, in: folders.map(\.path), selection: selection, anchor: anchor,
+                                                 shift: flags.contains(.shift), command: flags.contains(.command), style: .finder)
+        selection = result.selection
+        anchor = result.anchor
     }
 
     /// 拖动卡片排序：把 moved 排到 target 前面（target 为 nil 排到最后），之后按「自定」顺序显示。
@@ -688,6 +728,8 @@ struct FolderCard: View {
     /// 拾掇风格（自己画的文件夹）还是访达的系统图标。
     var iconStyle: FolderWallIconStyle = .shiduo
     var selected = false
+    /// 这张卡片在多选里时，选中的全部卡片（按墙上的顺序）：右键菜单作用在它们全部上。空 = 只有这一张。
+    var group: [String] = []
     /// 墙上按回车时设成这张卡片的路径：弹出重命名。
     @Binding var renamingPath: String?
     var onSelect: () -> Void = {}
@@ -971,7 +1013,18 @@ struct FolderCard: View {
     /// 「重命名…」用卡片自己的（墙上记的路径跟着改），多一项「从文件夹墙移除」和颜色。
     @ViewBuilder
     private var menu: some View {
-        if let item {
+        if group.count > 1 {
+            // 选中了好几张：打开、在访达中显示、拷贝路径……和「从文件夹墙移除」作用在全部选中的上（不在了的文件夹跳过）。
+            let paths = group
+            let items = paths.compactMap { FileItem(url: URL(fileURLWithPath: $0, isDirectory: true)) }
+            if items.isEmpty {
+                Button("从文件夹墙移除") { paths.forEach { store.unpin($0) } }
+            } else {
+                FileContextMenu(items: items, context: FileMenuContext(
+                    removeFromWall: { paths.forEach { store.unpin($0) } }
+                ))
+            }
+        } else if let item {
             FileContextMenu(items: [item], context: FileMenuContext(
                 rename: { startRename() },
                 removeFromWall: { store.unpin(summary.path) }

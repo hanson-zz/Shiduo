@@ -131,6 +131,8 @@ targets:
       - path: Sources/Pro/FileTemplateLogic.swift
       # 字体管理：路径安全规则、重复 / 多版本分组、停用清单、字体集绑定、中文字体判断。
       - path: Sources/Model/FontLogic.swift
+      # 框选 / 点选（⇧ 连选、⌘ 反选）的纯逻辑：所有页面的网格共用。
+      - path: Sources/Model/MarqueeSelectionLogic.swift
       # 字体预览：样张预设、字距、统一视觉大小、辅助线、列表排序、正文排版。
       - path: Sources/Model/FontPreviewLogic.swift
       # 字体细节（Pro）：字符表分类 / 搜索、字形转 SVG、OpenType 特性表、fvar / name / CPAL 表、CSS。

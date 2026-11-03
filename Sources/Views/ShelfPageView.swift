@@ -16,6 +16,10 @@ struct ShelfPageView: View {
     @State private var working = false
     @State private var previewURL: URL?
     @FocusState private var gridFocused: Bool
+    /// ⇧ 连选的起点（上一次点的那个）。
+    @State private var anchor: String?
+    /// 网格可见区域的高度：空白处也能开始框选。
+    @State private var viewportHeight: CGFloat = 0
 
     private let thumbnail: CGFloat = 104
 
@@ -251,12 +255,22 @@ struct ShelfPageView: View {
                             ))
                             .stableContextMenu { menu(for: item) }
                             .help(item.path)
+                            .marqueeItem(item.id)
                     }
                 }
                 .padding(16)
+                .frame(maxWidth: .infinity, minHeight: viewportHeight, alignment: .top)
+                // 空白处拖动框选（⇧ 加选，⌘ 反选，Esc 取消）；只点一下空白处取消选中。
+                .marqueeSelection(ids: { shelf.items.map(\.id) }, selection: $selection, hitInset: 8,
+                                  layoutKey: AnyHashable([AnyHashable(thumbnail), AnyHashable(shelf.items.count)]),
+                                  onBegin: { gridFocused = true },
+                                  onEnd: { anchor = MarqueeSelectionLogic.firstSelected(shelf.items.map(\.id), in: selection) ?? anchor })
             }
-            .contentShape(Rectangle())
-            .onTapGesture { selection = [] }
+            .background(GeometryReader { proxy in
+                Color.clear
+                    .onAppear { viewportHeight = proxy.size.height }
+                    .onChange(of: proxy.size.height) { viewportHeight = proxy.size.height }
+            })
             .focusable()
             .focused($gridFocused)
             .focusEffectDisabled()
@@ -269,10 +283,16 @@ struct ShelfPageView: View {
                 return .handled
             }
             .onKeyPress(.escape) {
-                guard previewURL != nil else { return .ignored }
-                previewURL = nil
+                if previewURL != nil {
+                    previewURL = nil
+                    return .handled
+                }
+                guard !selection.isEmpty else { return .ignored }
+                selection = []
                 return .handled
             }
+            // ⌘A：选中暂存架上的全部文件。
+            .selectionKeyCommands(selectAll: { selection = Set(shelf.items.map(\.id)) })
             // ⌫ 只从暂存架拿掉（文件还在原处）；⌘⌫ 才移到废纸篓（平时由「文件」菜单处理，这里兜底）。
             .onKeyPress(keys: [.delete, .deleteForward]) { press in
                 guard !selection.isEmpty else { return .ignored }
@@ -305,12 +325,12 @@ struct ShelfPageView: View {
         return shelf.items.filter { selection.contains($0.id) }.map(\.url)
     }
 
+    /// 点按：只选它；⌘ 加选 / 取消；⇧ 从上次点的那个连选到它（⇧⌘ 加到原来的选中上）。
     private func select(_ item: FileItem, flags: NSEvent.ModifierFlags) {
-        if flags.contains(.command) || flags.contains(.shift) {
-            if selection.contains(item.id) { selection.remove(item.id) } else { selection.insert(item.id) }
-        } else {
-            selection = [item.id]
-        }
+        let result = MarqueeSelectionLogic.click(item.id, in: shelf.items.map(\.id), selection: selection, anchor: anchor,
+                                                 shift: flags.contains(.shift), command: flags.contains(.command), style: .finder)
+        selection = result.selection
+        anchor = result.anchor
     }
 
     // MARK: 操作

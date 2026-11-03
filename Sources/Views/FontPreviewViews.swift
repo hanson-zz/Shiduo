@@ -23,8 +23,6 @@ struct FontLibraryTab: View {
     @State private var confirmTrash = false
     /// 字体文件拖到窗口上方。
     @State private var dropTargeted = false
-    @StateObject private var marquee = FontMarqueeModel()
-    @State private var cardFrames = FontCardFrames()
     @State private var viewport: CGSize = .zero
     /// 网格 + 详情面板一共多宽。
     @State private var contentWidth: CGFloat = 0
@@ -203,8 +201,6 @@ struct FontLibraryTab: View {
 
     // MARK: 网格
 
-    private static let gridSpace = "fontGrid"
-
     private var grid: some View {
         let palette = FontPreviewPalette.colors(FontPreviewColors(rawValue: colorsRaw) ?? .blackOnWhite)
         return ScrollView {
@@ -218,42 +214,27 @@ struct FontLibraryTab: View {
                         .contentShape(Rectangle())
                         .onTapGesture { tap(family) }
                         .stableContextMenu { menu(for: family) }
-                        .background(GeometryReader { proxy in
-                            Color.clear.preference(key: FontCardFramesKey.self,
-                                                   value: [family.id: proxy.frame(in: .named(Self.gridSpace))])
-                        })
+                        .marqueeItem(family.id)
                 }
             }
             .padding(20)
             .frame(maxWidth: .infinity, minHeight: viewport.height, alignment: .top)
-            // 在空白处拖动：框选（⌘ 拖动在原来的选中上反选）；只点一下空白处取消选中。
-            .background(
-                Color.clear
-                    .contentShape(Rectangle())
-                    .gesture(marqueeGesture)
-            )
-            .overlay(alignment: .topLeading) { FontMarqueeOverlay(model: marquee) }
-            .coordinateSpace(name: Self.gridSpace)
-            // 合并：LazyVGrid 回收了滚出屏幕的卡片，位置还留着，框选时照样算。
-            .onPreferenceChange(FontCardFramesKey.self) { frames in cardFrames.frames.merge(frames) { $1 } }
+            // 在空白处拖动：框选（⇧ 加选，⌘ 反选，Esc 取消）；只点一下空白处取消选中。
+            .marqueeSelection(ids: { families.map(\.id) }, selection: $selection,
+                              layoutKey: AnyHashable([AnyHashable(viewport.width), AnyHashable(size), AnyHashable(families.count)]),
+                              onBegin: { gridFocused = true },
+                              onEnd: { if let first = MarqueeSelectionLogic.firstSelected(families.map(\.id), in: selection) { anchor = first } })
         }
         .background(GeometryReader { proxy in
             Color.clear
                 .onAppear { viewport = proxy.size }
                 .onChange(of: proxy.size) { viewport = proxy.size }
         })
-        .onChange(of: viewport.width) { cardFrames.frames = [:] }
-        .onChange(of: size) { cardFrames.frames = [:] }
-        .onChange(of: families.count) { cardFrames.frames = [:] }
         .focusable()
         .focused($gridFocused)
         .focusEffectDisabled()
         .onCommand(#selector(NSResponder.selectAll(_:))) { selectAll() }
         .onKeyPress(.escape) {
-            if let restored = marquee.cancel() {
-                selection = restored
-                return .handled
-            }
             guard !selection.isEmpty else { return .ignored }
             selection = []
             return .handled
@@ -275,30 +256,6 @@ struct FontLibraryTab: View {
                 }
                 .onEnded { _ in magnifyBase = nil }
         )
-    }
-
-    private var marqueeGesture: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.gridSpace))
-            .onChanged { value in
-                if !marquee.active {
-                    gridFocused = true
-                    marquee.begin(at: value.startLocation, flags: NSEvent.modifierFlags, base: selection,
-                                  ids: Set(families.map(\.id)))
-                }
-                if let next = marquee.update(to: value.location, frames: cardFrames.frames), next != selection {
-                    selection = next
-                }
-            }
-            .onEnded { value in
-                let result = marquee.end(at: value.location, frames: cardFrames.frames)
-                if result.wasClick {
-                    selection = []
-                } else if let next = result.selection, next != selection {
-                    selection = next
-                }
-                // 下次 ⇧ 连选从框到的第一款开始。
-                if let first = families.first(where: { selection.contains($0.id) }) { anchor = first.id }
-            }
     }
 
     private func tap(_ family: FontFamily) {
@@ -1284,109 +1241,5 @@ struct FontFaceInfoRow: View {
                 .help(face.path)
         }
         .padding(.vertical, 2)
-    }
-}
-
-// MARK: - 字体网格框选
-
-/// 卡片在网格坐标里的位置（引用类型：滚动时更新不让整个网格重画）。
-final class FontCardFrames {
-    var frames: [String: CGRect] = [:]
-}
-
-struct FontCardFramesKey: PreferenceKey {
-    static let defaultValue: [String: CGRect] = [:]
-    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
-        value.merge(nextValue()) { $1 }
-    }
-}
-
-/// 框选：只有 FontMarqueeOverlay 观察它，矩形每帧变化时网格本身不重画。
-@MainActor
-final class FontMarqueeModel: ObservableObject {
-    @Published private(set) var rect: CGRect?
-    private(set) var active = false
-    /// ⌃点按：留给右键菜单，这次拖动什么都不做。
-    private var ignored = false
-    private var cancelled = false
-    private var start: CGPoint = .zero
-    private var location: CGPoint = .zero
-    private var base: Set<String> = []
-    private var toggle = false
-    private var ids: Set<String> = []
-    private var lastApply: TimeInterval = 0
-
-    func begin(at point: CGPoint, flags: NSEvent.ModifierFlags, base: Set<String>, ids: Set<String>) {
-        active = true
-        cancelled = false
-        ignored = flags.contains(.control)
-        start = point
-        location = point
-        toggle = flags.contains(.command)
-        self.base = base
-        self.ids = ids
-        lastApply = 0
-    }
-
-    /// 拖动中：返回新的选中（最多每 30 毫秒一次；矩形太小时返回 nil）。
-    func update(to point: CGPoint, frames: [String: CGRect]) -> Set<String>? {
-        guard active, !ignored, !cancelled else { return nil }
-        location = point
-        return apply(frames: frames, force: false)
-    }
-
-    /// 结束拖动。wasClick：只是点了一下空白处（调用方清空选中）。
-    func end(at point: CGPoint, frames: [String: CGRect]) -> (selection: Set<String>?, wasClick: Bool) {
-        defer { reset() }
-        guard active, !ignored, !cancelled else { return (nil, false) }
-        location = point
-        let moved = hypot(location.x - start.x, location.y - start.y)
-        if moved < 3 { return (nil, !toggle) }
-        return (apply(frames: frames, force: true), false)
-    }
-
-    /// Esc：正在框选时返回开始前的选中。
-    func cancel() -> Set<String>? {
-        guard active, !ignored, !cancelled else { return nil }
-        cancelled = true
-        rect = nil
-        return base
-    }
-
-    private func reset() {
-        active = false
-        ignored = false
-        cancelled = false
-        if rect != nil { rect = nil }
-    }
-
-    private func apply(frames: [String: CGRect], force: Bool) -> Set<String>? {
-        let r = FontSelectionLogic.rect(from: start, to: location)
-        guard r.width >= 3 || r.height >= 3 else {
-            if rect != nil { rect = nil }
-            return nil
-        }
-        rect = r
-        let now = ProcessInfo.processInfo.systemUptime
-        guard force || now - lastApply >= 0.03 else { return nil }
-        lastApply = now
-        let hit = FontSelectionLogic.hits(frames, rect: r).intersection(ids)
-        return FontSelectionLogic.marqueeSelection(base: base, hit: hit, toggle: toggle)
-    }
-}
-
-/// 框选矩形（半透明的强调色）。
-struct FontMarqueeOverlay: View {
-    @ObservedObject var model: FontMarqueeModel
-
-    var body: some View {
-        if let rect = model.rect {
-            Rectangle()
-                .fill(Color.accentColor.opacity(0.15))
-                .overlay(Rectangle().strokeBorder(Color.accentColor.opacity(0.8), lineWidth: 1))
-                .frame(width: rect.width, height: rect.height)
-                .offset(x: rect.minX, y: rect.minY)
-                .allowsHitTesting(false)
-        }
     }
 }

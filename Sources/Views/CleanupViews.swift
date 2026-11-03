@@ -612,6 +612,9 @@ struct CleanupReviewPage: View {
 
     @State private var selected: Set<String> = []
     @State private var confirm: [FileItem] = []
+    /// ⇧ 点按连选的起点。
+    @State private var anchor: String?
+    @FocusState private var focused: Bool
 
     private var card: CleanupCard? { scanner.cards.first { $0.kind == kind } }
     private var items: [FileItem] { card?.items ?? [] }
@@ -665,17 +668,33 @@ struct CleanupReviewPage: View {
                                 ReviewCell(item: item, selected: selected.contains(item.id), label: card?.labels[item.path])
                                     .onTapGesture(count: 2) { store.openItems([item]) }
                                     .onTapGesture { toggle(item) }
-                                    .stableContextMenu { FileContextMenu(items: [item]) }
+                                    // 右键的这一项在选中里 → 作用在全部选中，否则只作用在这一项。
+                                    .stableContextMenu { FileContextMenu(items: selected.contains(item.id) ? selectedItems : [item]) }
                                     .onDrag { InAppDrag.copyOnlyProvider(item.url) }
                                     .help(item.path)
+                                    .marqueeItem(item.id)
                             }
                         }
                     }
                 }
                 .padding(.horizontal, 32)
                 .padding(.vertical, 20)
+                // 空白处拖动框选：把框到的勾上（⌘ 拖动反选，Esc 取消）；点空白处不清掉已勾的。
+                .marqueeSelection(ids: { items.map(\.id) }, selection: $selected, style: .checklist, hitInset: 6,
+                                  layoutKey: AnyHashable(items.map(\.id)),
+                                  onBegin: { focused = true },
+                                  onEnd: { anchor = MarqueeSelectionLogic.firstSelected(items.map(\.id), in: selected) ?? anchor })
             }
             .scrollContentBackground(.hidden)
+            .focusable()
+            .focused($focused)
+            .focusEffectDisabled()
+            // ⌘A 全选，Esc 全不选。
+            .selectionKeyCommands(selectAll: { selected = Set(items.map(\.id)) }, clear: {
+                guard !selected.isEmpty else { return false }
+                selected = []
+                return true
+            })
 
             Divider()
             HStack(spacing: 12) {
@@ -747,8 +766,14 @@ struct CleanupReviewPage: View {
         }
     }
 
+    /// 点一下切换这一项；⇧ 点按把上次点的那项到这一项都选上。
     private func toggle(_ item: FileItem) {
-        if selected.contains(item.id) { selected.remove(item.id) } else { selected.insert(item.id) }
+        focused = true
+        let flags = NSEvent.modifierFlags
+        let result = MarqueeSelectionLogic.click(item.id, in: items.map(\.id), selection: selected, anchor: anchor,
+                                                 shift: flags.contains(.shift), command: flags.contains(.command), style: .checklist)
+        selected = result.selection
+        anchor = result.anchor
     }
 }
 

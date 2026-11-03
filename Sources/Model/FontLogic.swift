@@ -913,12 +913,11 @@ enum FontCoverage {
 
 enum FontSelectionLogic {
     /// 卡片四周留一点不算命中（矩形刚擦到边时不选）。
-    static let hitInset: CGFloat = 4
+    static let hitInset: CGFloat = MarqueeSelectionLogic.defaultHitInset
 
     /// 框选矩形碰到了哪些卡片（frames 是卡片在网格坐标里的位置）。
     static func hits(_ frames: [String: CGRect], rect: CGRect) -> Set<String> {
-        guard rect.width > 0 || rect.height > 0 else { return [] }
-        return Set(frames.filter { $0.value.insetBy(dx: hitInset, dy: hitInset).intersects(rect) }.map(\.key))
+        MarqueeSelectionLogic.hits(frames, rect: rect, inset: hitInset)
     }
 
     /// 框选后的选中：普通拖动只留框到的；⌘ 拖动在开始前的选中上反选框到的。
@@ -928,14 +927,12 @@ enum FontSelectionLogic {
 
     /// 两个点拉出的矩形（不管往哪个方向拖）。
     static func rect(from start: CGPoint, to end: CGPoint) -> CGRect {
-        CGRect(x: min(start.x, end.x), y: min(start.y, end.y), width: abs(end.x - start.x), height: abs(end.y - start.y))
+        MarqueeSelectionLogic.rect(from: start, to: end)
     }
 
     /// ⇧ 点按：从 anchor 到 target（按现在的排列顺序，两头都算）。anchor 不在列表里时只选 target。
     static func range(_ ids: [String], anchor: String?, target: String) -> [String] {
-        guard let end = ids.firstIndex(of: target) else { return [] }
-        guard let anchor, let start = ids.firstIndex(of: anchor) else { return [target] }
-        return Array(ids[min(start, end)...max(start, end)])
+        MarqueeSelectionLogic.range(ids, anchor: anchor, target: target)
     }
 }
 

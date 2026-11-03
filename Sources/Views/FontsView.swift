@@ -277,6 +277,17 @@ private struct FontProblemsTab: View {
     /// 勾选的（默认一个都不勾）。
     @State private var checked: Set<String> = []
     @State private var confirmTrash = false
+    /// ⇧ 点按连勾的起点。
+    @State private var anchor: String?
+    @FocusState private var focused: Bool
+
+    /// 能勾的，按页面上的顺序（框选、⇧ 连勾、⌘A 用）。
+    private var orderedActionable: [String] {
+        let kinds: [FontIssueGroup.Kind] = [.duplicate, .versions, .conflict, .damaged]
+        return kinds.flatMap { kind in
+            library.issues.filter { $0.kind == kind }.flatMap { $0.extras.filter(\.isActionable).map(\.path) }
+        }
+    }
 
     /// 能勾的（含撞车组，手动勾）。
     private var actionablePaths: Set<String> {
@@ -315,7 +326,21 @@ private struct FontProblemsTab: View {
                                 subtitle: String(localized: "系统读不出来（可能下载不完整或已损坏），装着也用不了"))
                     }
                     .padding(20)
+                    // 空白处拖动框选：把框到的勾上（⌘ 拖动反选，Esc 取消）；点空白处不清掉已勾的。
+                    .marqueeSelection(ids: { orderedActionable }, selection: $checked, style: .checklist, hitInset: 2,
+                                      layoutKey: AnyHashable(library.issues.map(\.id)),
+                                      onBegin: { focused = true },
+                                      onEnd: { anchor = MarqueeSelectionLogic.firstSelected(orderedActionable, in: checked) ?? anchor })
                 }
+                .focusable()
+                .focused($focused)
+                .focusEffectDisabled()
+                // ⌘A 全勾，Esc 全不勾。
+                .selectionKeyCommands(selectAll: { checked = Set(orderedActionable) }, clear: {
+                    guard !checked.isEmpty else { return false }
+                    checked = []
+                    return true
+                })
             }
             Divider()
             AdaptiveRow(spacing: 10) {
@@ -361,16 +386,28 @@ private struct FontProblemsTab: View {
                     Text(subtitle).font(.callout).foregroundStyle(.secondary)
                 }
                 ForEach(groups) { group in
-                    FontIssueCard(group: group, checked: $checked)
+                    FontIssueCard(group: group, checked: $checked, onRowTap: { tap($0) })
                 }
             }
         }
+    }
+
+    /// 点一行：切换勾选；⇧ 点按把上次点的那行到这一行都勾上。
+    private func tap(_ path: String) {
+        focused = true
+        let flags = NSEvent.modifierFlags
+        let result = MarqueeSelectionLogic.click(path, in: orderedActionable, selection: checked, anchor: anchor,
+                                                 shift: flags.contains(.shift), command: flags.contains(.command), style: .checklist)
+        checked = result.selection
+        anchor = result.anchor
     }
 }
 
 private struct FontIssueCard: View {
     let group: FontIssueGroup
     @Binding var checked: Set<String>
+    /// 点在一行上（不是勾选框、按钮）：切换勾选，⇧ 连勾。
+    var onRowTap: (String) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -401,6 +438,16 @@ private struct FontIssueCard: View {
                     fileLine(file)
                 }
                 .opacity(file.isActionable ? 1 : 0.6)
+                .background {
+                    if file.isActionable && checked.contains(file.path) {
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(Color.accentColor.opacity(0.12))
+                            .padding(-3)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { if file.isActionable { onRowTap(file.path) } }
+                .modifier(MarqueeItemIf(id: file.isActionable ? file.path : nil))
             }
         }
         .padding(14)
@@ -1202,10 +1249,11 @@ private struct FontDownloadsTab: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List {
+                // 选中就是勾选：拖动连选多行，⇧ / ⌘ 点按、⌘A 全选都是表格自己的（勾选框也还能单独点）。
+                List(selection: $checked) {
                     if !newItems.isEmpty {
                         Section {
-                            ForEach(newItems) { row($0) }
+                            ForEach(newItems) { row($0).tag($0.id) }
                         } header: {
                             HStack {
                                 Text("还没安装 · \(newItems.count) 个")
@@ -1223,7 +1271,7 @@ private struct FontDownloadsTab: View {
                     }
                     if !installedItems.isEmpty {
                         Section("已经装过 · \(installedItems.count) 个（下载里这份可以清掉）") {
-                            ForEach(installedItems) { row($0) }
+                            ForEach(installedItems) { row($0).tag($0.id) }
                         }
                     }
                 }
@@ -1303,7 +1351,9 @@ private struct FontDownloadsTab: View {
         .contentShape(Rectangle())
         .stableContextMenu {
             Button("在访达中显示") {
-                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: item.path)])
+                // 右键的这一行在勾选里 → 显示全部勾选的，否则只显示这一个。
+                let paths = checked.contains(item.id) ? items.filter { checked.contains($0.id) }.map(\.path) : [item.path]
+                NSWorkspace.shared.activateFileViewerSelecting(paths.map { URL(fileURLWithPath: $0) })
             }
         }
     }

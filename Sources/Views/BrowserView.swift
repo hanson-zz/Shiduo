@@ -448,12 +448,10 @@ struct FileCollectionView: View {
     @FocusState private var gridFocused: Bool
     /// ⇧ 连选的起点：上一次普通点按 / ⌘ 点按 / 方向键选中的那个（和访达一样）。
     @State private var selectionAnchor: FileItem.ID?
-    /// 框选的状态（引用类型：矩形只有它自己的小覆盖层在观察，拖动时网格本身不重画）。
-    @State private var marquee = MarqueeModel()
     /// 网格可见区域的高度：空白处也能开始框选。
     @State private var viewportHeight: CGFloat = 0
-    /// 每个格子在网格里的位置（引用类型，更新它不会重画网格）。
-    @State private var cellFrames = GridCellFrames()
+    /// 重排过一次就加一：框选记下的格子位置作废。
+    @State private var layoutTick = 0
     /// 正在往哪个文件夹格子上拖文件（高亮用）。
     @State private var dropFolderID: FileItem.ID?
     /// 正在往当前文件夹的空白处拖文件。
@@ -531,7 +529,7 @@ struct FileCollectionView: View {
         sortedItems = next
         sortedURLs = sortedItems.map(\.url)
         // 排版变了：之前记下的格子位置都作废
-        cellFrames.frames = [:]
+        layoutTick += 1
         return true
     }
 
@@ -571,8 +569,6 @@ struct FileCollectionView: View {
         }
         .onAppear { if sortKey == .size { resort() } }
         .onDisappear { FolderSizeStore.shared.prefetch([]) }
-        .onChange(of: thumbnailSize) { cellFrames.frames = [:] }
-        .onChange(of: gridWidth) { cellFrames.frames = [:] }
         .onCopyCommand { copyProviders() }
         // 在快速查看窗口里用方向键翻页时，列表 / 网格的选中跟着走。
         .onChange(of: previewURL) {
@@ -691,10 +687,7 @@ struct FileCollectionView: View {
                         // 把文件拖到文件夹格子上：移进去（⌥ 拷贝），⌘Z 可以撤销。
                         .modifier(FolderDropTarget(enabled: item.isDirectory,
                                                    targeted: dropTargeted(item)) { drop($0, onto: item, copy: $1) })
-                        .background(GeometryReader { proxy in
-                            Color.clear.preference(key: GridCellFramesKey.self,
-                                                   value: [item.id: proxy.frame(in: .named(Self.gridSpace))])
-                        })
+                        .marqueeItem(item.id)
                 }
                 } footer: {
                     // 资料库类别：翻到底自动加载下一页 / 已忽略的文件数（其他页面什么也不显示）。
@@ -709,19 +702,16 @@ struct FileCollectionView: View {
             })
             .padding(16)
             .frame(maxWidth: .infinity, minHeight: viewportHeight, alignment: .top)
-            // 在空白处拖动：框选（格子上拖动仍然是把文件拖出去）。
-            .background(
-                Color.clear
-                    .contentShape(Rectangle())
-                    .gesture(marqueeGesture)
-                    // 空白处右键：新建文件夹、粘贴、在终端 / 编辑器打开当前文件夹。
-                    .stableContextMenu { FolderBackgroundMenu() }
-            )
-            .overlay(alignment: .topLeading) { MarqueeOverlay(model: marquee) }
-            .background(EnclosingScrollViewReader { marquee.scrollView = $0 })
-            .coordinateSpace(name: Self.gridSpace)
-            // 合并而不是整个替换：LazyVGrid 回收了滚出屏幕的格子，它们的位置还留着，框选时照样能选中
-            .onPreferenceChange(GridCellFramesKey.self) { frames in cellFrames.frames.merge(frames) { $1 } }
+            // 在空白处拖动：框选（格子上拖动仍然是把文件拖出去）：⇧ 加选，⌘ 反选，Esc 取消，拖到上下边缘自动滚动；
+            // 只点一下空白处取消选中。空白处右键：新建文件夹、粘贴、在终端 / 编辑器打开当前文件夹。
+            .marqueeSelection(ids: { sorted.map(\.id) }, selection: $store.selectedIDs, hitInset: 8,
+                              layoutKey: AnyHashable([AnyHashable(thumbnailSize), AnyHashable(gridWidth), AnyHashable(layoutTick)]),
+                              backgroundMenu: { AnyView(FolderBackgroundMenu()) },
+                              onBegin: { gridFocused = true },
+                              onEnd: {
+                                  // 下次 ⇧ 连选从框选到的第一个开始。
+                                  if let first = sorted.first(where: { store.selectedIDs.contains($0.id) }) { selectionAnchor = first.id }
+                              })
         }
         // 拖到空白处：放进正在浏览的文件夹（⌥ 拷贝）。
         .modifier(FolderDropTarget(enabled: dropFolder != nil, targeted: $dropOnBackground, highlight: .background) { drop($0, onto: nil, copy: $1) })
@@ -752,8 +742,6 @@ struct FileCollectionView: View {
         }
         .onKeyPress(.escape) {
             guard !store.isInlineRenaming else { return .ignored }
-            // 框选拖到一半按 Esc：恢复成开始框选前的选中
-            if marquee.cancel(store: store) { return .handled }
             guard previewURL != nil || liveItem != nil else { return .ignored }
             previewURL = nil
             liveItem = nil
@@ -835,27 +823,6 @@ struct FileCollectionView: View {
     /// ⌘C：把选中的文件放进剪贴板（在访达里 ⌘V 就能粘贴）。
     private func copyProviders() -> [NSItemProvider] {
         selectedInOrder.map { NSItemProvider(object: $0.url as NSURL) }
-    }
-
-    private static let gridSpace = "fileGrid"
-
-    /// 在网格空白处拖出矩形选中文件（和访达一样）：⇧ 加选，⌘ 反选；只点一下空白处取消选中。
-    /// ⌃点按留给右键菜单，不清空选中；拖到上下边缘会自动滚动。
-    private var marqueeGesture: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.gridSpace))
-            .onChanged { value in
-                if !marquee.active {
-                    gridFocused = true
-                    marquee.begin(at: value.startLocation, flags: NSEvent.modifierFlags, store: store, frames: cellFrames)
-                }
-                marquee.update(location: value.location)
-            }
-            .onEnded { _ in
-                let wasClick = marquee.end()
-                if wasClick { store.selectedIDs = [] }
-                // 下次 ⇧ 连选从框选到的第一个开始。
-                if let first = sorted.first(where: { store.selectedIDs.contains($0.id) }) { selectionAnchor = first.id }
-            }
     }
 
     /// 网格每行几个（和 LazyVGrid 的 adaptive 列数算法一致：间距 8）。gridWidth 已是网格本身的宽度。
@@ -975,6 +942,8 @@ struct FileCollectionView: View {
         }
         // 列表空白处右键（macOS 15+）：新建文件夹、粘贴…（只在点到没有行的地方时接）。
         .stableTableBackgroundContextMenu { FolderBackgroundMenu() }
+        // 竖着拖动连选多行（⇧ / ⌘ 点按由表格自己处理）；横着拖动才把选中的文件拖出去。
+        .tableDragSelect()
         .onKeyPress(.space) {
             // 正在原地改名：空格留给输入框。
             guard !store.isInlineRenaming else { return .ignored }
@@ -1124,11 +1093,6 @@ struct InlineRenameField: View {
     }
 }
 
-/// 网格里每个格子的位置（框选用）。
-final class GridCellFrames {
-    var frames: [FileItem.ID: CGRect] = [:]
-}
-
 /// ⌘⌫ 移到废纸篓、⌘O / ⌘↓ 打开（网格和列表共用）。
 /// ⌘⌫ 平时由「文件」菜单处理（菜单先拿到按键，这里收不到，不会删两次）；菜单项不可用时这里兜底。
 struct FileKeyCommands: ViewModifier {
@@ -1149,191 +1113,6 @@ struct FileKeyCommands: ViewModifier {
 
     private static func onlyCommand(_ press: KeyPress) -> Bool {
         press.modifiers.subtracting([.numericPad, .function]) == .command
-    }
-}
-
-/// 框选：矩形、开始前的选中、修饰键，以及拖到边缘时的自动滚动。
-/// 只有 MarqueeOverlay 观察它，矩形每帧变化时网格本身不重画。
-@MainActor
-final class MarqueeModel: ObservableObject {
-    /// 画出来的矩形（网格坐标）。宽高都小于 3 时不画，单击空白处不会闪一下。
-    @Published private(set) var rect: CGRect?
-
-    private(set) var active = false
-    /// ⌃点按：留给右键菜单，这次拖动什么都不做。
-    private var ignored = false
-    /// 拖到一半按了 Esc。
-    private var cancelled = false
-    private var start: CGPoint = .zero
-    private var location: CGPoint = .zero
-    private var base: Set<FileItem.ID> = []
-    private var flags: NSEvent.ModifierFlags = []
-    private var lastApply: TimeInterval = 0
-    private weak var store: LibraryStore?
-    private var frames: GridCellFrames?
-    private var timer: Timer?
-    /// 网格所在的滚动视图（自动滚动用）。
-    weak var scrollView: NSScrollView?
-
-    /// 格子四周各有 8pt 内边距，命中只算缩略图加文字的范围。
-    private static let hitInset: CGFloat = 8
-    /// 鼠标离可视区域上下边缘多近开始自动滚动。
-    private static let edge: CGFloat = 24
-
-    func begin(at point: CGPoint, flags: NSEvent.ModifierFlags, store: LibraryStore, frames: GridCellFrames) {
-        active = true
-        cancelled = false
-        start = point
-        location = point
-        self.flags = flags
-        self.store = store
-        self.frames = frames
-        ignored = flags.contains(.control)
-        base = flags.contains(.shift) || flags.contains(.command) ? store.selectedIDs : []
-        lastApply = 0
-    }
-
-    func update(location point: CGPoint) {
-        guard active, !ignored, !cancelled else { return }
-        location = point
-        refresh(force: false)
-        startAutoScrollIfNeeded()
-    }
-
-    /// 结束拖动。返回 true 表示这是一次普通的单击空白处（调用方清空选中）。
-    func end() -> Bool {
-        defer { reset() }
-        guard active, !ignored, !cancelled else { return false }
-        refresh(force: true)
-        let moved = hypot(location.x - start.x, location.y - start.y)
-        return moved < 3 && !flags.contains(.shift) && !flags.contains(.command)
-    }
-
-    /// Esc：正在框选时恢复成开始前的选中，返回 true。
-    func cancel(store: LibraryStore) -> Bool {
-        guard active, !ignored, !cancelled else { return false }
-        cancelled = true
-        stopTimer()
-        rect = nil
-        store.selectedIDs = flags.contains(.shift) || flags.contains(.command) ? base : []
-        return true
-    }
-
-    private func reset() {
-        stopTimer()
-        active = false
-        ignored = false
-        cancelled = false
-        if rect != nil { rect = nil }
-    }
-
-    private var currentRect: CGRect {
-        CGRect(x: min(start.x, location.x), y: min(start.y, location.y),
-               width: abs(location.x - start.x), height: abs(location.y - start.y))
-    }
-
-    /// 更新矩形；选中集合最多每 30 毫秒写回一次（真的变了才写）。
-    private func refresh(force: Bool) {
-        let r = currentRect
-        guard r.width >= 3 || r.height >= 3 else {
-            if rect != nil { rect = nil }
-            return
-        }
-        rect = r
-        let now = ProcessInfo.processInfo.systemUptime
-        guard force || now - lastApply >= 0.03, let store, let frames else { return }
-        lastApply = now
-        let hit = Set(frames.frames.filter { $0.value.insetBy(dx: Self.hitInset, dy: Self.hitInset).intersects(r) }.map(\.key))
-        let next = flags.contains(.command) ? base.symmetricDifference(hit) : base.union(hit)
-        if next != store.selectedIDs { store.selectedIDs = next }
-    }
-
-    // MARK: 自动滚动
-
-    private func startAutoScrollIfNeeded() {
-        guard timer == nil, scrollView != nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.tick() }
-        }
-    }
-
-    private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
-    }
-
-    /// 鼠标在可视区域上下边缘附近时滚一点，矩形的终点跟着内容走。
-    private func tick() {
-        guard active, !ignored, !cancelled, let scrollView, let window = scrollView.window,
-              let document = scrollView.documentView else {
-            stopTimer()
-            return
-        }
-        let inWindow = window.convertPoint(fromScreen: NSEvent.mouseLocation)
-        let point = scrollView.convert(inWindow, from: nil)
-        let height = scrollView.bounds.height
-        // 离顶部的距离（不管滚动视图是不是翻转坐标）
-        let fromTop = scrollView.isFlipped ? point.y : height - point.y
-        var down: CGFloat = 0
-        if fromTop < Self.edge {
-            down = -min(Self.edge * 1.5, (Self.edge - fromTop) * 0.8 + 4)
-        } else if fromTop > height - Self.edge {
-            down = min(Self.edge * 1.5, (fromTop - (height - Self.edge)) * 0.8 + 4)
-        }
-        guard down != 0 else { return }
-        let clip = scrollView.contentView
-        let maxOffset = max(0, document.frame.height - clip.bounds.height)
-        var origin = clip.bounds.origin
-        // 翻转的文档视图：y 变大是往下；不翻转的反过来
-        let currentDown = document.isFlipped ? origin.y : maxOffset - origin.y
-        let targetDown = min(max(currentDown + down, 0), maxOffset)
-        let delta = targetDown - currentDown
-        guard abs(delta) > 0.5 else { return }
-        origin.y = document.isFlipped ? targetDown : maxOffset - targetDown
-        clip.scroll(to: origin)
-        scrollView.reflectScrolledClipView(clip)
-        // 内容往上走了 delta，鼠标下面的内容坐标就多了 delta
-        location.y += delta
-        refresh(force: false)
-    }
-}
-
-/// 框选矩形（单独的小视图，只有它观察 MarqueeModel）。
-struct MarqueeOverlay: View {
-    @ObservedObject var model: MarqueeModel
-
-    var body: some View {
-        if let rect = model.rect {
-            Rectangle()
-                .fill(Color.accentColor.opacity(0.15))
-                .overlay(Rectangle().strokeBorder(Color.accentColor.opacity(0.8), lineWidth: 1))
-                .frame(width: rect.width, height: rect.height)
-                .offset(x: rect.minX, y: rect.minY)
-                .allowsHitTesting(false)
-        }
-    }
-}
-
-/// 拿到 SwiftUI ScrollView 底下的 NSScrollView。
-struct EnclosingScrollViewReader: NSViewRepresentable {
-    let onFind: @MainActor (NSScrollView?) -> Void
-
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        // 刚创建时还没放进视图层级，等下一轮再找
-        Task { @MainActor in onFind(view.enclosingScrollView) }
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        if let found = nsView.enclosingScrollView { onFind(found) }
-    }
-}
-
-struct GridCellFramesKey: PreferenceKey {
-    static let defaultValue: [FileItem.ID: CGRect] = [:]
-    static func reduce(value: inout [FileItem.ID: CGRect], nextValue: () -> [FileItem.ID: CGRect]) {
-        value.merge(nextValue()) { $1 }
     }
 }
 
