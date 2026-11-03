@@ -46,6 +46,7 @@ private struct SavedSearchBar: View {
             Text("随时自动更新")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
             Button {
                 store.editSavedSearch(search)
             } label: {

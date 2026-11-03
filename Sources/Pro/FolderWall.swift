@@ -535,13 +535,15 @@ struct FolderWallView: View {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("文件夹墙")
                     .font(.title.weight(.bold))
+                    .lineLimit(1)
+                    .fixedSize()
                 Label("\(store.pinnedFolders.count)", systemImage: "folder")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                 Label("\(model.summaries.values.reduce(0) { $0 + $1.fileCount })", systemImage: "doc")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                Spacer()
+                Spacer(minLength: 4)
                 Button {
                     model.reload(store.pinnedFolders)
                 } label: {
@@ -557,8 +559,10 @@ struct FolderWallView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .help(AppShortcut.addToFolderWall.currentHelp)
+                .fixedSize()
             }
-            HStack(spacing: 12) {
+            // 窗口窄时排序换到下一行、分段换成下拉菜单（不把页面撑宽）。
+            AdaptiveRow(spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                     TextField(String(localized: "按名称或路径搜索 \(store.pinnedFolders.count) 个文件夹"), text: $query)
@@ -575,14 +579,11 @@ struct FolderWallView: View {
                 .padding(.vertical, 8)
                 .background(RoundedRectangle(cornerRadius: 10).fill(.background.opacity(0.7)))
                 .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.08)))
-                .frame(maxWidth: 460)
+                .frame(minWidth: 160, idealWidth: 460, maxWidth: 460)
 
-                Picker("排序", selection: $sort) {
+                AdaptiveSegmentedPicker(title: "排序", selection: $sort) {
                     ForEach(Sort.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
                 .help("「自定」按你拖动排好的顺序")
             }
         }

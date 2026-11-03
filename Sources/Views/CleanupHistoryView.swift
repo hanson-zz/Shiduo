@@ -78,14 +78,17 @@ struct CleanupHistoryView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .center, spacing: 12) {
+        // 窗口窄时按钮换到标题下面（不把页面撑宽）。
+        AdaptiveRow(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("清理记录")
                     .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .lineLimit(1)
+                    .fixedSize()
                 Text("拾掇移到废纸篓或搬走的文件，30 天内都能放回原处")
                     .foregroundStyle(.secondary)
             }
-            Spacer()
+            Spacer(minLength: 0)
             if working { ProgressView().controlSize(.small) }
             Button("恢复所选（\(selectedRestorable.count)）") { restore(selectedRestorable) }
                 .disabled(selectedRestorable.isEmpty || working)

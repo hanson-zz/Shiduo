@@ -53,4 +53,14 @@ final class FontSelectionLogicTests: XCTestCase {
         XCTAssertFalse(FontDropLogic.summary(installed: 3, skipped: 2).isEmpty)
         XCTAssertNotEqual(FontDropLogic.summary(installed: 0, skipped: 0), FontDropLogic.summary(installed: 0, skipped: 2))
     }
+
+    func testNarrowWindowLayout() {
+        XCTAssertEqual(FontLayoutLogic.gridMinimum(size: 48, available: 1200), 312, "宽窗口按字号算")
+        XCTAssertEqual(FontLayoutLogic.gridMinimum(size: 120, available: 500), 500, "不超过能用的宽度")
+        XCTAssertEqual(FontLayoutLogic.gridMinimum(size: 48, available: 60), 120, "再窄也有个底")
+        XCTAssertEqual(FontLayoutLogic.gridMinimum(size: 20, available: 0), 240, "还没量到宽度")
+        XCTAssertEqual(FontLayoutLogic.detailWidth(total: 1400), 440)
+        XCTAssertEqual(FontLayoutLogic.detailWidth(total: 700), 350)
+        XCTAssertEqual(FontLayoutLogic.detailWidth(total: 300), 260)
+    }
 }

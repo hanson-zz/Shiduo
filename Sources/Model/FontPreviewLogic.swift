@@ -511,3 +511,20 @@ enum FontBodyLogic {
         return clamped(spec)
     }
 }
+
+// MARK: - 窄窗口排版
+
+enum FontLayoutLogic {
+    /// 网格每列的最小宽度：按字号算（字越大卡片越宽），但不超过实际能用的宽度（窗口再窄也不裁掉卡片）。
+    static func gridMinimum(size: Double, available: CGFloat) -> CGFloat {
+        let wanted = max(240, CGFloat(size) * 6.5)
+        guard available > 0 else { return wanted }
+        return max(120, min(wanted, available))
+    }
+
+    /// 字体库右边详情面板的宽度：平时 440；窗口窄时最多占一半，最少 260。
+    static func detailWidth(total: CGFloat) -> CGFloat {
+        guard total > 0 else { return 440 }
+        return min(440, max(260, total * 0.5))
+    }
+}

@@ -50,11 +50,13 @@ struct FontsView: View {
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                     Text(summary)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
-                Spacer()
+                Spacer(minLength: 8)
                 if let busy = library.busy {
                     ProgressView().controlSize(.small)
-                    Text(busy).foregroundStyle(.secondary)
+                    Text(busy).foregroundStyle(.secondary).lineLimit(1).fixedSize()
                 }
                 Button {
                     library.scan()
@@ -67,21 +69,20 @@ struct FontsView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(library.isScanning)
+                .fixedSize()
             }
-            HStack(spacing: 10) {
-                Picker("", selection: $library.tab) {
+            // 窗口窄时：放不下的控件换到下一行；标签放不下换成下拉菜单（不会把整页撑宽）。
+            AdaptiveRow(spacing: 10) {
+                AdaptiveSegmentedPicker(title: "", selection: $library.tab) {
                     ForEach(FontsTab.allCases) { tab in
                         Text(tabLabel(tab)).tag(tab)
                     }
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: 700)
-                Spacer()
+                Spacer(minLength: 0)
                 if library.tab == .library {
                     TextField("搜索字体（中文名、英文名、拼音首字母）", text: $query)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 240)
+                        .frame(minWidth: 140, idealWidth: 240, maxWidth: 240)
                     Picker("筛选", selection: $filterRaw) {
                         Text("全部字体").tag(FontFilter.all.rawValue)
                         Text("中文字体").tag(FontFilter.cjk.rawValue)
@@ -103,6 +104,7 @@ struct FontsView: View {
                         Text("授权不明").tag(FontFilter.licenseUnknown.rawValue)
                     }
                     .frame(width: 140)
+                    .fixedSize()
                     // 列表视图点表头排序；网格用这个菜单。
                     if layout == .grid {
                         Picker("排序", selection: $sortRaw) {
@@ -112,6 +114,7 @@ struct FontsView: View {
                             Text("添加日期").tag(FontSortKey.added.rawValue)
                         }
                         .frame(width: 130)
+                        .fixedSize()
                     }
                     Picker("", selection: $layoutRaw) {
                         Text("网格").tag(FontLibraryLayout.grid.rawValue)
@@ -120,6 +123,7 @@ struct FontsView: View {
                     .pickerStyle(.segmented)
                     .labelsHidden()
                     .frame(width: 110)
+                    .fixedSize()
                     .help("网格看样张，列表看版本、厂商、字数")
                 }
             }
@@ -314,7 +318,7 @@ private struct FontProblemsTab: View {
                 }
             }
             Divider()
-            HStack(spacing: 10) {
+            AdaptiveRow(spacing: 10) {
                 Button("按建议勾选") { checked = suggestedPaths }
                     .disabled(suggestedPaths.isEmpty)
                 Button("全不勾") { checked = [] }
@@ -497,7 +501,7 @@ private struct FontStoredTab: View {
                 .listStyle(.inset)
             }
             Divider()
-            HStack(spacing: 10) {
+            AdaptiveRow(spacing: 10) {
                 Button("启用") {
                     let ids = Array(selection)
                     Task { await library.enable(entryIDs: ids) }
@@ -677,7 +681,7 @@ private struct FontSetsTab: View {
                 }
                 .padding(8)
             }
-            .frame(width: 220)
+            .frame(minWidth: 150, idealWidth: 220, maxWidth: 220)
             Divider()
             if let id = selectedID, let set = library.manifest.sets.first(where: { $0.id == id }) {
                 FontSetDetail(set: set, onDelete: { selectedID = nil })
@@ -729,11 +733,11 @@ private struct FontSetDetail: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                HStack {
+                AdaptiveRow(spacing: 8) {
                     TextField("字体集名字", text: $name)
                         .textFieldStyle(.roundedBorder)
                         .font(.title3)
-                        .frame(maxWidth: 320)
+                        .frame(minWidth: 140, idealWidth: 320, maxWidth: 320)
                         .onSubmit(rename)
                     Spacer()
                     if library.isActive(set) {
@@ -1031,9 +1035,10 @@ private struct FontCompareTab: View {
     var body: some View {
         let families = library.compareFamilies
         VStack(spacing: 0) {
-            HStack(spacing: 12) {
+            AdaptiveRow(spacing: 12) {
                 TextField("对比用的文字", text: $sample)
                     .textFieldStyle(.roundedBorder)
+                    .frame(minWidth: 140, idealWidth: 320)
                 Picker("", selection: $overlay) {
                     Text("并排").tag(false)
                     Text("叠放").tag(true)
@@ -1042,7 +1047,7 @@ private struct FontCompareTab: View {
                 .labelsHidden()
                 .frame(width: 120)
                 Slider(value: $size, in: 14...160)
-                    .frame(width: 140)
+                    .frame(minWidth: 80, idealWidth: 140, maxWidth: 140)
                 Text("\(Int(size)) pt")
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(.secondary)
@@ -1225,7 +1230,7 @@ private struct FontDownloadsTab: View {
                 .listStyle(.inset)
             }
             Divider()
-            HStack(spacing: 12) {
+            AdaptiveRow(spacing: 12) {
                 Toggle("装好后把下载里的原文件移到废纸篓", isOn: $trashAfterInstall)
                     .toggleStyle(.checkbox)
                 Spacer()
@@ -1282,16 +1287,17 @@ private struct FontDownloadsTab: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
-            .frame(minWidth: 200, alignment: .leading)
+            .frame(minWidth: 120, alignment: .leading)
             if let face = item.faces.first {
                 FontSampleText(face: face, text: face.coversCJK ? "永和九年 Aa" : "Aa Bb 0123", size: 18)
-                    .frame(minWidth: 120, maxWidth: 260, alignment: .leading)
+                    .frame(minWidth: 0, maxWidth: 260, alignment: .leading)
             }
             Spacer(minLength: 8)
             Text(item.size.byteText)
                 .font(.callout.monospacedDigit())
                 .foregroundStyle(.secondary)
-                .frame(width: 80, alignment: .trailing)
+                .lineLimit(1)
+                .fixedSize()
         }
         .padding(.vertical, 3)
         .contentShape(Rectangle())

@@ -522,17 +522,20 @@ struct AutoOrganizeView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top) {
+        // 窗口窄时三个按钮换到标题下面（以前会把标题挤成一列竖字）。
+        AdaptiveRow(spacing: 10, alignment: .top) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
                     Text("自动整理")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .lineLimit(1)
+                        .fixedSize()
                     ProBadge()
                 }
                 Text(subtitle)
                     .foregroundStyle(.secondary)
             }
-            Spacer()
+            Spacer(minLength: 0)
             // 先预览、确认后才移动的手动整理（可以一键撤销）。
             OrganizeDownloadsButton()
             Button {

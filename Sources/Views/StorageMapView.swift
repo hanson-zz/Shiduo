@@ -222,32 +222,50 @@ struct StorageMapView: View {
                 Label(FileManager.default.displayName(atPath: model.root.path), systemImage: "externaldrive")
             }
             .fixedSize()
-            ForEach(Array(model.path.enumerated()), id: \.offset) { index, url in
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-                Button(url.lastPathComponent) { model.jump(to: index) }
-                    .buttonStyle(.link)
-                    .lineLimit(1)
-            }
-            Spacer()
-            if model.isScanning {
-                ProgressView().controlSize(.small)
-                Text("正在计算大小…").font(.caption).foregroundStyle(.secondary)
-            }
-            if !model.path.isEmpty {
-                Button {
-                    model.jump(to: model.path.count - 2)
-                } label: {
-                    Label("返回上一层", systemImage: "chevron.left")
+            // 路径很深、窗口很窄时：路径这段横着滚，不把页面撑宽。
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(Array(model.path.enumerated()), id: \.offset) { index, url in
+                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+                        Button(url.lastPathComponent) { model.jump(to: index) }
+                            .buttonStyle(.link)
+                            .lineLimit(1)
+                    }
                 }
             }
-            Button {
-                model.rescan()
-            } label: {
-                Label("重新计算", systemImage: "arrow.clockwise")
+            .frame(minWidth: 0)
+            .layoutPriority(-1)
+            Spacer(minLength: 0)
+            if model.isScanning {
+                ProgressView().controlSize(.small)
+                Text("正在计算大小…").font(.caption).foregroundStyle(.secondary).lineLimit(1).fixedSize()
+            }
+            // 窄窗口时按钮只留图标。
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) { mapButtons }
+                HStack(spacing: 6) { mapButtons }.labelStyle(.iconOnly)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    @ViewBuilder
+    private var mapButtons: some View {
+        if !model.path.isEmpty {
+            Button {
+                model.jump(to: model.path.count - 2)
+            } label: {
+                Label("返回上一层", systemImage: "chevron.left")
+            }
+            .help("返回上一层")
+        }
+        Button {
+            model.rescan()
+        } label: {
+            Label("重新计算", systemImage: "arrow.clockwise")
+        }
+        .help("重新计算")
     }
 
     @ViewBuilder

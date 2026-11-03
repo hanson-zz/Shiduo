@@ -26,6 +26,8 @@ struct FontLibraryTab: View {
     @StateObject private var marquee = FontMarqueeModel()
     @State private var cardFrames = FontCardFrames()
     @State private var viewport: CGSize = .zero
+    /// 网格 + 详情面板一共多宽。
+    @State private var contentWidth: CGFloat = 0
     @FocusState private var gridFocused: Bool
     /// Option + 双指缩放开始时的字距。
     @State private var magnifyBase: Double? = nil
@@ -82,9 +84,15 @@ struct FontLibraryTab: View {
                     Divider()
                     FontDetailPanel(family: family) { selection = [] }
                         .id(family.id)
-                        .frame(width: 440)
+                        // 窄窗口时详情面板跟着变窄（最多 440，最多占一半），不把网格挤出窗口。
+                        .frame(width: FontLayoutLogic.detailWidth(total: contentWidth))
                 }
             }
+            .background(GeometryReader { proxy in
+                Color.clear
+                    .onAppear { contentWidth = proxy.size.width }
+                    .onChange(of: proxy.size.width) { contentWidth = proxy.size.width }
+            })
             Divider()
             bottomBar
         }
@@ -151,37 +159,43 @@ struct FontLibraryTab: View {
 
     private var bottomBar: some View {
         HStack(spacing: 10) {
+            // 说明文字最先让位：窗口窄时截断，按钮不会被挤出窗口。
             Label("系统字体只显示、不会动；/Library/Fonts 里的要管理员权限，拾掇也不改。停用是移进拾掇的字体仓库，不是删除。",
                   systemImage: "checkmark.shield")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-            Spacer()
-            if !selection.isEmpty {
-                Text("已选 \(selection.count) 款")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            }
-            if selection.count >= 2 {
-                Button("对比所选（\(min(selection.count, FontCompareLogic.maxCount))）") {
-                    library.addToCompare(selectedFamilies)
-                    library.tab = .compare
+                .truncationMode(.tail)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(-1)
+            AdaptiveRow(spacing: 10) {
+                if !selection.isEmpty {
+                    Text("已选 \(selection.count) 款")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .lineLimit(1)
                 }
-            }
-            if !selectedStoredIDs.isEmpty {
-                Button("启用所选") {
-                    let ids = selectedStoredIDs
-                    Task { await library.enable(entryIDs: ids) }
+                if selection.count >= 2 {
+                    Button("对比所选（\(min(selection.count, FontCompareLogic.maxCount))）") {
+                        library.addToCompare(selectedFamilies)
+                        library.tab = .compare
+                    }
                 }
+                if !selectedStoredIDs.isEmpty {
+                    Button("启用所选") {
+                        let ids = selectedStoredIDs
+                        Task { await library.enable(entryIDs: ids) }
+                    }
+                }
+                Button("停用所选（\(selectedUserPaths.count)）") {
+                    disableSelected()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(selectedUserPaths.isEmpty || library.busy != nil)
+                .help("只停用「用户字体」（~/Library/Fonts 里的）")
             }
-            Button("停用所选（\(selectedUserPaths.count)）") {
-                let paths = selectedUserPaths
-                Task { await library.disable(paths: paths) }
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(selectedUserPaths.isEmpty || library.busy != nil)
-            .help("只停用「用户字体」（~/Library/Fonts 里的）")
+            .layoutPriority(1)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -194,7 +208,9 @@ struct FontLibraryTab: View {
     private var grid: some View {
         let palette = FontPreviewPalette.colors(FontPreviewColors(rawValue: colorsRaw) ?? .blackOnWhite)
         return ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: max(240, CGFloat(size) * 6.5)), spacing: 14)], spacing: 14) {
+            // 列宽不超过实际能用的宽度：窗口再窄也至少一列、不会被裁掉。
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: FontLayoutLogic.gridMinimum(size: size, available: viewport.width - 40)),
+                                         spacing: 14)], spacing: 14) {
                 ForEach(families) { family in
                     FontGridCard(family: family, mark: library.mark(for: family), status: library.commercialStatus(family),
                                  sample: sample, size: size, tracking: tracking, palette: palette,
@@ -580,30 +596,23 @@ struct FontPreviewToolbar: View {
     private var custom: [FontSamplePreset] { FontSamplePresets.decode(presetsRaw) }
 
     var body: some View {
-        HStack(spacing: 14) {
+        // 窗口窄时放不下的控件换到下一行（滑块也会先变短）。
+        AdaptiveRow(spacing: 14) {
             presetMenu
-                .frame(maxWidth: 240)
-                .alert("自定义句子", isPresented: $showCustom) {
-                    TextField("输入要预览的句子", text: $customDraft)
-                    Button("使用") {
-                        let text = customDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !text.isEmpty { sample = text }
-                    }
-                    Button("取消", role: .cancel) {}
-                }
+                .frame(minWidth: 120, idealWidth: 240, maxWidth: 240)
             HStack(spacing: 6) {
-                Text("字号").foregroundStyle(.secondary)
+                Text("字号").foregroundStyle(.secondary).lineLimit(1).fixedSize()
                 Slider(value: $size, in: 12...120)
-                    .frame(width: 110)
+                    .frame(minWidth: 60, idealWidth: 110, maxWidth: 110)
                 Text(verbatim: "\(Int(size))")
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .frame(width: 28, alignment: .trailing)
             }
             HStack(spacing: 6) {
-                Text("字距").foregroundStyle(.secondary)
+                Text("字距").foregroundStyle(.secondary).lineLimit(1).fixedSize()
                 Slider(value: $tracking, in: FontTracking.range, step: 5)
-                    .frame(width: 100)
+                    .frame(minWidth: 60, idealWidth: 100, maxWidth: 100)
                 Text(verbatim: FontTracking.label(tracking))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
@@ -611,31 +620,43 @@ struct FontPreviewToolbar: View {
             }
             .help("单位是千分之一个字。按住 Option 在字体上双指缩放也能调")
             HStack(spacing: 6) {
-                Text("颜色").foregroundStyle(.secondary)
+                Text("颜色").foregroundStyle(.secondary).lineLimit(1).fixedSize()
                 ForEach(FontPreviewColors.allCases) { option in
                     colorButton(option)
                 }
             }
-            .alert("存为预设", isPresented: $showSave) {
-                TextField("预设名字（可以不填）", text: $saveName)
-                Button("存") {
-                    presetsRaw = FontSamplePresets.encode(FontSamplePresets.adding(name: saveName, text: sample, to: custom))
-                }
-                Button("取消", role: .cancel) {}
-            } message: {
-                Text("把现在的样张句子存成预设，以后在「样张」菜单里一点就换。")
-            }
             Toggle("统一视觉大小", isOn: $unify)
                 .toggleStyle(.switch)
                 .controlSize(.small)
+                .lineLimit(1)
+                .fixedSize()
                 .help("大小不一的字体看起来一样大：西文按 x 高、中文按字身对齐")
             Toggle("辅助线", isOn: $guides)
                 .toggleStyle(.switch)
                 .controlSize(.small)
+                .lineLimit(1)
+                .fixedSize()
                 .help("显示基线、x 高、大写高")
             Spacer(minLength: 0)
         }
         .font(.callout)
+        .alert("自定义句子", isPresented: $showCustom) {
+            TextField("输入要预览的句子", text: $customDraft)
+            Button("使用") {
+                let text = customDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !text.isEmpty { sample = text }
+            }
+            Button("取消", role: .cancel) {}
+        }
+        .alert("存为预设", isPresented: $showSave) {
+            TextField("预设名字（可以不填）", text: $saveName)
+            Button("存") {
+                presetsRaw = FontSamplePresets.encode(FontSamplePresets.adding(name: saveName, text: sample, to: custom))
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("把现在的样张句子存成预设，以后在「样张」菜单里一点就换。")
+        }
     }
 
     private var presetMenu: some View {
@@ -942,13 +963,12 @@ struct FontDetailPanel: View {
                 .foregroundStyle(.secondary)
                 .help("关闭")
             }
-            Picker("", selection: $tabRaw) {
+            // 面板窄时换成下拉菜单（分段控件不会自己变窄）。
+            AdaptiveSegmentedPicker(title: "", selection: $tabRaw) {
                 ForEach(FontDetailTab.allCases) { tab in
                     Text(tab.title).tag(tab.rawValue)
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
             if family.faces.count > 1 {
                 Picker("样式", selection: Binding(get: { face?.id ?? "" }, set: { faceID = $0 })) {
                     ForEach(family.faces) { face in

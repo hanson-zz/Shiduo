@@ -495,14 +495,12 @@ struct CleanupTabs<Content: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("清理", selection: tab) {
+            // 放不下（窄窗口 / 双栏）时换成下拉菜单，不把页面撑宽。
+            AdaptiveSegmentedPicker(title: "清理", selection: tab) {
                 ForEach(Tab.allCases) { tab in
                     Text(verbatim: tab == .organize && !license.isPro ? "\(tab.title) · Pro" : tab.title).tag(tab)
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .fixedSize()
             .frame(maxWidth: .infinity)
             .padding(.top, 12)
             .padding(.bottom, 2)

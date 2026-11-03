@@ -89,7 +89,8 @@ struct TransferProgressCard: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .frame(width: width)
+        // 浮在角落时固定宽度；放在页面里（备份卡片）时跟着页面变窄，不把窄窗口撑宽。
+        .frame(minWidth: floating ? width : 0, maxWidth: width)
         .modifier(HoverGlassBackground(shape: shape))
         .shadow(color: .black.opacity(floating ? 0.12 : 0), radius: 14, y: 6)
         .accessibilityElement(children: .contain)

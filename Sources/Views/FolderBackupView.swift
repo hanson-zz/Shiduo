@@ -154,7 +154,7 @@ private struct BackupPairCard: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
-                .frame(minWidth: 120, alignment: .leading)
+                .frame(minWidth: 80, alignment: .leading)
                 Image(systemName: "arrow.right")
                     .foregroundStyle(.secondary)
                     .help("只从 Mac 拷到硬盘")
@@ -186,7 +186,8 @@ private struct BackupPairCard: View {
             if backups.running?.pairID == pairID {
                 BackupProgressCard(floating: false, width: 520)
             } else {
-                HStack(spacing: 8) {
+                // 窗口窄时按钮换行（不把页面撑宽）。
+                AdaptiveRow(spacing: 8) {
                     Button("预览…") { backups.previewPairID = pairID }
                         .disabled(status.plan == nil)
                     Button("立即备份") { backups.backup(pairID, includeDeletes: false, announce: false) }
@@ -198,7 +199,7 @@ private struct BackupPairCard: View {
                     if status.scanning {
                         ProgressView().controlSize(.small)
                     }
-                    Spacer()
+                    Spacer(minLength: 0)
                     Menu("更多") {
                         Button("在访达中显示 Mac 文件夹") {
                             NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: pair.macPath)])

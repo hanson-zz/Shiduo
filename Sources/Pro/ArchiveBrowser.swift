@@ -383,6 +383,13 @@ struct ArchiveBrowserView: View {
     // MARK: 面包屑
 
     private var breadcrumb: some View {
+        // 层级很深、窗口很窄时横着滚，不把页面撑宽。
+        ScrollView(.horizontal, showsIndicators: false) {
+            breadcrumbRow
+        }
+    }
+
+    private var breadcrumbRow: some View {
         HStack(spacing: 4) {
             Button {
                 session.enter("")

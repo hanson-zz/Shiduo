@@ -78,7 +78,8 @@ struct BrowserView: View {
             // 设了来源筛选时菜单一直显示，免得列表里没有下载文件时没法清掉筛选。图片筛选同理。
             let showsImageFilter = imageFilter.isActive || itemsHaveImages
             if showsOCRTools || !sourceGroups.isEmpty || sourceFilter != nil || showsImageFilter {
-                HStack(spacing: 12) {
+                // 窗口窄时换行，不把页面撑宽。
+                AdaptiveRow(spacing: 12) {
                     if showsOCRTools { ocrBar }
                     if !sourceGroups.isEmpty || sourceFilter != nil { sourceMenu }
                     if showsImageFilter { ImageFilterButton(filter: $imageFilter) }
@@ -203,19 +204,21 @@ struct BrowserView: View {
                 .foregroundStyle(.secondary)
             TextField("按图中文字筛选", text: $ocrFilter)
                 .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 320)
+                .frame(minWidth: 120, idealWidth: 240, maxWidth: 320)
             if let progress = ocr.batchProgress {
                 ProgressView(value: progress)
-                    .frame(width: 120)
+                    .frame(minWidth: 50, idealWidth: 120, maxWidth: 120)
                 Text(ocr.batchStatus)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 Button("停止") { ocr.cancelBatch() }
             } else {
                 if !ocr.batchStatus.isEmpty {
                     Text(ocr.batchStatus)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
                 Button {
                     ocr.recognizeAll(store.items)
@@ -352,20 +355,19 @@ struct ChatFilesBar: View {
     @Binding var kind: ChatFileKind
 
     var body: some View {
-        HStack(spacing: 12) {
-            Picker("类型", selection: $kind) {
+        // 窗口窄时：放不下的换到下一行，分段换成下拉菜单（不把页面撑宽）。
+        AdaptiveRow(spacing: 12) {
+            AdaptiveSegmentedPicker(title: "类型", selection: $kind) {
                 ForEach(ChatFileKind.allCases) { Text($0.title).tag($0) }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: 260)
             Text("共 \(chat.bytes(app).byteText)")
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            Spacer()
+                .lineLimit(1)
+            Spacer(minLength: 0)
             if chat.isScanning {
                 ProgressView().controlSize(.small)
-                Text("正在扫描…").font(.caption).foregroundStyle(.secondary)
+                Text("正在扫描…").font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             Button {
                 Task {

@@ -134,7 +134,8 @@ struct DownloadSourcesView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .frame(minWidth: 210, idealWidth: 250, maxWidth: 320, maxHeight: .infinity)
+            // 窄窗口：两栏的最小宽度加起来不超过窗口（以前 210 + 400 会把页面撑宽）。
+            .frame(minWidth: 160, idealWidth: 250, maxWidth: 320, maxHeight: .infinity)
 
             Group {
                 if store.isLoading && store.items.isEmpty {
@@ -150,7 +151,7 @@ struct DownloadSourcesView: View {
                     FileCollectionView(items: visible)
                 }
             }
-            .frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity)
+            .frame(minWidth: 200, maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

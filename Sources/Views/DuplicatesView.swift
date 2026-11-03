@@ -220,19 +220,21 @@ struct DuplicatesView: View {
     // MARK: - 标签页
 
     private var tabs: some View {
-        HStack(spacing: 12) {
+        // 窗口窄时滑块换到下一行（不把页面撑宽）。
+        AdaptiveRow(spacing: 12) {
             HStack(spacing: 4) {
                 tabButton(.exact, title: String(localized: "完全相同"), count: exact.groups.count)
                 tabButton(.similar, title: String(localized: "相似照片"), count: similar.groups.count)
             }
             .padding(4)
             .background(Capsule().fill(Color.primary.opacity(0.06)))
-            Spacer()
+            .fixedSize()
+            Spacer(minLength: 0)
             if tab == .similar {
                 HStack(spacing: 6) {
                     Text("严格").font(.caption)
                     Slider(value: Binding(get: { similar.threshold }, set: { similar.threshold = $0 }), in: 0.2...0.8)
-                        .frame(width: 120)
+                        .frame(minWidth: 70, idealWidth: 120, maxWidth: 120)
                     Text("宽松").font(.caption)
                 }
                 .foregroundStyle(.secondary)

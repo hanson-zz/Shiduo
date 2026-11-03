@@ -92,6 +92,7 @@ struct ShelfPageView: View {
                 .font(.callout)
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
 
             if working || tools.busy { ProgressView().controlSize(.small) }
 
@@ -99,6 +100,9 @@ struct ShelfPageView: View {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) { actionButtons }
                 HStack(spacing: 4) { actionButtons }
+                    .labelStyle(.iconOnly)
+                // 再窄（双栏）：图标也换行，不把页面撑宽。
+                WrapLayout(spacing: 4, lineSpacing: 4) { actionButtons }
                     .labelStyle(.iconOnly)
             }
             .frame(maxWidth: .infinity, alignment: .trailing)

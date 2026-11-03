@@ -52,13 +52,16 @@ struct TopBar: View {
 
             // 首页的问候语里已经写了总大小，这里就不重复。
             if store.selection != .home {
-                HStack(spacing: 6) {
-                    Text("资料库大小")
-                        .foregroundStyle(.secondary)
-                    Text(store.libraryBytes > 0 ? store.libraryBytes.byteText : "--")
-                        .fontWeight(.semibold)
-                        .monospacedDigit()
+                // 窗口窄时只留数字（不换行、不把搜索框挤没）。
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 6) {
+                        Text("资料库大小")
+                            .foregroundStyle(.secondary)
+                        libraryBytesText
+                    }
+                    libraryBytesText
                 }
+                .lineLimit(1)
                 .font(.callout)
             }
         }
@@ -81,6 +84,12 @@ struct TopBar: View {
         .onChange(of: store.searchText) { _, newValue in
             if newValue.isEmpty { store.clearSearch() }
         }
+    }
+
+    private var libraryBytesText: some View {
+        Text(store.libraryBytes > 0 ? store.libraryBytes.byteText : "--")
+            .fontWeight(.semibold)
+            .monospacedDigit()
     }
 }
 

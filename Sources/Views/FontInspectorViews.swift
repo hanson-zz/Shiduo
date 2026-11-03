@@ -354,13 +354,11 @@ struct FontCharactersTab: View {
         VStack(alignment: .leading, spacing: 10) {
             TextField("搜索字符 / U+ 编码：永", text: $query)
                 .textFieldStyle(.roundedBorder)
-            Picker("", selection: $category) {
+            AdaptiveSegmentedPicker(title: "", selection: $category) {
                 ForEach(FontCharCategory.allCases) { category in
                     Text(category.title).tag(category)
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
             .disabled(!query.isEmpty)
             if loading {
                 ProgressView()
