@@ -908,3 +908,52 @@ enum FontCoverage {
     /// 默认样张：中英文、数字都有。
     static let defaultSample = "拾掇 永和九年 岁在癸丑 The quick brown fox 0123"
 }
+
+// MARK: - 字体库多选：框选、⇧ 连选
+
+enum FontSelectionLogic {
+    /// 卡片四周留一点不算命中（矩形刚擦到边时不选）。
+    static let hitInset: CGFloat = 4
+
+    /// 框选矩形碰到了哪些卡片（frames 是卡片在网格坐标里的位置）。
+    static func hits(_ frames: [String: CGRect], rect: CGRect) -> Set<String> {
+        guard rect.width > 0 || rect.height > 0 else { return [] }
+        return Set(frames.filter { $0.value.insetBy(dx: hitInset, dy: hitInset).intersects(rect) }.map(\.key))
+    }
+
+    /// 框选后的选中：普通拖动只留框到的；⌘ 拖动在开始前的选中上反选框到的。
+    static func marqueeSelection(base: Set<String>, hit: Set<String>, toggle: Bool) -> Set<String> {
+        toggle ? base.symmetricDifference(hit) : hit
+    }
+
+    /// 两个点拉出的矩形（不管往哪个方向拖）。
+    static func rect(from start: CGPoint, to end: CGPoint) -> CGRect {
+        CGRect(x: min(start.x, end.x), y: min(start.y, end.y), width: abs(end.x - start.x), height: abs(end.y - start.y))
+    }
+
+    /// ⇧ 点按：从 anchor 到 target（按现在的排列顺序，两头都算）。anchor 不在列表里时只选 target。
+    static func range(_ ids: [String], anchor: String?, target: String) -> [String] {
+        guard let end = ids.firstIndex(of: target) else { return [] }
+        guard let anchor, let start = ids.firstIndex(of: anchor) else { return [target] }
+        return Array(ids[min(start, end)...max(start, end)])
+    }
+}
+
+// MARK: - 拖进窗口安装字体
+
+enum FontDropLogic {
+    /// 是不是字体文件（只看扩展名，大小写都行；隐藏文件不算）。
+    static func isFontFile(_ path: String) -> Bool {
+        let name = (path as NSString).lastPathComponent
+        guard !name.hasPrefix("."), !FontPathRules.hasTraversal(path) else { return false }
+        return FontFileFormat.extensions.contains((name as NSString).pathExtension.lowercased())
+    }
+
+    /// 装完的小结：装了几个、跳过几个已装的。
+    static func summary(installed: Int, skipped: Int) -> String {
+        if installed == 0 && skipped == 0 { return String(localized: "没有找到字体文件") }
+        if installed == 0 { return String(localized: "都已经装过了，跳过 \(skipped) 个") }
+        if skipped == 0 { return String(localized: "装了 \(installed) 个字体文件") }
+        return String(localized: "装了 \(installed) 个，跳过 \(skipped) 个已装")
+    }
+}

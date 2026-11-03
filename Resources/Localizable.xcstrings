@@ -43278,6 +43278,134 @@
           }
         }
       }
+    },
+    "没有找到字体文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No font files found"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有找到字体文件"
+          }
+        }
+      }
+    },
+    "都已经装过了，跳过 %lld 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All already installed — skipped %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "都已经装过了，跳过 %lld 个"
+          }
+        }
+      }
+    },
+    "装了 %lld 个字体文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed %lld font file(s)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "装了 %lld 个字体文件"
+          }
+        }
+      }
+    },
+    "装了 %lld 个，跳过 %lld 个已装": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed %lld, skipped %lld already installed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "装了 %lld 个，跳过 %lld 个已装"
+          }
+        }
+      }
+    },
+    "已把 %lld 款字体加入「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added %lld fonts to “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已把 %lld 款字体加入「%@」"
+          }
+        }
+      }
+    },
+    "松手安装字体": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop to Install Fonts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松手安装字体"
+          }
+        }
+      }
+    },
+    "只动「用户字体」（~/Library/Fonts 里的），系统字体不会动。推荐用「停用」：不删文件，以后还能一键启用。移到废纸篓后 30 天内可以在「清理记录」里放回。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only user fonts (in ~/Library/Fonts) are affected; system fonts are never touched. “Disable” is recommended: it keeps the files so you can re-enable them in one click. Fonts moved to the Trash can be put back from Cleanup History within 30 days."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只动「用户字体」（~/Library/Fonts 里的），系统字体不会动。推荐用「停用」：不删文件，以后还能一键启用。移到废纸篓后 30 天内可以在「清理记录」里放回。"
+          }
+        }
+      }
+    },
+    "已选 %lld 款": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld selected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已选 %lld 款"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

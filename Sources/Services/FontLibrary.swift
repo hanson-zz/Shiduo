@@ -257,6 +257,40 @@ final class FontLibrary: ObservableObject {
         store.moveToTrash(files) { [weak self] _ in self?.scanDownloads() }
     }
 
+    /// 拖进字体库窗口的字体文件 / 文件夹：装进 ~/Library/Fonts（免费，可撤销）。已经装着的跳过。
+    func installDropped(_ urls: [URL]) async {
+        guard !urls.isEmpty, busy == nil else { return }
+        let installed = installedNames
+        let home = Self.home
+        busy = String(localized: "正在安装…")
+        let items = await Task.detached(priority: .userInitiated) {
+            FontScanner.scanDropped(urls, installed: installed)
+        }.value
+        let fresh = items.filter { !$0.alreadyInstalled }
+        let picked = FontDownloadsLogic.dedupe(fresh)
+        let skipped = items.count - picked.count
+        let paths = picked.map(\.path)
+        let outcome = await Task.detached(priority: .userInitiated) {
+            FontScanner.install(paths, downloads: nil, home: home)
+        }.value
+        busy = nil
+        let text = FontDropLogic.summary(installed: outcome.installed.count, skipped: skipped)
+        if !outcome.installed.isEmpty {
+            let done = outcome.installed
+            FileUndoCenter.shared.registerCustom(name: String(localized: "安装字体"), toast: text, undo: {
+                FontLibrary.shared.trash(paths: done)
+            }, redo: {
+                await FontLibrary.shared.installDropped(urls)
+            })
+            scan()
+        } else {
+            store?.showToast(text)
+        }
+        if !outcome.failed.isEmpty {
+            store?.alertMessage = String(localized: "\(outcome.failed.count) 个没有安装（文件不在了，或没有权限）：\(FileUndoLogic.names(outcome.failed))")
+        }
+    }
+
     // MARK: 停用 / 启用（免费）
 
     /// 停用：把 ~/Library/Fonts 里的字体文件移进拾掇字体仓库，记下原来的位置。可撤销。
@@ -509,6 +543,19 @@ final class FontLibrary: ObservableObject {
         }
         updateSet(set)
         store?.showToast(String(localized: "已把「\(family.displayName)」加入「\(set.name)」"))
+    }
+
+    /// 一次把好几款加入字体集（右键菜单作用于整个选中）。
+    func add(_ families: [FontFamily], to setID: UUID) {
+        if families.count == 1, let family = families.first { add(family, to: setID); return }
+        guard !families.isEmpty, ShelfTools.requirePro(), var set = manifest.sets.first(where: { $0.id == setID }) else { return }
+        for family in families {
+            for face in family.faces where !face.isDamaged && !set.postScriptNames.contains(face.postScriptName) {
+                set.postScriptNames.append(face.postScriptName)
+            }
+        }
+        updateSet(set)
+        store?.showToast(String(localized: "已把 \(families.count) 款字体加入「\(set.name)」"))
     }
 
     /// 字体集里每个名字现在对应的字形。
@@ -765,7 +812,26 @@ enum FontScanner {
 
     /// 下载文件夹里的字体文件（往下找几层，跳过 App 包和隐藏文件）。installed = 现在装着的 PostScript 名字。
     static func scanDownloads(_ folder: String, installed: Set<String>) -> [FontDownloadItem] {
-        let root = URL(fileURLWithPath: folder, isDirectory: true)
+        FontDownloadsLogic.sorted(fontItems(in: URL(fileURLWithPath: folder, isDirectory: true), installed: installed))
+    }
+
+    /// 拖进字体库的文件和文件夹（文件夹往下找几层，和下载里的一样）。
+    static func scanDropped(_ urls: [URL], installed: Set<String>) -> [FontDownloadItem] {
+        var items: [FontDownloadItem] = []
+        var seen = Set<String>()
+        for url in urls {
+            var isDir: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) else { continue }
+            let found = isDir.boolValue ? fontItems(in: url, installed: installed)
+                : (FontDropLogic.isFontFile(url.path) ? fontItem(url, installed: installed).map { [$0] } ?? [] : [])
+            for item in found where seen.insert(item.path).inserted { items.append(item) }
+            if items.count > FontDownloadsLogic.maxFiles { break }
+        }
+        return items
+    }
+
+    /// 文件夹里的字体文件（往下找几层，跳过 App 包和隐藏文件）。
+    private static func fontItems(in root: URL, installed: Set<String>) -> [FontDownloadItem] {
         guard let enumerator = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey],
                                                               options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { return [] }
         var items: [FontDownloadItem] = []
@@ -775,24 +841,30 @@ enum FontScanner {
             guard FontFileFormat.extensions.contains(file.pathExtension.lowercased()) else { continue }
             count += 1
             if count > FontDownloadsLogic.maxFiles { break }
-            let keys: Set<URLResourceKey> = [.fileSizeKey, .addedToDirectoryDateKey, .creationDateKey, .contentModificationDateKey]
-            let values = try? file.resourceValues(forKeys: keys)
-            let size = Int64(values?.fileSize ?? 0)
-            let added = values?.addedToDirectoryDate ?? values?.creationDate
-            let descriptors = (CTFontManagerCreateFontDescriptorsFromURL(file as CFURL) as? [CTFontDescriptor]) ?? []
-            guard !descriptors.isEmpty else { continue }
-            let faces = descriptors.map {
-                makeFace($0, url: file, size: size, format: FontFileFormat.from(extension: file.pathExtension), location: .user,
-                         added: added, modified: values?.contentModificationDate, manifestID: nil)
-            }
-            items.append(FontDownloadItem(path: file.path, size: size, added: added, faces: faces,
-                                          alreadyInstalled: FontDownloadsLogic.isInstalled(faces.map(\.postScriptName), installed: installed)))
+            if let item = fontItem(file, installed: installed) { items.append(item) }
         }
-        return FontDownloadsLogic.sorted(items)
+        return items
+    }
+
+    /// 读一个字体文件（读不出字形的坏文件返回 nil）。
+    private static func fontItem(_ file: URL, installed: Set<String>) -> FontDownloadItem? {
+        let keys: Set<URLResourceKey> = [.fileSizeKey, .addedToDirectoryDateKey, .creationDateKey, .contentModificationDateKey]
+        let values = try? file.resourceValues(forKeys: keys)
+        let size = Int64(values?.fileSize ?? 0)
+        let added = values?.addedToDirectoryDate ?? values?.creationDate
+        let descriptors = (CTFontManagerCreateFontDescriptorsFromURL(file as CFURL) as? [CTFontDescriptor]) ?? []
+        guard !descriptors.isEmpty else { return nil }
+        let faces = descriptors.map {
+            makeFace($0, url: file, size: size, format: FontFileFormat.from(extension: file.pathExtension), location: .user,
+                     added: added, modified: values?.contentModificationDate, manifestID: nil)
+        }
+        return FontDownloadItem(path: file.path, size: size, added: added, faces: faces,
+                                alreadyInstalled: FontDownloadsLogic.isInstalled(faces.map(\.postScriptName), installed: installed))
     }
 
     /// 把下载里的字体拷进 ~/Library/Fonts（同名换个名字，不覆盖）。返回装好的目标路径和失败的文件名。
-    static func install(_ paths: [String], downloads: String, home: String) -> (installed: [String], sources: [String], failed: [String]) {
+    /// downloads 为 nil：拖进窗口的文件，在哪儿都行（只要是字体文件）。
+    static func install(_ paths: [String], downloads: String?, home: String) -> (installed: [String], sources: [String], failed: [String]) {
         let fm = FileManager.default
         let target = FontPathRules.userFonts(home: home)
         try? fm.createDirectory(atPath: target, withIntermediateDirectories: true)
@@ -801,7 +873,8 @@ enum FontScanner {
         var failed: [String] = []
         for path in paths {
             let name = (path as NSString).lastPathComponent
-            guard FontDownloadsLogic.isInDownloads(path, downloads: downloads), fm.fileExists(atPath: path) else {
+            let allowed = downloads.map { FontDownloadsLogic.isInDownloads(path, downloads: $0) } ?? FontDropLogic.isFontFile(path)
+            guard allowed, fm.fileExists(atPath: path) else {
                 failed.append(name); continue
             }
             let unique = FontPathRules.uniqueName(name) { fm.fileExists(atPath: (target as NSString).appendingPathComponent($0)) }

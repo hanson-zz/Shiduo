@@ -1,6 +1,7 @@
 import AppKit
 import CoreText
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - 字体库：网格 / 列表两种看法，右边是选中字体的详情面板
 
@@ -12,8 +13,20 @@ struct FontLibraryTab: View {
     let families: [FontFamily]
     let layout: FontLibraryLayout
     @State private var selection: Set<String> = []
-    @State private var newSetFor: FontFamily?
+    /// 新建字体集要加进去的字体（右键时的整批）。
+    @State private var newSetTargets: [FontFamily]?
     @State private var newSetName = ""
+    /// ⇧ 连选的起点（上次点的那款）。
+    @State private var anchor: String?
+    /// 移到废纸篓前的确认（⌘⌫ / 右键）。
+    @State private var trashPaths: [String] = []
+    @State private var confirmTrash = false
+    /// 字体文件拖到窗口上方。
+    @State private var dropTargeted = false
+    @StateObject private var marquee = FontMarqueeModel()
+    @State private var cardFrames = FontCardFrames()
+    @State private var viewport: CGSize = .zero
+    @FocusState private var gridFocused: Bool
     /// Option + 双指缩放开始时的字距。
     @State private var magnifyBase: Double? = nil
 
@@ -75,21 +88,62 @@ struct FontLibraryTab: View {
             Divider()
             bottomBar
         }
+        .overlay {
+            if dropTargeted {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.accentColor.opacity(0.08))
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 2.5, dash: [8, 5]))
+                    Label("松手安装字体", systemImage: "square.and.arrow.down")
+                        .font(.title3.weight(.semibold))
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 10)
+                        .background(.regularMaterial, in: Capsule())
+                }
+                .padding(8)
+                .allowsHitTesting(false)
+            }
+        }
+        // 把字体文件（或装着字体的文件夹）拖进来：装进 ~/Library/Fonts，可撤销；已经装着的跳过。
+        .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
+            FileDrop.load(providers) { urls in
+                let list = urls
+                Task { await library.installDropped(list) }
+            }
+        }
+        // ⌘⌫（「文件」菜单）：把选中的用户字体移到废纸篓，先确认。
+        .trashContext(ids: Set(selectedUserPaths), items: {
+            selectedUserPaths.compactMap { FileItem(url: URL(fileURLWithPath: $0)) }
+        }, perform: { items in
+            requestTrash(items.map(\.path))
+        })
+        .confirmationDialog("把 \(trashPaths.count) 个字体文件移到废纸篓？", isPresented: $confirmTrash, titleVisibility: .visible) {
+            Button("移到废纸篓", role: .destructive) {
+                let paths = trashPaths
+                trashPaths = []
+                selection = []
+                library.trash(paths: paths)
+            }
+            Button("取消", role: .cancel) { trashPaths = [] }
+        } message: {
+            Text("只动「用户字体」（~/Library/Fonts 里的），系统字体不会动。推荐用「停用」：不删文件，以后还能一键启用。移到废纸篓后 30 天内可以在「清理记录」里放回。")
+        }
         .task(id: layout == .list ? families.count : -1) {
             // 列表要厂商、字数这些另外读的信息：后台读，读到一批显示一批。
             if layout == .list { extras.load(families.compactMap(\.representative)) }
         }
-        .alert("新建字体集", isPresented: Binding(get: { newSetFor != nil }, set: { if !$0 { newSetFor = nil } })) {
+        .alert("新建字体集", isPresented: Binding(get: { newSetTargets != nil }, set: { if !$0 { newSetTargets = nil } })) {
             TextField("名字，比如「客户A 品牌」", text: $newSetName)
             Button("新建") {
-                if let family = newSetFor, let set = library.createSet(name: newSetName) {
-                    library.add(family, to: set.id)
+                if let targets = newSetTargets, let set = library.createSet(name: newSetName) {
+                    library.add(targets, to: set.id)
                 }
-                newSetFor = nil
+                newSetTargets = nil
                 newSetName = ""
             }
             Button("取消", role: .cancel) {
-                newSetFor = nil
+                newSetTargets = nil
                 newSetName = ""
             }
         }
@@ -103,6 +157,12 @@ struct FontLibraryTab: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
             Spacer()
+            if !selection.isEmpty {
+                Text("已选 \(selection.count) 款")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
             if selection.count >= 2 {
                 Button("对比所选（\(min(selection.count, FontCompareLogic.maxCount))）") {
                     library.addToCompare(selectedFamilies)
@@ -129,6 +189,8 @@ struct FontLibraryTab: View {
 
     // MARK: 网格
 
+    private static let gridSpace = "fontGrid"
+
     private var grid: some View {
         let palette = FontPreviewPalette.colors(FontPreviewColors(rawValue: colorsRaw) ?? .blackOnWhite)
         return ScrollView {
@@ -140,9 +202,51 @@ struct FontLibraryTab: View {
                         .contentShape(Rectangle())
                         .onTapGesture { tap(family) }
                         .stableContextMenu { menu(for: family) }
+                        .background(GeometryReader { proxy in
+                            Color.clear.preference(key: FontCardFramesKey.self,
+                                                   value: [family.id: proxy.frame(in: .named(Self.gridSpace))])
+                        })
                 }
             }
             .padding(20)
+            .frame(maxWidth: .infinity, minHeight: viewport.height, alignment: .top)
+            // 在空白处拖动：框选（⌘ 拖动在原来的选中上反选）；只点一下空白处取消选中。
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(marqueeGesture)
+            )
+            .overlay(alignment: .topLeading) { FontMarqueeOverlay(model: marquee) }
+            .coordinateSpace(name: Self.gridSpace)
+            // 合并：LazyVGrid 回收了滚出屏幕的卡片，位置还留着，框选时照样算。
+            .onPreferenceChange(FontCardFramesKey.self) { frames in cardFrames.frames.merge(frames) { $1 } }
+        }
+        .background(GeometryReader { proxy in
+            Color.clear
+                .onAppear { viewport = proxy.size }
+                .onChange(of: proxy.size) { viewport = proxy.size }
+        })
+        .onChange(of: viewport.width) { cardFrames.frames = [:] }
+        .onChange(of: size) { cardFrames.frames = [:] }
+        .onChange(of: families.count) { cardFrames.frames = [:] }
+        .focusable()
+        .focused($gridFocused)
+        .focusEffectDisabled()
+        .onCommand(#selector(NSResponder.selectAll(_:))) { selectAll() }
+        .onKeyPress(.escape) {
+            if let restored = marquee.cancel() {
+                selection = restored
+                return .handled
+            }
+            guard !selection.isEmpty else { return .ignored }
+            selection = []
+            return .handled
+        }
+        // ⌫：停用所选（和「停用所选」一样）。⌘⌫ 由「文件」菜单处理（移到废纸篓）。
+        .onKeyPress(keys: [.delete]) { press in
+            guard press.modifiers.subtracting([.numericPad, .function]).isEmpty else { return .ignored }
+            disableSelected()
+            return .handled
         }
         // 按住 Option 双指缩放：调字距（不按 Option 时不管，留给系统）。
         .simultaneousGesture(
@@ -157,12 +261,70 @@ struct FontLibraryTab: View {
         )
     }
 
+    private var marqueeGesture: some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.gridSpace))
+            .onChanged { value in
+                if !marquee.active {
+                    gridFocused = true
+                    marquee.begin(at: value.startLocation, flags: NSEvent.modifierFlags, base: selection,
+                                  ids: Set(families.map(\.id)))
+                }
+                if let next = marquee.update(to: value.location, frames: cardFrames.frames), next != selection {
+                    selection = next
+                }
+            }
+            .onEnded { value in
+                let result = marquee.end(at: value.location, frames: cardFrames.frames)
+                if result.wasClick {
+                    selection = []
+                } else if let next = result.selection, next != selection {
+                    selection = next
+                }
+                // 下次 ⇧ 连选从框到的第一款开始。
+                if let first = families.first(where: { selection.contains($0.id) }) { anchor = first.id }
+            }
+    }
+
     private func tap(_ family: FontFamily) {
-        if NSEvent.modifierFlags.contains(.command) {
+        gridFocused = true
+        let flags = NSEvent.modifierFlags
+        if flags.contains(.shift) {
+            // ⇧ 点按：从上次点的那款连选到这款（按现在的排列顺序）；⇧⌘ 加到原来的选中上。
+            let range = FontSelectionLogic.range(families.map(\.id), anchor: anchor, target: family.id)
+            selection = flags.contains(.command) ? selection.union(range) : Set(range)
+            if anchor == nil { anchor = family.id }
+            return
+        }
+        anchor = family.id
+        if flags.contains(.command) {
             if selection.contains(family.id) { selection.remove(family.id) } else { selection.insert(family.id) }
         } else {
             selection = selection == [family.id] ? [] : [family.id]
         }
+    }
+
+    /// ⌘A：选中现在显示的所有字体。
+    private func selectAll() {
+        selection = Set(families.map(\.id))
+    }
+
+    /// ⌫ / 「停用所选」：只停用用户字体（系统、/Library/Fonts 的不动）。
+    private func disableSelected() {
+        let paths = selectedUserPaths
+        guard !paths.isEmpty, library.busy == nil else { return }
+        Task { await library.disable(paths: paths) }
+    }
+
+    /// 移到废纸篓前先确认（只收 ~/Library/Fonts 里的）。
+    private func requestTrash(_ paths: [String]) {
+        let home = FontLibrary.home
+        let allowed = paths.filter { FontPathRules.canDisable($0, home: home) }
+        guard !allowed.isEmpty else {
+            library.trash(paths: paths) // 只是解释为什么不能动
+            return
+        }
+        trashPaths = allowed
+        confirmTrash = true
     }
 
     // MARK: 列表
@@ -261,6 +423,8 @@ struct FontLibraryTab: View {
                 TableRow(row)
             }
         }
+        .onDeleteCommand { disableSelected() }
+        .onExitCommand { selection = [] }
         .onAppear(perform: loadColumns)
         .onChange(of: columnCustomization) { _, value in
             guard columnsLoaded, let data = try? JSONEncoder().encode(value) else { return }
@@ -300,6 +464,9 @@ struct FontLibraryTab: View {
         if !storedIDs.isEmpty {
             Button("启用") { Task { await library.enable(entryIDs: storedIDs) } }
         }
+        if !userPaths.isEmpty {
+            Button("移到废纸篓…") { requestTrash(userPaths) }
+        }
         Button("加入对比") { library.addToCompare(targets) }
         if targets.count >= 2 {
             Button("对比这 \(min(targets.count, FontCompareLogic.maxCount)) 款") {
@@ -328,13 +495,13 @@ struct FontLibraryTab: View {
         Divider()
         Menu("加入字体集") {
             ForEach(library.manifest.sets) { set in
-                Button(set.name) { library.add(family, to: set.id) }
+                Button(set.name) { library.add(targets, to: set.id) }
             }
             if !library.manifest.sets.isEmpty { Divider() }
             Button("新建字体集…") {
                 guard ShelfTools.requirePro() else { return }
                 newSetName = ""
-                newSetFor = family
+                newSetTargets = targets
             }
         }
     }
@@ -1097,5 +1264,109 @@ struct FontFaceInfoRow: View {
                 .help(face.path)
         }
         .padding(.vertical, 2)
+    }
+}
+
+// MARK: - 字体网格框选
+
+/// 卡片在网格坐标里的位置（引用类型：滚动时更新不让整个网格重画）。
+final class FontCardFrames {
+    var frames: [String: CGRect] = [:]
+}
+
+struct FontCardFramesKey: PreferenceKey {
+    static let defaultValue: [String: CGRect] = [:]
+    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
+/// 框选：只有 FontMarqueeOverlay 观察它，矩形每帧变化时网格本身不重画。
+@MainActor
+final class FontMarqueeModel: ObservableObject {
+    @Published private(set) var rect: CGRect?
+    private(set) var active = false
+    /// ⌃点按：留给右键菜单，这次拖动什么都不做。
+    private var ignored = false
+    private var cancelled = false
+    private var start: CGPoint = .zero
+    private var location: CGPoint = .zero
+    private var base: Set<String> = []
+    private var toggle = false
+    private var ids: Set<String> = []
+    private var lastApply: TimeInterval = 0
+
+    func begin(at point: CGPoint, flags: NSEvent.ModifierFlags, base: Set<String>, ids: Set<String>) {
+        active = true
+        cancelled = false
+        ignored = flags.contains(.control)
+        start = point
+        location = point
+        toggle = flags.contains(.command)
+        self.base = base
+        self.ids = ids
+        lastApply = 0
+    }
+
+    /// 拖动中：返回新的选中（最多每 30 毫秒一次；矩形太小时返回 nil）。
+    func update(to point: CGPoint, frames: [String: CGRect]) -> Set<String>? {
+        guard active, !ignored, !cancelled else { return nil }
+        location = point
+        return apply(frames: frames, force: false)
+    }
+
+    /// 结束拖动。wasClick：只是点了一下空白处（调用方清空选中）。
+    func end(at point: CGPoint, frames: [String: CGRect]) -> (selection: Set<String>?, wasClick: Bool) {
+        defer { reset() }
+        guard active, !ignored, !cancelled else { return (nil, false) }
+        location = point
+        let moved = hypot(location.x - start.x, location.y - start.y)
+        if moved < 3 { return (nil, !toggle) }
+        return (apply(frames: frames, force: true), false)
+    }
+
+    /// Esc：正在框选时返回开始前的选中。
+    func cancel() -> Set<String>? {
+        guard active, !ignored, !cancelled else { return nil }
+        cancelled = true
+        rect = nil
+        return base
+    }
+
+    private func reset() {
+        active = false
+        ignored = false
+        cancelled = false
+        if rect != nil { rect = nil }
+    }
+
+    private func apply(frames: [String: CGRect], force: Bool) -> Set<String>? {
+        let r = FontSelectionLogic.rect(from: start, to: location)
+        guard r.width >= 3 || r.height >= 3 else {
+            if rect != nil { rect = nil }
+            return nil
+        }
+        rect = r
+        let now = ProcessInfo.processInfo.systemUptime
+        guard force || now - lastApply >= 0.03 else { return nil }
+        lastApply = now
+        let hit = FontSelectionLogic.hits(frames, rect: r).intersection(ids)
+        return FontSelectionLogic.marqueeSelection(base: base, hit: hit, toggle: toggle)
+    }
+}
+
+/// 框选矩形（半透明的强调色）。
+struct FontMarqueeOverlay: View {
+    @ObservedObject var model: FontMarqueeModel
+
+    var body: some View {
+        if let rect = model.rect {
+            Rectangle()
+                .fill(Color.accentColor.opacity(0.15))
+                .overlay(Rectangle().strokeBorder(Color.accentColor.opacity(0.8), lineWidth: 1))
+                .frame(width: rect.width, height: rect.height)
+                .offset(x: rect.minX, y: rect.minY)
+                .allowsHitTesting(false)
+        }
     }
 }
