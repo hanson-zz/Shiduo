@@ -103,7 +103,9 @@ private struct MarqueeSelectionModifier<ID: Hashable>: ViewModifier {
     let onBegin: (() -> Void)?
     let onEnd: (() -> Void)?
 
-    @StateObject private var controller = MarqueeController<ID>()
+    // 用 @State 拿着、不观察：矩形每次鼠标移动都变，只让 MarqueeRectView 重画；
+    // 用 @StateObject 的话，这个修饰器（连同空白处右键菜单层、框选层）每次鼠标移动都要重算一遍。
+    @State private var controller = MarqueeController<ID>()
 
     func body(content: Content) -> some View {
         content
@@ -140,6 +142,8 @@ private struct MarqueeSelectionModifier<ID: Hashable>: ViewModifier {
             onCancel: {
                 let original = controller.cancel()
                 if original != selection { selection = original }
+                // 取消也算结束：页面暂存的框选草稿要在这里收尾。
+                onEnd?()
             }
         )
         if let backgroundMenu {
@@ -195,6 +199,7 @@ final class MarqueeController<ID: Hashable>: ObservableObject {
     private var shift = false
     private var command = false
     private var lastApply: TimeInterval = 0
+    private var lastHit: Set<ID>?
 
     func framesChanged(_ new: [ID: CGRect]) {
         latest = new
@@ -219,9 +224,10 @@ final class MarqueeController<ID: Hashable>: ObservableObject {
         self.command = command
         base = MarqueeSelectionLogic.base(current: selection, style: style, shift: shift, command: command)
         lastApply = 0
+        lastHit = nil
     }
 
-    /// 拖动中：返回新的选中（最多每 30 毫秒一次；force 时一定算；矩形太小时返回 nil）。
+    /// 拖动中：返回新的选中（最多每 30 毫秒一次；force 时一定算；矩形太小时返回 nil；框到的没变时也返回 nil）。
     func update(to point: CGPoint, force: Bool) -> Set<ID>? {
         guard active else { return nil }
         location = point
@@ -235,6 +241,9 @@ final class MarqueeController<ID: Hashable>: ObservableObject {
         guard force || now - lastApply >= 0.03 else { return nil }
         lastApply = now
         let hit = MarqueeSelectionLogic.hits(frames, rect: r, inset: inset).intersection(ids)
+        // 框到的和上一次一样：不用再算、也不用再写选中（鼠标在格子之间的空隙里移动时最常见）。
+        if !force, hit == lastHit { return nil }
+        lastHit = hit
         return MarqueeSelectionLogic.selection(base: base, hit: hit, command: command)
     }
 
@@ -256,6 +265,7 @@ final class MarqueeController<ID: Hashable>: ObservableObject {
 
     private func reset() {
         active = false
+        lastHit = nil
         if rect != nil { rect = nil }
     }
 }

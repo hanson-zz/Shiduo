@@ -439,6 +439,9 @@ struct FileCollectionView: View {
     @State private var sortedURLs: [URL]
     /// sortedItems 是由哪份列表排出来的：翻到底加载了下一页（只在后面多了文件）时，只排新来的再合并，不把几万个重排一遍。
     @State private var sortedInput: [FileItem]
+    /// 框选拖动中的选中（只在这一栏里）：拖的时候不写进 store.selectedIDs，不然每次框到的变了，
+    /// 侧边栏、简介栏、另一栏、工具栏……整个窗口都要跟着重画，框选就会一顿一顿的。松手时一次写回去。
+    @State private var marqueeDraft: Set<String>?
     @State private var previewURL: URL?
     /// 图片用自己的预览，能直接划选文字。
     @State private var liveItem: FileItem?
@@ -482,6 +485,12 @@ struct FileCollectionView: View {
     }
 
     private var sorted: [FileItem] { sortedItems }
+
+    /// 框选读写的选中：拖动中读写这一栏的草稿，没在框选时读 store。
+    private var marqueeSelectionBinding: Binding<Set<String>> {
+        Binding(get: { marqueeDraft ?? store.selectedIDs },
+                set: { marqueeDraft = $0 })
+    }
 
     /// 列表表头用：点表头换排序时写回 UserDefaults。
     private var sortBinding: Binding<[KeyPathComparator<FileItem>]> {
@@ -650,7 +659,7 @@ struct FileCollectionView: View {
                 Section {
                 ForEach(sorted) { item in
                     FileGridCell(
-                        item: item, size: CGFloat(thumbnailSize), selected: store.selectedIDs.contains(item.id),
+                        item: item, size: CGFloat(thumbnailSize), selected: (marqueeDraft ?? store.selectedIDs).contains(item.id),
                         nameFontSize: CGFloat(ListFontSize.gridNameSize(appearance.settings.listFontSize)),
                         copyText: TextExtractor.canExtract(item) ? { store.copyText(targets(for: item)) } : nil,
                         // 左键点按、双击和拖动交给 AppKit：拖动选中的格子时一次带上所有选中的文件（macOS 14 起都行）。
@@ -704,11 +713,16 @@ struct FileCollectionView: View {
             .frame(maxWidth: .infinity, minHeight: viewportHeight, alignment: .top)
             // 在空白处拖动：框选（格子上拖动仍然是把文件拖出去）：⇧ 加选，⌘ 反选，Esc 取消，拖到上下边缘自动滚动；
             // 只点一下空白处取消选中。空白处右键：新建文件夹、粘贴、在终端 / 编辑器打开当前文件夹。
-            .marqueeSelection(ids: { sorted.map(\.id) }, selection: $store.selectedIDs, hitInset: 8,
+            .marqueeSelection(ids: { sorted.map(\.id) }, selection: marqueeSelectionBinding, hitInset: 8,
                               layoutKey: AnyHashable([AnyHashable(thumbnailSize), AnyHashable(gridWidth), AnyHashable(layoutTick)]),
                               backgroundMenu: { AnyView(FolderBackgroundMenu()) },
                               onBegin: { gridFocused = true },
                               onEnd: {
+                                  // 松手 / Esc：草稿一次写回 store（简介栏、底栏这时才更新）。
+                                  if let draft = marqueeDraft {
+                                      marqueeDraft = nil
+                                      if draft != store.selectedIDs { store.selectedIDs = draft }
+                                  }
                                   // 下次 ⇧ 连选从框选到的第一个开始。
                                   if let first = sorted.first(where: { store.selectedIDs.contains($0.id) }) { selectionAnchor = first.id }
                               })
