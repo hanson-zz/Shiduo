@@ -408,17 +408,19 @@ struct FolderWallView: View {
             if store.pinnedFolders.isEmpty {
                 empty
             } else {
+                // 每次重画只算一次（框选拖动中选中一变就重画）：不在每张卡片里各自把整个列表过一遍。
+                let selectedGroup = selection.count > 1 ? folders.map(\.path).filter(selection.contains) : []
+                let reminderPaths = reminders.reminders.map(\.path)
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: cardWidth + 32, maximum: cardWidth + 64), spacing: 20)], spacing: 24) {
                         ForEach(folders, id: \.path) { s in
                             FolderCard(summary: s,
                                        tint: model.tint(for: s),
-                                       reminderCount: reminders.reminders.filter { $0.path.hasPrefix(s.path + "/") }.count,
+                                       reminderCount: reminderPaths.lazy.filter { $0.hasPrefix(s.path + "/") }.count,
                                        width: cardWidth,
                                        iconStyle: iconStyle,
                                        selected: selection.contains(s.path),
-                                       group: selection.contains(s.path) && selection.count > 1
-                                           ? folders.map(\.path).filter(selection.contains) : [],
+                                       group: selection.contains(s.path) ? selectedGroup : [],
                                        renamingPath: $renamingPath,
                                        onSelect: {
                                            select(s.path, flags: NSEvent.modifierFlags)
