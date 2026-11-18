@@ -2383,22 +2383,6 @@
         }
       }
     },
-    "休息时长：%lld 分钟": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Break length: %lld min"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "休息时长：%lld 分钟"
-          }
-        }
-      }
-    },
     "位数": {
       "localizations": {
         "en": {
@@ -2775,22 +2759,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "共 %@"
-          }
-        }
-      }
-    },
-    "共 %lld 分钟": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld min total"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "共 %lld 分钟"
           }
         }
       }
@@ -6899,22 +6867,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "提示"
-          }
-        }
-      }
-    },
-    "提示音连响 %lld 次": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play sound %lld times"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "提示音连响 %lld 次"
           }
         }
       }

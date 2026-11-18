@@ -12,7 +12,10 @@ struct UpdateInfo: Identifiable, Equatable {
 /// 检查更新：只访问 GitHub 上本项目的 Release。拾掇另外只在激活 / 校验 Pro 授权时联网（见 Sources/Pro/License.swift）。
 enum UpdateChecker {
     static let repoURL = URL(string: "https://github.com/hanson-zz/Shiduo")!
-    static let apiURL = URL(string: "https://api.github.com/repos/hanson-zz/Shiduo/releases/latest")!
+    /// 正式版用户：只看「最新正式版」（GitHub 的 latest 本身不含预发布和草稿）。
+    static let latestURL = URL(string: "https://api.github.com/repos/hanson-zz/Shiduo/releases/latest")!
+    /// 测试版用户：看最近的 Release 列表（含预发布），挑出比当前新的最高版本（测试版或正式版都行）。
+    static let listURL = URL(string: "https://api.github.com/repos/hanson-zz/Shiduo/releases?per_page=30")!
 
     static var currentVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
@@ -25,23 +28,42 @@ enum UpdateChecker {
     }
 
     static func check() async -> Outcome {
-        var request = URLRequest(url: apiURL)
+        let current = currentVersion
+        let wantsBeta = UpdateSelection.wantsPrereleases(currentVersion: current)
+        var request = URLRequest(url: wantsBeta ? listURL : latestURL)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 10
         guard let response = try? await URLSession.shared.data(for: request),
-              let object = try? JSONSerialization.jsonObject(with: response.0) as? [String: Any],
-              let tag = object["tag_name"] as? String,
+              let json = try? JSONSerialization.jsonObject(with: response.0)
+        else { return .failed }
+        let releases: [[String: Any]]
+        if let list = json as? [[String: Any]] {
+            releases = list
+        } else if let one = json as? [String: Any] {
+            releases = [one]
+        } else {
+            return .failed
+        }
+        let candidates: [(UpdateSelection.Candidate, [String: Any])] = releases.compactMap { object in
+            guard let tag = object["tag_name"] as? String else { return nil }
+            let candidate = UpdateSelection.Candidate(
+                tag: tag,
+                isDraft: object["draft"] as? Bool ?? false,
+                isPrerelease: object["prerelease"] as? Bool ?? false
+            )
+            return (candidate, object)
+        }
+        guard !candidates.isEmpty else { return .failed }
+        guard let best = UpdateSelection.best(from: candidates.map(\.0), currentVersion: current),
+              let object = candidates.first(where: { $0.0 == best })?.1,
               let html = object["html_url"] as? String,
               let url = URL(string: html)
-        else { return .failed }
+        else { return .upToDate }
         let assets = object["assets"] as? [[String: Any]] ?? []
         let zip = assets.first { ($0["name"] as? String)?.hasSuffix(".zip") == true }
         let zipURL = (zip?["browser_download_url"] as? String).flatMap(URL.init(string:))
-        let latest = tag.hasPrefix("v") ? String(tag.dropFirst()) : tag
-        if latest.compare(currentVersion, options: .numeric) == .orderedDescending {
-            return .available(UpdateInfo(version: latest, url: url, zipURL: zipURL))
-        }
-        return .upToDate
+        let latest = best.tag.hasPrefix("v") ? String(best.tag.dropFirst()) : best.tag
+        return .available(UpdateInfo(version: latest, url: url, zipURL: zipURL))
     }
 }
 

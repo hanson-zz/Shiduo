@@ -149,6 +149,8 @@ targets:
       - path: Sources/Model/FolderListing.swift
       - path: Sources/Services/PerfLog.swift
       - path: Sources/Services/ThumbnailService.swift
+      # 检查更新：版本比较（测试版后缀）和挑选该提示的 Release。
+      - path: Sources/Services/AppVersion.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.hanson-zz.shiduo.tests
