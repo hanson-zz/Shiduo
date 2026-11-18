@@ -253,5 +253,5 @@ enum ShelfActions {
         let picker = NSSharingServicePicker(items: urls)
         picker.show(relativeTo: rect, of: view, preferredEdge: .minY)
     }
-    // 隔空投送用 AirDropShare（Pro/FocusTimer.swift）：要一直持有系统分享服务，否则窗口一闪就没了。
+    // 隔空投送用 AirDropShare（Pro/AirDropShare.swift）：要一直持有系统分享服务，否则窗口一闪就没了。
 }

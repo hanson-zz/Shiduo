@@ -149,7 +149,7 @@ enum NotchShelfPrefs {
 final class NotchShelfController: NSObject, ObservableObject {
     static let shared = NotchShelfController()
 
-    enum Tab: String, CaseIterable { case shelf, downloads, reminders, focus }
+    enum Tab: String, CaseIterable { case shelf, downloads, reminders }
 
     @Published var tab: Tab = .shelf
     @Published var downloads: [FileItem] = []
@@ -286,7 +286,6 @@ final class NotchShelfController: NSObject, ObservableObject {
         loadDownloads()
         // 演示模式截图时鼠标不在面板上，不要自动收起。
         if !Demo.isOn { startWatching() }
-        FocusNotchIndicator.shared.update()
     }
 
     func hide() {
@@ -316,7 +315,6 @@ final class NotchShelfController: NSObject, ObservableObject {
                 guard NotchShelfController.shared.showGeneration == generation else { return }
                 panel.orderOut(nil)
                 panel.alphaValue = 1
-                FocusNotchIndicator.shared.update()
             }
         })
     }
@@ -370,7 +368,6 @@ final class NotchShelfController: NSObject, ObservableObject {
         case .shelf: return ShelfStore.shared.items
         case .downloads: return downloads
         case .reminders: return ReminderStore.shared.items
-        case .focus: return []
         }
     }
 
@@ -405,12 +402,10 @@ final class NotchShelfController: NSObject, ObservableObject {
         case .reminders:
             if let reminder = ReminderStore.shared.reminder(for: item.path) { ReminderStore.shared.complete(reminder.id) }
             selectedIndex = min(selectedIndex, max(ReminderStore.shared.count - 1, 0))
-        case .focus:
-            FocusTimer.shared.reset()
         }
     }
 
-    /// ⌘⌫ 能移到废纸篓的：暂存架和「最近下载」里选中的那个文件（提醒、专注两页没有）。
+    /// ⌘⌫ 能移到废纸篓的：暂存架和「最近下载」里选中的那个文件（提醒页没有）。
     var trashableSelection: [FileItem] {
         guard tab == .shelf || tab == .downloads, let item = selectedItem else { return [] }
         return [item]
@@ -666,7 +661,6 @@ struct NotchShelfView: View {
                       perform: { controller.trashSelected($0) })
         .onKeyPress(.tab) { controller.switchTab(); return .handled }
         .onKeyPress(.space) {
-            if controller.tab == .focus { FocusTimer.shared.toggle(); return .handled }
             previewURL = previewURL == nil ? controller.selectedItem?.url : nil
             return .handled
         }
@@ -684,7 +678,7 @@ struct NotchShelfView: View {
     }
 
     private var header: some View {
-        // 刘海正中是摄像头，什么都看不见：标签分到刘海两边，左边两个、右边两个。
+        // 刘海正中是摄像头，什么都看不见：标签分到刘海两边，左边两个、右边一个。
         HStack(spacing: 0) {
             HStack(spacing: 6) {
                 Spacer(minLength: 0)
@@ -695,7 +689,6 @@ struct NotchShelfView: View {
             Color.clear.frame(width: screenNotchWidth + 16)
             HStack(spacing: 6) {
                 tabButton(.reminders, title: String(localized: "提醒"), count: reminders.count)
-                tabButton(.focus, title: String(localized: "专注"), count: nil)
                 Spacer(minLength: 0)
                 rightControls
             }
@@ -763,8 +756,6 @@ struct NotchShelfView: View {
     @ViewBuilder
     private var content: some View {
         switch controller.tab {
-        case .focus:
-            FocusTabView(height: cardSize + 30)
         case .shelf:
             HStack(spacing: 10) {
                 HoopView {
@@ -847,7 +838,6 @@ struct NotchShelfView: View {
         case .shelf: return "tray.and.arrow.down"
         case .downloads: return "arrow.down.circle"
         case .reminders: return "alarm"
-        case .focus: return "timer"
         }
     }
 
@@ -856,7 +846,6 @@ struct NotchShelfView: View {
         case .shelf: return String(localized: "把文件拖到这里，暂时放一下")
         case .downloads: return String(localized: "没有最近下载的文件")
         case .reminders: return String(localized: "还没有提醒")
-        case .focus: return ""
         }
     }
 
@@ -916,8 +905,6 @@ struct NotchShelfView: View {
                     Button("1 小时后再提醒") { reminders.snooze(reminder.id) }
                     Button("完成") { reminders.complete(reminder.id) }
                 }
-            case .focus:
-                EmptyView()
             }
         }
         .help(item.path)
@@ -993,6 +980,5 @@ struct ShelfStyleSettings: View {
                     .frame(width: 40, alignment: .trailing)
             }
         }
-        FocusSettings()
     }
 }
