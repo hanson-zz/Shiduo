@@ -307,12 +307,15 @@ struct StorageMapView: View {
                 Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([node.url]) }
                 Button("拷贝路径") { FileActions.copy(node.url.path) }
                 Divider()
-                Button("大文件搬家…") {
+                Button {
                     if let item = FileItem(url: node.url) {
                         var copy = item
                         copy.size = node.size
                         store.requestMoveOut([copy])
                     }
+                } label: {
+                    // 大文件搬家是 Pro：没解锁时标「· Pro」和小锁（点了弹付费页）。
+                    ProMenuLabel(title: String(localized: "大文件搬家…"))
                 }
                 // 和其他地方一样不弹确认：小提示上可以撤销（⌘Z 也行）。只有 5 GB 以上的大块才先问一句。
                 Button("移到废纸篓", role: .destructive) {

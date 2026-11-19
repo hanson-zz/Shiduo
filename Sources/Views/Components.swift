@@ -128,6 +128,8 @@ struct FileMenuContext {
     var rename: (() -> Void)? = nil
     /// 在文件夹墙上：多一项「从文件夹墙移除」。
     var removeFromWall: (() -> Void)? = nil
+    /// 文件夹墙的单张卡片：自带「文件夹换装 ▸」子菜单，通用的「文件夹换装…」不再重复出现。
+    var hidesFolderIcon = false
     /// 主窗口的文件列表（网格 / 列表）：单个项目「重命名…」原地改名；其他地方弹重命名对话框。
     var inBrowser = false
 }
@@ -298,7 +300,7 @@ private struct FileMenuItems<Extra: View>: View {
             return context.inBrowser && store.libraryCategory != nil && items.count == 1
         case "rename": return context.rename != nil || items.count == 1 || !files.isEmpty
         case "saveAsTemplate": return !files.isEmpty && files.count == items.count
-        case "folderIcon": return !folders.isEmpty && folders.count == items.count
+        case "folderIcon": return !context.hidesFolderIcon && !folders.isEmpty && folders.count == items.count
         case "restoreFolderIcon": return !coloredFolders.isEmpty
         case "contextExtras": return Extra.self != EmptyView.self
         case "convertImage": return items.contains(where: ImageConverter.canConvert)

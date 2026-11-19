@@ -72,7 +72,7 @@ struct AppearanceSettingsSections: View {
                     appearance.update { $0.appIcon = id }
                 }
             }
-            .disabled(!license.isPro)
+            .proLocked(!license.isPro)
             appIconNote
         } header: {
             HStack(spacing: 6) {

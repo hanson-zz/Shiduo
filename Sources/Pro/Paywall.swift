@@ -23,6 +23,62 @@ struct ProBadge: View {
     }
 }
 
+/// 打开拾掇 Pro 介绍页（独立窗口，主窗口关着时也能弹）。所有「没解锁时点了弹付费页」的入口都用它。
+@MainActor
+enum ProPaywall {
+    static func open() {
+        NSApp.activate(ignoringOtherApps: true)
+        LicenseManager.shared.showPaywall = true
+    }
+}
+
+/// 菜单项标题：已解锁（含试用中）只显示标题；没解锁时标题后面加「· Pro」和小锁，和文件右键菜单一样。
+struct ProMenuLabel: View {
+    let title: String
+    var systemImage: String? = nil
+
+    var body: some View {
+        if LicenseManager.shared.isPro {
+            if let systemImage {
+                Label(title, systemImage: systemImage)
+            } else {
+                Text(title)
+            }
+        } else {
+            Label {
+                Text(title) + Text(verbatim: "  · Pro")
+            } icon: {
+                Image(systemName: "lock.fill")
+            }
+        }
+    }
+}
+
+/// 没解锁时：控件照样显示（灰掉），但点它不再「没反应」，而是弹出拾掇 Pro 介绍页。
+private struct ProLockedModifier: ViewModifier {
+    let locked: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .disabled(locked)
+            .overlay {
+                if locked {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { ProPaywall.open() }
+                        .help(String(localized: "拾掇 Pro 功能，点一下了解 Pro"))
+                }
+            }
+    }
+}
+
+extension View {
+    /// locked 为 true 时：灰掉 + 点一下弹付费页（设置里的 Pro 开关、选择器都用它，不再悄悄灰着）。
+    func proLocked(_ locked: Bool) -> some View {
+        modifier(ProLockedModifier(locked: locked))
+    }
+}
+
 /// Pro 功能清单，付费页和设置页共用。
 enum ProFeature: CaseIterable, Identifiable {
     case autoOrganize

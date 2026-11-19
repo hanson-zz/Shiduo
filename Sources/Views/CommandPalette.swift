@@ -93,9 +93,11 @@ enum PaletteCatalog {
         var list: [Entry] = []
         func add(_ id: String, _ title: String, _ section: PaletteItem.Section, symbol: String,
                  subtitle: String? = nil, shortcut: AppShortcut? = nil, shortcutText: String? = nil,
-                 keywords: [String] = [], action: @escaping @MainActor () -> Void) {
+                 keywords: [String] = [], pro: Bool = false, action: @escaping @MainActor () -> Void) {
+            // Pro 项目都能用「pro」搜到。
             let item = PaletteItem(id: id, title: title, section: section, subtitle: subtitle,
-                                   shortcut: shortcutText ?? shortcut?.currentDisplay, symbol: symbol, keywords: keywords)
+                                   shortcut: shortcutText ?? shortcut?.currentDisplay, symbol: symbol,
+                                   keywords: pro && !keywords.contains("Pro") ? keywords + ["Pro"] : keywords, pro: pro)
             list.append((item, action))
         }
         let defaults = UserDefaults.standard
@@ -178,15 +180,15 @@ enum PaletteCatalog {
             store.addSelectionToFolderWall()
         }
         add("folderIcon", String(localized: "文件夹换装…"), .action, symbol: "paintpalette",
-            keywords: [String(localized: "文件夹颜色"), String(localized: "文件夹图标"), "Folder Icon", "Pro"]) {
+            keywords: [String(localized: "文件夹颜色"), String(localized: "文件夹图标"), "Folder Icon", "Pro"], pro: true) {
             store.editFolderIconsForSelection()
         }
         add("imageTools", String(localized: "图片工具…"), .action, symbol: "photo.on.rectangle", shortcut: .imageTools,
-            keywords: [String(localized: "拼图"), String(localized: "标注")]) {
+            keywords: [String(localized: "拼图"), String(localized: "标注")], pro: true) {
             ImageStudio.shared.open([], mode: .stitch, toShelf: false)
         }
         add("floatingShelf", String(localized: "显示 / 隐藏悬浮暂存架"), .action, symbol: "tray.full",
-            shortcutText: FloatingShelfHotKey.current.title) { FloatingShelfController.shared.toggle() }
+            shortcutText: FloatingShelfHotKey.current.title, pro: true) { FloatingShelfController.shared.toggle() }
         add("refresh", String(localized: "刷新"), .action, symbol: "arrow.clockwise", shortcut: .refresh, keywords: ["Reload"]) {
             store.reload()
         }
@@ -203,11 +205,11 @@ enum PaletteCatalog {
         }
         add("home", String(localized: "首页"), .go, symbol: "house", shortcut: .home, keywords: ["Home"]) { store.selection = .home }
         add("shelf", String(localized: "暂存架"), .go, symbol: "tray.full", keywords: ["Shelf"]) { store.selection = .shelf }
-        add("reminders", String(localized: "提醒"), .go, symbol: "alarm") { store.selection = .reminders }
+        add("reminders", String(localized: "提醒"), .go, symbol: "alarm", pro: true) { store.selection = .reminders }
         add("folderWall", String(localized: "文件夹墙"), .go, symbol: "square.grid.2x2") { store.selection = .folderWall }
         add("fonts", String(localized: "字体"), .go, symbol: "f.cursive", keywords: ["Fonts", String(localized: "字体库")]) { store.selection = .fonts }
         add("folderBackup", String(localized: "备份到硬盘"), .go, symbol: "externaldrive.badge.timemachine",
-            keywords: ["Backup", String(localized: "移动硬盘")]) { store.selection = .folderBackup }
+            keywords: ["Backup", String(localized: "移动硬盘")], pro: true) { store.selection = .folderBackup }
         add("homeFolder", String(localized: "个人文件夹"), .go, symbol: "house.circle", shortcut: .homeFolder) { store.goToHomeFolder() }
         add("desktop", String(localized: "桌面"), .go, symbol: "menubar.dock.rectangle", shortcut: .desktop, keywords: ["Desktop"]) {
             store.goToFolder(.desktop)
@@ -314,7 +316,7 @@ enum PaletteCatalog {
         add("storageMap", String(localized: "空间占用"), .cleanup, symbol: "chart.pie") { store.selection = .storageMap }
         add("cleanupHistory", String(localized: "清理记录"), .cleanup, symbol: "clock.arrow.circlepath",
             keywords: [String(localized: "放回原处")]) { store.selection = .cleanupHistory }
-        add("autoOrganize", String(localized: "自动整理"), .cleanup, symbol: "wand.and.stars") { store.selection = .autoOrganize }
+        add("autoOrganize", String(localized: "自动整理"), .cleanup, symbol: "wand.and.stars", pro: true) { store.selection = .autoOrganize }
 
         // 设置
         if let openSettings {
@@ -330,7 +332,7 @@ enum PaletteCatalog {
             ]
             for (tab, title, symbol, keywords) in pages {
                 add("settings:" + tab.rawValue, title, .settings, symbol: symbol, shortcutText: tab == .general ? "⌘," : nil,
-                    keywords: keywords + ["Settings", String(localized: "偏好设置")]) {
+                    keywords: keywords + ["Settings", String(localized: "偏好设置")], pro: tab == .menus) {
                     defaults.set(tab.rawValue, forKey: "settings.tab")
                     openSettings()
                 }
@@ -485,6 +487,10 @@ private struct PaletteRow: View {
                 }
             }
             Spacer(minLength: 8)
+            // Pro 功能没解锁（含试用结束）：标「PRO」；试用中和已购买不标。
+            if item.pro && !LicenseManager.shared.isPro {
+                ProBadge()
+            }
             if let shortcut = item.shortcut {
                 Text(shortcut)
                     .font(.system(size: 12, design: .rounded))

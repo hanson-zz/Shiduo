@@ -27,7 +27,7 @@ struct MenuShortcutSettingsView: View {
                     Button("导入…") { MenuShortcutsTransfer.importFile() }
                 }
                 .fixedSize()
-                .disabled(!license.isPro)
+                .proLocked(!license.isPro)
             }
             if !license.isPro {
                 ProHintRow()
@@ -43,7 +43,7 @@ struct MenuShortcutSettingsView: View {
                 case .shortcuts: ShortcutEditor()
                 }
             }
-            .disabled(!license.isPro)
+            .proLocked(!license.isPro)
         }
         .padding(16)
     }

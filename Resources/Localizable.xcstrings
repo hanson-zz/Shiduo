@@ -13943,38 +13943,6 @@
         }
       }
     },
-    "在访达里也用这个颜色": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use This Color in Finder"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在访达里也用这个颜色"
-          }
-        }
-      }
-    },
-    "访达里的「%@」已换成这个颜色": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "“%@” now uses this color in Finder"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "访达里的「%@」已换成这个颜色"
-          }
-        }
-      }
-    },
     "文件夹不存在了": {
       "localizations": {
         "en": {
@@ -24235,22 +24203,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "只有文件夹能放上文件夹墙；文件可以拖到某张卡片上，移进那个文件夹"
-          }
-        }
-      }
-    },
-    "卡片颜色": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Card Color"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "卡片颜色"
           }
         }
       }
@@ -42853,6 +42805,198 @@
           "stringUnit": {
             "state": "translated",
             "value": "在拾掇里新建文件夹并起好名字后，名字对得上（如「截图」「设计素材」）就在窗口底部推荐一款换装图标，点「换成推荐图标」打开文件夹换装。只看拾掇里新建的文件夹，不监视访达。"
+          }
+        }
+      }
+    },
+    "新建上一次用的模板（Pro）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New from Last Template (Pro)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建上一次用的模板（Pro）"
+          }
+        }
+      }
+    },
+    "图片工具…（Pro）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image Tools… (Pro)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片工具…（Pro）"
+          }
+        }
+      }
+    },
+    "卡片和访达里的「%@」都换成了这个颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” now uses this color on the card and in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卡片和访达里的「%@」都换成了这个颜色"
+          }
+        }
+      }
+    },
+    "访达里的「%@」也还原成了原来的图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is back to its original icon in Finder too"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "访达里的「%@」也还原成了原来的图标"
+          }
+        }
+      }
+    },
+    "访达里的「%@」换过主题图标或角标，没有动；要还原请用右键「还原文件夹图标」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” has a themed icon or badge in Finder, so it was left as is. To undo it, right-click and choose “Restore Folder Icon”."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "访达里的「%@」换过主题图标或角标，没有动；要还原请用右键「还原文件夹图标」"
+          }
+        }
+      }
+    },
+    "颜色会换在访达里的文件夹图标上": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colors apply to the folder icon in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "颜色会换在访达里的文件夹图标上"
+          }
+        }
+      }
+    },
+    "系统图标样式下，颜色改的是访达里的图标（Pro）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With system icons, colors change the icon in Finder (Pro)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统图标样式下，颜色改的是访达里的图标（Pro）"
+          }
+        }
+      }
+    },
+    "卡片和访达里的图标一起换": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes the card and the Finder icon together"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卡片和访达里的图标一起换"
+          }
+        }
+      }
+    },
+    "免费版换的是卡片颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The free version changes the card color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费版换的是卡片颜色"
+          }
+        }
+      }
+    },
+    "同时改访达里的图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also Change the Icon in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同时改访达里的图标"
+          }
+        }
+      }
+    },
+    "主题图标、角标、更多…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Themed Icons, Badges & More…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主题图标、角标、更多…"
+          }
+        }
+      }
+    },
+    "拾掇 Pro 功能，点一下了解 Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Shiduo Pro feature. Click to learn about Pro"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇 Pro 功能，点一下了解 Pro"
           }
         }
       }

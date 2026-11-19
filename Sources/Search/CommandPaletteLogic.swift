@@ -16,6 +16,8 @@ struct PaletteItem: Identifiable, Equatable, Sendable {
     var symbol: String = "command"
     /// 别的叫法（英文名、同义词），也参与匹配。
     var keywords: [String] = []
+    /// 拾掇 Pro 功能：没解锁时这一行右边标「PRO」，执行时弹付费页（或打开上锁页）。
+    var pro: Bool = false
 }
 
 /// 命令面板的匹配和排序：不分大小写 / 重音；中文标题可以打全拼或拼音首字母（「znql」→「智能清理」、「ys」→「压缩」）；

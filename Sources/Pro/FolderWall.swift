@@ -183,9 +183,53 @@ final class FolderWallModel: ObservableObject {
     }
 
     /// 打开系统色盘，拖动时实时改这个文件夹的颜色。
-    func openColorPanel(for s: FolderSummary) {
+    /// alsoFinder（Pro）：停手 0.8 秒后访达里的图标也换成这个颜色（拖动中不反复写图标）。
+    func openColorPanel(for s: FolderSummary, alsoFinder: Bool = false) {
         FolderColorPanel.shared.open(initial: tint(for: s)) { [weak self] color in
             self?.setCustom(color, for: s.path)
+            if alsoFinder { self?.scheduleFinderColor(color, path: s.path, name: s.name) }
+        }
+    }
+
+    private var finderColorWork: DispatchWorkItem?
+
+    private func scheduleFinderColor(_ color: NSColor, path: String, name: String) {
+        finderColorWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                Task { await self.applyFinderColor(color, path: path, name: name) }
+            }
+        }
+        finderColorWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: work)
+    }
+
+    /// 文件夹墙「文件夹换装」选了颜色（Pro）：访达里的图标也换成这个颜色，卡片和访达保持一致。
+    func applyFinderColor(_ color: NSColor, path: String, name: String) async {
+        let url = URL(fileURLWithPath: path, isDirectory: true)
+        guard let outcome = await FolderIconService.shared.applyColor(color, to: url) else { return }
+        refreshIcons()
+        if !outcome.succeeded.isEmpty {
+            LibraryStore.shared?.showToast(String(localized: "卡片和访达里的「\(name)」都换成了这个颜色"))
+        }
+        if !outcome.failed.isEmpty { LibraryStore.shared?.alertMessage = outcome.failureText }
+    }
+
+    /// 「自动」（Pro）：访达里拾掇上的纯色一起还原；换过主题图标或加了角标的不动，并说一声。
+    func clearFinderColor(path: String, name: String) {
+        let url = URL(fileURLWithPath: path, isDirectory: true)
+        switch FolderIconService.shared.clearPlainColor(url) {
+        case .untouched:
+            break
+        case .restored(let outcome):
+            refreshIcons()
+            if !outcome.succeeded.isEmpty {
+                LibraryStore.shared?.showToast(String(localized: "访达里的「\(name)」也还原成了原来的图标"))
+            }
+            if !outcome.failed.isEmpty { LibraryStore.shared?.alertMessage = outcome.failureText }
+        case .keptOutfit:
+            LibraryStore.shared?.showToast(String(localized: "访达里的「\(name)」换过主题图标或角标，没有动；要还原请用右键「还原文件夹图标」"))
         }
     }
 
@@ -259,6 +303,21 @@ enum FolderPalette {
     static func hex(_ color: NSColor) -> String {
         let c = color.usingColorSpace(.sRGB) ?? color
         return String(format: "%02X%02X%02X", Int(round(c.redComponent * 255)), Int(round(c.greenComponent * 255)), Int(round(c.blueComponent * 255)))
+    }
+
+    /// 菜单里的小圆色块（菜单项的图标）：不当模板图，保持原色。
+    static func swatch(_ color: NSColor) -> NSImage {
+        let image = NSImage(size: NSSize(width: 12, height: 12), flipped: false) { rect in
+            let path = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
+            color.setFill()
+            path.fill()
+            NSColor.black.withAlphaComponent(0.2).setStroke()
+            path.lineWidth = 0.5
+            path.stroke()
+            return true
+        }
+        image.isTemplate = false
+        return image
     }
 
     static func color(hex: String) -> NSColor? {
@@ -938,8 +997,8 @@ struct FolderCard: View {
                 HStack(spacing: 4) {
                     actionButton("pencil", help: String(localized: "重命名"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { startRename() }
                     actionButton("folder", help: String(localized: "移动到…"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { moveFolder() }
-                    // 两种图标样式都直接打开「文件夹换装」（Pro，不是 Pro 弹付费页）；卡片自己的颜色在右键「卡片颜色」里改。
-                    actionButton("paintpalette", help: String(localized: "文件夹换装…"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) {
+                    // 两种图标样式都直接打开「文件夹换装」编辑器（Pro，不是 Pro 弹付费页）；颜色在右键「文件夹换装 ▸」里改。
+                    actionButton("paintpalette", help: LicenseManager.shared.isPro ? String(localized: "文件夹换装…") : String(localized: "文件夹换装…（Pro）"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) {
                         FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path, isDirectory: true)], color: tint)
                     }
                     actionButton("minus.circle", help: String(localized: "从文件夹墙移除"), tint: .red) { store.unpin(summary.path) }
@@ -1008,7 +1067,7 @@ struct FolderCard: View {
     private var item: FileItem? { FileItem(url: URL(fileURLWithPath: summary.path, isDirectory: true)) }
 
     /// 右键菜单：和主窗口同一套（打开、在访达中显示、显示简介、拷贝路径……），
-    /// 「重命名…」用卡片自己的（墙上记的路径跟着改），多一项「从文件夹墙移除」和颜色。
+    /// 「重命名…」用卡片自己的（墙上记的路径跟着改），多一项「从文件夹墙移除」和「文件夹换装 ▸」。
     @ViewBuilder
     private var menu: some View {
         if group.count > 1 {
@@ -1025,9 +1084,11 @@ struct FolderCard: View {
         } else if let item {
             FileContextMenu(items: [item], context: FileMenuContext(
                 rename: { startRename() },
-                removeFromWall: { store.unpin(summary.path) }
+                removeFromWall: { store.unpin(summary.path) },
+                hidesFolderIcon: true
             )) {
-                if iconStyle == .shiduo { colorMenu }
+                // 两种图标样式都有：「文件夹换装 ▸」（颜色 + 主题图标、角标）；通用的「文件夹换装…」这里不再重复。
+                outfitMenu
             }
         } else {
             // 文件夹已经不在了（被移走、在没插上的硬盘里）：只能从墙上拿掉。
@@ -1035,45 +1096,95 @@ struct FolderCard: View {
         }
     }
 
+    private var folderURL: URL { URL(fileURLWithPath: summary.path, isDirectory: true) }
+
+    /// 右键「文件夹换装 ▸」：改文件夹颜色 + 主题图标、角标（拾掇 Pro）。合并了以前的「卡片颜色」和「在访达里也用这个颜色」。
+    /// 拾掇风格：免费改卡片颜色；Pro 同时改访达里的图标（保持一致）。
+    /// 系统图标风格：卡片颜色看不到，颜色直接改访达里的图标（Pro；没解锁时每项标 Pro，点了弹付费页）。
     @ViewBuilder
-    private var colorMenu: some View {
-        Menu("卡片颜色") {
-            Button("自动") { model.setPreset(nil, for: summary.path) }
+    private var outfitMenu: some View {
+        let isPro = LicenseManager.shared.isPro
+        let system = iconStyle == .system
+        let colorLocked = system && !isPro
+        Menu {
+            if system {
+                Text(isPro ? String(localized: "颜色会换在访达里的文件夹图标上") : String(localized: "系统图标样式下，颜色改的是访达里的图标（Pro）"))
+            } else if isPro {
+                Text("卡片和访达里的图标一起换")
+            } else {
+                Text("免费版换的是卡片颜色")
+            }
+            Button { pickAutoColor() } label: { colorLabel(String(localized: "自动"), swatch: nil, locked: colorLocked) }
             Divider()
             ForEach(FolderPalette.colors.indices, id: \.self) { i in
-                Button(FolderPalette.colors[i].0) { model.setPreset(i, for: summary.path) }
+                Button { pickPresetColor(i) } label: {
+                    colorLabel(FolderPalette.colors[i].0, swatch: FolderPalette.colors[i].1, locked: colorLocked)
+                }
             }
             Divider()
-            Button("自定义颜色…") { model.openColorPanel(for: summary) }
+            Button { pickCustomColor() } label: { colorLabel(String(localized: "自定义颜色…"), swatch: nil, locked: colorLocked) }
+            if !isPro && !system {
+                // 免费用户：说清楚 Pro 多了什么，点了弹付费页。
+                Button { ProPaywall.open() } label: { ProMenuLabel(title: String(localized: "同时改访达里的图标")) }
+            }
             Divider()
-            // 拾掇 Pro：给这个文件夹换颜色 / 主题插画 / 角标，访达里也看得到。
+            // 拾掇 Pro：主题插画、符号 / emoji / 图片角标，编辑器顶部有按名字推荐的图标。
             Button {
-                FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path, isDirectory: true)], color: tint)
+                FolderIconService.shared.openEditor([folderURL], color: tint)
             } label: {
-                proMenuLabel(String(localized: "文件夹换装…"))
+                ProMenuLabel(title: String(localized: "主题图标、角标、更多…"))
             }
-        }
-        Button {
-            guard let outcome = FolderIconService.shared.quickApply(color: tint, to: [URL(fileURLWithPath: summary.path)]) else { return }
-            if !outcome.succeeded.isEmpty { store.showToast(String(localized: "访达里的「\(summary.name)」已换成这个颜色")) }
-            if !outcome.failed.isEmpty { store.alertMessage = outcome.failureText }
         } label: {
-            proMenuLabel(String(localized: "在访达里也用这个颜色"))
+            Label("文件夹换装", systemImage: "paintpalette")
         }
     }
 
-    /// Pro 菜单项没解锁时：标题后面加「Pro」和小锁（和文件右键菜单一样）。
+    /// 颜色项：前面是小色块；上锁时标题后面加「· Pro」（没有色块的项用小锁）。
     @ViewBuilder
-    private func proMenuLabel(_ title: String) -> some View {
-        if LicenseManager.shared.isPro {
-            Text(title)
-        } else {
+    private func colorLabel(_ title: String, swatch: NSColor?, locked: Bool) -> some View {
+        if let swatch {
+            Label {
+                if locked { Text(title) + Text(verbatim: "  · Pro") } else { Text(title) }
+            } icon: {
+                Image(nsImage: FolderPalette.swatch(swatch)).renderingMode(.original)
+            }
+        } else if locked {
             Label {
                 Text(title) + Text(verbatim: "  · Pro")
             } icon: {
                 Image(systemName: "lock.fill")
             }
+        } else {
+            Text(title)
         }
+    }
+
+    /// 系统图标风格下颜色只作用在访达图标上：没解锁就弹付费页。返回 false 表示被拦下。
+    private func colorAllowed() -> Bool {
+        guard iconStyle == .system, !LicenseManager.shared.isPro else { return true }
+        ProPaywall.open()
+        return false
+    }
+
+    private func pickAutoColor() {
+        guard colorAllowed() else { return }
+        model.setPreset(nil, for: summary.path)
+        if LicenseManager.shared.isPro { model.clearFinderColor(path: summary.path, name: summary.name) }
+    }
+
+    private func pickPresetColor(_ index: Int) {
+        guard colorAllowed() else { return }
+        model.setPreset(index, for: summary.path)
+        if LicenseManager.shared.isPro {
+            let color = FolderPalette.colors[index].1
+            let path = summary.path, name = summary.name
+            Task { await model.applyFinderColor(color, path: path, name: name) }
+        }
+    }
+
+    private func pickCustomColor() {
+        guard colorAllowed() else { return }
+        model.openColorPanel(for: summary, alsoFinder: LicenseManager.shared.isPro)
     }
 
     // MARK: 操作

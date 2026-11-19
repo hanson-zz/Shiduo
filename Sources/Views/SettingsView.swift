@@ -151,8 +151,14 @@ struct SettingsView: View {
         ExternalToolsSection()
 
         // 和「暂存架」页里的是同一个设置：放到左右两侧，避开其他也用刘海的 App。
-        Section("刘海暂存架") {
+        // 刘海暂存架是 Pro：两处一样，没解锁时标 PRO，点了弹付费页（不再悄悄灰着）。
+        Section {
             NotchShelfPositionPicker()
+        } header: {
+            HStack(spacing: 6) {
+                Text("刘海暂存架")
+                if !license.isPro { ProBadge() }
+            }
         }
 
         // 「文件夹图标」风格、浅色 / 深色挪到了「外观」页。
@@ -215,7 +221,7 @@ struct SettingsView: View {
         }
         Section {
             QuickPickSettings()
-                .disabled(!license.isPro)
+                .proLocked(!license.isPro)
         } header: {
             HStack(spacing: 6) {
                 Text("数字键直达")
@@ -432,7 +438,7 @@ struct SettingsView: View {
     private var shelfSettings: some View {
             Toggle("悬浮暂存架：拖文件到刘海或屏幕边缘时弹出", isOn: $floatingShelfEnabled)
                 // 试用结束后还开着的，可以在这里关掉（只是不能再打开）。
-                .disabled(!license.isPro && !floatingShelfEnabled)
+                .proLocked(!license.isPro && !floatingShelfEnabled)
                 .onChange(of: floatingShelfEnabled) { applyFloatingShelf() }
             Toggle(isOn: $floatingShelfHotKey) {
                 HStack {
@@ -445,7 +451,8 @@ struct SettingsView: View {
                         .background(RoundedRectangle(cornerRadius: 5).fill(.quaternary))
                 }
             }
-            .disabled(!license.isPro || !floatingShelfEnabled)
+            .disabled(!floatingShelfEnabled)
+            .proLocked(!license.isPro)
             .onChange(of: floatingShelfHotKey) { applyFloatingShelf() }
             Picker("悬浮暂存架快捷键", selection: $floatingShelfHotKeyChoice) {
                 ForEach(FloatingShelfHotKey.allCases) { key in
@@ -456,7 +463,8 @@ struct SettingsView: View {
                     }
                 }
             }
-            .disabled(!license.isPro || !floatingShelfEnabled || !floatingShelfHotKey)
+            .disabled(!floatingShelfEnabled || !floatingShelfHotKey)
+            .proLocked(!license.isPro)
             .onChange(of: floatingShelfHotKeyChoice) { applyFloatingShelf() }
             if !floatingHotKeyAvailable {
                 Text("\(floatingShelfHotKeyChoice.title) 已被其他 App 占用，仍可在拾掇的「前往」菜单里使用。")
@@ -464,7 +472,8 @@ struct SettingsView: View {
                     .foregroundStyle(.orange)
             }
             ShelfStyleSettings()
-                .disabled(!license.isPro || !floatingShelfEnabled)
+                .disabled(!floatingShelfEnabled)
+                .proLocked(!license.isPro)
     }
 
     private var proSection: some View {
@@ -472,11 +481,12 @@ struct SettingsView: View {
             ProHintRow()
             Toggle("在菜单栏显示拾掇（剩余空间、最近下载、快速搜索）", isOn: $menuBarEnabled)
                 // 上锁后仍然可以关掉（和悬浮暂存架一样），只是不能再打开。
-                .disabled(!license.isPro && !menuBarEnabled)
+                .proLocked(!license.isPro && !menuBarEnabled)
             Toggle("在菜单栏图标旁显示可腾出的空间", isOn: $menuBarShowsReclaimable)
-                .disabled(!license.isPro || !menuBarEnabled)
+                .disabled(!menuBarEnabled)
+                .proLocked(!license.isPro)
             Toggle("每周提醒我清理", isOn: $reminderEnabled)
-                .disabled(!license.isPro)
+                .proLocked(!license.isPro)
             HStack {
                 Picker("提醒时间", selection: $reminderWeekday) {
                     ForEach(CleanupReminder.weekdayOrder, id: \.self) { day in
@@ -491,14 +501,15 @@ struct SettingsView: View {
                 .labelsHidden()
                 .frame(width: 90)
             }
-            .disabled(!license.isPro || !reminderEnabled)
+            .disabled(!reminderEnabled)
+            .proLocked(!license.isPro)
             if reminderEnabled && reminderDenied {
                 Text("系统没有允许拾掇发通知：请到「系统设置 › 通知 › 拾掇」里打开。")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
             Toggle("双击压缩包时在拾掇里浏览（不解压）", isOn: $archiveBrowseOnDoubleClick)
-                .disabled(!license.isPro)
+                .proLocked(!license.isPro)
         } header: {
             HStack(spacing: 6) {
                 Text("拾掇 Pro 功能")

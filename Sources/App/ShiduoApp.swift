@@ -57,7 +57,10 @@ struct ShiduoApp: App {
                 // 拾掇 Pro：新建文件模板（没解锁时点了弹升级面板）。
                 NewFileMenu()
                     .disabled(store.currentFolder == nil || store.activeQuery != nil || store.archiveSession != nil || renaming)
-                Button("新建上一次用的模板") { FileTemplateStore.shared.createLast(in: store) }
+                // 新建文件模板是 Pro：没解锁时标题标出来（点了弹付费页）。
+                Button(license.isPro ? String(localized: "新建上一次用的模板") : String(localized: "新建上一次用的模板（Pro）")) {
+                    FileTemplateStore.shared.createLast(in: store)
+                }
                     .keyboardShortcut(.newFromLastTemplate)
                     .disabled(store.currentFolder == nil || store.activeQuery != nil || store.archiveSession != nil || renaming)
                 // 和访达的「添加到边栏」（⌃⌘T）一个意思：选中了文件夹就直接放上墙，否则选一个。
@@ -260,6 +263,8 @@ struct SupportCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     /// 拾掇 Pro 自定义快捷键：改了以后菜单马上换。
     @ObservedObject private var shortcuts = ShortcutStore.shared
+    /// 「图片工具…」是 Pro：没解锁时标题标出来。
+    @ObservedObject private var license = LicenseManager.shared
 
     var body: some Commands {
         CommandGroup(after: .appInfo) {
@@ -267,7 +272,9 @@ struct SupportCommands: Commands {
         }
         CommandGroup(after: .newItem) {
             // ⌥⌘I 在访达里是「检查器」、⌃⌘I 是「显示摘要信息」，用 ⌃⌘E。
-            Button("图片工具…") { ImageStudio.shared.open([], mode: .stitch, toShelf: false) }
+            Button(license.isPro ? String(localized: "图片工具…") : String(localized: "图片工具…（Pro）")) {
+                ImageStudio.shared.open([], mode: .stitch, toShelf: false)
+            }
                 .keyboardShortcut(.imageTools)
         }
         CommandGroup(replacing: .help) {

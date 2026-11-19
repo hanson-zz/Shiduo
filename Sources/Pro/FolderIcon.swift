@@ -403,6 +403,42 @@ final class FolderIconService: ObservableObject {
         return apply(FolderIconStyle(color: FolderPalette.hex(color)), to: urls)
     }
 
+    /// 文件夹墙右键「文件夹换装」里点了颜色（Pro）：访达里的图标也换成这个颜色。
+    /// 拾掇加过的角标（符号 / emoji / 图片）保留；主题插画换成这个纯色（选颜色就是要看到这个颜色）。
+    /// 不是 Pro 就弹付费页，返回 nil。
+    func applyColor(_ color: NSColor, to url: URL) async -> FolderIconOutcome? {
+        guard LicenseManager.shared.isPro else {
+            LicenseManager.shared.showPaywall = true
+            return nil
+        }
+        let hex = FolderPalette.hex(color)
+        var style = FolderIconStyle(color: hex)
+        if let old = self.style(for: url), old.overlay != FolderIconStyle.Overlay.none {
+            let themed = old.theme != nil
+            style = FolderIconStyle(color: hex, overlay: old.overlay, overlayScale: old.overlayScale,
+                                    backdrop: themed ? nil : old.backdrop,
+                                    overlayCenter: themed ? nil : old.overlayCenter)
+        }
+        return await applyInBackground(style, to: [url])
+    }
+
+    /// 文件夹墙「文件夹换装 › 自动」（Pro）时访达里的图标怎么办。
+    enum AutoColorResult {
+        /// 访达里的图标不是拾掇改的：不动。
+        case untouched
+        /// 拾掇上的纯色：已还原（或还原失败，见 outcome）。
+        case restored(FolderIconOutcome)
+        /// 拾掇换过主题图标或加了角标：不动，免得把换装的成果一起清掉。
+        case keptOutfit
+    }
+
+    /// 只有拾掇上的纯色（没有主题、没有角标）才还原；别的 App / 用户自己设的图标、换装过的都不动。
+    func clearPlainColor(_ url: URL) -> AutoColorResult {
+        guard LicenseManager.shared.isPro, let current = self.style(for: url) else { return .untouched }
+        guard current.theme == nil, current.overlay == FolderIconStyle.Overlay.none else { return .keptOutfit }
+        return .restored(restore([url]))
+    }
+
     // MARK: 检查
 
     /// 不能改的文件夹返回中文原因；可以改返回 nil。

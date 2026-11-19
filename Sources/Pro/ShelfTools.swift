@@ -142,12 +142,15 @@ struct ShelfConvertMenu: View {
     let urls: () -> [URL]
 
     var body: some View {
-        Menu("转换格式") {
+        // 转换格式是 Pro（startConvert 没解锁时弹付费页）：没解锁时标题带「· Pro」和小锁。
+        Menu {
             ForEach(ImageConverter.OutputFormat.available) { format in
                 Button(String(localized: "转换为 \(format.title)")) {
                     ShelfTools.shared.startConvert(urls(), to: format)
                 }
             }
+        } label: {
+            ProMenuLabel(title: String(localized: "转换格式"))
         }
     }
 }

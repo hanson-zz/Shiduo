@@ -478,7 +478,7 @@ struct FontLibraryTab: View {
             NSPasteboard.general.setString(family.faces.map(\.postScriptName).joined(separator: "\n"), forType: .string)
         }
         Divider()
-        Menu("加入字体集") {
+        Menu {
             ForEach(library.manifest.sets) { set in
                 Button(set.name) { library.add(targets, to: set.id) }
             }
@@ -488,6 +488,9 @@ struct FontLibraryTab: View {
                 newSetName = ""
                 newSetTargets = targets
             }
+        } label: {
+            // 字体集是 Pro：没解锁时标题带「· Pro」和小锁。
+            ProMenuLabel(title: String(localized: "加入字体集"))
         }
     }
 }
@@ -896,10 +899,20 @@ enum FontDetailTab: String, CaseIterable, Identifiable {
         case .info: return String(localized: "信息")
         }
     }
+
+    /// 字体细节（字符表、OpenType 特性、可变字体）是 Pro。
+    var isPro: Bool {
+        switch self {
+        case .characters, .features, .variations: return true
+        case .body, .info: return false
+        }
+    }
 }
 
 struct FontDetailPanel: View {
     @ObservedObject private var extras = FontExtraInfoStore.shared
+    /// 字符 / 特性 / 可变 是 Pro（字体细节）：没解锁时标签上标「· Pro」。
+    @ObservedObject private var license = LicenseManager.shared
     let family: FontFamily
     let onClose: () -> Void
     @AppStorage("fonts.detailTab") private var tabRaw = FontDetailTab.body.rawValue
@@ -935,7 +948,7 @@ struct FontDetailPanel: View {
             // 面板窄时换成下拉菜单（分段控件不会自己变窄）。
             AdaptiveSegmentedPicker(title: "", selection: $tabRaw) {
                 ForEach(FontDetailTab.allCases) { tab in
-                    Text(tab.title).tag(tab.rawValue)
+                    Text(verbatim: tab.isPro && !license.isPro ? tab.title + " · Pro" : tab.title).tag(tab.rawValue)
                 }
             }
             if family.faces.count > 1 {

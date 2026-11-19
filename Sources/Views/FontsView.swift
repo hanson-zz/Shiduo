@@ -6,6 +6,8 @@ import SwiftUI
 /// 字体页：字体库、样张、问题字体、已停用（免费）；字体集（Pro）。
 struct FontsView: View {
     @ObservedObject private var library = FontLibrary.shared
+    /// 「字体集」标签没解锁时标「· Pro」。
+    @ObservedObject private var license = LicenseManager.shared
     @State private var query = ""
     @AppStorage("fonts.filter") private var filterRaw = FontFilter.all.rawValue
     @AppStorage("fonts.sort") private var sortRaw = FontSortKey.name.rawValue
@@ -140,8 +142,9 @@ struct FontsView: View {
             return tab.title + " \(library.compareIDs.count)"
         case .downloads where library.newDownloadCount > 0:
             return tab.title + " \(library.newDownloadCount)"
-        case .sets:
-            return tab.title + " · PRO"
+        case .sets where !license.isPro:
+            // 和其他页内标签（清理 › 自动整理）一样：没解锁时才标。
+            return tab.title + " · Pro"
         default:
             return tab.title
         }
@@ -585,8 +588,9 @@ private struct FontStoredTab: View {
                 }
                 .disabled(selectedDisabled.isEmpty || library.busy != nil)
                 Menu {
-                    Button("选择压缩存放的位置…") { chooseArchiveFolder() }
-                    Button("恢复默认位置") { library.setArchiveFolder(nil) }
+                    // 压缩存放是 Pro（字体压缩存放 / 搬到移动硬盘）：没解锁时标「· Pro」，点了弹付费页。
+                    Button { chooseArchiveFolder() } label: { ProMenuLabel(title: String(localized: "选择压缩存放的位置…")) }
+                    Button { library.setArchiveFolder(nil) } label: { ProMenuLabel(title: String(localized: "恢复默认位置")) }
                         .disabled(library.manifest.archiveFolder == nil)
                     Divider()
                     Button("在访达中显示字体仓库") {

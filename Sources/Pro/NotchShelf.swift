@@ -125,13 +125,21 @@ extension NotchShelfPosition {
 /// 「刘海暂存架位置」选择器：设置 › 通用 和 设置 › 暂存架 里各有一个，存的是同一个设置，改了马上生效。
 struct NotchShelfPositionPicker: View {
     @AppStorage(NotchShelfPosition.key) private var position: NotchShelfPosition = .center
+    /// 刘海暂存架是 Pro：没解锁时标 PRO，点了弹付费页（设置 › 通用 和 设置 › 暂存架 两处一样）。
+    @ObservedObject private var license = LicenseManager.shared
 
     // beta.12 存的「屏幕顶部左侧 / 右侧」（left / right）在启动时（FloatingShelfController.apply）改写成新的左右侧竖版。
 
     var body: some View {
-        Picker("刘海暂存架位置", selection: $position) {
+        Picker(selection: $position) {
             ForEach(NotchShelfPosition.allCases) { Text($0.title).tag($0) }
+        } label: {
+            HStack(spacing: 6) {
+                Text("刘海暂存架位置")
+                if !license.isPro { ProBadge() }
+            }
         }
+        .proLocked(!license.isPro)
         .onChange(of: position) {
             NotchShelfController.shared.relayout()
             NotchSideHandles.shared.update()

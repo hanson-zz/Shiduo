@@ -130,7 +130,7 @@ struct ShelfPageView: View {
                     Button(String(localized: "转换为 \(format.title)")) { convert(targets, to: format) }
                 }
             } label: {
-                Label("转换格式…", systemImage: "photo.on.rectangle.angled")
+                ProMenuLabel(title: String(localized: "转换格式…"), systemImage: "photo.on.rectangle.angled")
             }
             .fixedSize()
             .disabled(ShelfTools.images(in: targets.map(\.url)).isEmpty)

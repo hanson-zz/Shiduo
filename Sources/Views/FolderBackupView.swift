@@ -97,7 +97,7 @@ struct FolderBackupView: View {
                     .glassCapsule()
             }
             .buttonStyle(.plain)
-            .disabled(!license.isPro)
+            .proLocked(!license.isPro)
             .help("先选 Mac 上要备份的文件夹，再选移动硬盘上放备份的文件夹")
         }
     }
@@ -174,7 +174,7 @@ private struct BackupPairCard: View {
                 Toggle("", isOn: Binding(get: { pair.enabled }, set: { backups.setEnabled(pairID, $0) }))
                     .toggleStyle(.switch)
                     .labelsHidden()
-                    .disabled(!license.isPro)
+                    .proLocked(!license.isPro)
                     .help("打开后，插上这块硬盘时才会检查和提示；关着时什么都不拷")
             }
 
@@ -195,7 +195,8 @@ private struct BackupPairCard: View {
                         .disabled(backups.blocker(pairID) != nil || !(status.plan?.hasWork ?? false))
                         .help(backups.blocker(pairID) ?? String(localized: "把新文件和改动拷到硬盘（不删除硬盘上的文件）"))
                     Button("重新检查") { backups.refresh(pairID) }
-                        .disabled(!pair.enabled || !license.isPro || status.scanning)
+                        .disabled(!pair.enabled || status.scanning)
+                        .proLocked(!license.isPro)
                     if status.scanning {
                         ProgressView().controlSize(.small)
                     }
@@ -239,7 +240,7 @@ private struct BackupPairCard: View {
             }
             .toggleStyle(.checkbox)
             .font(.callout)
-            .disabled(!license.isPro)
+            .proLocked(!license.isPro)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
