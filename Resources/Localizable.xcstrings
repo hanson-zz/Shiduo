@@ -42598,25 +42598,43 @@
             "state": "translated",
             "value": "Notch center (default)"
           }
-        }
-      }
-    },
-    "屏幕顶部左侧": {
-      "localizations": {
-        "en": {
+        },
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Top left"
+            "value": "刘海正中（默认）"
           }
         }
       }
     },
-    "屏幕顶部右侧": {
+    "屏幕左侧（竖版）": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Top right"
+            "value": "Left edge (vertical)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕左侧（竖版）"
+          }
+        }
+      }
+    },
+    "屏幕右侧（竖版）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right edge (vertical)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕右侧（竖版）"
           }
         }
       }
@@ -42627,6 +42645,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notch Shelf Position"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刘海暂存架位置"
           }
         }
       }
@@ -42641,12 +42665,18 @@
         }
       }
     },
-    "放到左侧或右侧，可以和其他也用刘海的 App（比如码头）错开。把文件拖到屏幕顶边的对应位置就会展开；左右两侧是菜单栏，点一下不会展开。": {
+    "放到屏幕左侧或右侧，变成竖着的一条，刘海整个让给其他也用刘海的 App（比如码头）。把文件拖到屏幕左边或右边就会展开；也可以点一下边上的小把手。": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Put it on the left or right to stay clear of other apps that use the notch (like Dockling). Drag a file to that spot on the top edge of the screen to open it. The left and right spots sit on the menu bar, so clicking there doesn't open it."
+            "value": "On the left or right edge it becomes a tall, narrow panel, leaving the notch free for other apps that use it (like Dockling). Drag a file to the left or right edge of the screen to open it, or click the small handle on that edge."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放到屏幕左侧或右侧，变成竖着的一条，刘海整个让给其他也用刘海的 App（比如码头）。把文件拖到屏幕左边或右边就会展开；也可以点一下边上的小把手。"
           }
         }
       }

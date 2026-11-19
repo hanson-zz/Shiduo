@@ -98,6 +98,11 @@ extension NSScreen {
         return 200
     }
 
+    /// 程序坞在哪边（left / right / bottom）；读不到时 nil（这时按 visibleFrame 推断）。
+    static var dockOrientation: String? {
+        UserDefaults(suiteName: "com.apple.dock")?.string(forKey: "orientation")
+    }
+
     /// 刘海（或菜单栏）的高度。
     var notchHeight: CGFloat {
         if hasNotch { return safeAreaInsets.top }
@@ -111,8 +116,8 @@ extension NotchShelfPosition {
     var title: String {
         switch self {
         case .center: return String(localized: "刘海正中（默认）")
-        case .left: return String(localized: "屏幕顶部左侧")
-        case .right: return String(localized: "屏幕顶部右侧")
+        case .left: return String(localized: "屏幕左侧（竖版）")
+        case .right: return String(localized: "屏幕右侧（竖版）")
         }
     }
 }
@@ -121,12 +126,17 @@ extension NotchShelfPosition {
 struct NotchShelfPositionPicker: View {
     @AppStorage(NotchShelfPosition.key) private var position: NotchShelfPosition = .center
 
+    // beta.12 存的「屏幕顶部左侧 / 右侧」（left / right）在启动时（FloatingShelfController.apply）改写成新的左右侧竖版。
+
     var body: some View {
         Picker("刘海暂存架位置", selection: $position) {
             ForEach(NotchShelfPosition.allCases) { Text($0.title).tag($0) }
         }
-        .onChange(of: position) { NotchShelfController.shared.relayout() }
-        Text("放到左侧或右侧，可以和其他也用刘海的 App（比如码头）错开。把文件拖到屏幕顶边的对应位置就会展开；左右两侧是菜单栏，点一下不会展开。")
+        .onChange(of: position) {
+            NotchShelfController.shared.relayout()
+            NotchSideHandles.shared.update()
+        }
+        Text("放到屏幕左侧或右侧，变成竖着的一条，刘海整个让给其他也用刘海的 App（比如码头）。把文件拖到屏幕左边或右边就会展开；也可以点一下边上的小把手。")
             .font(.caption)
             .foregroundStyle(.secondary)
     }
@@ -241,10 +251,14 @@ final class NotchShelfController: NSObject, ObservableObject {
     /// 每次显示加一：收起动画的完成回调只在期间没有再次显示时才真正 orderOut。
     private var showGeneration = 0
 
-    /// 设置 › 通用 › 刘海暂存架位置：刘海正中 / 顶部左侧 / 顶部右侧。
+    /// 设置 › 通用 › 刘海暂存架位置：刘海正中 / 屏幕左侧（竖版）/ 屏幕右侧（竖版）。
     private var position: NotchShelfPosition { NotchShelfPosition.current }
 
     private func panelSize(for screen: NSScreen) -> NSSize {
+        if position.isSide {
+            // 竖版：窄而高，贴着屏幕边（上锁卡片稍宽一点）。
+            return NotchPositionLogic.sidePanelSize(visible: screen.visibleFrame, locked: !LicenseManager.shared.isPro)
+        }
         let card = NotchShelfPrefs.cardSize
         guard LicenseManager.shared.isPro else {
             // 上锁卡片（试用结束 / 需要校验）文字和按钮多，沿用改版前的宽度。
@@ -261,22 +275,29 @@ final class NotchShelfController: NSObject, ObservableObject {
     }
 
     private func targetFrame(for screen: NSScreen) -> NSRect {
-        NotchPositionLogic.panelFrame(position, screen: screen.frame, size: panelSize(for: screen),
+        NotchPositionLogic.panelFrame(position, screen: screen.frame, visible: screen.visibleFrame,
+                                      dockOrientation: NSScreen.dockOrientation, size: panelSize(for: screen),
                                       notchWidth: screen.notchWidth, notchHeight: screen.notchHeight)
     }
 
-    /// 展开前、收起后的大小：正中是刘海本身，左右两侧是顶边上一段「虚拟刘海」。
+    /// 展开前、收起后的大小：正中是刘海本身，左右两侧是屏幕边上的小把手。
     private func anchorFrame(for screen: NSScreen) -> NSRect {
-        NotchPositionLogic.anchorFrame(position, screen: screen.frame,
+        NotchPositionLogic.anchorFrame(position, screen: screen.frame, visible: screen.visibleFrame,
+                                       dockOrientation: NSScreen.dockOrientation,
                                        notchWidth: screen.notchWidth, notchHeight: screen.notchHeight)
     }
 
     private func makeView(for screen: NSScreen) -> NotchShelfView {
-        NotchShelfView(controller: self,
-                       screenNotchWidth: NotchPositionLogic.headerGap(position, hasNotch: screen.hasNotch,
-                                                                      notchWidth: screen.notchWidth),
-                       topInset: screen.notchHeight)
+        let position = self.position
+        return NotchShelfView(controller: self,
+                              screenNotchWidth: NotchPositionLogic.headerGap(position, hasNotch: screen.hasNotch,
+                                                                             notchWidth: screen.notchWidth),
+                              topInset: position.isSide ? 14 : screen.notchHeight,
+                              side: position)
     }
+
+    /// 现在是不是竖版（左右两侧）：拖文件的落点按纵坐标分。
+    var isVertical: Bool { position.isSide }
 
     /// 改了「刘海宽度」、卡片大小或位置：开着的面板直接换成新尺寸、挪到新位置。
     func relayout() {
@@ -314,13 +335,14 @@ final class NotchShelfController: NSObject, ObservableObject {
     func dropTarget(at location: CGPoint) -> DropTarget {
         let frame = contentFrame
         guard frame.width > 0 else { return .shelf }
-        let index = Int(((location.x - frame.minX) / (frame.width / 3)).rounded(.down))
-        return DropTarget(rawValue: min(max(index, 0), 2)) ?? .shelf
+        let index = NotchPositionLogic.dropIndex(at: location, in: frame, vertical: isVertical)
+        return DropTarget(rawValue: index) ?? .shelf
     }
 
-    /// 点在刘海本身上（不含两边的余量：两边是菜单栏图标）。放在左右两侧时点一下不展开（那里是菜单栏）。
+    /// 点在刘海本身上（不含两边的余量：两边是菜单栏图标）。放在左右两侧时，是点在边上的小把手上。
     func isInNotch(_ point: NSPoint, on screen: NSScreen) -> Bool {
-        NotchPositionLogic.isClickToOpen(point, position: position, screen: screen.frame,
+        NotchPositionLogic.isClickToOpen(point, position: position, screen: screen.frame, visible: screen.visibleFrame,
+                                         dockOrientation: NSScreen.dockOrientation,
                                          notchWidth: screen.notchWidth, notchHeight: screen.notchHeight)
     }
 
@@ -332,9 +354,10 @@ final class NotchShelfController: NSObject, ObservableObject {
         show(on: screen, byDrag: false)
     }
 
-    /// 鼠标是不是在这块屏幕刘海附近的顶边上（放在左右两侧时，是对应那一段顶边）。
+    /// 鼠标是不是在这块屏幕刘海附近的顶边上（放在左右两侧时，是贴着那条屏幕边的触发条或小把手）。
     func isAtNotch(_ point: NSPoint, on screen: NSScreen) -> Bool {
-        NotchPositionLogic.isAtTrigger(point, position: position, screen: screen.frame,
+        NotchPositionLogic.isAtTrigger(point, position: position, screen: screen.frame, visible: screen.visibleFrame,
+                                       dockOrientation: NSScreen.dockOrientation,
                                        notchWidth: screen.notchWidth, notchHeight: screen.notchHeight)
     }
 
@@ -404,6 +427,8 @@ final class NotchShelfController: NSObject, ObservableObject {
         panel.setFrame(start, display: false)
         panel.alphaValue = 0
         panel.orderFrontRegardless()
+        // 竖版：展开时边上的小把手先藏起来，收起后再放回去。
+        NotchSideHandles.shared.update()
         if !byDrag { panel.makeKey() }
         if Demo.isOn {
             // 演示模式截图：直接展开，不做动画。
@@ -447,6 +472,7 @@ final class NotchShelfController: NSObject, ObservableObject {
                 guard NotchShelfController.shared.showGeneration == generation else { return }
                 panel.orderOut(nil)
                 panel.alphaValue = 1
+                NotchSideHandles.shared.update()
             }
         })
     }
@@ -582,7 +608,7 @@ final class NotchShelfController: NSObject, ObservableObject {
         panel.hasShadow = true
         panel.isReleasedWhenClosed = false
         panel.isMovable = false
-        panel.contentView = NSHostingView(rootView: NotchShelfView(controller: self, screenNotchWidth: 0, topInset: 32))
+        panel.contentView = NSHostingView(rootView: NotchShelfView(controller: self, screenNotchWidth: 0, topInset: 32, side: .center))
         return panel
     }
 }
@@ -629,6 +655,8 @@ struct NotchShelfView: View {
     @ObservedObject private var reminders = ReminderStore.shared
     let screenNotchWidth: CGFloat
     let topInset: CGFloat
+    /// 刘海正中（横版，贴屏幕顶）还是屏幕左 / 右侧（竖版，贴屏幕边）：同一套内容，只换排列方向和外形。
+    var side: NotchShelfPosition = .center
     @State private var previewURL: URL?
     @FocusState private var focused: Bool
     @AppStorage(NotchShelfPrefs.opacityKey) private var opacity = 1.0
@@ -646,6 +674,22 @@ struct NotchShelfView: View {
     /// 卡片缩略图边长：紧凑档小一号。
     private var thumb: CGFloat { compact ? NotchShelfPrefs.compactThumb(cardSize) : cardSize }
     private var items: [FileItem] { controller.currentItems }
+    /// 竖版：标签一排在上，文件一列往下滚。
+    private var vertical: Bool { side.isSide }
+
+    /// 面板外形：横版是和刘海连成一体的形状；竖版贴着屏幕边的一侧不圆角，朝屏幕里的一侧大圆角。
+    private var panelShape: AnyShape {
+        switch side {
+        case .center:
+            return AnyShape(NotchShape())
+        case .left:
+            return AnyShape(UnevenRoundedRectangle(topLeadingRadius: 4, bottomLeadingRadius: 4,
+                                                   bottomTrailingRadius: 22, topTrailingRadius: 22, style: .continuous))
+        case .right:
+            return AnyShape(UnevenRoundedRectangle(topLeadingRadius: 22, bottomLeadingRadius: 22,
+                                                   bottomTrailingRadius: 4, topTrailingRadius: 4, style: .continuous))
+        }
+    }
 
     var body: some View {
         if license.isPro {
@@ -670,8 +714,11 @@ struct NotchShelfView: View {
     /// 试用结束后：碰到刘海不再悄悄没反应，而是展开这张上锁卡片，说明原因，可以购买、输入授权码或关掉这个功能。
     private var lockedBody: some View {
         VStack(spacing: 10) {
-            Color.clear.frame(height: max(topInset - 4, 20))
-            HStack(spacing: 14) {
+            Color.clear.frame(height: max(topInset - 4, vertical ? 6 : 20))
+            // 竖版窄：图标、说明、按钮上下排；横版和以前一样左右排。
+            let layout = vertical ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+                                  : AnyLayout(HStackLayout(spacing: 14))
+            layout {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.8))
@@ -726,10 +773,11 @@ struct NotchShelfView: View {
                 .foregroundStyle(.white.opacity(0.6))
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, vertical ? 22 : 28)
         .padding(.bottom, 12)
+        .frame(maxHeight: vertical ? .infinity : nil, alignment: .top)
         .foregroundStyle(.white)
-        .background(Color.black.clipShape(NotchShape()))
+        .background(Color.black.clipShape(panelShape))
         .environment(\.colorScheme, .dark)
         .focusable()
         .focusEffectDisabled()
@@ -743,7 +791,7 @@ struct NotchShelfView: View {
     private var unlockedBody: some View {
         VStack(spacing: 6) {
             header
-                .frame(height: max(topInset - 4, 24))
+                .frame(height: max(topInset - 4, vertical ? 28 : 24))
                 .padding(.horizontal, 12)
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -754,8 +802,8 @@ struct NotchShelfView: View {
                 }
                 .padding(.horizontal, compact ? 14 : 16)
         }
-        .padding(.bottom, 10)
-        .padding(.top, 2)
+        .padding(.bottom, vertical ? 14 : 10)
+        .padding(.top, vertical ? 10 : 2)
         .onPreferenceChange(NotchContentFrameKey.self) { frame in
             MainActor.assumeIsolated { NotchShelfController.shared.contentFrame = frame }
         }
@@ -773,11 +821,11 @@ struct NotchShelfView: View {
                 }
                 Color.black.opacity(opacity)
             }
-            .clipShape(NotchShape())
+            .clipShape(panelShape)
         }
         .overlay {
             if controller.dropTargeted && !controller.cardDragging {
-                NotchShape()
+                panelShape
                     .stroke(Color.accentColor.opacity(0.6), lineWidth: 1.5)
                     .allowsHitTesting(false)
             }
@@ -794,6 +842,17 @@ struct NotchShelfView: View {
         .onChange(of: controller.openCount) { expanded = false }
         .onKeyPress(.leftArrow) { controller.moveSelection(-1); return .handled }
         .onKeyPress(.rightArrow) { controller.moveSelection(1); return .handled }
+        // 竖版文件是一列：上下键选。横版不接（和以前一样）。
+        .onKeyPress(.upArrow) {
+            guard vertical else { return .ignored }
+            controller.moveSelection(-1)
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            guard vertical else { return .ignored }
+            controller.moveSelection(1)
+            return .handled
+        }
         .onKeyPress(.return) { controller.openSelected(); return .handled }
         // ⌫ 从暂存架拿掉；⌘⌫ 移到废纸篓（「文件」菜单拿到按键时由菜单处理，这里兜底，不会删两次）。
         .onKeyPress(keys: [.delete]) { press in
@@ -861,7 +920,21 @@ struct NotchShelfView: View {
 
     // MARK: 顶栏
 
+    @ViewBuilder
     private var header: some View {
+        if vertical {
+            // 竖版：不在刘海下面，三个标签一排，平分宽度，带文字。
+            HStack(spacing: 6) {
+                tabButton(.shelf, symbol: "tray", title: String(localized: "暂存架"), badge: nil)
+                tabButton(.downloads, symbol: "arrow.down.circle", title: String(localized: "最近下载"), badge: nil)
+                tabButton(.reminders, symbol: "bell", title: String(localized: "提醒"), badge: reminders.count)
+            }
+        } else {
+            notchHeader
+        }
+    }
+
+    private var notchHeader: some View {
         // 刘海正中是摄像头，什么都看不见：图标标签分到刘海两边，左边两个、右边一个。
         HStack(spacing: 0) {
             HStack(spacing: compact ? 2 : 6) {
@@ -883,9 +956,7 @@ struct NotchShelfView: View {
             controller.tab = tab
             controller.selectedIndex = 0
         } label: {
-            Image(systemName: symbol)
-                .font(.system(size: compact ? 13 : 14, weight: selected ? .semibold : .regular))
-                .frame(width: compact ? 24 : 28, height: compact ? 20 : 22)
+            tabLabel(symbol: symbol, title: title, selected: selected)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(selected ? Color.white.opacity(0.18) : .clear)
@@ -911,6 +982,27 @@ struct NotchShelfView: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
+    /// 横版：只有图标（和以前一样）。竖版：图标 + 文字，三个平分一排。
+    @ViewBuilder
+    private func tabLabel(symbol: String, title: String, selected: Bool) -> some View {
+        if vertical {
+            HStack(spacing: 5) {
+                Image(systemName: symbol)
+                    .font(.system(size: 13, weight: selected ? .semibold : .regular))
+                Text(title)
+                    .font(.system(size: 12, weight: selected ? .semibold : .regular))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 26)
+        } else {
+            Image(systemName: symbol)
+                .font(.system(size: compact ? 13 : 14, weight: selected ? .semibold : .regular))
+                .frame(width: compact ? 24 : 28, height: compact ? 20 : 22)
+        }
+    }
+
     // MARK: 内容
 
     /// 拖着文件经过面板、或篮筐正在投（右键「投进篮筐」、投送中、已送达）：显示三个落点。
@@ -923,7 +1015,8 @@ struct NotchShelfView: View {
         Group {
             if showsDropTargets {
                 NotchDropTargets(compact: compact,
-                                 hovered: controller.dropTargeted || controller.demoDropPreview ? controller.dropHover : nil)
+                                 hovered: controller.dropTargeted || controller.demoDropPreview ? controller.dropHover : nil,
+                                 vertical: vertical)
             } else if !tools.pendingImages.isEmpty || !tools.pendingFiles.isEmpty {
                 // 拖到「转换」后：格式 / 处理按钮占满内容区。
                 ShelfConvertChooser()
@@ -960,6 +1053,51 @@ struct NotchShelfView: View {
 
     @ViewBuilder
     private var fileList: some View {
+        if !items.isEmpty && vertical {
+            verticalFileList
+        } else {
+            horizontalFileList
+        }
+    }
+
+    /// 竖版：文件一行一个（缩略图 + 名字），一列往下滚；没有紧凑档的「+N」折叠。
+    private var verticalFileList: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 6) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        card(item, index: index)
+                            .id(item.id)
+                    }
+                    if controller.tab == .shelf && items.count > 1 {
+                        MultiFileDragArea(urls: {
+                            MainActor.assumeIsolated {
+                                NotchShelfController.shared.cardDragging = true
+                                return ShelfStore.shared.urls
+                            }
+                        }) {
+                            Label("拖出全部", systemImage: "hand.draw")
+                                .font(.system(size: 12, weight: .medium))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 34)
+                                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.08)))
+                        }
+                        .help("按住拖到访达、微信、邮件等任何地方，一次带上所有文件")
+                        .accessibilityLabel(Text("拖出全部"))
+                    }
+                }
+                .padding(.vertical, 1)
+            }
+            .onChange(of: controller.selectedIndex) {
+                if let item = controller.selectedItem {
+                    withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo(item.id) }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var horizontalFileList: some View {
         if items.isEmpty {
             HStack(spacing: 8) {
                 Image(systemName: emptySymbol)
@@ -1050,27 +1188,48 @@ struct NotchShelfView: View {
         }
     }
 
+    private func cardThumbnail(_ item: FileItem) -> some View {
+        ThumbnailView(url: item.url, size: thumb, isFolder: item.isPlainFolder)
+            .quickLookSource(item.url)
+            .overlay(alignment: .topTrailing) {
+                if reminders.paths.contains(item.path) {
+                    Image(systemName: "alarm.fill")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(3)
+                        .background(Circle().fill(Color.red))
+                        .offset(x: 3, y: -3)
+                }
+            }
+    }
+
+    /// 横版：缩略图在上、名字在下（和以前一样）。竖版：一行，缩略图在左、名字在右占满。
+    @ViewBuilder
+    private func cardBody(_ item: FileItem) -> some View {
+        if vertical {
+            HStack(spacing: 10) {
+                cardThumbnail(item)
+                Text(item.name)
+                    .font(.system(size: 12))
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            VStack(spacing: 3) {
+                cardThumbnail(item)
+                Text(item.name)
+                    .font(.caption2)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(width: thumb + 8)
+            }
+        }
+    }
+
     private func card(_ item: FileItem, index: Int) -> some View {
         let selected = index == controller.selectedIndex
-        return VStack(spacing: 3) {
-            ThumbnailView(url: item.url, size: thumb, isFolder: item.isPlainFolder)
-                .quickLookSource(item.url)
-                .overlay(alignment: .topTrailing) {
-                    if reminders.paths.contains(item.path) {
-                        Image(systemName: "alarm.fill")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.white)
-                            .padding(3)
-                            .background(Circle().fill(Color.red))
-                            .offset(x: 3, y: -3)
-                    }
-                }
-            Text(item.name)
-                .font(.caption2)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .frame(width: thumb + 8)
-        }
+        return cardBody(item)
         .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)

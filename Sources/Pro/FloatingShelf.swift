@@ -90,6 +90,9 @@ final class FloatingShelfController: NSObject {
         hotKeyAvailable = HotKeyCenter.shared.applyFloatingShelf(active: hotKeyOn) {
             FloatingShelfController.shared.toggle()
         }
+        // 刘海暂存架放在屏幕左右侧（竖版）时，边上的小把手跟着开关和授权显示 / 拿掉；beta.12 的旧位置值顺手改写成新值。
+        NotchShelfPosition.migrateLegacy()
+        NotchSideHandles.shared.update()
     }
 
     /// 菜单命令：显示或隐藏。不是 Pro 时打开 Pro 介绍页。

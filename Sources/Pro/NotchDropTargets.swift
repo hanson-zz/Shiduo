@@ -9,6 +9,8 @@ import SwiftUI
 struct NotchDropTargets: View {
     let compact: Bool
     let hovered: NotchShelfController.DropTarget?
+    /// 竖版（暂存架在屏幕左右边）：三个落点从上到下排（拖文件时按纵坐标判断）。
+    var vertical = false
     @ObservedObject private var hoop = AirDropHoop.shared
     @ObservedObject private var tools = ShelfTools.shared
     @ObservedObject private var media = MediaTools.shared
@@ -16,7 +18,8 @@ struct NotchDropTargets: View {
     private var iconHeight: CGFloat { compact ? 34 : 38 }
 
     var body: some View {
-        HStack(spacing: compact ? 6 : 8) {
+        let layout = vertical ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: compact ? 6 : 8))
+        layout {
             cell(.shelf)
             cell(.hoop)
             cell(.convert)
@@ -49,7 +52,7 @@ struct NotchDropTargets: View {
                 .font(.system(size: compact ? 11.5 : 12, weight: .semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            if !compact {
+            if !compact || vertical {
                 Text(hint(target))
                     .font(.system(size: 9.5, weight: .medium))
                     .foregroundStyle(.white.opacity(0.55))
