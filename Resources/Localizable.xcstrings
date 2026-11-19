@@ -42590,6 +42590,66 @@
           }
         }
       }
+    },
+    "刘海正中（默认）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notch center (default)"
+          }
+        }
+      }
+    },
+    "屏幕顶部左侧": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top left"
+          }
+        }
+      }
+    },
+    "屏幕顶部右侧": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top right"
+          }
+        }
+      }
+    },
+    "刘海暂存架位置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notch Shelf Position"
+          }
+        }
+      }
+    },
+    "刘海暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notch Shelf"
+          }
+        }
+      }
+    },
+    "放到左侧或右侧，可以和其他也用刘海的 App（比如码头）错开。把文件拖到屏幕顶边的对应位置就会展开；左右两侧是菜单栏，点一下不会展开。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put it on the left or right to stay clear of other apps that use the notch (like Dockling). Drag a file to that spot on the top edge of the screen to open it. The left and right spots sit on the menu bar, so clicking there doesn't open it."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

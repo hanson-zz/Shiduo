@@ -103,6 +103,8 @@ targets:
       - path: Sources/Model/FolderArtLogic.swift
       - path: Sources/Model/SmartCleanupLogic.swift
       - path: Sources/Model/HoverPreviewLogic.swift
+      # 刘海暂存架位置（刘海正中 / 顶部左侧 / 顶部右侧）：面板、触发区的位置计算。
+      - path: Sources/Model/NotchPositionLogic.swift
       - path: Sources/Model/SizeSortLogic.swift
       - path: Sources/Model/FolderSizeInvalidation.swift
       - path: Sources/Model/MoveProgressLogic.swift

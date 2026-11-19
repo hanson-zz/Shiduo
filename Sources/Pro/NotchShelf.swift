@@ -107,6 +107,31 @@ extension NSScreen {
 
 // MARK: - 设置项
 
+extension NotchShelfPosition {
+    var title: String {
+        switch self {
+        case .center: return String(localized: "刘海正中（默认）")
+        case .left: return String(localized: "屏幕顶部左侧")
+        case .right: return String(localized: "屏幕顶部右侧")
+        }
+    }
+}
+
+/// 「刘海暂存架位置」选择器：设置 › 通用 和 设置 › 暂存架 里各有一个，存的是同一个设置，改了马上生效。
+struct NotchShelfPositionPicker: View {
+    @AppStorage(NotchShelfPosition.key) private var position: NotchShelfPosition = .center
+
+    var body: some View {
+        Picker("刘海暂存架位置", selection: $position) {
+            ForEach(NotchShelfPosition.allCases) { Text($0.title).tag($0) }
+        }
+        .onChange(of: position) { NotchShelfController.shared.relayout() }
+        Text("放到左侧或右侧，可以和其他也用刘海的 App（比如码头）错开。把文件拖到屏幕顶边的对应位置就会展开；左右两侧是菜单栏，点一下不会展开。")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+}
+
 /// 「刘海宽度」：标准 / 紧凑。宽度总是按这块屏幕真实的刘海宽度算。
 enum NotchShelfWidth: String, CaseIterable, Identifiable {
     case standard, compact
@@ -216,8 +241,8 @@ final class NotchShelfController: NSObject, ObservableObject {
     /// 每次显示加一：收起动画的完成回调只在期间没有再次显示时才真正 orderOut。
     private var showGeneration = 0
 
-    /// 刘海两边各多出这么宽也算碰到。
-    private let triggerSlack: CGFloat = 60
+    /// 设置 › 通用 › 刘海暂存架位置：刘海正中 / 顶部左侧 / 顶部右侧。
+    private var position: NotchShelfPosition { NotchShelfPosition.current }
 
     private func panelSize(for screen: NSScreen) -> NSSize {
         let card = NotchShelfPrefs.cardSize
@@ -236,17 +261,28 @@ final class NotchShelfController: NSObject, ObservableObject {
     }
 
     private func targetFrame(for screen: NSScreen) -> NSRect {
-        let size = panelSize(for: screen)
-        return NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
-                      width: size.width, height: size.height)
+        NotchPositionLogic.panelFrame(position, screen: screen.frame, size: panelSize(for: screen),
+                                      notchWidth: screen.notchWidth, notchHeight: screen.notchHeight)
     }
 
-    /// 改了「刘海宽度」或卡片大小：开着的面板直接换成新尺寸。
+    /// 展开前、收起后的大小：正中是刘海本身，左右两侧是顶边上一段「虚拟刘海」。
+    private func anchorFrame(for screen: NSScreen) -> NSRect {
+        NotchPositionLogic.anchorFrame(position, screen: screen.frame,
+                                       notchWidth: screen.notchWidth, notchHeight: screen.notchHeight)
+    }
+
+    private func makeView(for screen: NSScreen) -> NotchShelfView {
+        NotchShelfView(controller: self,
+                       screenNotchWidth: NotchPositionLogic.headerGap(position, hasNotch: screen.hasNotch,
+                                                                      notchWidth: screen.notchWidth),
+                       topInset: screen.notchHeight)
+    }
+
+    /// 改了「刘海宽度」、卡片大小或位置：开着的面板直接换成新尺寸、挪到新位置。
     func relayout() {
         guard let panel, panel.isVisible, let screen else { return }
         if let host = panel.contentView as? NSHostingView<NotchShelfView> {
-            host.rootView = NotchShelfView(controller: self, screenNotchWidth: screen.hasNotch ? screen.notchWidth : 0,
-                                           topInset: screen.notchHeight)
+            host.rootView = makeView(for: screen)
         }
         panel.setFrame(targetFrame(for: screen), display: true, animate: !Demo.isOn)
     }
@@ -282,9 +318,10 @@ final class NotchShelfController: NSObject, ObservableObject {
         return DropTarget(rawValue: min(max(index, 0), 2)) ?? .shelf
     }
 
-    /// 点在刘海本身上（不含两边的余量：两边是菜单栏图标）。
+    /// 点在刘海本身上（不含两边的余量：两边是菜单栏图标）。放在左右两侧时点一下不展开（那里是菜单栏）。
     func isInNotch(_ point: NSPoint, on screen: NSScreen) -> Bool {
-        point.y >= screen.frame.maxY - screen.notchHeight && abs(point.x - screen.frame.midX) <= screen.notchWidth / 2
+        NotchPositionLogic.isClickToOpen(point, position: position, screen: screen.frame,
+                                         notchWidth: screen.notchWidth, notchHeight: screen.notchHeight)
     }
 
     /// 点一下刘海：展开 / 收起（刘海那块本来什么都点不到）。
@@ -295,10 +332,10 @@ final class NotchShelfController: NSObject, ObservableObject {
         show(on: screen, byDrag: false)
     }
 
-    /// 鼠标是不是在这块屏幕刘海附近的顶边上。
+    /// 鼠标是不是在这块屏幕刘海附近的顶边上（放在左右两侧时，是对应那一段顶边）。
     func isAtNotch(_ point: NSPoint, on screen: NSScreen) -> Bool {
-        let half = screen.notchWidth / 2 + triggerSlack
-        return point.y >= screen.frame.maxY - 3 && abs(point.x - screen.frame.midX) <= half
+        NotchPositionLogic.isAtTrigger(point, position: position, screen: screen.frame,
+                                       notchWidth: screen.notchWidth, notchHeight: screen.notchHeight)
     }
 
     // MARK: 悬停展开
@@ -352,13 +389,11 @@ final class NotchShelfController: NSObject, ObservableObject {
         let panel = self.panel ?? makePanel()
         self.panel = panel
         if let host = panel.contentView as? NSHostingView<NotchShelfView> {
-            host.rootView = NotchShelfView(controller: self, screenNotchWidth: screen.hasNotch ? screen.notchWidth : 0,
-                                           topInset: screen.notchHeight)
+            host.rootView = makeView(for: screen)
         }
         let frame = targetFrame(for: screen)
         // 从刘海里「长」出来：先是刘海大小，再展开。
-        let start = NSRect(x: screen.frame.midX - screen.notchWidth / 2, y: screen.frame.maxY - screen.notchHeight,
-                           width: screen.notchWidth, height: screen.notchHeight)
+        let start = anchorFrame(for: screen)
         if byDrag { tab = .shelf }
         showGeneration += 1
         openCount += 1
@@ -403,9 +438,7 @@ final class NotchShelfController: NSObject, ObservableObject {
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.16
             if let screen {
-                panel.animator().setFrame(NSRect(x: screen.frame.midX - screen.notchWidth / 2,
-                                                 y: screen.frame.maxY - screen.notchHeight,
-                                                 width: screen.notchWidth, height: screen.notchHeight), display: true)
+                panel.animator().setFrame(self.anchorFrame(for: screen), display: true)
             }
             panel.animator().alphaValue = 0
         }, completionHandler: {
@@ -1215,6 +1248,7 @@ struct ShelfStyleSettings: View {
             Text("0.5 秒").tag(0.5)
         }
         .disabled(!hoverToOpen)
+        NotchShelfPositionPicker()
         Picker("刘海宽度", selection: $notchWidth) {
             ForEach(NotchShelfWidth.allCases) { Text($0.title).tag($0) }
         }

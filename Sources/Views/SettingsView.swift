@@ -150,6 +150,11 @@ struct SettingsView: View {
 
         ExternalToolsSection()
 
+        // 和「暂存架」页里的是同一个设置：放到左右两侧，避开其他也用刘海的 App。
+        Section("刘海暂存架") {
+            NotchShelfPositionPicker()
+        }
+
         // 「文件夹图标」风格、浅色 / 深色挪到了「外观」页。
 
         Section("悬停预览") {
