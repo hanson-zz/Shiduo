@@ -29,10 +29,6 @@ struct FontLibraryTab: View {
     @FocusState private var gridFocused: Bool
     /// Option + 双指缩放开始时的字距。
     @State private var magnifyBase: Double? = nil
-    /// 框选拖动中：详情面板保持拖动开始时的样子（不跟着选中数量出现 / 消失），
-    /// 不然框到正好一款时面板弹出来、网格变窄重排，卡片在鼠标底下跳来跳去，框选又卡又乱。
-    @State private var marqueeActive = false
-    @State private var heldDetail: FontFamily?
 
     // 网格预览的设置（下次打开还是这样）。
     @AppStorage("fonts.sampleText") private var sample = FontCoverage.defaultSample
@@ -82,7 +78,8 @@ struct FontLibraryTab: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                if let family = marqueeActive ? heldDetail : detailFamily {
+                // 框选拖动中页面的选中不变（框到的只在框选草稿里），详情面板不会中途弹出 / 收起、网格不会变窄重排。
+                if let family = detailFamily {
                     Divider()
                     FontDetailPanel(family: family) { selection = [] }
                         .id(family.id)
@@ -212,13 +209,18 @@ struct FontLibraryTab: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: FontLayoutLogic.gridMinimum(size: size, available: viewport.width - 40)),
                                          spacing: 14)], spacing: 14) {
                 ForEach(families) { family in
-                    FontGridCard(family: family, mark: library.mark(for: family), status: library.commercialStatus(family),
-                                 sample: sample, size: size, tracking: tracking, palette: palette,
-                                 unify: unify, guides: guides, selected: selection.contains(family.id))
-                        .contentShape(Rectangle())
-                        .onTapGesture { tap(family) }
-                        .stableContextMenu { menu(for: family) }
-                        .marqueeItem(family.id)
+                    let mark = library.mark(for: family)
+                    let status = library.commercialStatus(family)
+                    // 框选拖动中只有选中状态变了的卡片重画（页面、详情面板都不动，见 MarqueeSelection.swift）。
+                    MarqueeSelected(family.id, committed: selection.contains(family.id)) { selected in
+                        FontGridCard(family: family, mark: mark, status: status,
+                                     sample: sample, size: size, tracking: tracking, palette: palette,
+                                     unify: unify, guides: guides, selected: selected)
+                            .contentShape(Rectangle())
+                            .onTapGesture { tap(family) }
+                            .stableContextMenu { menu(for: family) }
+                    }
+                    .marqueeItem(family.id)
                 }
             }
             .padding(20)
@@ -226,14 +228,8 @@ struct FontLibraryTab: View {
             // 在空白处拖动：框选（⇧ 加选，⌘ 反选，Esc 取消）；只点一下空白处取消选中。
             .marqueeSelection(ids: { families.map(\.id) }, selection: $selection,
                               layoutKey: AnyHashable([AnyHashable(viewport.width), AnyHashable(size), AnyHashable(families.count)]),
-                              onBegin: {
-                                  gridFocused = true
-                                  heldDetail = detailFamily
-                                  marqueeActive = true
-                              },
+                              onBegin: { gridFocused = true },
                               onEnd: {
-                                  marqueeActive = false
-                                  heldDetail = nil
                                   if let first = MarqueeSelectionLogic.firstSelected(families.map(\.id), in: selection) { anchor = first }
                               })
         }

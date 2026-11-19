@@ -665,14 +665,18 @@ struct CleanupReviewPage: View {
                     } else {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
                             ForEach(items) { item in
-                                ReviewCell(item: item, selected: selected.contains(item.id), label: card?.labels[item.path])
-                                    .onTapGesture(count: 2) { store.openItems([item]) }
-                                    .onTapGesture { toggle(item) }
-                                    // 右键的这一项在选中里 → 作用在全部选中，否则只作用在这一项。
-                                    .stableContextMenu { FileContextMenu(items: selected.contains(item.id) ? selectedItems : [item]) }
-                                    .onDrag { InAppDrag.copyOnlyProvider(item.url) }
-                                    .help(item.path)
-                                    .marqueeItem(item.id)
+                                let label = card?.labels[item.path]
+                                // 框选拖动中只有勾选状态变了的格子重画（页面不重画，见 MarqueeSelection.swift）。
+                                MarqueeSelected(item.id, committed: selected.contains(item.id)) { isOn in
+                                    ReviewCell(item: item, selected: isOn, label: label)
+                                        .onTapGesture(count: 2) { store.openItems([item]) }
+                                        .onTapGesture { toggle(item) }
+                                        // 右键的这一项在选中里 → 作用在全部选中，否则只作用在这一项。
+                                        .stableContextMenu { FileContextMenu(items: selected.contains(item.id) ? selectedItems : [item]) }
+                                        .onDrag { InAppDrag.copyOnlyProvider(item.url) }
+                                        .help(item.path)
+                                }
+                                .marqueeItem(item.id)
                             }
                         }
                     }

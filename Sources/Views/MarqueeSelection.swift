@@ -1,4 +1,5 @@
 import AppKit
+import Observation
 import SwiftUI
 
 // MARK: - 框选（所有页面的网格 / 卡片共用）
@@ -8,8 +9,10 @@ import SwiftUI
 //     ScrollView {
 //         LazyVGrid(...) {
 //             ForEach(items) { item in
-//                 Cell(item)
-//                     .marqueeItem(item.id)          // 报告自己在网格里的位置
+//                 MarqueeSelected(item.id, committed: selection.contains(item.id)) { selected in
+//                     Cell(item, selected: selected)   // 拖动中只有选中状态变了的格子重画
+//                 }
+//                 .marqueeItem(item.id)                // 报告自己在网格里的位置
 //             }
 //         }
 //         .padding(16)
@@ -24,6 +27,12 @@ import SwiftUI
 // 的框选就是这样失灵的。透明层对左键返回 nil 时，AppKit 会把点按交给下面的 NSView（格子的 FileCellMouseArea
 // 一直就是这样拿到点按的），所以框选也做成一个垫在最底下的 NSView：只接左键，右键 / 滚轮 / 悬停都不管。
 // 拖动时用 AppKit 自己的跟踪循环：拖到边缘自动滚动、Esc 取消（恢复成开始前的选中）都在这里处理。
+//
+// 为什么拖动中不写页面的 selection：页面的 selection 一变，整个页面（工具栏、底栏、整个网格、每个格子的
+// 右键菜单层 / 鼠标层 / 缩略图……）都要重算一遍，几百个格子时每帧几十毫秒，框选就一顿一顿的。
+// 所以拖动中框到的只放进框选自己的草稿（MarqueeDraft：每个项目一个小开关），格子用 MarqueeSelected 读它，
+// 只有选中状态真的变了的那几个格子重画；松手（或 Esc）时才把结果一次写回页面的 selection。
+// 「已选 N 个」这类页面上的数字松手时才更新。
 
 enum MarqueeSpace {
     /// 网格的坐标空间名字（项目位置和框选矩形都用它）。
@@ -93,6 +102,90 @@ struct MarqueeItemIf<ID: Hashable>: ViewModifier {
     }
 }
 
+// MARK: - 拖动中的选中草稿
+
+/// 一个项目在拖动中的选中状态：nil = 没在框选（用页面的选中）。只有读它的那一个格子观察它。
+@Observable
+final class MarqueeDraftFlag {
+    var value: Bool?
+}
+
+/// 框选拖动中的选中草稿（每个框选区域一份）：每个项目一个 MarqueeDraftFlag，
+/// 只改选中状态变了的那几个开关，其他格子、整个页面都不重画。
+@MainActor
+final class MarqueeDraft {
+    private var flags: [AnyHashable: MarqueeDraftFlag] = [:]
+    /// 现在开关不是 nil 的（松手时都要清掉）。
+    private var touched: Set<AnyHashable> = []
+
+    /// 格子读这个（在 body 里读 value，SwiftUI 就只在它变时重画这个格子）。
+    func flag(for id: AnyHashable) -> MarqueeDraftFlag {
+        if let flag = flags[id] { return flag }
+        let flag = MarqueeDraftFlag()
+        flags[id] = flag
+        return flag
+    }
+
+    /// 开始拖动：不在现在列表里的项目的开关丢掉（它们的格子已经不在了，回来时会重新拿一个）。
+    func begin<ID: Hashable>(ids: [ID]) {
+        clear()
+        guard flags.count > ids.count else { return }
+        let keep = Set(ids.map { AnyHashable($0) })
+        flags = flags.filter { keep.contains($0.key) }
+    }
+
+    /// 这几个项目现在显示成选中 / 没选中。
+    func set<ID: Hashable>(_ changed: Set<ID>, selectedIn next: Set<ID>) {
+        for id in changed {
+            let key = AnyHashable(id)
+            let value = next.contains(id)
+            let flag = flag(for: key)
+            if flag.value != value { flag.value = value }
+            touched.insert(key)
+        }
+    }
+
+    /// 拖完：所有开关回到 nil（格子又用页面的选中，这时页面的选中已经写好了，不会闪）。
+    func clear() {
+        for key in touched {
+            if let flag = flags[key], flag.value != nil { flag.value = nil }
+        }
+        touched = []
+    }
+}
+
+private struct MarqueeDraftKey: EnvironmentKey {
+    static let defaultValue: MarqueeDraft? = nil
+}
+
+extension EnvironmentValues {
+    /// 外面最近的框选区域的草稿（没有框选时为 nil）。
+    var marqueeDraft: MarqueeDraft? {
+        get { self[MarqueeDraftKey.self] }
+        set { self[MarqueeDraftKey.self] = newValue }
+    }
+}
+
+/// 包在格子外面：拖动中按框选草稿显示选中，没在框选时用 committed（页面的选中）。
+/// 拖动中只有选中状态变了的格子重画；页面本身不重画。
+struct MarqueeSelected<ID: Hashable, Content: View>: View {
+    let id: ID
+    let committed: Bool
+    let content: (Bool) -> Content
+
+    @Environment(\.marqueeDraft) private var draft
+
+    init(_ id: ID, committed: Bool, @ViewBuilder content: @escaping (Bool) -> Content) {
+        self.id = id
+        self.committed = committed
+        self.content = content
+    }
+
+    var body: some View {
+        content(MarqueeSelectionLogic.isSelected(draft: draft?.flag(for: AnyHashable(id)).value, committed: committed))
+    }
+}
+
 private struct MarqueeSelectionModifier<ID: Hashable>: ViewModifier {
     let ids: () -> [ID]
     @Binding var selection: Set<ID>
@@ -106,9 +199,12 @@ private struct MarqueeSelectionModifier<ID: Hashable>: ViewModifier {
     // 用 @State 拿着、不观察：矩形每次鼠标移动都变，只让 MarqueeRectView 重画；
     // 用 @StateObject 的话，这个修饰器（连同空白处右键菜单层、框选层）每次鼠标移动都要重算一遍。
     @State private var controller = MarqueeController<ID>()
+    /// 拖动中的选中草稿：格子读它，页面不读（见文件开头）。
+    @State private var draft = MarqueeDraft()
 
     func body(content: Content) -> some View {
         content
+            .environment(\.marqueeDraft, draft)
             .background { surfaceLayer }
             .overlay(alignment: .topLeading) { MarqueeRectView(controller: controller) }
             .coordinateSpace(name: MarqueeSpace.name)
@@ -122,27 +218,28 @@ private struct MarqueeSelectionModifier<ID: Hashable>: ViewModifier {
         let surface = MarqueeSurface(
             onBegin: { point, flags in
                 onBegin?()
-                controller.begin(at: point, selection: selection, ids: ids(), style: style, inset: hitInset,
+                let list = ids()
+                draft.begin(ids: list)
+                controller.begin(at: point, selection: selection, ids: list, style: style, inset: hitInset,
                                  shift: flags.contains(.shift), command: flags.contains(.command))
             },
             onDrag: { point in
-                if let next = controller.update(to: point, force: false), next != selection { selection = next }
+                // 只改草稿里变了的那几个格子，不写页面的 selection。
+                if let change = controller.update(to: point, force: false) {
+                    draft.set(change.changed, selectedIn: change.selection)
+                }
             },
             onEnd: { point in
-                switch controller.end(at: point) {
-                case .clear:
-                    if !selection.isEmpty { selection = [] }
-                case .select(let next):
-                    if next != selection { selection = next }
-                case .nothing:
-                    break
-                }
+                // 先写页面的选中，再清草稿：同一次事件里做完，SwiftUI 一起重画，格子不会闪回去。
+                if let next = controller.end(at: point), next != selection { selection = next }
+                draft.clear()
                 onEnd?()
             },
             onCancel: {
+                // Esc：页面的选中一直没动过，清掉草稿就回到开始前的样子。
                 let original = controller.cancel()
                 if original != selection { selection = original }
-                // 取消也算结束：页面暂存的框选草稿要在这里收尾。
+                draft.clear()
                 onEnd?()
             }
         )
@@ -171,13 +268,10 @@ private struct MarqueeSelectionModifier<ID: Hashable>: ViewModifier {
 /// 框选的状态：只有 MarqueeRectView 观察它，矩形每帧变化时网格本身不重画。
 @MainActor
 final class MarqueeController<ID: Hashable>: ObservableObject {
-    enum EndResult: Equatable {
-        /// 只点了一下空白处，要清空选中。
-        case clear
-        /// 拖完了，选中是这个。
-        case select(Set<ID>)
-        /// 什么都不改。
-        case nothing
+    /// 拖动中一帧的结果：现在的选中，和跟上一帧比变了的项目。
+    struct Change {
+        let selection: Set<ID>
+        let changed: Set<ID>
     }
 
     /// 画出来的矩形（网格坐标）。太小时不画，单击空白处不会闪一下。
@@ -198,10 +292,15 @@ final class MarqueeController<ID: Hashable>: ObservableObject {
     private var inset: CGFloat = MarqueeSelectionLogic.defaultHitInset
     private var shift = false
     private var command = false
-    private var lastApply: TimeInterval = 0
     private var lastHit: Set<ID>?
+    /// 草稿里现在显示的选中（开始时是原来的选中）。
+    private var shown: Set<ID> = []
+    /// 拖出过矩形以后最后一次算出来的选中（松手时矩形太小也用它）。
+    private var lastSelection: Set<ID>?
 
     func framesChanged(_ new: [ID: CGRect]) {
+        // 只是选中变了、格子重画时位置没变：不用再合并一遍。
+        guard new != latest else { return }
         latest = new
         frames.merge(new) { $1 }
     }
@@ -223,12 +322,14 @@ final class MarqueeController<ID: Hashable>: ObservableObject {
         self.shift = shift
         self.command = command
         base = MarqueeSelectionLogic.base(current: selection, style: style, shift: shift, command: command)
-        lastApply = 0
         lastHit = nil
+        shown = selection
+        lastSelection = nil
     }
 
-    /// 拖动中：返回新的选中（最多每 30 毫秒一次；force 时一定算；矩形太小时返回 nil；框到的没变时也返回 nil）。
-    func update(to point: CGPoint, force: Bool) -> Set<ID>? {
+    /// 拖动中：返回这一帧的选中和变了的项目（每次鼠标移动都算：命中只是几百个矩形相交，很便宜；
+    /// 矩形太小时返回 nil；框到的没变时也返回 nil，force 时照样返回）。
+    func update(to point: CGPoint, force: Bool) -> Change? {
         guard active else { return nil }
         location = point
         let r = MarqueeSelectionLogic.rect(from: start, to: location)
@@ -236,25 +337,27 @@ final class MarqueeController<ID: Hashable>: ObservableObject {
             if rect != nil { rect = nil }
             return nil
         }
-        rect = r
-        let now = ProcessInfo.processInfo.systemUptime
-        guard force || now - lastApply >= 0.03 else { return nil }
-        lastApply = now
+        if rect != r { rect = r }
         let hit = MarqueeSelectionLogic.hits(frames, rect: r, inset: inset).intersection(ids)
         // 框到的和上一次一样：不用再算、也不用再写选中（鼠标在格子之间的空隙里移动时最常见）。
         if !force, hit == lastHit { return nil }
         lastHit = hit
-        return MarqueeSelectionLogic.selection(base: base, hit: hit, command: command)
+        let next = MarqueeSelectionLogic.selection(base: base, hit: hit, command: command)
+        let changed = MarqueeSelectionLogic.changed(from: shown, to: next)
+        shown = next
+        lastSelection = next
+        return Change(selection: next, changed: changed)
     }
 
-    func end(at point: CGPoint) -> EndResult {
+    /// 松手：返回页面要写的选中（nil = 什么都不改）。
+    func end(at point: CGPoint) -> Set<ID>? {
         defer { reset() }
-        guard active else { return .nothing }
-        if MarqueeSelectionLogic.isClick(from: start, to: point) {
-            return MarqueeSelectionLogic.clearsOnEmptyClick(style: style, shift: shift, command: command) ? .clear : .nothing
-        }
-        if let next = update(to: point, force: true) { return .select(next) }
-        return .nothing
+        guard active else { return nil }
+        let click = MarqueeSelectionLogic.isClick(from: start, to: point)
+        let final = click ? nil : update(to: point, force: true)?.selection
+        return MarqueeSelectionLogic.commit(click: click,
+                                            clearsOnClick: MarqueeSelectionLogic.clearsOnEmptyClick(style: style, shift: shift, command: command),
+                                            final: final, last: lastSelection)
     }
 
     /// Esc：返回开始框选前的选中。
@@ -266,6 +369,8 @@ final class MarqueeController<ID: Hashable>: ObservableObject {
     private func reset() {
         active = false
         lastHit = nil
+        lastSelection = nil
+        shown = []
         if rect != nil { rect = nil }
     }
 }

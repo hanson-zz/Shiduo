@@ -439,9 +439,6 @@ struct FileCollectionView: View {
     @State private var sortedURLs: [URL]
     /// sortedItems 是由哪份列表排出来的：翻到底加载了下一页（只在后面多了文件）时，只排新来的再合并，不把几万个重排一遍。
     @State private var sortedInput: [FileItem]
-    /// 框选拖动中的选中（只在这一栏里）：拖的时候不写进 store.selectedIDs，不然每次框到的变了，
-    /// 侧边栏、简介栏、另一栏、工具栏……整个窗口都要跟着重画，框选就会一顿一顿的。松手时一次写回去。
-    @State private var marqueeDraft: Set<String>?
     @State private var previewURL: URL?
     /// 图片用自己的预览，能直接划选文字。
     @State private var liveItem: FileItem?
@@ -486,10 +483,11 @@ struct FileCollectionView: View {
 
     private var sorted: [FileItem] { sortedItems }
 
-    /// 框选读写的选中：拖动中读写这一栏的草稿，没在框选时读 store。
+    /// 框选读写的选中。拖动中框到的只放在框选自己的草稿里（只有变了的格子重画），
+    /// 松手 / Esc 时才写一次 store.selectedIDs：不然侧边栏、简介栏、另一栏、工具栏……整个窗口每帧都要重画。
     private var marqueeSelectionBinding: Binding<Set<String>> {
-        Binding(get: { marqueeDraft ?? store.selectedIDs },
-                set: { marqueeDraft = $0 })
+        Binding(get: { store.selectedIDs },
+                set: { store.selectedIDs = $0 })
     }
 
     /// 列表表头用：点表头换排序时写回 UserDefaults。
@@ -658,45 +656,48 @@ struct FileCollectionView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: thumbnailSize + 28), spacing: 8)], spacing: 10) {
                 Section {
                 ForEach(sorted) { item in
-                    FileGridCell(
-                        item: item, size: CGFloat(thumbnailSize), selected: (marqueeDraft ?? store.selectedIDs).contains(item.id),
-                        nameFontSize: CGFloat(ListFontSize.gridNameSize(appearance.settings.listFontSize)),
-                        copyText: TextExtractor.canExtract(item) ? { store.copyText(targets(for: item)) } : nil,
-                        // 左键点按、双击和拖动交给 AppKit：拖动选中的格子时一次带上所有选中的文件（macOS 14 起都行）。
-                        mouseArea: FileCellMouseArea(
-                            urls: { targets(for: item).map(\.url) },
-                            onClick: { count, flags in
-                                gridFocused = true
-                                if count >= 2 {
-                                    // ⌘ 双击文件夹：在新标签页中打开（和访达一样）。
-                                    if flags.contains(.command), item.isDirectory, let windowTabs {
-                                        windowTabs.openInNewTab(item.path)
+                    // 框选拖动中只有选中状态变了的格子重画（这一栏、整个窗口都不重画，见 MarqueeSelection.swift）。
+                    MarqueeSelected(item.id, committed: store.selectedIDs.contains(item.id)) { selected in
+                        FileGridCell(
+                            item: item, size: CGFloat(thumbnailSize), selected: selected,
+                            nameFontSize: CGFloat(ListFontSize.gridNameSize(appearance.settings.listFontSize)),
+                            copyText: TextExtractor.canExtract(item) ? { store.copyText(targets(for: item)) } : nil,
+                            // 左键点按、双击和拖动交给 AppKit：拖动选中的格子时一次带上所有选中的文件（macOS 14 起都行）。
+                            mouseArea: FileCellMouseArea(
+                                urls: { targets(for: item).map(\.url) },
+                                onClick: { count, flags in
+                                    gridFocused = true
+                                    if count >= 2 {
+                                        // ⌘ 双击文件夹：在新标签页中打开（和访达一样）。
+                                        if flags.contains(.command), item.isDirectory, let windowTabs {
+                                            windowTabs.openInNewTab(item.path)
+                                        } else {
+                                            store.open(item, in: sorted)
+                                        }
                                     } else {
-                                        store.open(item, in: sorted)
+                                        select(item, flags: flags)
                                     }
-                                } else {
-                                    select(item, flags: flags)
-                                }
-                            },
-                            // 中键点按文件夹：在后台的新标签页中打开（和浏览器一样）。
-                            onMiddleClick: item.isDirectory && windowTabs != nil ? {
-                                windowTabs?.openInNewTab(item.path, select: false)
-                            } : nil
-                        ),
-                        showsExtension: showExtensions, showsInfo: showItemInfo,
-                        renaming: store.inlineRenamePath == item.path,
-                        onRename: { store.commitInlineRename(item, to: $0) },
-                        hoverPreview: true,
-                        onOpenFolderMenu: item.isDirectory ? { openFolderMenu(item) } : nil
-                    )
-                        .stableContextMenu {
-                            FileContextMenu(items: targets(for: item), preview: { preview($0) })
-                        }
-                        .help(item.path)
-                        // 把文件拖到文件夹格子上：移进去（⌥ 拷贝），⌘Z 可以撤销。
-                        .modifier(FolderDropTarget(enabled: item.isDirectory,
-                                                   targeted: dropTargeted(item)) { drop($0, onto: item, copy: $1) })
-                        .marqueeItem(item.id)
+                                },
+                                // 中键点按文件夹：在后台的新标签页中打开（和浏览器一样）。
+                                onMiddleClick: item.isDirectory && windowTabs != nil ? {
+                                    windowTabs?.openInNewTab(item.path, select: false)
+                                } : nil
+                            ),
+                            showsExtension: showExtensions, showsInfo: showItemInfo,
+                            renaming: store.inlineRenamePath == item.path,
+                            onRename: { store.commitInlineRename(item, to: $0) },
+                            hoverPreview: true,
+                            onOpenFolderMenu: item.isDirectory ? { openFolderMenu(item) } : nil
+                        )
+                            .stableContextMenu {
+                                FileContextMenu(items: targets(for: item), preview: { preview($0) })
+                            }
+                            .help(item.path)
+                            // 把文件拖到文件夹格子上：移进去（⌥ 拷贝），⌘Z 可以撤销。
+                            .modifier(FolderDropTarget(enabled: item.isDirectory,
+                                                       targeted: dropTargeted(item)) { drop($0, onto: item, copy: $1) })
+                    }
+                    .marqueeItem(item.id)
                 }
                 } footer: {
                     // 资料库类别：翻到底自动加载下一页 / 已忽略的文件数（其他页面什么也不显示）。
@@ -718,11 +719,7 @@ struct FileCollectionView: View {
                               backgroundMenu: { AnyView(FolderBackgroundMenu()) },
                               onBegin: { gridFocused = true },
                               onEnd: {
-                                  // 松手 / Esc：草稿一次写回 store（简介栏、底栏这时才更新）。
-                                  if let draft = marqueeDraft {
-                                      marqueeDraft = nil
-                                      if draft != store.selectedIDs { store.selectedIDs = draft }
-                                  }
+                                  // 松手 / Esc 时框选已经把结果一次写回 store（简介栏、底栏这时才更新）。
                                   // 下次 ⇧ 连选从框选到的第一个开始。
                                   if let first = sorted.first(where: { store.selectedIDs.contains($0.id) }) { selectionAnchor = first.id }
                               })

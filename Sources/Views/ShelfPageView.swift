@@ -240,22 +240,25 @@ struct ShelfPageView: View {
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: thumbnail + 28), spacing: 8)], spacing: 10) {
                     ForEach(shelf.items) { item in
-                        FileGridCell(item: item, size: thumbnail, selected: selection.contains(item.id))
-                            // 左键点按、双击和拖动交给 AppKit：拖动选中的格子时一次带上所有选中的文件。
-                            .overlay(FileCellMouseArea(
-                                urls: { dragURLs(for: item) },
-                                onClick: { count, flags in
-                                    gridFocused = true
-                                    if count >= 2 {
-                                        store.openItems([item])
-                                    } else {
-                                        select(item, flags: flags)
+                        // 框选拖动中只有选中状态变了的格子重画（页面不重画，见 MarqueeSelection.swift）。
+                        MarqueeSelected(item.id, committed: selection.contains(item.id)) { selected in
+                            FileGridCell(item: item, size: thumbnail, selected: selected)
+                                // 左键点按、双击和拖动交给 AppKit：拖动选中的格子时一次带上所有选中的文件。
+                                .overlay(FileCellMouseArea(
+                                    urls: { dragURLs(for: item) },
+                                    onClick: { count, flags in
+                                        gridFocused = true
+                                        if count >= 2 {
+                                            store.openItems([item])
+                                        } else {
+                                            select(item, flags: flags)
+                                        }
                                     }
-                                }
-                            ))
-                            .stableContextMenu { menu(for: item) }
-                            .help(item.path)
-                            .marqueeItem(item.id)
+                                ))
+                                .stableContextMenu { menu(for: item) }
+                                .help(item.path)
+                        }
+                        .marqueeItem(item.id)
                     }
                 }
                 .padding(16)

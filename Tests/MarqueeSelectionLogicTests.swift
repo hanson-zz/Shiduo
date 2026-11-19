@@ -104,4 +104,47 @@ final class MarqueeSelectionLogicTests: XCTestCase {
         XCTAssertEqual(MarqueeSelectionLogic.firstSelected(["a", "b", "c"], in: ["c", "b"]), "b")
         XCTAssertNil(MarqueeSelectionLogic.firstSelected(["a"], in: ["z"]))
     }
+
+    // MARK: 拖动中的草稿
+
+    func testChangedOnlyListsItemsWhoseStateFlipped() {
+        XCTAssertEqual(MarqueeSelectionLogic.changed(from: [1, 2], to: [2, 3]), [1, 3], "只有 1 和 3 要重画")
+        XCTAssertEqual(MarqueeSelectionLogic.changed(from: [1, 2], to: [1, 2]), [], "框到的没变：一个格子都不重画")
+        XCTAssertEqual(MarqueeSelectionLogic.changed(from: Set<Int>(), to: [4]), [4])
+        XCTAssertEqual(MarqueeSelectionLogic.changed(from: [4], to: Set<Int>()), [4])
+    }
+
+    func testDraftOverridesCommittedOnlyWhileDragging() {
+        XCTAssertTrue(MarqueeSelectionLogic.isSelected(draft: nil, committed: true), "没在框选：用页面的选中")
+        XCTAssertFalse(MarqueeSelectionLogic.isSelected(draft: nil, committed: false))
+        XCTAssertTrue(MarqueeSelectionLogic.isSelected(draft: true, committed: false), "拖动中：草稿说了算")
+        XCTAssertFalse(MarqueeSelectionLogic.isSelected(draft: false, committed: true))
+    }
+
+    /// 一帧帧应用 changed，草稿里显示的选中始终等于最后一帧算出来的（不会漏掉中途又框回去的格子）。
+    func testApplyingChangesFrameByFrameMatchesLastSelection() {
+        let original: Set<Int> = [1, 9]
+        var shown = original
+        var draft: [Int: Bool] = [:]
+        let frames: [Set<Int>] = [[1, 2], [1, 2, 3], [2], [2, 3, 4], [9]]
+        for next in frames {
+            for id in MarqueeSelectionLogic.changed(from: shown, to: next) { draft[id] = next.contains(id) }
+            shown = next
+            let displayed = Set((0...10).filter { MarqueeSelectionLogic.isSelected(draft: draft[$0], committed: original.contains($0)) })
+            XCTAssertEqual(displayed, next)
+        }
+    }
+
+    func testCommitOnMouseUp() {
+        XCTAssertEqual(MarqueeSelectionLogic.commit(click: true, clearsOnClick: true, final: nil, last: [1]), Set<Int>(),
+                       "访达式：点一下空白处清空")
+        XCTAssertNil(MarqueeSelectionLogic.commit(click: true, clearsOnClick: false, final: nil, last: Set<Int>([1])),
+                     "勾选框页面：点一下空白处什么都不改")
+        XCTAssertEqual(MarqueeSelectionLogic.commit(click: false, clearsOnClick: true, final: [2, 3], last: [2]), [2, 3],
+                       "松手那一下按最后位置算")
+        XCTAssertEqual(MarqueeSelectionLogic.commit(click: false, clearsOnClick: true, final: nil, last: [2]), [2],
+                       "松手时矩形太小：用拖动中最后显示的，不丢掉")
+        XCTAssertNil(MarqueeSelectionLogic.commit(click: false, clearsOnClick: true, final: nil, last: Set<Int>?.none),
+                     "没拖出过矩形：什么都不改")
+    }
 }

@@ -424,32 +424,35 @@ private struct FontIssueCard: View {
                 }
             }
             ForEach(group.extras) { file in
-                HStack(spacing: 8) {
-                    if file.isActionable {
-                        Toggle("", isOn: Binding(
-                            get: { checked.contains(file.path) },
-                            set: { on in if on { checked.insert(file.path) } else { checked.remove(file.path) } }
-                        ))
-                        .toggleStyle(.checkbox)
-                        .labelsHidden()
-                    } else {
-                        Image(systemName: "lock.fill")
-                            .foregroundStyle(.secondary)
-                            .help(FontLibrary.adminNote(1))
+                // 框选拖动中只有勾选状态变了的行重画（页面不重画，见 MarqueeSelection.swift）。
+                MarqueeSelected(file.path, committed: checked.contains(file.path)) { isOn in
+                    HStack(spacing: 8) {
+                        if file.isActionable {
+                            Toggle("", isOn: Binding(
+                                get: { isOn },
+                                set: { on in if on { checked.insert(file.path) } else { checked.remove(file.path) } }
+                            ))
+                            .toggleStyle(.checkbox)
+                            .labelsHidden()
+                        } else {
+                            Image(systemName: "lock.fill")
+                                .foregroundStyle(.secondary)
+                                .help(FontLibrary.adminNote(1))
+                        }
+                        Text(reason(for: file)).font(.callout.weight(.medium))
+                        fileLine(file)
                     }
-                    Text(reason(for: file)).font(.callout.weight(.medium))
-                    fileLine(file)
-                }
-                .opacity(file.isActionable ? 1 : 0.6)
-                .background {
-                    if file.isActionable && checked.contains(file.path) {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(Color.accentColor.opacity(0.12))
-                            .padding(-3)
+                    .opacity(file.isActionable ? 1 : 0.6)
+                    .background {
+                        if file.isActionable && isOn {
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(Color.accentColor.opacity(0.12))
+                                .padding(-3)
+                        }
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture { if file.isActionable { onRowTap(file.path) } }
                 }
-                .contentShape(Rectangle())
-                .onTapGesture { if file.isActionable { onRowTap(file.path) } }
                 .modifier(MarqueeItemIf(id: file.isActionable ? file.path : nil))
             }
         }

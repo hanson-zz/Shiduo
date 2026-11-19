@@ -98,4 +98,24 @@ enum MarqueeSelectionLogic {
     static func firstSelected<ID: Hashable>(_ ids: [ID], in selection: Set<ID>) -> ID? {
         ids.first { selection.contains($0) }
     }
+
+    /// 框选拖动中，上一帧到这一帧选中状态变了的项目（只让这些格子重画）。
+    static func changed<ID: Hashable>(from previous: Set<ID>, to next: Set<ID>) -> Set<ID> {
+        previous.symmetricDifference(next)
+    }
+
+    /// 格子显示成选中没有：拖动中有草稿就用草稿，没有就用页面真正的选中。
+    static func isSelected(draft: Bool?, committed: Bool) -> Bool {
+        draft ?? committed
+    }
+
+    /// 拖完 / 取消时页面真正要写的选中。
+    /// - click：只点了一下空白处（clearsOnClick：要不要清空）。
+    /// - final：松手那一下按最后位置算的（矩形太小时为 nil）。
+    /// - last：拖动中最后一次显示出来的草稿（没拖出过矩形时为 nil）。
+    /// 返回 nil 表示什么都不改。
+    static func commit<ID: Hashable>(click: Bool, clearsOnClick: Bool, final: Set<ID>?, last: Set<ID>?) -> Set<ID>? {
+        if click { return clearsOnClick ? [] : nil }
+        return final ?? last
+    }
 }

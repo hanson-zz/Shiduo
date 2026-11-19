@@ -467,25 +467,31 @@ struct FolderWallView: View {
             if store.pinnedFolders.isEmpty {
                 empty
             } else {
-                // 每次重画只算一次（框选拖动中选中一变就重画）：不在每张卡片里各自把整个列表过一遍。
+                // 每次重画只算一次：不在每张卡片里各自把整个列表过一遍。
                 let selectedGroup = selection.count > 1 ? folders.map(\.path).filter(selection.contains) : []
                 let reminderPaths = reminders.reminders.map(\.path)
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: cardWidth + 32, maximum: cardWidth + 64), spacing: 20)], spacing: 24) {
                         ForEach(folders, id: \.path) { s in
-                            FolderCard(summary: s,
-                                       tint: model.tint(for: s),
-                                       reminderCount: reminderPaths.lazy.filter { $0.hasPrefix(s.path + "/") }.count,
-                                       width: cardWidth,
-                                       iconStyle: iconStyle,
-                                       selected: selection.contains(s.path),
-                                       group: selection.contains(s.path) ? selectedGroup : [],
-                                       renamingPath: $renamingPath,
-                                       onSelect: {
-                                           select(s.path, flags: NSEvent.modifierFlags)
-                                           gridFocused = true
-                                       },
-                                       onDropTile: { moved in reorder(moved, before: s.path) })
+                            let reminderCount = reminderPaths.lazy.filter { $0.hasPrefix(s.path + "/") }.count
+                            let tint = model.tint(for: s)
+                            // 框选拖动中只有选中状态变了的卡片重画（页面不重画，见 MarqueeSelection.swift）。
+                            // 拖出多张一起走的「一组」只看真正的选中（框选松手后才会拖卡片）。
+                            MarqueeSelected(s.path, committed: selection.contains(s.path)) { selected in
+                                FolderCard(summary: s,
+                                           tint: tint,
+                                           reminderCount: reminderCount,
+                                           width: cardWidth,
+                                           iconStyle: iconStyle,
+                                           selected: selected,
+                                           group: selection.contains(s.path) ? selectedGroup : [],
+                                           renamingPath: $renamingPath,
+                                           onSelect: {
+                                               select(s.path, flags: NSEvent.modifierFlags)
+                                               gridFocused = true
+                                           },
+                                           onDropTile: { moved in reorder(moved, before: s.path) })
+                            }
                             .marqueeItem(s.path)
                         }
                     }
