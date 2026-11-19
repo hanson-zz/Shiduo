@@ -294,6 +294,8 @@ final class FolderIconService: ObservableObject {
     @Published var editing: [URL] = []
     /// 打开编辑器时的初始颜色（文件夹墙卡片的颜色），nil 用上次的样式。
     @Published var seedColor: String?
+    /// 打开编辑器时直接预览的样式（新建文件夹后点「换成推荐图标」），nil 用上次的样式。
+    @Published var seedStyle: FolderIconStyle?
     @Published private(set) var ledger = FolderIconLedger()
 
     private let directory: URL
@@ -382,12 +384,13 @@ final class FolderIconService: ObservableObject {
     }
 
     /// 打开编辑器；不是 Pro 就弹付费页（跟「提醒我处理…」一样）。
-    func openEditor(_ urls: [URL], color: NSColor? = nil) {
+    func openEditor(_ urls: [URL], color: NSColor? = nil, style: FolderIconStyle? = nil) {
         guard LicenseManager.shared.isPro else {
             LicenseManager.shared.showPaywall = true
             return
         }
         seedColor = color.map(FolderPalette.hex)
+        seedStyle = style
         editing = urls
     }
 

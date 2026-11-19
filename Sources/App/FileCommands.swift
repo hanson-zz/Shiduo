@@ -241,6 +241,7 @@ extension LibraryStore {
                 action.createdFolders = [created.path]
             }
             forget(paths: Set(result.pairs.map(\.from)))
+            freshFolders.insert(created.standardizedFileURL.path)
             FolderSizeStore.shared.noteChanged([created.path])
             if let item = FileItem(url: created) {
                 remember([item])

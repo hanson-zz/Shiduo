@@ -8,6 +8,7 @@ struct AppearanceSettingsSections: View {
     @ObservedObject private var iconStatus = AppIconBundleStatus.shared
     @AppStorage(AppAppearance.key) private var mode: AppAppearance = .system
     @AppStorage(FolderWallIconStyle.key) private var folderIconStyle: FolderWallIconStyle = .shiduo
+    @AppStorage(FolderIconSuggest.promptKey) private var suggestFolderIcons = true
 
     private var settings: AppearanceSettings { appearance.settings }
 
@@ -124,6 +125,15 @@ struct AppearanceSettingsSections: View {
                 Text(verbatim: "128×128").tag(ThumbnailStartSize.p128)
             }
             Text("图标比这个尺寸小时只显示通用图标，不生成预览图。关掉上面的开关后，图片和视频也按这个尺寸来，并且超过 \(ThumbnailPolicy.bigFolderCount) 项的文件夹一律用通用图标，翻大文件夹更快。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Toggle(isOn: $suggestFolderIcons) {
+                HStack(spacing: 6) {
+                    Text("新建文件夹时推荐图标")
+                    if !license.isPro { ProBadge() }
+                }
+            }
+            Text("在拾掇里新建文件夹并起好名字后，名字对得上（如「截图」「设计素材」）就在窗口底部推荐一款换装图标，点「换成推荐图标」打开文件夹换装。只看拾掇里新建的文件夹，不监视访达。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Toggle("透视文件夹", isOn: appearance.binding(\.peekFolders))

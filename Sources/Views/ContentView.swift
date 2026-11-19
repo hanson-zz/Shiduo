@@ -133,7 +133,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: Binding(get: { ownsSheet("folderIcon", !folderIcons.editing.isEmpty) },
                                     set: { if !$0 { folderIcons.editing = []; SheetOwnership.shared.release("folderIcon") } })) {
-            FolderIconEditor(urls: folderIcons.editing, seedColor: folderIcons.seedColor) { store.showToast($0) }
+            FolderIconEditor(urls: folderIcons.editing, seedColor: folderIcons.seedColor, seedStyle: folderIcons.seedStyle) { store.showToast($0) }
         }
         .alert(
             "拾掇有新版本",
@@ -337,16 +337,25 @@ struct PaneHost: View {
             .environment(\.paneStore, store)
             .environment(\.isActivePane, isActive)
             .overlay(alignment: .bottom) {
-                if let preview = store.copiedPreview {
-                    CopiedTextCard(preview: preview)
-                        .padding(.bottom, 24)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                } else if let toast = store.toast {
-                    ToastView(text: toast, undo: toastUndo)
-                        .padding(.bottom, 24)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                VStack(spacing: 10) {
+                    // 新建文件夹起好名字后：推荐换装图标（可关：设置 › 外观 › 新建文件夹时推荐图标）。
+                    if let prompt = store.iconSuggestPrompt {
+                        FolderIconSuggestCard(prompt: prompt,
+                                              accept: { store.acceptIconSuggestion(prompt) },
+                                              dismiss: { store.iconSuggestPrompt = nil })
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    if let preview = store.copiedPreview {
+                        CopiedTextCard(preview: preview)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else if let toast = store.toast {
+                        ToastView(text: toast, undo: toastUndo)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
+                .padding(.bottom, 24)
             }
+            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.iconSuggestPrompt)
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.toast)
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.copiedPreview)
             .modifier(PaneSheets(store: store))

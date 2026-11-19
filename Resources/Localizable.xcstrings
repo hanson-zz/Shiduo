@@ -42696,6 +42696,166 @@
           }
         }
       }
+    },
+    "名字里有「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name contains “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字里有「%@」"
+          }
+        }
+      }
+    },
+    "在「%@」里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inside “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在「%@」里"
+          }
+        }
+      }
+    },
+    "推荐": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐"
+          }
+        }
+      }
+    },
+    "点一下会用在全部 %lld 个文件夹上": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click one to use it on all %lld folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点一下会用在全部 %lld 个文件夹上"
+          }
+        }
+      }
+    },
+    "按「%@」推荐，点一下会用在全部 %lld 个文件夹上": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on “%1$@”. Click one to use it on all %2$lld folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按「%1$@」推荐，点一下会用在全部 %2$lld 个文件夹上"
+          }
+        }
+      }
+    },
+    "「%@」可以换个图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” could use a new icon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」可以换个图标"
+          }
+        }
+      }
+    },
+    "换成推荐图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Suggested Icon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "换成推荐图标"
+          }
+        }
+      }
+    },
+    "不用了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Thanks"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不用了"
+          }
+        }
+      }
+    },
+    "新建文件夹时推荐图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest Icons for New Folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建文件夹时推荐图标"
+          }
+        }
+      }
+    },
+    "在拾掇里新建文件夹并起好名字后，名字对得上（如「截图」「设计素材」）就在窗口底部推荐一款换装图标，点「换成推荐图标」打开文件夹换装。只看拾掇里新建的文件夹，不监视访达。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After you create and name a folder in Shiduo, if the name matches (like “Screenshots” or “Design Assets”), a suggested icon appears at the bottom of the window. Click “Use Suggested Icon” to open Folder Restyle. Only folders created in Shiduo are checked; Finder isn’t watched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在拾掇里新建文件夹并起好名字后，名字对得上（如「截图」「设计素材」）就在窗口底部推荐一款换装图标，点「换成推荐图标」打开文件夹换装。只看拾掇里新建的文件夹，不监视访达。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

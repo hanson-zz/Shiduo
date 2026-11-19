@@ -87,6 +87,8 @@ targets:
       - path: Sources/Pro/ShakeDetector.swift
       - path: Sources/Services/CleanupHistory.swift
       - path: Sources/Pro/FolderIconStyle.swift
+      # 换装智能推荐：按文件夹名字推荐图标（本地关键词表：中英文、拼音全拼 / 首字母）。
+      - path: Sources/Model/FolderIconSuggest.swift
       - path: Sources/Services/FinderTagEntries.swift
       - path: Sources/Pro/MediaToolsLogic.swift
       - path: Sources/Pro/UninstallLogic.swift

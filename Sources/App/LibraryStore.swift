@@ -338,6 +338,10 @@ final class LibraryStore: ObservableObject {
     @Published var duplicatesTab: DuplicatesTab = .exact
     /// 底部的小提示，例如“已拷贝 3 张图片的文字”。
     @Published var toast: String?
+    /// 新建文件夹起好名字后的「换成推荐图标」小提示。
+    @Published var iconSuggestPrompt: FolderIconSuggestPrompt?
+    /// 拾掇里刚新建、还没起名的文件夹（新建文件夹 / 用所选项目新建文件夹）。只看拾掇里新建的，不监视访达。
+    var freshFolders: Set<String> = []
     /// 小提示上的「撤销」：移到废纸篓后可以把这一批放回去（清理记录里的 batchID）。
     @Published var toastUndoBatch: UUID?
     /// 小提示是在主窗口以外的哪个窗口里操作出来的（悬浮 / 刘海暂存架、菜单栏、快速搜索）。
@@ -1755,6 +1759,10 @@ final class LibraryStore: ObservableObject {
         FolderIconService.shared.movePath(src.path, to: dst.path)
         folderMoved(from: src.path, to: dst.path)
         FileUndoCenter.shared.registerRename([(old: src, new: dst)], toast: String(localized: "已重命名为「\(trimmed)」"))
+        // 刚在拾掇里新建的文件夹起好了名字：名字对得上就推荐换装图标。
+        if freshFolders.remove(src.standardizedFileURL.path) != nil, item.isDirectory {
+            suggestIcon(forNewFolder: dst)
+        }
         if let renamed = FileItem(url: dst), let index = items.firstIndex(where: { $0.id == item.id }) {
             remember([renamed])
             items[index] = renamed
@@ -1845,6 +1853,7 @@ final class LibraryStore: ObservableObject {
             return
         }
         registerNewFolderUndo(url)
+        freshFolders.insert(url.standardizedFileURL.path)
         if let item = FileItem(url: url) {
             remember([item])
             items.append(item)

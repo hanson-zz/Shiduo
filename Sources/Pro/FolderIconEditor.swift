@@ -60,13 +60,25 @@ struct FolderIconEditor: View {
     @State private var applying = false
     @State private var dropTargeted = false
     @State private var errorText: String?
+    /// 「推荐」：按文件夹名字推荐的样式（多选时每个文件夹一行，放不下就只按第一个推荐）。
+    @State private var suggestionGroups: [SuggestionGroup] = []
+    @State private var suggestionNote: String?
+    @State private var suggestionImages: [FolderIconStyle: NSImage] = [:]
 
-    init(urls: [URL], seedColor: String?, onDone: @escaping (String) -> Void = { _ in }) {
+    struct SuggestionGroup: Identifiable {
+        let id: String
+        /// 多选时这一行是哪个文件夹（单个文件夹时是 nil，不显示）。
+        let label: String?
+        let items: [FolderIconSuggestion]
+    }
+
+    /// seedStyle：一打开就预览这个样式（新建文件夹后的「换成推荐图标」）。
+    init(urls: [URL], seedColor: String?, seedStyle: FolderIconStyle? = nil, onDone: @escaping (String) -> Void = { _ in }) {
         self.onDone = onDone
         _folders = State(initialValue: urls)
         let saved = urls.first.flatMap { FolderIconService.shared.style(for: $0) }
-        let start = saved ?? FolderIconStyle(color: seedColor ?? FolderPalette.hex(FolderPalette.colors[4].1))
-        _color = State(initialValue: seedColor.flatMap(FolderIconStyle.normalizedHex) ?? start.color)
+        let start = seedStyle ?? saved ?? FolderIconStyle(color: seedColor ?? FolderPalette.hex(FolderPalette.colors[4].1))
+        _color = State(initialValue: seedStyle?.color ?? seedColor.flatMap(FolderIconStyle.normalizedHex) ?? start.color)
         _scale = State(initialValue: start.overlayScale)
         _backdrop = State(initialValue: start.backdrop)
         _overlayCenter = State(initialValue: start.overlayCenter)
@@ -146,6 +158,7 @@ struct FolderIconEditor: View {
                 previewPane
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
+                        suggestSection
                         Picker("", selection: $mode) {
                             ForEach(Mode.allCases) { Text($0.title).tag($0) }
                         }
@@ -183,7 +196,11 @@ struct FolderIconEditor: View {
         .task(id: PreviewKey(style: style, dragging: dragStart != nil)) {
             preview = FolderIconRenderer.render(style, pixels: dragStart != nil ? 256 : 512)
         }
-        .onAppear(perform: renderHistory)
+        .onAppear {
+            renderHistory()
+            refreshSuggestions()
+        }
+        .onChange(of: folders) { refreshSuggestions() }
         .alert("有些文件夹没改成", isPresented: Binding(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) {
             Button("好") {}
         } message: {
@@ -192,6 +209,58 @@ struct FolderIconEditor: View {
     }
 
     // MARK: 各部分
+
+    /// 「推荐」：按文件夹名字推荐几款，点一下换到预览里，之后照样可以随便改。没有对得上的就不显示。
+    @ViewBuilder
+    private var suggestSection: some View {
+        if !suggestionGroups.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 5) {
+                    sectionTitle("推荐")
+                    Image(systemName: "sparkles").font(.caption).foregroundStyle(.secondary)
+                }
+                ForEach(suggestionGroups) { group in
+                    HStack(spacing: 6) {
+                        if let label = group.label {
+                            Text(verbatim: "「\(label)」")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .frame(width: 96, alignment: .leading)
+                                .help(label)
+                        }
+                        ForEach(group.items) { item in
+                            Button {
+                                load(item.style)
+                            } label: {
+                                Group {
+                                    if let image = suggestionImages[item.style] {
+                                        Image(nsImage: image).resizable().interpolation(.high)
+                                    } else {
+                                        Color.primary.opacity(0.05)
+                                    }
+                                }
+                                .frame(width: 44, height: 44)
+                                .padding(3)
+                                .background(RoundedRectangle(cornerRadius: 9)
+                                    .fill(item.style == style ? Color.accentColor.opacity(0.2) : Color.primary.opacity(0.04)))
+                                .overlay(RoundedRectangle(cornerRadius: 9)
+                                    .strokeBorder(item.style == style ? Color.accentColor : Color.clear, lineWidth: 2))
+                            }
+                            .buttonStyle(.plain)
+                            .help(item.reason)
+                        }
+                    }
+                }
+                if let suggestionNote {
+                    Text(suggestionNote)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
 
     private var header: some View {
         HStack(spacing: 10) {
@@ -659,6 +728,41 @@ struct FolderIconEditor: View {
             }
     }
 
+    /// 按名字重新算推荐。1 个文件夹：一行最多 6 款；2–3 个：每个文件夹一行最多 4 款；更多：只按第一个对得上的推荐。
+    private func refreshSuggestions() {
+        func suggest(_ url: URL, limit: Int) -> [FolderIconSuggestion] {
+            FolderIconSuggest.suggestions(for: url.lastPathComponent,
+                                          parentName: url.deletingLastPathComponent().lastPathComponent, limit: limit)
+        }
+        var groups: [SuggestionGroup] = []
+        var note: String?
+        if folders.count == 1, let url = folders.first {
+            let items = suggest(url, limit: FolderIconSuggest.defaultLimit)
+            if !items.isEmpty { groups = [SuggestionGroup(id: url.path, label: nil, items: items)] }
+        } else if folders.count > 1, folders.count <= 3 {
+            groups = folders.compactMap { url -> SuggestionGroup? in
+                let items = suggest(url, limit: 4)
+                return items.isEmpty ? nil : SuggestionGroup(id: url.path, label: url.lastPathComponent, items: items)
+            }
+            if !groups.isEmpty { note = String(localized: "点一下会用在全部 \(folders.count) 个文件夹上") }
+        } else if folders.count > 3 {
+            for url in folders {
+                let items = suggest(url, limit: FolderIconSuggest.defaultLimit)
+                guard !items.isEmpty else { continue }
+                groups = [SuggestionGroup(id: url.path, label: nil, items: items)]
+                note = String(localized: "按「\(url.lastPathComponent)」推荐，点一下会用在全部 \(folders.count) 个文件夹上")
+                break
+            }
+        }
+        suggestionGroups = groups
+        suggestionNote = note
+        var images: [FolderIconStyle: NSImage] = [:]
+        for item in groups.flatMap(\.items) {
+            images[item.style] = suggestionImages[item.style] ?? FolderIconRenderer.render(item.style, pixels: 96)
+        }
+        suggestionImages = images
+    }
+
     private func renderHistory() {
         var images: [FolderIconStyle: NSImage] = [:]
         for item in service.history { images[item] = historyImages[item] ?? FolderIconRenderer.render(item, pixels: 96) }
@@ -714,6 +818,8 @@ enum FolderIconSymbols {
         // 常用
         "star.fill", "heart.fill", "bookmark.fill", "flag.fill", "bolt.fill", "sparkles", "crown.fill", "checkmark.seal.fill",
         "exclamationmark.triangle.fill", "lock.fill", "key.fill", "pin.fill", "tag.fill", "bell.fill", "clock.fill", "calendar",
+        // 智能推荐用到的
+        "camera.viewfinder", "clock.arrow.circlepath", "megaphone.fill",
         "hourglass", "alarm.fill", "timer", "trash.fill", "archivebox.fill", "tray.full.fill", "shippingbox.fill", "gift.fill",
         // 文稿与工作
         "doc.fill", "doc.text.fill", "doc.richtext.fill", "doc.on.doc.fill", "list.bullet", "checklist", "note.text", "book.fill",
