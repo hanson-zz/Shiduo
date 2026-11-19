@@ -910,7 +910,7 @@ struct FolderCard: View {
         .frame(width: width, height: height, alignment: .topLeading)
     }
 
-    /// 卡片颜色：墙上手动选过颜色就用它；否则文件夹在「文件夹上色」里上过色，用那个颜色（和主窗口里一样）。
+    /// 卡片颜色：墙上手动选过颜色就用它；否则文件夹在「文件夹换装」里上过色，用那个颜色（和主窗口里一样）。
     private var shownTint: NSColor {
         guard model.customColors[summary.path] == nil, model.manualColors[summary.path] == nil,
               let v = artVariant, v.styled, let color = FolderPalette.color(hex: v.hex) else { return tint }
@@ -938,13 +938,9 @@ struct FolderCard: View {
                 HStack(spacing: 4) {
                     actionButton("pencil", help: String(localized: "重命名"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { startRename() }
                     actionButton("folder", help: String(localized: "移动到…"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { moveFolder() }
-                    if iconStyle == .system {
-                        // 系统图标看不到卡片颜色：直接打开「文件夹上色」（Pro，不是 Pro 弹付费页）。
-                        actionButton("paintpalette", help: String(localized: "文件夹换装…")) {
-                            FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path, isDirectory: true)], color: tint)
-                        }
-                    } else {
-                        actionButton("paintpalette", help: String(localized: "自定义颜色…"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) { model.openColorPanel(for: summary) }
+                    // 两种图标样式都直接打开「文件夹换装」（Pro，不是 Pro 弹付费页）；卡片自己的颜色在右键「卡片颜色」里改。
+                    actionButton("paintpalette", help: String(localized: "文件夹换装…"), tint: darkGlass ? Color.white.opacity(0.85) : Color.black.opacity(0.7)) {
+                        FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path, isDirectory: true)], color: tint)
                     }
                     actionButton("minus.circle", help: String(localized: "从文件夹墙移除"), tint: .red) { store.unpin(summary.path) }
                 }
@@ -1049,11 +1045,34 @@ struct FolderCard: View {
             }
             Divider()
             Button("自定义颜色…") { model.openColorPanel(for: summary) }
+            Divider()
+            // 拾掇 Pro：给这个文件夹换颜色 / 主题插画 / 角标，访达里也看得到。
+            Button {
+                FolderIconService.shared.openEditor([URL(fileURLWithPath: summary.path, isDirectory: true)], color: tint)
+            } label: {
+                proMenuLabel(String(localized: "文件夹换装…"))
+            }
         }
-        Button("在访达里也用这个颜色") {
+        Button {
             guard let outcome = FolderIconService.shared.quickApply(color: tint, to: [URL(fileURLWithPath: summary.path)]) else { return }
             if !outcome.succeeded.isEmpty { store.showToast(String(localized: "访达里的「\(summary.name)」已换成这个颜色")) }
             if !outcome.failed.isEmpty { store.alertMessage = outcome.failureText }
+        } label: {
+            proMenuLabel(String(localized: "在访达里也用这个颜色"))
+        }
+    }
+
+    /// Pro 菜单项没解锁时：标题后面加「Pro」和小锁（和文件右键菜单一样）。
+    @ViewBuilder
+    private func proMenuLabel(_ title: String) -> some View {
+        if LicenseManager.shared.isPro {
+            Text(title)
+        } else {
+            Label {
+                Text(title) + Text(verbatim: "  · Pro")
+            } icon: {
+                Image(systemName: "lock.fill")
+            }
         }
     }
 

@@ -63,6 +63,10 @@ struct ShiduoApp: App {
                 // 和访达的「添加到边栏」（⌃⌘T）一个意思：选中了文件夹就直接放上墙，否则选一个。
                 Button("添加到文件夹墙…") { store.addSelectionToFolderWall() }
                     .keyboardShortcut(.addToFolderWall)
+                // 拾掇 Pro：选中了文件夹就给它们换装，否则先选文件夹（以前在侧边栏，现在放这里和右键菜单、命令面板里）。
+                Button(license.isPro ? String(localized: "文件夹换装…") : String(localized: "文件夹换装…（Pro）")) {
+                    store.editFolderIconsForSelection()
+                }
             }
             // 和访达一样：「文件」菜单里的「移到废纸篓 ⌘⌫」，不管焦点在侧边栏、搜索结果还是简介栏都能用。
             TrashCommands(center: trash)
@@ -116,7 +120,12 @@ struct ShiduoApp: App {
                     .keyboardShortcut(.smallerIcons)
                 Divider()
                 // 全局快捷键可在设置里换（默认 ⌃⌥S），这里不再固定占用 ⌥⌘S。
-                Button("显示 / 隐藏悬浮暂存架（\(FloatingShelfHotKey.current.title)）") { FloatingShelfController.shared.toggle() }
+                // 悬浮暂存架是 Pro：没解锁时和「左右双栏（Pro）」一样在标题上标出来（点了弹付费页）。
+                Button(license.isPro
+                       ? String(localized: "显示 / 隐藏悬浮暂存架（\(FloatingShelfHotKey.current.title)）")
+                       : String(localized: "显示 / 隐藏悬浮暂存架（\(FloatingShelfHotKey.current.title)，Pro）")) {
+                    FloatingShelfController.shared.toggle()
+                }
                 Divider()
                 // ⌘R 在访达里是「显示原身」，刷新改用 ⌥⌘R。
                 Button("刷新") { store.reload() }

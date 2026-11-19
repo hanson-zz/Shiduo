@@ -3,7 +3,7 @@ import AppKit
 // MARK: - 刘海暂存架：放在屏幕左右侧（竖版）时，收起状态的小把手
 
 /// 刘海暂存架放到「屏幕左侧 / 右侧（竖版）」时，收起后在那条屏幕边的正中留一根细细的竖把手：
-/// 看得见暂存架在哪；点一下展开；拖文件碰到它也展开；开了「鼠标移到刘海处就展开」时悬停也展开。
+/// 看得见暂存架在哪；点一下展开；拖文件碰到它也展开；开了「鼠标移过去就展开」时悬停也展开。
 /// 程序坞在同一边时贴在程序坞旁边。展开时藏起来，收起后再放回去。每块用刘海样式的屏幕一根。
 @MainActor
 final class NotchSideHandles: NSObject {
@@ -134,7 +134,7 @@ final class NotchSideHandleView: NSView {
         tracking = area
     }
 
-    /// 悬停：和碰到刘海一样（只在开了「鼠标移到刘海处就展开」时才展开，延迟也一样）。
+    /// 悬停：和碰到刘海一样（只在开了「鼠标移过去就展开」时才展开，延迟也一样）。
     override func mouseEntered(with event: NSEvent) {
         MainActor.assumeIsolated { NotchShelfController.shared.mouseMoved(to: NSEvent.mouseLocation) }
     }

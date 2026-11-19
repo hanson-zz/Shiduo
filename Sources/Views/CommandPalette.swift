@@ -177,6 +177,10 @@ enum PaletteCatalog {
         add("addToWall", String(localized: "添加到文件夹墙…"), .action, symbol: "square.grid.2x2", shortcut: .addToFolderWall) {
             store.addSelectionToFolderWall()
         }
+        add("folderIcon", String(localized: "文件夹换装…"), .action, symbol: "paintpalette",
+            keywords: [String(localized: "文件夹颜色"), String(localized: "文件夹图标"), "Folder Icon", "Pro"]) {
+            store.editFolderIconsForSelection()
+        }
         add("imageTools", String(localized: "图片工具…"), .action, symbol: "photo.on.rectangle", shortcut: .imageTools,
             keywords: [String(localized: "拼图"), String(localized: "标注")]) {
             ImageStudio.shared.open([], mode: .stitch, toShelf: false)

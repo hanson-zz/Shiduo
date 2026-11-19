@@ -110,25 +110,9 @@ struct SidebarView: View {
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
-
             }
             .tag(SidebarItem.folderWall)
             .help("常用的文件夹放在一面卡片墙上，一眼看到里面有什么")
-
-            // 文件夹换装（Pro）：不是一个页面，点一下选文件夹，直接打开换装编辑器。
-            Button {
-                FolderIconService.chooseFoldersAndEdit()
-            } label: {
-                HStack {
-                    Label("文件夹换装", systemImage: "paintpalette")
-                    Spacer()
-                    ProBadge()
-                        .opacity(license.isPro ? 0.55 : 1)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help("选几个文件夹，换颜色、主题插画或加角标，访达里同步显示")
 
             CollapsibleSection("library", title: "资料库") {
                 ForEach(FileCategory.allCases) { category in
@@ -183,9 +167,19 @@ struct SidebarView: View {
                     .badge(fonts.actionableIssueCount > 0 ? Text("\(fonts.actionableIssueCount)") : nil)
                     .tag(SidebarItem.fonts)
                     .help("装了哪些字体、中文样张预览，停用不常用的，查重复和损坏的字体")
-                Label("备份到硬盘", systemImage: "externaldrive.badge.timemachine")
-                    .badge(license.isPro && backups.totalPending > 0 ? Text("\(backups.totalPending)") : nil)
-                    .tag(SidebarItem.folderBackup)
+                // Pro 页面：和「提醒」一样带 Pro 角标（以前没有，点进去才看到上锁）。
+                HStack {
+                    Label("备份到硬盘", systemImage: "externaldrive.badge.timemachine")
+                    Spacer()
+                    if license.isPro && backups.totalPending > 0 {
+                        Text("\(backups.totalPending)")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    ProBadge()
+                        .opacity(license.isPro ? 0.55 : 1)
+                }
+                .tag(SidebarItem.folderBackup)
                     .help("把 Mac 上的文件夹单向备份到移动硬盘；数字是插着的硬盘上待备份的文件个数")
             }
 

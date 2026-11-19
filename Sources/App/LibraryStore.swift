@@ -1920,6 +1920,17 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    /// 「文件」菜单 / 命令面板的「文件夹换装…」：选中的全是文件夹就直接打开编辑器，否则先选文件夹。不是 Pro 弹付费页。
+    func editFolderIconsForSelection() {
+        let selected = selectedItems
+        let folders = selected.filter(\.isDirectory)
+        if !folders.isEmpty, folders.count == selected.count {
+            FolderIconService.shared.openEditor(folders.map(\.url))
+        } else {
+            FolderIconService.chooseFoldersAndEdit()
+        }
+    }
+
     enum StandardFolder {
         case desktop, documents, downloads
         var path: String {

@@ -11903,22 +11903,6 @@
         }
       }
     },
-    "鼠标移到刘海处就展开（不用拖文件）": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open when the pointer reaches the notch (no drag needed)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "鼠标移到刘海处就展开（不用拖文件）"
-          }
-        }
-      }
-    },
     "鼠标移开 0.5 秒后自动收起刘海暂存架": {
       "localizations": {
         "en": {
@@ -24335,22 +24319,6 @@
         }
       }
     },
-    "关掉时，把文件拖到刘海处或点一下刘海才展开。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "When off, the Notch Shelf opens only when you drag files to the notch or click the notch."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "关掉时，把文件拖到刘海处或点一下刘海才展开。"
-          }
-        }
-      }
-    },
     "已转换 %lld 张为 %@，已加入暂存架": {
       "localizations": {
         "en": {
@@ -26955,22 +26923,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "可以腾出 %@"
-          }
-        }
-      }
-    },
-    "选几个文件夹，换颜色、主题插画或加角标，访达里同步显示": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pick folders to give them a color, a themed illustration or a badge — Finder shows it too"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "选几个文件夹，换颜色、主题插画或加角标，访达里同步显示"
           }
         }
       }
@@ -42677,6 +42629,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "放到屏幕左侧或右侧，变成竖着的一条，刘海整个让给其他也用刘海的 App（比如码头）。把文件拖到屏幕左边或右边就会展开；也可以点一下边上的小把手。"
+          }
+        }
+      }
+    },
+    "文件夹换装…（Pro）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restyle Folder… (Pro)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹换装…（Pro）"
+          }
+        }
+      }
+    },
+    "鼠标移过去就展开（不用拖文件）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open on hover (no drag needed)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鼠标移过去就展开（不用拖文件）"
+          }
+        }
+      }
+    },
+    "关掉时，把文件拖过去，或者点一下刘海 / 边上的小把手才展开。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When off, the shelf opens only when you drag files to it, or click the notch / the handle at the screen edge."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关掉时，把文件拖过去，或者点一下刘海 / 边上的小把手才展开。"
+          }
+        }
+      }
+    },
+    "显示 / 隐藏悬浮暂存架（%@，Pro）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show / Hide Floating Shelf (%@, Pro)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示 / 隐藏悬浮暂存架（%@，Pro）"
           }
         }
       }

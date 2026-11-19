@@ -196,7 +196,7 @@ enum NotchShelfPrefs {
         UserDefaults.standard.object(forKey: autoHideKey) as? Bool ?? true
     }
 
-    /// 不拖文件、只把鼠标移到刘海处也展开。新装的默认关闭（拖文件过去、点一下刘海才展开，免得去点菜单栏时误触）。
+    /// 不拖文件、只把鼠标移到刘海处（左右两侧是边上的小把手）也展开。新装的默认关闭（拖文件过去、点一下刘海才展开，免得去点菜单栏时误触）。
     static var hoverToOpen: Bool {
         UserDefaults.standard.object(forKey: hoverKey) as? Bool ?? false
     }
@@ -670,7 +670,8 @@ struct NotchShelfView: View {
     @ObservedObject private var media = MediaTools.shared
 
     private var cardSize: CGFloat { NotchShelfPrefs.cardSize }
-    private var compact: Bool { widthMode == .compact }
+    /// 「刘海宽度」只管刘海正中的横版；左右两侧竖版的宽度是固定的，不跟紧凑档走（设置和右键菜单里那时也不显示这一项）。
+    private var compact: Bool { widthMode == .compact && !vertical }
     /// 卡片缩略图边长：紧凑档小一号。
     private var thumb: CGFloat { compact ? NotchShelfPrefs.compactThumb(cardSize) : cardSize }
     private var items: [FileItem] { controller.currentItems }
@@ -900,14 +901,17 @@ struct NotchShelfView: View {
         }
         MediaToolsMenu(urls: { shelf.urls }, toShelf: true)
         Divider()
-        Picker("刘海宽度", selection: Binding(
-            get: { widthMode },
-            set: { value in
-                widthMode = value
-                DispatchQueue.main.async { NotchShelfController.shared.relayout() }
+        // 左右两侧竖版不在刘海下面，宽度固定：不显示「刘海宽度」。
+        if !vertical {
+            Picker("刘海宽度", selection: Binding(
+                get: { widthMode },
+                set: { value in
+                    widthMode = value
+                    DispatchQueue.main.async { NotchShelfController.shared.relayout() }
+                }
+            )) {
+                ForEach(NotchShelfWidth.allCases) { Text($0.title).tag($0) }
             }
-        )) {
-            ForEach(NotchShelfWidth.allCases) { Text($0.title).tag($0) }
         }
         Button("暂存架设置…") {
             controller.hide()
@@ -1361,6 +1365,7 @@ struct ShelfStyleSettings: View {
     @AppStorage(NotchShelfPrefs.delayKey) private var delay = 0.2
     @AppStorage(NotchShelfPrefs.cardSizeKey) private var cardSize = 64.0
     @AppStorage(NotchShelfPrefs.widthKey) private var notchWidth: NotchShelfWidth = .standard
+    @AppStorage(NotchShelfPosition.key) private var position: NotchShelfPosition = .center
     @AppStorage(NotchShelfPrefs.autoHideKey) private var autoHide = true
     @AppStorage(NotchShelfPrefs.opacityKey) private var opacity = 1.0
     @AppStorage(FloatingShelfController.shakeKey) private var shakeToSummon = true
@@ -1397,8 +1402,9 @@ struct ShelfStyleSettings: View {
                 }
             }
         }
-        Toggle("鼠标移到刘海处就展开（不用拖文件）", isOn: $hoverToOpen)
-        Text("关掉时，把文件拖到刘海处或点一下刘海才展开。")
+        // 刘海正中和左右两侧竖版都适用，说法不提刘海。
+        Toggle("鼠标移过去就展开（不用拖文件）", isOn: $hoverToOpen)
+        Text("关掉时，把文件拖过去，或者点一下刘海 / 边上的小把手才展开。")
             .font(.caption)
             .foregroundStyle(.secondary)
         Picker("展开延迟", selection: $delay) {
@@ -1408,13 +1414,16 @@ struct ShelfStyleSettings: View {
         }
         .disabled(!hoverToOpen)
         NotchShelfPositionPicker()
-        Picker("刘海宽度", selection: $notchWidth) {
-            ForEach(NotchShelfWidth.allCases) { Text($0.title).tag($0) }
+        // 「刘海宽度」只对刘海正中有用；放到左右两侧（竖版，宽度固定）时不显示。
+        if !position.isSide {
+            Picker("刘海宽度", selection: $notchWidth) {
+                ForEach(NotchShelfWidth.allCases) { Text($0.title).tag($0) }
+            }
+            .onChange(of: notchWidth) { NotchShelfController.shared.relayout() }
+            Text("标准：刘海两边各多约 107 点；紧凑：各多约 70 点，平时只显示 3 张卡片和剩余数量。都按这台 Mac 的刘海宽度算。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .onChange(of: notchWidth) { NotchShelfController.shared.relayout() }
-        Text("标准：刘海两边各多约 107 点；紧凑：各多约 70 点，平时只显示 3 张卡片和剩余数量。都按这台 Mac 的刘海宽度算。")
-            .font(.caption)
-            .foregroundStyle(.secondary)
         Picker("卡片大小", selection: $cardSize) {
             Text("小").tag(52.0)
             Text("中").tag(64.0)

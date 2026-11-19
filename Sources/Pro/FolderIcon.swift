@@ -364,7 +364,7 @@ final class FolderIconService: ObservableObject {
 
     // MARK: 入口
 
-    /// 侧边栏「文件夹换装」：先选文件夹（可多选），再打开编辑器。不是 Pro 就直接弹付费页。
+    /// 「文件夹换装…」（文件菜单 / 命令面板，没选中文件夹时）：先选文件夹（可多选），再打开编辑器。不是 Pro 就直接弹付费页。
     static func chooseFoldersAndEdit() {
         guard LicenseManager.shared.isPro else {
             LicenseManager.shared.showPaywall = true
