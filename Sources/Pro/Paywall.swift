@@ -106,6 +106,8 @@ enum ProFeature: CaseIterable, Identifiable {
     case customMenus
     case appIcons
     case folderBackup
+    /// 项目工作区（放行规则集中在 WorkspaceAccess）。
+    case workspace
 
     var id: Self { self }
 
@@ -136,6 +138,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .customMenus: return String(localized: "自定义右键菜单与快捷键")
         case .appIcons: return String(localized: "备选应用图标")
         case .folderBackup: return String(localized: "文件夹备份到硬盘")
+        case .workspace: return String(localized: "项目工作区")
         }
     }
 
@@ -166,6 +169,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .customMenus: return String(localized: "右键菜单留哪些、什么顺序、收进子菜单由你定；菜单快捷键随便改，撞键当场提示，可一键交换")
         case .appIcons: return String(localized: "拾掇的图标换一款，「应用程序」和程序坞里都跟着变：小熊猫、节日、笑脸小电脑等 28 款，设置 › 外观 里点一下就换")
         case .folderBackup: return String(localized: "Mac 文件夹配对移动硬盘，插上就提示有几个新文件要备份；先预览，只从 Mac 拷到硬盘，默认不删硬盘上的文件")
+        case .workspace: return String(localized: "把桌面、iCloud 云盘、移动硬盘上同一个项目的文件夹放进一个工作区，一眼看到数量、最近文件和分类；只记位置，不移动原文件")
         }
     }
 
@@ -196,6 +200,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .customMenus: return "contextualmenu.and.cursorarrow"
         case .appIcons: return "app.badge"
         case .folderBackup: return "externaldrive.badge.timemachine"
+        case .workspace: return "square.stack.3d.up"
         }
     }
 
@@ -226,6 +231,7 @@ enum ProFeature: CaseIterable, Identifiable {
         case .customMenus: return .mint
         case .appIcons: return .cyan
         case .folderBackup: return .green
+        case .workspace: return .indigo
         }
     }
 }

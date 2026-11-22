@@ -520,6 +520,8 @@ extension LibraryStore {
         case "onboarding": showOnboarding = true
         case "storagemap": selection = .storageMap
         case "folderwall": applyDemoFolderWall()
+        case "workspace": applyDemoWorkspace(empty: false)
+        case "workspace-empty": applyDemoWorkspace(empty: true)
         case "shelf":
             pickDemoShelf()
             selection = .shelf

@@ -314,6 +314,10 @@ struct PaneContent: View {
                 FontsView()
             case .folderBackup:
                 FolderBackupView()
+            case .workspace(let id):
+                // 免费用户也能进来看空工作区的引导；添加文件夹时弹付费页（规则在 WorkspaceAccess）。
+                WorkspaceView(id: id)
+                    .id(id)
             case .savedSearch(let id):
                 SavedSearchPage(id: id)
                     .proGated(.savedSearch)
