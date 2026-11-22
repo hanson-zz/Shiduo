@@ -337,7 +337,9 @@ struct WorkspaceView: View {
         .onAppear {
             // 截图用（--page=workspace-bottom）：滚到最下面，看分类和快捷操作。
             guard Demo.isOn, Demo.page == "workspace-bottom" else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { proxy.scrollTo(Self.bottomAnchor, anchor: .bottom) }
+            for delay in [1.5, 3.0, 5.0] {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { proxy.scrollTo(Self.bottomAnchor, anchor: .bottom) }
+            }
         }
         }
         .scrollContentBackground(.hidden)
@@ -712,7 +714,7 @@ struct WorkspaceView: View {
         let totals = workspaces.totals(workspace)
         let recent = workspaces.recentFiles(workspace, limit: 60)
         return VStack(alignment: .leading, spacing: 14) {
-            SectionHeader(title: String(localized: "分类"))
+            SectionHeader(title: String(localized: "workspace.section.categories", defaultValue: "分类"))
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 14)], spacing: 12) {
                 ForEach(WorkspaceFileKind.allCases, id: \.self) { kind in
                     Button { tab = WorkspaceTab.tab(for: kind) } label: {
@@ -1121,12 +1123,15 @@ struct WorkspaceCategoryTile: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(kind.title)
                     .font(.system(.headline, design: .rounded))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Text("\(count.formatted()) 个")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            Spacer(minLength: 8)
+            .layoutPriority(1)
+            Spacer(minLength: 4)
             FannedThumbnails(items: previews, total: count)
         }
         .padding(.horizontal, 16)
