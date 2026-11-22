@@ -43000,6 +43000,1814 @@
           }
         }
       }
+    },
+    "删除工作区“%@”？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete workspace “%@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除工作区“%@”？"
+          }
+        }
+      }
+    },
+    "只删除这个工作区和它记住的位置，原来的文件夹和文件都不会动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the workspace and the locations it remembers are removed. Your folders and files stay exactly where they are."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只删除这个工作区和它记住的位置，原来的文件夹和文件都不会动。"
+          }
+        }
+      }
+    },
+    "删除工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除工作区"
+          }
+        }
+      }
+    },
+    "重命名工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名工作区"
+          }
+        }
+      }
+    },
+    "添加到工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加到工作区"
+          }
+        }
+      }
+    },
+    "选一个或几个文件夹。工作区只记住位置，不移动、不复制原文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one or more folders. A workspace only remembers where they are — nothing is moved or copied."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选一个或几个文件夹。工作区只记住位置，不移动、不复制原文件。"
+          }
+        }
+      }
+    },
+    "「%@」不是文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is not a folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」不是文件夹"
+          }
+        }
+      }
+    },
+    "「%@」已经在这个工作区里了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is already in this workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」已经在这个工作区里了"
+          }
+        }
+      }
+    },
+    "「%@」已经包含在「%@」里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” is already inside “%2$@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」已经包含在「%2$@」里"
+          }
+        }
+      }
+    },
+    "已添加 %lld 个文件夹（只记位置，原文件不动）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added %lld folder(s) (locations only, originals untouched)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已添加 %lld 个文件夹（只记位置，原文件不动）"
+          }
+        }
+      }
+    },
+    "已取消打包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zipping cancelled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消打包"
+          }
+        }
+      }
+    },
+    "已打包 %lld 个文件到「下载」：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zipped %1$lld files to Downloads: %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已打包 %1$lld 个文件到「下载」：%2$@"
+          }
+        }
+      }
+    },
+    "（跳过 %lld 个只在 iCloud 云端的文件）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (skipped %lld iCloud-only files)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（跳过 %lld 个只在 iCloud 云端的文件）"
+          }
+        }
+      }
+    },
+    "没能打包这个工作区。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t zip this workspace."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能打包这个工作区。"
+          }
+        }
+      }
+    },
+    "没有可以打包的文件（只在 iCloud 云端的文件不会下载）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to zip (iCloud-only files aren’t downloaded)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有可以打包的文件（只在 iCloud 云端的文件不会下载）。"
+          }
+        }
+      }
+    },
+    "默认工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认工作区"
+          }
+        }
+      }
+    },
+    "新工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新工作区"
+          }
+        }
+      }
+    },
+    "工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspaces"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区"
+          }
+        }
+      }
+    },
+    "来源": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sources"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源"
+          }
+        }
+      }
+    },
+    "项目工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project Workspaces"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "项目工作区"
+          }
+        }
+      }
+    },
+    "把桌面、iCloud 云盘、移动硬盘上同一个项目的文件夹放进一个工作区，一眼看到数量、最近文件和分类；只记位置，不移动原文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gather one project’s folders from your Desktop, iCloud Drive and external drives into a workspace: counts, recent files and categories at a glance. Only locations are saved — files never move"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把桌面、iCloud 云盘、移动硬盘上同一个项目的文件夹放进一个工作区，一眼看到数量、最近文件和分类；只记位置，不移动原文件"
+          }
+        }
+      }
+    },
+    "本地": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地"
+          }
+        }
+      }
+    },
+    "外接硬盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "External Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外接硬盘"
+          }
+        }
+      }
+    },
+    "公文包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Briefcase"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公文包"
+          }
+        }
+      }
+    },
+    "调色盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palette"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "调色盘"
+          }
+        }
+      }
+    },
+    "书": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Book"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "书"
+          }
+        }
+      }
+    },
+    "包装盒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Box"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "包装盒"
+          }
+        }
+      }
+    },
+    "锤子": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hammer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "锤子"
+          }
+        }
+      }
+    },
+    "图表": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chart"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图表"
+          }
+        }
+      }
+    },
+    "客户": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clients"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "客户"
+          }
+        }
+      }
+    },
+    "购物车": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cart"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "购物车"
+          }
+        }
+      }
+    },
+    "学习": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "学习"
+          }
+        }
+      }
+    },
+    "星标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Star"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星标"
+          }
+        }
+      }
+    },
+    "爱心": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "爱心"
+          }
+        }
+      }
+    },
+    "叶子": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "叶子"
+          }
+        }
+      }
+    },
+    "旅行": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旅行"
+          }
+        }
+      }
+    },
+    "家": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "家"
+          }
+        }
+      }
+    },
+    "修改图标": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Icon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改图标"
+          }
+        }
+      }
+    },
+    "修改颜色": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改颜色"
+          }
+        }
+      }
+    },
+    "新建工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建工作区"
+          }
+        }
+      }
+    },
+    "新建一个工作区：把同一个项目的几个文件夹放在一起看": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a workspace to see one project’s folders together"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建一个工作区：把同一个项目的几个文件夹放在一起看"
+          }
+        }
+      }
+    },
+    "%lld 个来源；把文件夹拖到这里加进工作区（只记位置，不移动原文件）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sources. Drop folders here to add them (locations only — files never move)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个来源；把文件夹拖到这里加进工作区（只记位置，不移动原文件）"
+          }
+        }
+      }
+    },
+    "删除工作区…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Workspace…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除工作区…"
+          }
+        }
+      }
+    },
+    "找不到这个工作区": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace Not Found"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到这个工作区"
+          }
+        }
+      }
+    },
+    "它可能已经被删除了。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It may have been deleted."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它可能已经被删除了。"
+          }
+        }
+      }
+    },
+    "只记位置，不移动原文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembers locations only — files never move"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只记位置，不移动原文件"
+          }
+        }
+      }
+    },
+    "未连接的来源显示上次统计": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "disconnected sources show their last count"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未连接的来源显示上次统计"
+          }
+        }
+      }
+    },
+    "添加文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加文件夹"
+          }
+        }
+      }
+    },
+    "选几个文件夹加进这个工作区（只记位置，不移动原文件）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add folders to this workspace (locations only — files never move)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选几个文件夹加进这个工作区（只记位置，不移动原文件）"
+          }
+        }
+      }
+    },
+    "工作区名称": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace Name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区名称"
+          }
+        }
+      }
+    },
+    "双击重命名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-click to rename"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双击重命名"
+          }
+        }
+      }
+    },
+    "工作区设置…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace Settings…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区设置…"
+          }
+        }
+      }
+    },
+    "重命名、修改图标、修改颜色、工作区设置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename, change icon, change color, workspace settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名、修改图标、修改颜色、工作区设置"
+          }
+        }
+      }
+    },
+    "工作区菜单": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace Menu"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区菜单"
+          }
+        }
+      }
+    },
+    "%lld 个来源": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sources"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个来源"
+          }
+        }
+      }
+    },
+    "%@ 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 个文件"
+          }
+        }
+      }
+    },
+    "%@修改": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "modified %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@修改"
+          }
+        }
+      }
+    },
+    "停止统计（下次打开再继续）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop counting (resumes next time you open it)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止统计（下次打开再继续）"
+          }
+        }
+      }
+    },
+    "添加文件夹，开始整理你的项目": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add folders to start organizing your project"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加文件夹，开始整理你的项目"
+          }
+        }
+      }
+    },
+    "把同一个项目散在桌面、iCloud 云盘、移动硬盘上的文件夹放进来，一眼看到有多少文件、最近改了什么。工作区只记住位置，不移动、不复制原文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring in one project’s folders from your Desktop, iCloud Drive and external drives to see how many files there are and what changed recently. A workspace only remembers locations — nothing is moved or copied."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把同一个项目散在桌面、iCloud 云盘、移动硬盘上的文件夹放进来，一眼看到有多少文件、最近改了什么。工作区只记住位置，不移动、不复制原文件。"
+          }
+        }
+      }
+    },
+    "也可以把文件夹直接拖到这里，或拖到侧边栏的工作区上": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can also drop folders here, or onto a workspace in the sidebar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "也可以把文件夹直接拖到这里，或拖到侧边栏的工作区上"
+          }
+        }
+      }
+    },
+    "最近文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent Files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近文件"
+          }
+        }
+      }
+    },
+    "从工作区移除（文件夹不动）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Workspace (Folder Stays)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从工作区移除（文件夹不动）"
+          }
+        }
+      }
+    },
+    "硬盘「%@」没有连接。记录和上次的统计都还在，接上后自动恢复。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive “%@” isn’t connected. The source and its last count are kept and come back when you plug it in."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "硬盘「%@」没有连接。记录和上次的统计都还在，接上后自动恢复。"
+          }
+        }
+      }
+    },
+    "找不到这个文件夹了：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can’t find this folder anymore: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到这个文件夹了：%@"
+          }
+        }
+      }
+    },
+    "放进暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put on Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放进暂存架"
+          }
+        }
+      }
+    },
+    "%@（只在 iCloud 云端）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (iCloud only)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@（只在 iCloud 云端）"
+          }
+        }
+      }
+    },
+    "这个文件只在 iCloud 云端，没有下载，先不预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file is only in iCloud and isn’t downloaded, so it isn’t previewed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件只在 iCloud 云端，没有下载，先不预览"
+          }
+        }
+      }
+    },
+    "%@ 没有连接，这里没有列出它的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ isn’t connected; its files aren’t listed here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 没有连接，这里没有列出它的文件"
+          }
+        }
+      }
+    },
+    "来源里没有子文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No subfolders in these sources"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源里没有子文件夹"
+          }
+        }
+      }
+    },
+    "没有这一类文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No files of this kind"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有这一类文件"
+          }
+        }
+      }
+    },
+    "只显示最近修改的 300 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing the 300 most recently modified"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只显示最近修改的 300 个"
+          }
+        }
+      }
+    },
+    "来源都没有连接（硬盘没接上或文件夹找不到了），接上后再试": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No source is connected (drive unplugged or folder missing). Try again once it’s back"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源都没有连接（硬盘没接上或文件夹找不到了），接上后再试"
+          }
+        }
+      }
+    },
+    "快捷操作": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick Actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷操作"
+          }
+        }
+      }
+    },
+    "在访达中打开全部": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open All in Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中打开全部"
+          }
+        }
+      }
+    },
+    "每个连接着的来源开一个访达窗口": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens a Finder window for each connected source"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个连接着的来源开一个访达窗口"
+          }
+        }
+      }
+    },
+    "全部放进暂存架": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put All on Shelf"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部放进暂存架"
+          }
+        }
+      }
+    },
+    "把来源文件夹放上暂存架（只记位置，不复制）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puts the source folders on the Shelf (locations only, no copies)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把来源文件夹放上暂存架（只记位置，不复制）"
+          }
+        }
+      }
+    },
+    "正在打包…点按取消": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zipping… Click to Cancel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在打包…点按取消"
+          }
+        }
+      }
+    },
+    "打包成 ZIP": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zip It Up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打包成 ZIP"
+          }
+        }
+      }
+    },
+    "打成一个 ZIP 放进「下载」，同名不覆盖": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Makes one ZIP in Downloads; never overwrites an existing file"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打成一个 ZIP 放进「下载」，同名不覆盖"
+          }
+        }
+      }
+    },
+    "在选中的来源里新建一个文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creates a folder in the source you pick"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在选中的来源里新建一个文件夹"
+          }
+        }
+      }
+    },
+    "在哪个来源里新建文件夹？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New folder in which source?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在哪个来源里新建文件夹？"
+          }
+        }
+      }
+    },
+    "在终端里打开选中的来源": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the source you pick in Terminal"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在终端里打开选中的来源"
+          }
+        }
+      }
+    },
+    "在终端打开哪个来源？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open which source in Terminal?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在终端打开哪个来源？"
+          }
+        }
+      }
+    },
+    "没连接的来源不参与快捷操作": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected sources are skipped by quick actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没连接的来源不参与快捷操作"
+          }
+        }
+      }
+    },
+    "在访达中打开 %lld 个窗口？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open %lld Finder windows?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中打开 %lld 个窗口？"
+          }
+        }
+      }
+    },
+    "每个来源开一个访达窗口。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One Finder window per source."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个来源开一个访达窗口。"
+          }
+        }
+      }
+    },
+    "全部打开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open All"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部打开"
+          }
+        }
+      }
+    },
+    "把 %lld 个来源文件夹放进暂存架？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put %lld source folders on the Shelf?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把 %lld 个来源文件夹放进暂存架？"
+          }
+        }
+      }
+    },
+    "共 %@ 个文件，%@。暂存架只记位置，不复制文件。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ files, %2$@ in total. The Shelf only remembers locations; nothing is copied."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共 %1$@ 个文件，%2$@。暂存架只记位置，不复制文件。"
+          }
+        }
+      }
+    },
+    "约 %@ 个文件，%@（压缩前）。ZIP 放进「下载」，已有同名的不会被覆盖，会自动加编号。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %1$@ files, %2$@ before compression. The ZIP goes to Downloads; an existing file with the same name is never overwritten — a number is added instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "约 %1$@ 个文件，%2$@（压缩前）。ZIP 放进「下载」，已有同名的不会被覆盖，会自动加编号。"
+          }
+        }
+      }
+    },
+    "只在 iCloud 云端的 %lld 个文件会跳过，不会下载。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld iCloud-only files will be skipped, not downloaded."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只在 iCloud 云端的 %lld 个文件会跳过，不会下载。"
+          }
+        }
+      }
+    },
+    "没连接的来源不打包。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected sources aren’t included."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没连接的来源不打包。"
+          }
+        }
+      }
+    },
+    "把「%@」打包成 ZIP？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zip “%@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把「%@」打包成 ZIP？"
+          }
+        }
+      }
+    },
+    "打包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zip"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打包"
+          }
+        }
+      }
+    },
+    "%@（硬盘未连接）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (drive not connected)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@（硬盘未连接）"
+          }
+        }
+      }
+    },
+    "%@（找不到了）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (missing)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@（找不到了）"
+          }
+        }
+      }
+    },
+    "在「%@」里新建文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New folder in “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在「%@」里新建文件夹"
+          }
+        }
+      }
+    },
+    "已在「%@」里新建「%@」": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created “%2$@” in “%1$@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在「%1$@」里新建「%2$@」"
+          }
+        }
+      }
+    },
+    "还没有统计": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not counted yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有统计"
+          }
+        }
+      }
+    },
+    "至少 %@ 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at least %@ files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "至少 %@ 个"
+          }
+        }
+      }
+    },
+    "%@ 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 个"
+          }
+        }
+      }
+    },
+    "硬盘未连接": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive not connected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "硬盘未连接"
+          }
+        }
+      }
+    },
+    "找不到了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到了"
+          }
+        }
+      }
+    },
+    "工作区设置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace Settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区设置"
+          }
+        }
+      }
+    },
+    "还没有来源": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sources yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有来源"
+          }
+        }
+      }
+    },
+    "只从工作区移除，文件夹和里面的文件不动": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only removes it from the workspace; the folder and its files stay put"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只从工作区移除，文件夹和里面的文件不动"
+          }
+        }
+      }
+    },
+    "移除来源、删除工作区都只删记录，原来的文件夹和文件不会动。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing a source or deleting a workspace only deletes the record. Your folders and files are never touched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除来源、删除工作区都只删记录，原来的文件夹和文件不会动。"
+          }
+        }
+      }
+    },
+    "硬盘「%@」未连接": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive “%@” not connected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "硬盘「%@」未连接"
+          }
+        }
+      }
+    },
+    "找不到了：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到了：%@"
+          }
+        }
+      }
+    },
+    "workspace.tab.folders": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹"
+          }
+        }
+      }
+    },
+    "workspace.section.categories": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分类"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

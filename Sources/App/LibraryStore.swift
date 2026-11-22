@@ -36,6 +36,8 @@ enum SidebarItem: Hashable {
     case fonts
     /// Pro：文件夹备份到硬盘（Mac 文件夹 ↔ 移动硬盘文件夹，只单向 Mac → 硬盘）。
     case folderBackup
+    /// Pro：项目工作区（几个来源文件夹放在一起看，只记位置）。
+    case workspace(UUID)
 }
 
 enum DuplicatesTab: String, Hashable {
@@ -1130,7 +1132,7 @@ final class LibraryStore: ObservableObject {
         case .home:
             await refreshDashboard()
             return
-        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf, .folderWall, .cleanupHistory, .fonts, .folderBackup:
+        case .duplicates, .similarPhotos, .cleanup, .storageMap, .autoOrganize, .shelf, .folderWall, .cleanupHistory, .fonts, .folderBackup, .workspace:
             items = []
             return
         case .category(let c) where c.usesLibraryScope:
@@ -2422,6 +2424,7 @@ extension LibraryStore {
         case .tag(let name): return "tag:" + name
         case .chat(let app): return "chat:" + app.rawValue
         case .savedSearch(let id): return "saved:" + id.uuidString
+        case .workspace(let id): return "workspace:" + id.uuidString
         case .home, .pinned, .folder, .volume: return nil
         }
     }
@@ -2441,6 +2444,7 @@ extension LibraryStore {
         case "tag": return .tag(parts[1])
         case "chat": return ChatApp(rawValue: parts[1]).map(SidebarItem.chat)
         case "saved": return UUID(uuidString: parts[1]).map(SidebarItem.savedSearch)
+        case "workspace": return UUID(uuidString: parts[1]).map(SidebarItem.workspace)
         default: return nil
         }
     }
@@ -2470,6 +2474,7 @@ extension LibraryStore {
         case .tag(let name): return String(localized: "标签：\(name)")
         case .chat(let app): return String(localized: "\(app.name)文件")
         case .savedSearch(let id): return SavedSearchStore.shared.search(id)?.name ?? String(localized: "保存的搜索")
+        case .workspace(let id): return WorkspaceStore.shared.workspace(id)?.name ?? String(localized: "工作区")
         case .pinned(let path), .folder(let path), .volume(let path): return FileManager.default.displayName(atPath: path)
         }
     }
@@ -2496,6 +2501,7 @@ extension LibraryStore {
         case .tag: return "tag"
         case .chat: return "bubble.left.and.bubble.right"
         case .savedSearch: return "folder.badge.gearshape"
+        case .workspace(let id): return WorkspaceStore.shared.workspace(id)?.symbol ?? WorkspaceLogic.defaultSymbol
         case .pinned, .folder, .volume: return "folder"
         }
     }

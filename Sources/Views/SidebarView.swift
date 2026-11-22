@@ -183,6 +183,9 @@ struct SidebarView: View {
                     .help("把 Mac 上的文件夹单向备份到移动硬盘；数字是插着的硬盘上待备份的文件个数")
             }
 
+            // 工作区（Pro）：在「整理」和「收藏」之间，列出工作区 + 末行「新建工作区」。
+            WorkspacesSidebarSection()
+
             if !chat.installedApps.isEmpty {
                 CollapsibleSection("chat", title: "聊天文件") {
                     ForEach(chat.installedApps) { app in
