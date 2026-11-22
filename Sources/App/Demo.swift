@@ -10,7 +10,14 @@ import UniformTypeIdentifiers
 ///
 /// 不读 Spotlight，不碰用户文件；示例文件放在临时目录里。
 enum Demo {
-    static let isOn = ProcessInfo.processInfo.arguments.contains("--demo")
+    static let isOn: Bool = {
+        let on = ProcessInfo.processInfo.arguments.contains("--demo")
+        // 工作区截图：收起「资料库」「智能文件夹」两节，侧边栏的「工作区」分组露出来（只是注册默认值，不写进用户设置）。
+        if on, page.hasPrefix("workspace") {
+            UserDefaults.standard.register(defaults: ["sidebar.collapsed.library": true, "sidebar.collapsed.smart": true])
+        }
+        return on
+    }()
     static let isDark = ProcessInfo.processInfo.arguments.contains("--dark")
 
     static var page: String {
@@ -520,7 +527,7 @@ extension LibraryStore {
         case "onboarding": showOnboarding = true
         case "storagemap": selection = .storageMap
         case "folderwall": applyDemoFolderWall()
-        case "workspace": applyDemoWorkspace(empty: false)
+        case "workspace", "workspace-bottom": applyDemoWorkspace(empty: false)
         case "workspace-empty": applyDemoWorkspace(empty: true)
         case "shelf":
             pickDemoShelf()

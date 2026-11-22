@@ -205,7 +205,7 @@ enum WorkspaceTab: Hashable, CaseIterable {
     var title: String {
         switch self {
         case .overview: return String(localized: "概览")
-        case .folders: return String(localized: "文件夹")
+        case .folders: return String(localized: "workspace.tab.folders", defaultValue: "文件夹")
         case .images: return String(localized: "图片")
         case .documents: return String(localized: "文稿")
         case .videos: return String(localized: "视频")
@@ -300,7 +300,10 @@ struct WorkspaceView: View {
 
     // MARK: 整页
 
+    private static let bottomAnchor = "workspace.bottom"
+
     private func page(_ workspace: Workspace) -> some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 header(workspace)
@@ -327,6 +330,15 @@ struct WorkspaceView: View {
                     .contentShape(Rectangle())
                     .onTapGesture { selectedPath = nil }
             )
+            Color.clear
+                .frame(height: 1)
+                .id(Self.bottomAnchor)
+        }
+        .onAppear {
+            // 截图用（--page=workspace-bottom）：滚到最下面，看分类和快捷操作。
+            guard Demo.isOn, Demo.page == "workspace-bottom" else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { proxy.scrollTo(Self.bottomAnchor, anchor: .bottom) }
+        }
         }
         .scrollContentBackground(.hidden)
         .focusable()
@@ -466,13 +478,15 @@ struct WorkspaceView: View {
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 14, weight: .semibold))
-                .frame(width: 34, height: 32)
-                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(.regularMaterial))
-                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.primary.opacity(0.1)))
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
         .fixedSize()
+        // 菜单按钮会丢掉标签上的背景：底板画在菜单外面。
+        .frame(width: 36, height: 34)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(.regularMaterial))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.primary.opacity(0.1)).allowsHitTesting(false))
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .accessibilityLabel("更多")
     }
 

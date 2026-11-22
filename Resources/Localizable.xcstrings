@@ -44622,7 +44622,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "at least %@"
+            "value": "at least %@ files"
           }
         },
         "zh-Hans": {
@@ -44638,7 +44638,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@"
+            "value": "%@ files"
           }
         },
         "zh-Hans": {
@@ -44773,6 +44773,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "找不到了：%@"
+          }
+        }
+      }
+    },
+    "workspace.tab.folders": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹"
           }
         }
       }
