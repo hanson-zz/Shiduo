@@ -408,10 +408,16 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertEqual(firstURL.lastPathComponent, "默认工作区 2.zip")
         XCTAssertEqual(try String(contentsOf: existing, encoding: .utf8), "别动我", "已有的同名 ZIP 不能被覆盖")
 
-        // 再打一次：同一个目标名字已经有了，自动换成下一个编号。
-        let second = WorkspaceZip.make(sources: [("设计稿", one)], target: target)
+        // 再打一次（和 App 一样每次从工作区名字算目标）：自动换成下一个编号。
+        let second = WorkspaceZip.make(sources: [("设计稿", one)], target: WorkspaceLogic.uniqueURL(for: "默认工作区.zip", in: out))
         XCTAssertEqual(second.url?.lastPathComponent, "默认工作区 3.zip")
         XCTAssertEqual(second.files, 2)
+        // 打包期间目标被别人占了（传进来的目标已经存在）：也不覆盖，换一个名字。
+        let firstSize = try FileManager.default.attributesOfItem(atPath: firstURL.path)[.size] as? Int
+        let raced = WorkspaceZip.make(sources: [("设计稿", one)], target: firstURL)
+        XCTAssertNotNil(raced.url)
+        XCTAssertNotEqual(raced.url?.lastPathComponent, firstURL.lastPathComponent)
+        XCTAssertEqual(try FileManager.default.attributesOfItem(atPath: firstURL.path)[.size] as? Int, firstSize)
 
         // ZIP 里每个来源一个顶层文件夹，重名的加编号；没有留下临时文件。
         let entries = try ZipDirectoryReader.readEntries(at: firstURL).filter { !$0.isDirectory }
