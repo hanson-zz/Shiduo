@@ -527,6 +527,7 @@ extension LibraryStore {
         case "onboarding": showOnboarding = true
         case "storagemap": selection = .storageMap
         case "folderwall": applyDemoFolderWall()
+        case "fonts": selection = .fonts
         case "workspace", "workspace-bottom": applyDemoWorkspace(empty: false)
         case "workspace-empty": applyDemoWorkspace(empty: true)
         case "shelf":
