@@ -42,15 +42,14 @@
   }
 })();
 
-/* 观看演示：弹窗播放；竖屏设备播放竖版视频。打开 #demo 链接时自动弹出。 */
+/* Product film: load on demand. The previous demos remain available at their original URLs. */
 (function () {
   var modal = document.getElementById('demo-modal');
   if (!modal) return;
   var video = document.getElementById('demo-video');
   function open(e) {
     if (e) e.preventDefault();
-    var tall = window.innerHeight > window.innerWidth * 1.2;
-    var src = tall ? 'demo/shiduo-demo-vertical.mp4' : 'demo/shiduo-demo.mp4';
+    var src = 'demo/shiduo-promo-35s.mp4';
     if (video.getAttribute('src') !== src) video.setAttribute('src', src);
     modal.hidden = false;
     var p = video.play(); if (p && p.catch) p.catch(function () {});
