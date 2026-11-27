@@ -44824,6 +44824,150 @@
           }
         }
       }
+    },
+    "「%@」范围太大（整个磁盘或用户文件夹），请选里面具体的文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is too broad (a whole disk or your home folder). Choose a specific folder inside it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」范围太大（整个磁盘或用户文件夹），请选里面具体的文件夹"
+          }
+        }
+      }
+    },
+    "「%@」没有添加（它包含已有的来源）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” wasn’t added (it contains existing sources)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」没有添加（它包含已有的来源）"
+          }
+        }
+      }
+    },
+    "，替换了里面的 %lld 个来源": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", replacing %lld source(s) inside it"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "，替换了里面的 %lld 个来源"
+          }
+        }
+      }
+    },
+    "「%@」包含已有的来源 %@，换成「%@」吗？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” contains the existing source(s) %2$@. Replace them with “%3$@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」包含已有的来源 %2$@，换成「%3$@」吗？"
+          }
+        }
+      }
+    },
+    "只从工作区移除里面那几个来源的记录，文件夹和文件都不会动。不换的话，同一批文件会被算两遍。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only those sources are removed from the workspace; no folders or files are touched. Otherwise the same files would be counted twice."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只从工作区移除里面那几个来源的记录，文件夹和文件都不会动。不换的话，同一批文件会被算两遍。"
+          }
+        }
+      }
+    },
+    "替换": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换"
+          }
+        }
+      }
+    },
+    "这个文件夹在「%@」里面，统计和打包时不重复计算": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder is inside “%@”, so it isn’t counted or zipped twice"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件夹在「%@」里面，统计和打包时不重复计算"
+          }
+        }
+      }
+    },
+    "已包含在「%@」里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inside “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已包含在「%@」里"
+          }
+        }
+      }
+    },
+    "%@；%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@; %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@；%2$@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

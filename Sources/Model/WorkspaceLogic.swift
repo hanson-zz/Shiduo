@@ -491,6 +491,10 @@ enum WorkspaceSourceAvailability: Equatable {
 enum WorkspaceAddProblem: Equatable {
     case alreadyAdded(String)
     case insideExisting(String)
+    /// 新加的文件夹是已有来源的上层文件夹（父文件夹后加）：可以换成它（只移除那几个子来源的记录）。
+    case containsExisting(ids: [UUID], names: [String])
+    /// 范围太大（整个磁盘、用户文件夹、资源库）：会扫几十万个文件、连续弹权限框。
+    case tooBroad
     case notFolder
 }
 
@@ -619,15 +623,46 @@ enum WorkspaceLogic {
         return source
     }
 
-    /// 能不能加进这个工作区：同一个文件夹、已有来源里面的子文件夹不再加（数字会重复算）。
-    static func addProblem(path: String, existing: [WorkspaceSource]) -> WorkspaceAddProblem? {
+    /// 能不能加进这个工作区：同一个文件夹、已有来源里面的子文件夹不再加；
+    /// 已有来源的上层文件夹要先问用户（换掉那几个子来源），不然数字、ZIP 会重复算。
+    static func addProblem(path: String, existing: [WorkspaceSource], home: String = NSHomeDirectory()) -> WorkspaceAddProblem? {
         let p = FolderBackupLogic.standardized(path)
+        if isTooBroad(p, home: home) { return .tooBroad }
         for source in existing {
             let s = FolderBackupLogic.standardized(source.path)
             if s.lowercased() == p.lowercased() { return .alreadyAdded(source.name) }
             if FolderBackupLogic.isInside(p, s) { return .insideExisting(source.name) }
         }
+        let children = existing.filter { FolderBackupLogic.isInside($0.path, p) }
+        if !children.isEmpty { return .containsExisting(ids: children.map(\.id), names: children.map(\.name)) }
         return nil
+    }
+
+    /// 范围太大的文件夹：根目录、/Users、/Volumes、系统目录、用户文件夹本身、资源库。
+    static func isTooBroad(_ path: String, home: String) -> Bool {
+        let p = FolderBackupLogic.standardized(path).lowercased()
+        let h = FolderBackupLogic.standardized(home).lowercased()
+        let broad = ["/", "/users", "/volumes", "/system", "/system/volumes/data", "/library", "/applications", "/private",
+                     h, h + "/library"]
+        return broad.contains(p)
+    }
+
+    /// 同一个工作区里落在别的来源里面的来源（来源 id → 包含它的来源的名字）。
+    /// 统计、最近文件、打包都跳过它们，免得同一批文件算两遍；路径一样的只留前面那个。
+    /// items 用来源此刻的路径（书签跟着改名 / 移动以后的）。
+    static func nestedSources(_ items: [(id: UUID, path: String, name: String)]) -> [UUID: String] {
+        var out: [UUID: String] = [:]
+        let paths = items.map { FolderBackupLogic.standardized($0.path).lowercased() }
+        for (i, item) in items.enumerated() {
+            for (j, other) in items.enumerated() where i != j && out[other.id] == nil {
+                guard FolderBackupLogic.isInside(paths[i], paths[j]) else { continue }
+                // 路径完全一样：只把后面的那个算重复。
+                if paths[i] == paths[j] && j > i { continue }
+                out[item.id] = other.name
+                break
+            }
+        }
+        return out
     }
 
     /// 这块卷是不是来源所在的硬盘：有 UUID 只认 UUID；没有时「名字 + 容量」都一样才算（同「备份到硬盘」）。

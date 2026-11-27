@@ -595,12 +595,13 @@ struct WorkspaceView: View {
 
     private func sourceCard(_ source: WorkspaceSource, in workspace: Workspace) -> some View {
         let state = workspaces.state(source)
+        let parent = workspaces.nested(workspace)[source.id]
         return WorkspaceSourceCard(source: source, state: state, stats: workspaces.stats(source),
-                                   scanning: workspaces.scanning.contains(source.id))
+                                   scanning: workspaces.scanning.contains(source.id), insideOf: parent)
             .onTapGesture(count: 2) {
                 if let path = state.path { store.goToRoot(path) }
             }
-            .help(sourceHelp(source, state: state))
+            .help(parent.map { String(localized: "这个文件夹在「\($0)」里面，统计和打包时不重复计算") } ?? sourceHelp(source, state: state))
             .stableContextMenu {
                 Button("在拾掇中打开") { if let path = state.path { store.goToRoot(path) } }
                     .disabled(!state.isOnline)
@@ -848,7 +849,7 @@ struct WorkspaceView: View {
 
     private func zip(_ workspace: Workspace) {
         guard WorkspaceAccess.require() else { return }
-        let online = workspaces.onlineSources(workspace)
+        let online = workspaces.zipSources(workspace)
         guard !online.isEmpty else { return }
         var files = 0
         var bytes: Int64 = 0
@@ -993,6 +994,8 @@ struct WorkspaceSourceCard: View {
     let state: WorkspaceSourceAvailability
     let stats: WorkspaceSourceStats?
     let scanning: Bool
+    /// 落在另一个来源里面（统计不重复算）：那个来源的名字。
+    var insideOf: String?
 
     private var dimmed: Bool { !state.isOnline }
 
@@ -1049,7 +1052,11 @@ struct WorkspaceSourceCard: View {
         case .missing:
             statusPill(String(localized: "找不到了"))
         case .online:
-            if scanning { ProgressView().controlSize(.mini) }
+            if scanning {
+                ProgressView().controlSize(.mini)
+            } else if let insideOf {
+                statusPill(String(localized: "已包含在「\(insideOf)」里"))
+            }
         }
     }
 

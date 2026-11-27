@@ -92,8 +92,23 @@ final class WorkspaceStore: ObservableObject {
         live[source.id]?.stats ?? source.stats
     }
 
+    /// 统计：落在别的来源里面的来源不重复算（父子文件夹都加了的时候）。
     func totals(_ workspace: Workspace) -> WorkspaceTotals {
-        WorkspaceLogic.totals(workspace.sources.map { stats($0) })
+        let skip = nested(workspace)
+        var t = WorkspaceLogic.totals(workspace.sources.filter { skip[$0.id] == nil }.map { stats($0) })
+        t.sources = workspace.sources.count
+        return t
+    }
+
+    /// 落在别的来源里面的来源（来源 id → 包含它的来源名字），按来源此刻的路径判断。
+    func nested(_ workspace: Workspace) -> [UUID: String] {
+        WorkspaceLogic.nestedSources(workspace.sources.map { (id: $0.id, path: state($0).path ?? $0.path, name: $0.name) })
+    }
+
+    /// 打包用的来源：在线的，去掉落在别的来源里面的（同一批文件不打两遍）。
+    func zipSources(_ workspace: Workspace) -> [(source: WorkspaceSource, path: String)] {
+        let skip = nested(workspace)
+        return onlineSources(workspace).filter { skip[$0.source.id] == nil }
     }
 
     func isScanning(_ workspace: Workspace) -> Bool {
@@ -120,7 +135,8 @@ final class WorkspaceStore: ObservableObject {
     private func rows(_ workspace: Workspace, limit: Int, list: (WorkspaceSource) -> [WorkspaceFileEntry]?) -> [WorkspaceFileRow] {
         var owner: [String: WorkspaceSource] = [:]
         var lists: [[WorkspaceFileEntry]] = []
-        for source in workspace.sources {
+        let skip = nested(workspace)
+        for source in workspace.sources where skip[source.id] == nil {
             guard let entries = list(source) else { continue }
             for entry in entries { owner[entry.path] = source }
             lists.append(entries)
@@ -248,17 +264,32 @@ final class WorkspaceStore: ObservableObject {
     func addSources(_ urls: [URL], to id: UUID) -> String? {
         guard WorkspaceAccess.require(), var workspace = self.workspace(id) else { return nil }
         var added: [WorkspaceSource] = []
+        var replaced: Set<UUID> = []
         var problems: [String] = []
         for url in urls {
             guard LibraryStore.isBrowsableFolder(url) else {
                 problems.append(String(localized: "「\(url.lastPathComponent)」不是文件夹"))
                 continue
             }
-            if let problem = WorkspaceLogic.addProblem(path: url.path, existing: workspace.sources + added) {
+            let current = workspace.sources.filter { !replaced.contains($0.id) } + added
+            if let problem = WorkspaceLogic.addProblem(path: url.path, existing: current) {
                 switch problem {
                 case .alreadyAdded(let name): problems.append(String(localized: "「\(name)」已经在这个工作区里了"))
                 case .insideExisting(let name): problems.append(String(localized: "「\(url.lastPathComponent)」已经包含在「\(name)」里"))
                 case .notFolder: problems.append(String(localized: "「\(url.lastPathComponent)」不是文件夹"))
+                case .tooBroad: problems.append(String(localized: "「\(url.lastPathComponent)」范围太大（整个磁盘或用户文件夹），请选里面具体的文件夹"))
+                case .containsExisting(let ids, let names):
+                    // 父文件夹后加：问一下要不要换掉里面那几个来源（只删记录），不然同一批文件会算两遍。
+                    let batch = Set(added.map(\.id))
+                    let fromWorkspace = ids.filter { !batch.contains($0) }
+                    if !fromWorkspace.isEmpty, !confirmReplace(parent: url.lastPathComponent, children: names) {
+                        problems.append(String(localized: "「\(url.lastPathComponent)」没有添加（它包含已有的来源）"))
+                        continue
+                    }
+                    added.removeAll { ids.contains($0.id) }
+                    replaced.formUnion(fromWorkspace)
+                    let volume = FolderBackupStore.volumeInfo(containing: url)
+                    added.append(WorkspaceLogic.makeSource(url: url, volume: volume))
                 }
                 continue
             }
@@ -266,14 +297,39 @@ final class WorkspaceStore: ObservableObject {
             added.append(WorkspaceLogic.makeSource(url: url, volume: volume))
         }
         guard !added.isEmpty else { return problems.first }
+        for sourceID in replaced {
+            cancelScan(sourceID)
+            availability[sourceID] = nil
+            live[sourceID] = nil
+        }
+        workspace.sources.removeAll { replaced.contains($0.id) }
         workspace.sources.append(contentsOf: added)
         update(id) { $0.sources = workspace.sources }
         for source in added {
             availability[source.id] = .online(path: source.path)
             scan(source)
         }
-        let message = String(localized: "已添加 \(added.count) 个文件夹（只记位置，原文件不动）")
-        return problems.isEmpty ? message : message + "；" + problems.joined(separator: "；")
+        var message = String(localized: "已添加 \(added.count) 个文件夹（只记位置，原文件不动）")
+        if !replaced.isEmpty { message += String(localized: "，替换了里面的 \(replaced.count) 个来源") }
+        return Self.joined([message] + problems)
+    }
+
+    /// 几句提示连成一句（中文用「；」，英文用「; 」）。
+    static func joined(_ parts: [String]) -> String {
+        guard var out = parts.first else { return "" }
+        for part in parts.dropFirst() { out = String(localized: "\(out)；\(part)") }
+        return out
+    }
+
+    /// 父文件夹后加：确认换掉里面的来源（只删记录，文件不动）。
+    private func confirmReplace(parent: String, children: [String]) -> Bool {
+        let alert = NSAlert()
+        let list = ListFormatter.localizedString(byJoining: children.map { "「\($0)」" })
+        alert.messageText = String(localized: "「\(parent)」包含已有的来源 \(list)，换成「\(parent)」吗？")
+        alert.informativeText = String(localized: "只从工作区移除里面那几个来源的记录，文件夹和文件都不会动。不换的话，同一批文件会被算两遍。")
+        alert.addButton(withTitle: String(localized: "替换"))
+        alert.addButton(withTitle: String(localized: "取消"))
+        return alert.runModal() == .alertFirstButtonReturn
     }
 
     /// 从工作区移除一个来源：只删引用，文件夹本身不动。

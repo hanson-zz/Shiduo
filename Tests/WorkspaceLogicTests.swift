@@ -253,8 +253,35 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertEqual(WorkspaceLogic.addProblem(path: "/Users/me/Desktop/设计稿/", existing: existing), .alreadyAdded("设计稿"))
         XCTAssertEqual(WorkspaceLogic.addProblem(path: "/users/me/desktop/设计稿", existing: existing), .alreadyAdded("设计稿"))
         XCTAssertEqual(WorkspaceLogic.addProblem(path: "/Users/me/Desktop/设计稿/草稿", existing: existing), .insideExisting("设计稿"))
-        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Users/me/Desktop/设计稿2", existing: existing))
-        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Users/me/Desktop", existing: existing))
+        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Users/me/Desktop/设计稿2", existing: existing, home: "/Users/me"))
+        // 父文件夹后加（审计 P1-1）：不能悄悄加进去，要提示换掉里面的来源。
+        XCTAssertEqual(WorkspaceLogic.addProblem(path: "/Users/me/Desktop", existing: existing, home: "/Users/me"),
+                       .containsExisting(ids: [existing[0].id], names: ["设计稿"]))
+        XCTAssertEqual(WorkspaceLogic.addProblem(path: "/USERS/me/desktop/", existing: existing, home: "/Users/me"),
+                       .containsExisting(ids: [existing[0].id], names: ["设计稿"]), "不分大小写")
+    }
+
+    func testTooBroadFoldersRejected() {
+        for path in ["/", "/Users", "/Volumes", "/Users/me", "/Users/me/", "/Users/me/Library", "/System/Volumes/Data"] {
+            XCTAssertEqual(WorkspaceLogic.addProblem(path: path, existing: [], home: "/Users/me"), .tooBroad, path)
+        }
+        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Users/me/Documents", existing: [], home: "/Users/me"))
+        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Volumes/闪迪", existing: [], home: "/Users/me"), "整块外接盘可以")
+    }
+
+    func testNestedSourcesAreCountedOnce() {
+        let parent = UUID(), child = UUID(), other = UUID(), dupe = UUID()
+        let nested = WorkspaceLogic.nestedSources([
+            (id: child, path: "/Users/me/Desktop/设计稿", name: "设计稿"),
+            (id: parent, path: "/Users/me/Desktop", name: "Desktop"),
+            (id: other, path: "/Users/me/Desktop2", name: "Desktop2"),
+            (id: dupe, path: "/users/me/desktop/", name: "Desktop"),
+        ])
+        XCTAssertEqual(nested[child], "Desktop", "子来源在父来源里：不重复算")
+        XCTAssertNil(nested[parent], "父来源自己照常算")
+        XCTAssertNil(nested[other], "名字前缀相同但不是子文件夹")
+        XCTAssertEqual(nested[dupe], "Desktop", "同一个路径只留前面那个")
+        XCTAssertEqual(nested.count, 2)
     }
 
     // MARK: - 离线判定
