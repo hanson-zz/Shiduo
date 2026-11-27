@@ -981,13 +981,13 @@ enum WorkspaceScanner {
             guard problem == EPERM || problem == EACCES else { return nil }  // 不在了 / 断开了：没有结果，缓存不动
             return Result(stats: stats, byKind: [:], folders: [], localFileCount: 0, localBytes: 0, permissionDenied: true)
         }
-        // 子文件夹读不了：记个数（errorHandler 在别的地方调用，用一个盒子装计数）。
-        final class Counter { var denied = 0 }
-        let counter = Counter()
+        // 子文件夹读不了：记下来（errorHandler 在别的地方调用，用一个盒子装；同一个文件夹只算一次）。
+        final class Denied { var paths = Set<String>() }
+        let denied = Denied()
         guard let enumerator = fm.enumerator(at: root, includingPropertiesForKeys: keys,
                                              options: [.skipsHiddenFiles, .skipsPackageDescendants],
-                                             errorHandler: { _, error in
-                                                 if WorkspaceScanner.isPermissionError(error) { counter.denied += 1 }
+                                             errorHandler: { url, error in
+                                                 if WorkspaceScanner.isPermissionError(error) { denied.paths.insert(url.path) }
                                                  return true
                                              }) else { return nil }
         var seen = 0
@@ -1016,6 +1016,10 @@ enum WorkspaceScanner {
                 if isDataless(path: next.path) {
                     enumerator.skipDescendants()
                     stats.cloudFolders += 1
+                } else if access(next.path, R_OK | X_OK) != 0 {
+                    // 没有读权限的子文件夹（errorHandler 不一定报）：不往下走，记下来。
+                    enumerator.skipDescendants()
+                    denied.paths.insert(next.path)
                 }
                 if enumerator.level == 1 {
                     let entry = WorkspaceFileEntry(path: next.path, name: next.lastPathComponent, modified: modified,
@@ -1053,7 +1057,7 @@ enum WorkspaceScanner {
             keepNewest(&recent, entry, limit: recentLimit)
         }
         if isCancelled() { return nil }
-        stats.unreadableFolders = counter.denied
+        stats.unreadableFolders = denied.paths.count
         for kind in WorkspaceFileKind.allCases {
             byKind[kind] = Array((byKind[kind] ?? []).sorted { $0.modified > $1.modified }.prefix(perKindLimit))
         }
