@@ -44808,6 +44808,22 @@
           }
         }
       }
+    },
+    "工作区配置来自更新版本的拾掇，这次的修改不会保存（原来的配置已备份）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workspace setup was saved by a newer version of Shiduo. Changes made now won’t be saved (the original setup has been backed up)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区配置来自更新版本的拾掇，这次的修改不会保存（原来的配置已备份）。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

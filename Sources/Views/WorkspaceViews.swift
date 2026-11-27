@@ -401,6 +401,12 @@ struct WorkspaceView: View {
                 }
                 .font(.callout)
                 .foregroundStyle(.secondary)
+                if let notice = workspaces.readOnlyNotice {
+                    Label(notice, systemImage: "exclamationmark.triangle")
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .layoutPriority(1)
             Spacer(minLength: 12)

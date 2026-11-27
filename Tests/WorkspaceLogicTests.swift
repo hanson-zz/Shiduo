@@ -133,6 +133,69 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertEqual(file.workspaces.count, 1)
     }
 
+    // MARK: - 配置不被覆盖（审计 P1-2）
+
+    func testFirstLaunchIsTheOnlyCaseThatSavesRightAway() {
+        let first = WorkspaceCodec.load(nil)
+        XCTAssertTrue(first.needsSave, "第一次用：建了默认工作区，要存")
+        XCTAssertFalse(first.needsBackup)
+        XCTAssertFalse(first.readOnly)
+        let normal = WorkspaceCodec.load(WorkspaceCodec.encode(WorkspacesFile(workspaces: [Workspace(name: "W")], seededDefault: true)))
+        XCTAssertFalse(normal.needsSave, "正常读出来以后不再无条件写回去")
+        XCTAssertFalse(normal.needsBackup)
+        XCTAssertFalse(normal.readOnly)
+    }
+
+    func testCorruptDataIsBackedUpAndNotOverwritten() {
+        let loaded = WorkspaceCodec.load(Data("not json".utf8))
+        XCTAssertTrue(loaded.needsBackup, "读不出来：原始数据先备份")
+        XCTAssertFalse(loaded.needsSave, "不能马上拿默认值覆盖")
+        XCTAssertEqual(loaded.file.workspaces.count, 1, "这次运行显示一个默认工作区")
+    }
+
+    func testNewerVersionIsReadOnlyAndBackedUp() {
+        let json = #"{"version": 2, "seededDefault": true, "workspaces": [{"id": "11111111-1111-1111-1111-111111111111", "name": "品牌", "sources": []}]}"#
+        let loaded = WorkspaceCodec.load(Data(json.utf8))
+        XCTAssertTrue(loaded.readOnly, "更新版本的数据：这次只读")
+        XCTAssertTrue(loaded.needsBackup)
+        XCTAssertFalse(loaded.needsSave)
+        XCTAssertEqual(loaded.file.workspaces.map(\.name), ["品牌"])
+    }
+
+    func testDroppedItemsTriggerBackup() {
+        let json = #"{"version": 1, "seededDefault": true, "workspaces": [{"id": "11111111-1111-1111-1111-111111111111", "name": "品牌", "sources": [{"kind": "local"}, {"path": "/Users/me/a"}]}, {"colorIndex": 1}]}"#
+        let loaded = WorkspaceCodec.load(Data(json.utf8))
+        XCTAssertTrue(loaded.needsBackup, "有读丢的工作区 / 来源：先备份原始数据")
+        XCTAssertFalse(loaded.readOnly)
+        XCTAssertEqual(loaded.file.workspaces.count, 1)
+        XCTAssertEqual(loaded.file.workspaces.first?.sources.count, 1)
+    }
+
+    func testUnknownFieldsSurviveRoundTrip() throws {
+        let json = """
+        {"version": 1, "seededDefault": true, "topLevelNew": {"a": [1, "b", null, true]},
+         "workspaces": [{"id": "11111111-1111-1111-1111-111111111111", "name": "品牌", "pinned": true,
+           "sources": [{"id": "22222222-2222-2222-2222-222222222222", "path": "/Volumes/NAS/项目", "kind": "nas", "share": "smb://nas/项目"}]}]}
+        """
+        let file = WorkspaceCodec.decode(Data(json.utf8))
+        XCTAssertEqual(file.workspaces.first?.sources.first?.kind, .local)
+        let data = try XCTUnwrap(WorkspaceCodec.encode(file))
+        let top = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertNotNil(top["topLevelNew"], "顶层认不出的字段写回去")
+        let workspace = try XCTUnwrap((top["workspaces"] as? [[String: Any]])?.first)
+        XCTAssertEqual(workspace["pinned"] as? Bool, true, "工作区认不出的字段写回去")
+        let source = try XCTUnwrap((workspace["sources"] as? [[String: Any]])?.first)
+        XCTAssertEqual(source["share"] as? String, "smb://nas/项目", "来源认不出的字段写回去")
+        XCTAssertEqual(source["kind"] as? String, "nas", "认不出的位置类型写回原值")
+        // 再读一遍还是一样的。
+        XCTAssertEqual(WorkspaceCodec.decode(data).workspaces, file.workspaces)
+    }
+
+    func testBackupKeyFormat() {
+        let key = WorkspaceCodec.backupKey(Date(timeIntervalSince1970: 0))
+        XCTAssertEqual(key, "workspaces.backup.19700101-000000")
+    }
+
     func testSanitizeRelativePathOnDecode() throws {
         let source = WorkspaceSource(path: "/Volumes/A/x", kind: .external, volumeUUID: "U", relativePath: "../../etc")
         let file = WorkspacesFile(workspaces: [Workspace(name: "W", sources: [source])], seededDefault: true)

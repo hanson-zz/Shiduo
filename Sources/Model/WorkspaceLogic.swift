@@ -141,6 +141,8 @@ struct WorkspaceSource: Codable, Identifiable, Equatable {
     var added: Date
     /// 上次扫描的统计（缓存）。
     var stats: WorkspaceSourceStats?
+    /// 这一版认不出的字段（以后版本加的）：原样留着，存的时候写回去。
+    var unknownFields: [String: WorkspaceJSON] = [:]
 
     init(id: UUID = UUID(), bookmark: Data? = nil, path: String, kind: WorkspaceSourceKind = .local,
          volumeUUID: String? = nil, volumeName: String? = nil, volumeCapacity: Int64 = 0,
@@ -166,7 +168,7 @@ struct WorkspaceSource: Codable, Identifiable, Equatable {
     /// 在外接硬盘上（拔掉后显示「硬盘未连接」）。
     var isOnExternalVolume: Bool { kind == .external || !(volumeUUID ?? "").isEmpty }
 
-    private enum CodingKeys: String, CodingKey {
+    private enum CodingKeys: String, CodingKey, CaseIterable {
         case id, bookmark, path, kind, volumeUUID, volumeName, volumeCapacity, relativePath, added, stats
     }
 
@@ -175,14 +177,37 @@ struct WorkspaceSource: Codable, Identifiable, Equatable {
         id = (try? c.decode(UUID.self, forKey: .id)) ?? UUID()
         bookmark = try? c.decode(Data.self, forKey: .bookmark)
         path = try c.decode(String.self, forKey: .path)
-        // 以后版本加的新位置类型：这一版认不出就当「本地」。
-        kind = (try? c.decode(WorkspaceSourceKind.self, forKey: .kind)) ?? .local
+        var extra = WorkspaceUnknownFields.decode(decoder, known: Set(CodingKeys.allCases.map(\.rawValue)))
+        // 以后版本加的新位置类型：这一版认不出就当「本地」（原来的值留在 unknownFields 里，存的时候写回去）。
+        if let raw = try? c.decode(String.self, forKey: .kind), WorkspaceSourceKind(rawValue: raw) == nil {
+            kind = .local
+            extra["kind"] = .string(raw)
+        } else {
+            kind = (try? c.decode(WorkspaceSourceKind.self, forKey: .kind)) ?? .local
+        }
         volumeUUID = try? c.decode(String.self, forKey: .volumeUUID)
         volumeName = try? c.decode(String.self, forKey: .volumeName)
         volumeCapacity = (try? c.decode(Int64.self, forKey: .volumeCapacity)) ?? 0
         relativePath = try? c.decode(String.self, forKey: .relativePath)
         added = (try? c.decode(Date.self, forKey: .added)) ?? Date()
         stats = try? c.decode(WorkspaceSourceStats.self, forKey: .stats)
+        unknownFields = extra
+    }
+
+    func encode(to encoder: Encoder) throws {
+        // 先写认不出的字段，再写这一版的字段（同名时这一版的值为准；认不出的位置类型写回原值）。
+        try WorkspaceUnknownFields.encode(unknownFields, to: encoder)
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encodeIfPresent(bookmark, forKey: .bookmark)
+        try c.encode(path, forKey: .path)
+        if unknownFields["kind"] == nil || kind != .local { try c.encode(kind, forKey: .kind) }
+        try c.encodeIfPresent(volumeUUID, forKey: .volumeUUID)
+        try c.encodeIfPresent(volumeName, forKey: .volumeName)
+        try c.encode(volumeCapacity, forKey: .volumeCapacity)
+        try c.encodeIfPresent(relativePath, forKey: .relativePath)
+        try c.encode(added, forKey: .added)
+        try c.encodeIfPresent(stats, forKey: .stats)
     }
 }
 
@@ -195,6 +220,8 @@ struct Workspace: Codable, Identifiable, Equatable {
     var symbol: String
     var sources: [WorkspaceSource]
     var created: Date
+    /// 这一版认不出的字段（以后版本加的）：原样留着，存的时候写回去。
+    var unknownFields: [String: WorkspaceJSON] = [:]
 
     init(id: UUID = UUID(), name: String, colorIndex: Int = WorkspaceLogic.defaultColorIndex,
          symbol: String = WorkspaceLogic.defaultSymbol, sources: [WorkspaceSource] = [], created: Date = Date()) {
@@ -206,7 +233,7 @@ struct Workspace: Codable, Identifiable, Equatable {
         self.created = created
     }
 
-    private enum CodingKeys: String, CodingKey { case id, name, colorIndex, symbol, sources, created }
+    private enum CodingKeys: String, CodingKey, CaseIterable { case id, name, colorIndex, symbol, sources, created }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -216,6 +243,18 @@ struct Workspace: Codable, Identifiable, Equatable {
         symbol = (try? c.decode(String.self, forKey: .symbol)) ?? WorkspaceLogic.defaultSymbol
         sources = WorkspaceLossy.decodeArray(WorkspaceSource.self, c, .sources)
         created = (try? c.decode(Date.self, forKey: .created)) ?? Date()
+        unknownFields = WorkspaceUnknownFields.decode(decoder, known: Set(CodingKeys.allCases.map(\.rawValue)))
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try WorkspaceUnknownFields.encode(unknownFields, to: encoder)
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(name, forKey: .name)
+        try c.encode(colorIndex, forKey: .colorIndex)
+        try c.encode(symbol, forKey: .symbol)
+        try c.encode(sources, forKey: .sources)
+        try c.encode(created, forKey: .created)
     }
 }
 
@@ -227,6 +266,8 @@ struct WorkspacesFile: Codable, Equatable {
     var workspaces: [Workspace]
     /// 已经自动建过「默认工作区」（用户删光了也不再自动建）。
     var seededDefault: Bool
+    /// 这一版认不出的字段（以后版本加的）：原样留着，存的时候写回去。
+    var unknownFields: [String: WorkspaceJSON] = [:]
 
     init(version: Int = WorkspacesFile.currentVersion, workspaces: [Workspace] = [], seededDefault: Bool = false) {
         self.version = version
@@ -234,13 +275,102 @@ struct WorkspacesFile: Codable, Equatable {
         self.seededDefault = seededDefault
     }
 
-    private enum CodingKeys: String, CodingKey { case version, workspaces, seededDefault }
+    private enum CodingKeys: String, CodingKey, CaseIterable { case version, workspaces, seededDefault }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         version = (try? c.decode(Int.self, forKey: .version)) ?? 0
         workspaces = WorkspaceLossy.decodeArray(Workspace.self, c, .workspaces)
         seededDefault = (try? c.decode(Bool.self, forKey: .seededDefault)) ?? !workspaces.isEmpty
+        unknownFields = WorkspaceUnknownFields.decode(decoder, known: Set(CodingKeys.allCases.map(\.rawValue)))
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try WorkspaceUnknownFields.encode(unknownFields, to: encoder)
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(version, forKey: .version)
+        try c.encode(workspaces, forKey: .workspaces)
+        try c.encode(seededDefault, forKey: .seededDefault)
+    }
+}
+
+/// 任意 JSON 值（保留认不出的字段用）。
+enum WorkspaceJSON: Codable, Equatable {
+    case null
+    case bool(Bool)
+    case number(Double)
+    case string(String)
+    case array([WorkspaceJSON])
+    case object([String: WorkspaceJSON])
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if c.decodeNil() {
+            self = .null
+        } else if let value = try? c.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? c.decode(Double.self) {
+            self = .number(value)
+        } else if let value = try? c.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? c.decode([WorkspaceJSON].self) {
+            self = .array(value)
+        } else {
+            self = .object(try c.decode([String: WorkspaceJSON].self))
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        switch self {
+        case .null: try c.encodeNil()
+        case .bool(let value): try c.encode(value)
+        case .number(let value): try c.encode(value)
+        case .string(let value): try c.encode(value)
+        case .array(let value): try c.encode(value)
+        case .object(let value): try c.encode(value)
+        }
+    }
+
+    var arrayValue: [WorkspaceJSON]? {
+        if case .array(let value) = self { return value }
+        return nil
+    }
+
+    var objectValue: [String: WorkspaceJSON]? {
+        if case .object(let value) = self { return value }
+        return nil
+    }
+
+    var numberValue: Double? {
+        if case .number(let value) = self { return value }
+        return nil
+    }
+}
+
+/// 读 / 写认不出的字段。
+enum WorkspaceUnknownFields {
+    private struct AnyKey: CodingKey {
+        var stringValue: String
+        var intValue: Int? { nil }
+        init(_ string: String) { stringValue = string }
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
+    }
+
+    static func decode(_ decoder: Decoder, known: Set<String>) -> [String: WorkspaceJSON] {
+        guard let c = try? decoder.container(keyedBy: AnyKey.self) else { return [:] }
+        var out: [String: WorkspaceJSON] = [:]
+        for key in c.allKeys where !known.contains(key.stringValue) {
+            if let value = try? c.decode(WorkspaceJSON.self, forKey: key) { out[key.stringValue] = value }
+        }
+        return out
+    }
+
+    static func encode(_ fields: [String: WorkspaceJSON], to encoder: Encoder) throws {
+        guard !fields.isEmpty else { return }
+        var c = encoder.container(keyedBy: AnyKey.self)
+        for (key, value) in fields { try c.encode(value, forKey: AnyKey(key)) }
     }
 }
 
@@ -256,7 +386,47 @@ enum WorkspaceLossy {
     }
 }
 
+/// 从 UserDefaults 读出来的结果：要不要先备份原始数据、这次运行能不能写回去。
+struct WorkspacesLoad {
+    var file: WorkspacesFile
+    /// 原始数据要先原样备份（读不出来、来自更新的版本、有工作区 / 来源读丢了）。
+    var needsBackup = false
+    /// 只读：数据来自更新版本的拾掇，这次运行一律不写回去（免得把新版本的数据改坏、丢字段）。
+    var readOnly = false
+    /// 要马上存一次（第一次用，刚建了默认工作区）。其他情况读完不存。
+    var needsSave = false
+}
+
 enum WorkspaceCodec {
+    /// 备份键的前缀：workspaces.backup.<时间>。
+    static let backupPrefix = "workspaces.backup."
+
+    static func backupKey(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        return backupPrefix + formatter.string(from: date)
+    }
+
+    /// 启动时读配置：什么情况都不会拿默认值覆盖用户原来的数据。
+    /// 读不出来（损坏）：先备份原始数据，这次用一个默认工作区，但不马上保存；
+    /// 版本号比这一版新：备份 + 只读；有工作区 / 来源读丢了：备份（用户改了东西再存时原始数据还在备份里）。
+    static func load(_ data: Data?) -> WorkspacesLoad {
+        guard let data else { return WorkspacesLoad(file: decode(nil), needsSave: true) }
+        let file = decode(data)
+        guard let raw = try? JSONDecoder().decode(WorkspaceJSON.self, from: data), let top = raw.objectValue else {
+            return WorkspacesLoad(file: file, needsBackup: true)
+        }
+        let version = Int(top["version"]?.numberValue ?? 0)
+        let newer = version > WorkspacesFile.currentVersion
+        let rawWorkspaces = top["workspaces"]?.arrayValue ?? []
+        let rawSources = rawWorkspaces.reduce(0) { $0 + ($1.objectValue?["sources"]?.arrayValue?.count ?? 0) }
+        let decodedSources = file.workspaces.reduce(0) { $0 + $1.sources.count }
+        let lost = file.workspaces.count < rawWorkspaces.count || decodedSources < rawSources
+        return WorkspacesLoad(file: file, needsBackup: newer || lost, readOnly: newer)
+    }
+
     /// 读：读不出来就是空的（还没建过）；路径不是绝对路径的来源丢掉；同一个 id 只留第一个。
     static func decode(_ data: Data?) -> WorkspacesFile {
         guard let data else { return WorkspaceLogic.migrate(WorkspacesFile(version: WorkspacesFile.currentVersion)) }

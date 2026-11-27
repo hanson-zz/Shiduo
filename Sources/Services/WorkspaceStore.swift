@@ -38,8 +38,11 @@ final class WorkspaceStore: ObservableObject {
     @Published private(set) var zipping: UUID?
     /// 页面上要进入改名状态的工作区（双击标题、菜单「重命名」）。
     @Published var renamingInline: UUID?
+    /// 配置来自更新版本的拾掇：这次运行只读（不写回去），页面上提示一句。
+    @Published private(set) var readOnlyNotice: String?
 
     private var file = WorkspacesFile()
+    private var readOnly = false
     private var scanTasks: [UUID: Task<Void, Never>] = [:]
     private var scanFlags: [UUID: WorkspaceCancelFlag] = [:]
     private var zipFlag: WorkspaceCancelFlag?
@@ -47,9 +50,25 @@ final class WorkspaceStore: ObservableObject {
 
     private init() {
         if !Demo.isOn {
-            file = WorkspaceCodec.decode(UserDefaults.standard.data(forKey: Self.defaultsKey))
+            let defaults = UserDefaults.standard
+            let stored = defaults.object(forKey: Self.defaultsKey)
+            if let stored, !(stored is Data) {
+                // 键里存的不是数据（被别的东西写坏了）：原样备份，这次不保存默认值。
+                Self.backup(stored)
+                file = WorkspaceCodec.decode(nil)
+            } else {
+                let loaded = WorkspaceCodec.load(stored as? Data)
+                if loaded.needsBackup, let raw = stored as? Data { Self.backup(raw) }
+                file = loaded.file
+                readOnly = loaded.readOnly
+                if loaded.readOnly {
+                    readOnlyNotice = String(localized: "工作区配置来自更新版本的拾掇，这次的修改不会保存（原来的配置已备份）。")
+                }
+                // 只有第一次用（刚建了默认工作区）才马上存。读出来的旧数据不再无条件写回去：
+                // 读不出来的不会被默认值覆盖；切换语言时两个实例也不会互相覆盖。
+                if loaded.needsSave { save() }
+            }
             workspaces = file.workspaces
-            save()
         }
         let center = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification, NSWorkspace.didRenameVolumeNotification] {
@@ -191,8 +210,16 @@ final class WorkspaceStore: ObservableObject {
         save()
     }
 
+    /// 读不懂的原始配置原样存到 workspaces.backup.<时间>（同样的内容只备份一份）。
+    private static func backup(_ value: Any) {
+        let defaults = UserDefaults.standard
+        let existing = defaults.dictionaryRepresentation().filter { $0.key.hasPrefix(WorkspaceCodec.backupPrefix) }
+        if let data = value as? Data, existing.values.contains(where: { ($0 as? Data) == data }) { return }
+        defaults.set(value, forKey: WorkspaceCodec.backupKey(Date()))
+    }
+
     private func save() {
-        guard !Demo.isOn else { return }
+        guard !Demo.isOn, !readOnly else { return }
         file.workspaces = workspaces
         file.seededDefault = true
         if let data = WorkspaceCodec.encode(file) {
