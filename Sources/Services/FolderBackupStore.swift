@@ -192,12 +192,12 @@ final class FolderBackupStore: ObservableObject {
 
     // MARK: - 硬盘
 
-    private static let volumeKeys: [URLResourceKey] = [
+    nonisolated private static let volumeKeys: [URLResourceKey] = [
         .volumeUUIDStringKey, .volumeNameKey, .volumeLocalizedNameKey, .volumeTotalCapacityKey,
         .volumeIsInternalKey, .volumeIsRemovableKey, .volumeIsEjectableKey, .volumeIsRootFileSystemKey,
     ]
 
-    private static func info(forVolume url: URL) -> BackupVolumeInfo? {
+    nonisolated private static func info(forVolume url: URL) -> BackupVolumeInfo? {
         guard let v = try? url.resourceValues(forKeys: Set(volumeKeys)) else { return nil }
         let rootFS = v.volumeIsRootFileSystem == true
         let external = !rootFS && !url.path.hasPrefix("/System/")
@@ -207,15 +207,15 @@ final class FolderBackupStore: ObservableObject {
                                 capacity: Int64(v.volumeTotalCapacity ?? 0), isExternal: external)
     }
 
-    /// 现在挂着的卷。
-    static func mountedVolumes() -> [BackupVolumeInfo] {
+    /// 现在挂着的卷（工作区在后台线程调用）。
+    nonisolated static func mountedVolumes() -> [BackupVolumeInfo] {
         let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: volumeKeys,
                                                          options: [.skipHiddenVolumes]) ?? []
         return urls.compactMap(info(forVolume:))
     }
 
     /// 某个路径所在的卷。
-    static func volumeInfo(containing url: URL) -> BackupVolumeInfo? {
+    nonisolated static func volumeInfo(containing url: URL) -> BackupVolumeInfo? {
         guard let volume = (try? url.resourceValues(forKeys: [.volumeURLKey]))?.volume else { return nil }
         return info(forVolume: volume)
     }

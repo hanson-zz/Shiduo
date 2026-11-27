@@ -210,6 +210,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // 工作区正在打包：停掉压缩子进程、删掉临时文件（不然子进程会接着写，留下一个没人管的大文件）。
+        WorkspaceZipJob.stopAllForQuit()
         MainActor.assumeIsolated {
             AppDelegate.updater?.installIfReady()
         }

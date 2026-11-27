@@ -133,6 +133,70 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertEqual(file.workspaces.count, 1)
     }
 
+    // MARK: - 配置不被覆盖（审计 P1-2）
+
+    func testFirstLaunchIsTheOnlyCaseThatSavesRightAway() {
+        let first = WorkspaceCodec.load(nil)
+        XCTAssertTrue(first.needsSave, "第一次用：建了默认工作区，要存")
+        XCTAssertFalse(first.needsBackup)
+        XCTAssertFalse(first.readOnly)
+        let normal = WorkspaceCodec.load(WorkspaceCodec.encode(WorkspacesFile(workspaces: [Workspace(name: "W")], seededDefault: true)))
+        XCTAssertFalse(normal.needsSave, "正常读出来以后不再无条件写回去")
+        XCTAssertFalse(normal.needsBackup)
+        XCTAssertFalse(normal.readOnly)
+    }
+
+    func testCorruptDataIsBackedUpAndNotOverwritten() {
+        let loaded = WorkspaceCodec.load(Data("not json".utf8))
+        XCTAssertTrue(loaded.needsBackup, "读不出来：原始数据先备份")
+        XCTAssertFalse(loaded.needsSave, "不能马上拿默认值覆盖")
+        XCTAssertEqual(loaded.file.workspaces.count, 1, "这次运行显示一个默认工作区")
+    }
+
+    func testNewerVersionIsReadOnlyAndBackedUp() {
+        let json = #"{"version": 2, "seededDefault": true, "workspaces": [{"id": "11111111-1111-1111-1111-111111111111", "name": "品牌", "sources": []}]}"#
+        let loaded = WorkspaceCodec.load(Data(json.utf8))
+        XCTAssertTrue(loaded.readOnly, "更新版本的数据：这次只读")
+        XCTAssertTrue(loaded.needsBackup)
+        XCTAssertFalse(loaded.needsSave)
+        XCTAssertEqual(loaded.file.workspaces.map(\.name), ["品牌"])
+    }
+
+    func testDroppedItemsTriggerBackup() {
+        let json = #"{"version": 1, "seededDefault": true, "workspaces": [{"id": "11111111-1111-1111-1111-111111111111", "name": "品牌", "sources": [{"kind": "local"}, {"path": "/Users/me/a"}]}, {"colorIndex": 1}]}"#
+        let loaded = WorkspaceCodec.load(Data(json.utf8))
+        XCTAssertTrue(loaded.needsBackup, "有读丢的工作区 / 来源：先备份原始数据")
+        XCTAssertFalse(loaded.readOnly)
+        XCTAssertEqual(loaded.file.workspaces.count, 1)
+        XCTAssertEqual(loaded.file.workspaces.first?.sources.count, 1)
+    }
+
+    func testUnknownFieldsSurviveRoundTrip() throws {
+        let json = """
+        {"version": 1, "seededDefault": true, "topLevelNew": {"a": [1, "b", null, true]},
+         "workspaces": [{"id": "11111111-1111-1111-1111-111111111111", "name": "品牌", "pinned": true, "created": "2026-01-01T00:00:00Z",
+           "sources": [{"id": "22222222-2222-2222-2222-222222222222", "path": "/Volumes/NAS/项目", "kind": "nas", "share": "smb://nas/项目",
+                        "added": "2026-01-02T00:00:00Z"}]}]}
+        """
+        let file = WorkspaceCodec.decode(Data(json.utf8))
+        XCTAssertEqual(file.workspaces.first?.sources.first?.kind, .local)
+        let data = try XCTUnwrap(WorkspaceCodec.encode(file))
+        let top = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertNotNil(top["topLevelNew"], "顶层认不出的字段写回去")
+        let workspace = try XCTUnwrap((top["workspaces"] as? [[String: Any]])?.first)
+        XCTAssertEqual(workspace["pinned"] as? Bool, true, "工作区认不出的字段写回去")
+        let source = try XCTUnwrap((workspace["sources"] as? [[String: Any]])?.first)
+        XCTAssertEqual(source["share"] as? String, "smb://nas/项目", "来源认不出的字段写回去")
+        XCTAssertEqual(source["kind"] as? String, "nas", "认不出的位置类型写回原值")
+        // 再读一遍还是一样的。
+        XCTAssertEqual(WorkspaceCodec.decode(data).workspaces, file.workspaces)
+    }
+
+    func testBackupKeyFormat() {
+        let key = WorkspaceCodec.backupKey(Date(timeIntervalSince1970: 0))
+        XCTAssertEqual(key, "workspaces.backup.19700101-000000")
+    }
+
     func testSanitizeRelativePathOnDecode() throws {
         let source = WorkspaceSource(path: "/Volumes/A/x", kind: .external, volumeUUID: "U", relativePath: "../../etc")
         let file = WorkspacesFile(workspaces: [Workspace(name: "W", sources: [source])], seededDefault: true)
@@ -190,8 +254,35 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertEqual(WorkspaceLogic.addProblem(path: "/Users/me/Desktop/设计稿/", existing: existing), .alreadyAdded("设计稿"))
         XCTAssertEqual(WorkspaceLogic.addProblem(path: "/users/me/desktop/设计稿", existing: existing), .alreadyAdded("设计稿"))
         XCTAssertEqual(WorkspaceLogic.addProblem(path: "/Users/me/Desktop/设计稿/草稿", existing: existing), .insideExisting("设计稿"))
-        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Users/me/Desktop/设计稿2", existing: existing))
-        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Users/me/Desktop", existing: existing))
+        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Users/me/Desktop/设计稿2", existing: existing, home: "/Users/me"))
+        // 父文件夹后加（审计 P1-1）：不能悄悄加进去，要提示换掉里面的来源。
+        XCTAssertEqual(WorkspaceLogic.addProblem(path: "/Users/me/Desktop", existing: existing, home: "/Users/me"),
+                       .containsExisting(ids: [existing[0].id], names: ["设计稿"]))
+        XCTAssertEqual(WorkspaceLogic.addProblem(path: "/USERS/me/desktop/", existing: existing, home: "/Users/me"),
+                       .containsExisting(ids: [existing[0].id], names: ["设计稿"]), "不分大小写")
+    }
+
+    func testTooBroadFoldersRejected() {
+        for path in ["/", "/Users", "/Volumes", "/Users/me", "/Users/me/", "/Users/me/Library", "/System/Volumes/Data"] {
+            XCTAssertEqual(WorkspaceLogic.addProblem(path: path, existing: [], home: "/Users/me"), .tooBroad, path)
+        }
+        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Users/me/Documents", existing: [], home: "/Users/me"))
+        XCTAssertNil(WorkspaceLogic.addProblem(path: "/Volumes/闪迪", existing: [], home: "/Users/me"), "整块外接盘可以")
+    }
+
+    func testNestedSourcesAreCountedOnce() {
+        let parent = UUID(), child = UUID(), other = UUID(), dupe = UUID()
+        let nested = WorkspaceLogic.nestedSources([
+            (id: child, path: "/Users/me/Desktop/设计稿", name: "设计稿"),
+            (id: parent, path: "/Users/me/Desktop", name: "Desktop"),
+            (id: other, path: "/Users/me/Desktop2", name: "Desktop2"),
+            (id: dupe, path: "/users/me/desktop/", name: "Desktop"),
+        ])
+        XCTAssertEqual(nested[child], "Desktop", "子来源在父来源里：不重复算")
+        XCTAssertNil(nested[parent], "父来源自己照常算")
+        XCTAssertNil(nested[other], "名字前缀相同但不是子文件夹")
+        XCTAssertEqual(nested[dupe], "Desktop", "同一个路径只留前面那个")
+        XCTAssertEqual(nested.count, 2)
     }
 
     // MARK: - 离线判定
@@ -402,7 +493,7 @@ final class WorkspaceLogicTests: XCTestCase {
         let target = WorkspaceLogic.uniqueURL(for: "默认工作区.zip", in: out)
         XCTAssertEqual(target.lastPathComponent, "默认工作区 2.zip")
         let first = WorkspaceZip.make(sources: [("设计稿", one), ("设计稿", two)], target: target)
-        XCTAssertFalse(first.failed)
+        XCTAssertFalse(first.failed, "\(first)")
         XCTAssertEqual(first.files, 3)
         let firstURL = try XCTUnwrap(first.url)
         XCTAssertEqual(firstURL.lastPathComponent, "默认工作区 2.zip")
@@ -448,5 +539,262 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertNil(outcome.url)
         XCTAssertFalse(outcome.failed)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: out.path), [])
+    }
+
+    // MARK: - 打包 ZIP 的稳定性（审计 P1-3、P1-4、P1-10、P1-11、P2-10）
+
+    /// 读 ZIP 中央目录里每一项的「通用位标记」（第 11 位 = 文件名是 UTF-8）。
+    private func centralDirectoryFlags(_ url: URL) throws -> [(name: String, flags: UInt16)] {
+        let bytes = [UInt8](try Data(contentsOf: url))
+        func u16(_ i: Int) -> Int { Int(bytes[i]) | Int(bytes[i + 1]) << 8 }
+        func u32(_ i: Int) -> Int { u16(i) | u16(i + 2) << 16 }
+        var eocd = bytes.count - 22
+        while eocd >= 0 && u32(eocd) != 0x0605_4B50 { eocd -= 1 }
+        XCTAssertGreaterThanOrEqual(eocd, 0, "找不到 ZIP 结尾记录")
+        guard eocd >= 0 else { return [] }
+        let count = u16(eocd + 10)
+        var i = u32(eocd + 16)
+        var out: [(name: String, flags: UInt16)] = []
+        for _ in 0..<count {
+            guard u32(i) == 0x0201_4B50 else { break }
+            let flags = UInt16(u16(i + 8))
+            let n = u16(i + 28), e = u16(i + 30), c = u16(i + 32)
+            out.append((String(decoding: bytes[(i + 46)..<(i + 46 + n)], as: UTF8.self), flags))
+            i += 46 + n + e + c
+        }
+        return out
+    }
+
+    func testZipWritesUTF8NamesWithFlag() throws {
+        let one = try folder("源/客户资料")
+        try write("报价", "第一季度/报价单（终版）.pdf", in: one)
+        try write("合同", "合同 2026.docx", in: one)
+        let out = try folder("下载")
+        let outcome = WorkspaceZip.make(sources: [("客户资料", one)], target: out.appendingPathComponent("年底报价.zip"))
+        let url = try XCTUnwrap(outcome.url, "\(outcome)")
+        XCTAssertEqual(outcome.files, 2)
+        let entries = try centralDirectoryFlags(url).filter { !$0.name.hasSuffix("/") }
+        XCTAssertEqual(Set(entries.map { $0.name.precomposedStringWithCanonicalMapping }),
+                       Set(["客户资料/第一季度/报价单（终版）.pdf", "客户资料/合同 2026.docx"].map { $0.precomposedStringWithCanonicalMapping }))
+        for entry in entries {
+            XCTAssertNotEqual(entry.flags & 0x0800, 0, "\(entry.name) 没有 UTF-8 标记（Windows 上会乱码）")
+            XCTAssertFalse(entry.name.contains("._"), "不能带 AppleDouble 文件")
+        }
+        let names = try ZipDirectoryReader.readEntries(at: url).map(\.path)
+        XCTAssertFalse(names.contains { $0.contains("__MACOSX") || ($0 as NSString).lastPathComponent.hasPrefix("._") })
+    }
+
+    func testZipKeepsArchiveWhenSomeFilesUnreadable() throws {
+        let one = try folder("源/设计稿")
+        try write("好", "可以读.txt", in: one)
+        let locked = try write("锁", "读不了.txt", in: one)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: locked.path) }
+        let out = try folder("下载")
+        let outcome = WorkspaceZip.make(sources: [("设计稿", one)], target: out.appendingPathComponent("W.zip"))
+        XCTAssertFalse(outcome.failed, "一个文件读不了不能让整包失败：\(outcome)")
+        let url = try XCTUnwrap(outcome.url, "\(outcome)")
+        XCTAssertEqual(outcome.files, 1)
+        XCTAssertEqual(outcome.unreadable.map { $0.precomposedStringWithCanonicalMapping }, ["设计稿/读不了.txt"])
+        let names = try ZipDirectoryReader.readEntries(at: url).filter { !$0.isDirectory }.map { $0.path.precomposedStringWithCanonicalMapping }
+        XCTAssertEqual(names, ["设计稿/可以读.txt"])
+    }
+
+    func testZipSkipsUnavailableSourceButKeepsOthers() throws {
+        let one = try folder("源/在")
+        try write("x", "a.txt", in: one)
+        let gone = base.appendingPathComponent("源/拔掉了", isDirectory: true)
+        let out = try folder("下载")
+        let outcome = WorkspaceZip.make(sources: [("在", one), ("拔掉了", gone)], target: out.appendingPathComponent("W.zip"))
+        XCTAssertFalse(outcome.cancelled, "来源断开不是「取消」")
+        XCTAssertEqual(outcome.unavailableSources, ["拔掉了"])
+        XCTAssertNotNil(outcome.url, "\(outcome)")
+        XCTAssertEqual(outcome.files, 1)
+        let onlyGone = WorkspaceZip.make(sources: [("拔掉了", gone)], target: out.appendingPathComponent("V.zip"))
+        XCTAssertNil(onlyGone.url)
+        XCTAssertFalse(onlyGone.cancelled)
+        XCTAssertFalse(onlyGone.failed)
+        XCTAssertEqual(onlyGone.unavailableSources, ["拔掉了"])
+    }
+
+    func testZipPackagesCountAsOneAndIncludeContents() throws {
+        let one = try folder("源/文稿")
+        try write("{\\rtf1 hi}", "说明.rtfd/TXT.rtf", in: one)
+        try write("x", "说明.rtfd/图片.png", in: one)
+        try write("y", "普通.txt", in: one)
+        let out = try folder("下载")
+        let outcome = WorkspaceZip.make(sources: [("文稿", one)], target: out.appendingPathComponent("W.zip"))
+        let url = try XCTUnwrap(outcome.url, "\(outcome)")
+        XCTAssertEqual(outcome.files, 2, "文件包算一个")
+        let names = Set(try ZipDirectoryReader.readEntries(at: url).filter { !$0.isDirectory }.map { $0.path.precomposedStringWithCanonicalMapping })
+        XCTAssertEqual(names, Set(["文稿/说明.rtfd/TXT.rtf", "文稿/说明.rtfd/图片.png", "文稿/普通.txt"].map { $0.precomposedStringWithCanonicalMapping }))
+    }
+
+    func testFreeSpaceCheck() {
+        let gb: Int64 = 1024 * 1024 * 1024
+        XCTAssertTrue(WorkspaceZip.hasRoom(needed: 10 * gb, available: 13 * gb))
+        XCTAssertFalse(WorkspaceZip.hasRoom(needed: 10 * gb, available: 11 * gb), "要留 2 GB 余量")
+        XCTAssertFalse(WorkspaceZip.hasRoom(needed: 50 * gb, available: 20 * gb))
+        XCTAssertTrue(WorkspaceZip.hasRoom(needed: 50 * gb, available: nil), "读不到剩余空间时不拦")
+    }
+
+    func testParseBsdtarErrors() {
+        let listed: Set<String> = ["设计稿/a.png", "设计稿/b: c.txt", "设计稿/d.txt"]
+        let stderr = """
+        bsdtar: 设计稿/a.png: Cannot stat: No such file or directory
+        bsdtar: 设计稿/b: c.txt: Couldn't open: Permission denied
+        bsdtar: Error exit delayed from previous errors.
+        """
+        let parsed = WorkspaceZip.unreadableFiles(stderr: stderr, listed: listed)
+        XCTAssertEqual(parsed.files, ["设计稿/a.png", "设计稿/b: c.txt"])
+        XCTAssertTrue(parsed.onlyFileErrors)
+        let fatal = WorkspaceZip.unreadableFiles(stderr: "bsdtar: Write error: No space left on device\n", listed: listed)
+        XCTAssertFalse(fatal.onlyFileErrors, "写不进去不是「个别文件读不了」")
+    }
+
+    func testStaleLeftoverNames() {
+        let old = Date().addingTimeInterval(-2 * 24 * 3600)
+        let fresh = Date()
+        XCTAssertTrue(WorkspaceZip.isStaleLeftover(name: ".默认工作区.zip.1A2B3C4D.part", modified: old), "1.0 留下的")
+        XCTAssertTrue(WorkspaceZip.isStaleLeftover(name: ".shiduo-zip-\(UUID().uuidString).part", modified: old))
+        XCTAssertTrue(WorkspaceZip.isStaleLeftover(name: "ShiduoWorkspaceZip-\(UUID().uuidString)", modified: old))
+        XCTAssertFalse(WorkspaceZip.isStaleLeftover(name: ".默认工作区.zip.1A2B3C4D.part", modified: fresh), "可能正在打包：不碰")
+        XCTAssertFalse(WorkspaceZip.isStaleLeftover(name: "默认工作区.zip", modified: old), "用户的 ZIP 不碰")
+        XCTAssertFalse(WorkspaceZip.isStaleLeftover(name: "电影.mkv.part", modified: old), "别的程序的下载临时文件不碰")
+        XCTAssertFalse(WorkspaceZip.isStaleLeftover(name: ".x.zip.abcdefgh.part", modified: old))
+    }
+
+    func testZipJobStopIsSafeWithoutProcess() {
+        let job = WorkspaceZipJob()
+        XCTAssertFalse(job.isStopped)
+        job.stopAndCleanUp()
+        XCTAssertTrue(job.isStopped)
+        WorkspaceZipJob.stopAllForQuit()
+    }
+
+    // MARK: - 云盘占位、权限、文件包（审计 P1-5、P1-8、P1-9）
+
+    func testDatalessFlag() {
+        XCTAssertTrue(WorkspaceScanner.isDataless(flags: 0x4000_0000))
+        XCTAssertTrue(WorkspaceScanner.isDataless(flags: 0x4000_0000 | 0x8000))
+        XCTAssertFalse(WorkspaceScanner.isDataless(flags: 0))
+        XCTAssertFalse(WorkspaceScanner.isDataless(flags: 0x8000), "UF_HIDDEN 不是云端占位")
+        XCTAssertFalse(WorkspaceScanner.isDataless(path: base.path), "本地文件夹不是占位")
+        XCTAssertFalse(WorkspaceScanner.isDataless(path: "/没有这个路径"))
+    }
+
+    func testPermissionDeniedIsNotZeroFiles() throws {
+        let root = try folder("没权限")
+        try write("x", "a.txt", in: root)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: root.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: root.path) }
+        let result = try XCTUnwrap(WorkspaceScanner.scan(root: root))
+        XCTAssertTrue(result.permissionDenied, "读不了要明确说出来，不能当成 0 个文件")
+        XCTAssertNil(WorkspaceScanner.scan(root: base.appendingPathComponent("不存在")), "不在了：没有结果（缓存不动）")
+    }
+
+    func testUnreadableSubfolderMarksPartial() throws {
+        let root = try folder("部分")
+        try write("x", "a.txt", in: root)
+        let locked = try folder("部分/锁着")
+        try write("y", "b.txt", in: locked)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: locked.path) }
+        let result = try XCTUnwrap(WorkspaceScanner.scan(root: root))
+        XCTAssertFalse(result.permissionDenied)
+        XCTAssertEqual(result.stats.fileCount, 1)
+        XCTAssertEqual(result.stats.unreadableFolders, 1)
+        XCTAssertTrue(WorkspaceLogic.totals([result.stats]).truncated, "数字是「至少」")
+    }
+
+    func testPermissionErrorDetection() {
+        XCTAssertTrue(WorkspaceScanner.isPermissionError(NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoPermissionError)))
+        XCTAssertTrue(WorkspaceScanner.isPermissionError(NSError(domain: NSPOSIXErrorDomain, code: Int(EPERM))))
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: 256,
+                              userInfo: [NSUnderlyingErrorKey: NSError(domain: NSPOSIXErrorDomain, code: Int(EACCES))])
+        XCTAssertTrue(WorkspaceScanner.isPermissionError(wrapped))
+        XCTAssertFalse(WorkspaceScanner.isPermissionError(NSError(domain: NSPOSIXErrorDomain, code: Int(ENOENT))))
+    }
+
+    func testPackagesHaveRealSizeAndCountAsOneFile() throws {
+        let root = try folder("工程")
+        try write("12345", "说明.rtfd/TXT.rtf", in: root)
+        try write("1234567890", "说明.rtfd/附件.png", in: root)
+        try write("abc", "普通.txt", in: root)
+        let result = try XCTUnwrap(WorkspaceScanner.scan(root: root))
+        XCTAssertEqual(result.stats.fileCount, 2, "文件包算一个文件")
+        XCTAssertEqual(result.stats.folderCount, 0, "文件包不算文件夹")
+        XCTAssertEqual(result.stats.bytes, 18, "文件包的大小是里面文件加起来")
+        XCTAssertEqual(result.stats.documents, 2)
+    }
+
+    // MARK: - 离线和找不到（审计 P1-12、P2-1）
+
+    func testSecondInternalDiskIsRecordedAsRemovable() throws {
+        let mount = try folder("数据盘")
+        let dir = try folder("数据盘/项目")
+        let source = WorkspaceLogic.makeSource(url: dir, volume: volume(mount.path, uuid: "D-1", name: "数据盘", external: false))
+        XCTAssertEqual(source.kind, .local, "内置盘不叫「外接硬盘」")
+        XCTAssertEqual(source.volumeUUID, "D-1", "不在启动盘上：记下卷")
+        XCTAssertEqual(source.relativePath, "项目")
+        XCTAssertTrue(source.isOnExternalVolume)
+        let state = WorkspaceLogic.availability(of: source, resolvedPath: nil, mounted: [], isFolder: { _ in false })
+        XCTAssertEqual(state, .offline(volumeName: "数据盘"), "断开了是「未连接」，不是「找不到了」")
+        XCTAssertFalse(WorkspaceLogic.isStartupVolume(volume("/Volumes/数据盘", uuid: nil, external: false)))
+        XCTAssertTrue(WorkspaceLogic.isStartupVolume(volume("/", uuid: nil, external: false)))
+        XCTAssertTrue(WorkspaceLogic.isStartupVolume(volume("/System/Volumes/Data", uuid: nil, external: false)))
+    }
+
+    func testUnrecordedVolumePathIsOfflineNotMissing() {
+        // 1.0 加的 NAS 来源：没记卷信息。
+        let source = WorkspaceSource(path: "/Volumes/NAS/项目")
+        XCTAssertFalse(source.isOnExternalVolume)
+        let offline = WorkspaceLogic.availability(of: source, resolvedPath: nil, mounted: [], isFolder: { _ in true })
+        XCTAssertEqual(offline, .offline(volumeName: "NAS"), "挂载点残留空目录也不算在线")
+        let online = WorkspaceLogic.availability(of: source, resolvedPath: nil,
+                                                 mounted: [volume("/Volumes/NAS", uuid: nil, name: "NAS", external: false)],
+                                                 isFolder: { _ in true })
+        XCTAssertEqual(online, .online(path: "/Volumes/NAS/项目"))
+        let gone = WorkspaceLogic.availability(of: source, resolvedPath: nil,
+                                               mounted: [volume("/Volumes/NAS", uuid: nil, name: "NAS", external: false)],
+                                               isFolder: { _ in false })
+        XCTAssertEqual(gone, .missing, "盘在、文件夹不在：才是找不到了")
+        XCTAssertEqual(WorkspaceLogic.volumeRoot(ofPath: "/Volumes/NAS/项目/a")?.name, "NAS")
+        XCTAssertNil(WorkspaceLogic.volumeRoot(ofPath: "/Users/me/Volumes/x"))
+    }
+
+    func testMakeSourceWithoutVolumeInfoStillRecordsVolumesPath() {
+        let source = WorkspaceLogic.makeSource(url: URL(fileURLWithPath: "/Volumes/NAS/项目/客户"), volume: nil)
+        XCTAssertEqual(source.volumeName, "NAS")
+        XCTAssertEqual(source.relativePath, "项目/客户")
+        XCTAssertTrue(source.isOnExternalVolume)
+    }
+
+    func testZeroCapacityVolumeMatchesByName() {
+        let source = WorkspaceSource(path: "/Volumes/卡/a", kind: .external, volumeName: "卡", volumeCapacity: 0, relativePath: "a")
+        XCTAssertTrue(WorkspaceLogic.matches(source, volume: volume("/Volumes/卡", uuid: nil, name: "卡", capacity: 0)),
+                      "容量读不到时按名字认，不能永远「未连接」")
+        XCTAssertTrue(WorkspaceLogic.matches(source, volume: volume("/Volumes/卡", uuid: nil, name: "卡", capacity: 32)))
+        XCTAssertFalse(WorkspaceLogic.matches(source, volume: volume("/Volumes/别的", uuid: nil, name: "别的", capacity: 0)))
+    }
+
+    func testCloudStorageKind() {
+        XCTAssertEqual(WorkspaceLogic.kind(forPath: "/Users/me/Library/CloudStorage/OneDrive-个人/项目", home: "/Users/me",
+                                           isExternalVolume: false), .cloudDrive)
+    }
+
+    // MARK: - 改名（审计 P2-14）
+
+    func testNamesDropInvisibleCharacters() {
+        XCTAssertNil(WorkspaceLogic.sanitizedName("\u{200B}\u{200B}"), "只有零宽空格：等于空的")
+        XCTAssertNil(WorkspaceLogic.sanitizedName("\t \u{FEFF}"))
+        XCTAssertEqual(WorkspaceLogic.sanitizedName("品\u{200B}牌\t改版"), "品牌 改版")
+        XCTAssertEqual(WorkspaceLogic.sanitizedName("家人👨\u{200D}👩\u{200D}👧"), "家人👨\u{200D}👩\u{200D}👧", "组合 emoji 不拆")
+    }
+
+    func testRenameAvoidsDuplicates() {
+        XCTAssertEqual(WorkspaceLogic.uniqueName("品牌", existing: ["品牌", "品牌 2"]), "品牌 3")
+        XCTAssertEqual(WorkspaceLogic.uniqueName("Brand", existing: ["brand"]), "Brand 2", "不分大小写")
+        XCTAssertEqual(WorkspaceLogic.uniqueName("新名字", existing: ["品牌"]), "新名字")
     }
 }

@@ -22,6 +22,7 @@ extension WorkspaceSourceKind {
         case .documents: return String(localized: "文稿")
         case .downloads: return String(localized: "下载")
         case .iCloud: return String(localized: "iCloud 云盘")
+        case .cloudDrive: return String(localized: "第三方云盘")
         case .external: return String(localized: "外接硬盘")
         }
     }
@@ -33,18 +34,30 @@ extension WorkspaceSourceKind {
         case .documents: return "doc"
         case .downloads: return "arrow.down"
         case .iCloud: return "icloud"
+        case .cloudDrive: return "cloud"
         case .external: return "externaldrive"
         }
     }
 
     var tint: Color {
         switch self {
-        case .local, .desktop: return Color(red: 0.40, green: 0.58, blue: 0.98)
-        case .documents: return Color(red: 0.98, green: 0.62, blue: 0.25)
-        case .downloads: return Color(red: 0.66, green: 0.52, blue: 0.96)
-        case .iCloud: return Color(red: 0.25, green: 0.70, blue: 0.92)
-        case .external: return Color(red: 0.50, green: 0.53, blue: 0.60)
+        case .local, .desktop: return .workspaceDynamic(light: (0.40, 0.58, 0.98), dark: (0.50, 0.66, 1.00))
+        case .documents: return .workspaceDynamic(light: (0.98, 0.62, 0.25), dark: (1.00, 0.68, 0.34))
+        case .downloads: return .workspaceDynamic(light: (0.66, 0.52, 0.96), dark: (0.74, 0.62, 1.00))
+        case .iCloud, .cloudDrive: return .workspaceDynamic(light: (0.25, 0.70, 0.92), dark: (0.36, 0.76, 0.96))
+        case .external: return .workspaceDynamic(light: (0.50, 0.53, 0.60), dark: (0.66, 0.69, 0.76))
         }
+    }
+}
+
+extension Color {
+    /// 浅色 / 深色各一个值的颜色（深色下稍微提亮，在深色玻璃卡片上看得清）。
+    static func workspaceDynamic(light: (Double, Double, Double), dark: (Double, Double, Double)) -> Color {
+        Color(nsColor: NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let c = isDark ? dark : light
+            return NSColor(srgbRed: c.0, green: c.1, blue: c.2, alpha: 1)
+        })
     }
 }
 
@@ -72,7 +85,7 @@ extension WorkspaceFileKind {
         case .image: return FileCategory.images.tint
         case .document: return FileCategory.documents.tint
         case .video: return FileCategory.videos.tint
-        case .other: return Color(red: 0.96, green: 0.58, blue: 0.30)
+        case .other: return .workspaceDynamic(light: (0.96, 0.58, 0.30), dark: (1.00, 0.66, 0.40))
         }
     }
 }
@@ -283,10 +296,10 @@ struct WorkspaceView: View {
         }
         .navigationTitle("工作区")
         .onAppear {
-            workspaces.refresh(id)
+            workspaces.pageAppeared(id)
             if workspaces.renamingInline == id { beginRename() }
         }
-        .onDisappear { workspaces.cancelScans(id) }
+        .onDisappear { workspaces.pageDisappeared(id) }
         .onChange(of: workspaces.renamingInline) {
             if workspaces.renamingInline == id { beginRename() }
         }
@@ -401,6 +414,12 @@ struct WorkspaceView: View {
                 }
                 .font(.callout)
                 .foregroundStyle(.secondary)
+                if let notice = workspaces.readOnlyNotice {
+                    Label(notice, systemImage: "exclamationmark.triangle")
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .layoutPriority(1)
             Spacer(minLength: 12)
@@ -501,7 +520,11 @@ struct WorkspaceView: View {
             if totals.fileCount == 0 && scanning {
                 Text("统计中…")
             } else {
-                Text("\(totals.fileCount.formatted()) 个文件")
+                if totals.truncated {
+                    Text("至少 \(totals.fileCount.formatted()) 个文件")
+                } else {
+                    Text("\(totals.fileCount.formatted()) 个文件")
+                }
                 Text(verbatim: "·")
                 Text(totals.bytes.byteText)
                 if let date = totals.lastModified {
@@ -513,7 +536,7 @@ struct WorkspaceView: View {
                 ProgressView().controlSize(.mini)
                 Button("停止") { workspaces.cancelScans(workspace.id) }
                     .buttonStyle(.link)
-                    .help("停止统计（下次打开再继续）")
+                    .help("停止统计（数字先用上次的，可以在 ⋯ 里重新统计）")
             }
         }
         .font(.callout)
@@ -589,12 +612,15 @@ struct WorkspaceView: View {
 
     private func sourceCard(_ source: WorkspaceSource, in workspace: Workspace) -> some View {
         let state = workspaces.state(source)
+        let parent = workspaces.nested(workspace)[source.id]
+        let denied = workspaces.denied.contains(source.id)
         return WorkspaceSourceCard(source: source, state: state, stats: workspaces.stats(source),
-                                   scanning: workspaces.scanning.contains(source.id))
+                                   scanning: workspaces.scanning.contains(source.id), insideOf: parent, denied: denied)
             .onTapGesture(count: 2) {
                 if let path = state.path { store.goToRoot(path) }
             }
-            .help(sourceHelp(source, state: state))
+            .help(denied ? String(localized: "拾掇没有权限读取这个文件夹，数字是上次的。到 系统设置 › 隐私与安全性 › 文件与文件夹（或「完全磁盘访问权限」）里允许拾掇，再重新统计。")
+                  : parent.map { String(localized: "这个文件夹在「\($0)」里面，统计和打包时不重复计算") } ?? sourceHelp(source, state: state))
             .stableContextMenu {
                 Button("在拾掇中打开") { if let path = state.path { store.goToRoot(path) } }
                     .disabled(!state.isOnline)
@@ -604,6 +630,9 @@ struct WorkspaceView: View {
                 .disabled(!state.isOnline)
                 Button("重新统计") { workspaces.scan(source) }
                     .disabled(!state.isOnline)
+                if denied {
+                    Button("打开隐私设置…") { WorkspaceStore.openPrivacySettings() }
+                }
                 Divider()
                 Button("从工作区移除（文件夹不动）") { workspaces.removeSource(source.id, from: workspace.id) }
             }
@@ -621,35 +650,52 @@ struct WorkspaceView: View {
 
     private func fileTile(_ entry: WorkspaceFileEntry, source: WorkspaceSource) -> some View {
         let url = URL(fileURLWithPath: entry.path)
+        // 来源没连接（缓存里的最近文件）：调暗，不能打开、预览、拖出。
+        let available = workspaces.state(source).isOnline
         return WorkspaceFileTile(entry: entry, sourceName: source.name, sourceSymbol: source.kind.symbol,
                                  selected: selectedPath == entry.path)
-            .onTapGesture(count: 2) { open(entry) }
+            .opacity(available ? 1 : 0.45)
+            .onTapGesture(count: 2) { open(entry, source: source) }
             .onTapGesture {
                 selectedPath = entry.path
                 gridFocused = true
-                if previewURL != nil, !entry.cloudOnly { previewURL = url }
+                if previewURL != nil, !entry.cloudOnly, available { previewURL = url }
             }
             .stableContextMenu {
                 if !entry.isFolder {
                     Button("快速查看") { preview(entry.path, cloudOnly: entry.cloudOnly) }
-                        .disabled(entry.cloudOnly)
+                        .disabled(entry.cloudOnly || !available)
                 }
-                Button("打开") { open(entry) }
+                Button("打开") { open(entry, source: source) }
+                    .disabled(!available)
                 Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+                    .disabled(!available)
                 Divider()
                 Button("放进暂存架") {
                     let added = ShelfStore.shared.add([url])
                     store.showToast(added > 0 ? String(localized: "已加入暂存架：\(added) 个") : String(localized: "已经在暂存架上了"))
                 }
+                .disabled(!available)
             }
-            .onDrag { InAppDrag.copyOnlyProvider(url) }
-            .help(entry.cloudOnly ? String(localized: "\(entry.path)（只在 iCloud 云端）") : entry.path)
+            .onDrag { available ? InAppDrag.copyOnlyProvider(url) : NSItemProvider() }
+            .help(!available ? String(localized: "「\(source.name)」没有连接，接上后才能打开")
+                  : entry.cloudOnly ? String(localized: "\(entry.path)（只在云端）") : entry.path)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
-            .accessibilityAction { open(entry) }
+            .accessibilityAction { open(entry, source: source) }
     }
 
-    private func open(_ entry: WorkspaceFileEntry) {
+    /// 打开前先看来源连着、文件还在：不在了提示一句并重新统计（列表是扫描时记下的，可能过时）。
+    private func open(_ entry: WorkspaceFileEntry, source: WorkspaceSource) {
+        guard workspaces.state(source).isOnline else {
+            store.showToast(String(localized: "「\(source.name)」没有连接，接上后才能打开"))
+            return
+        }
+        guard FileManager.default.fileExists(atPath: entry.path) else {
+            store.showToast(String(localized: "找不到「\(entry.name)」了，已重新统计"))
+            workspaces.scan(source)
+            return
+        }
         let url = URL(fileURLWithPath: entry.path)
         if entry.isFolder {
             store.goToRoot(entry.path)
@@ -660,7 +706,7 @@ struct WorkspaceView: View {
 
     private func preview(_ path: String, cloudOnly: Bool) {
         if cloudOnly {
-            store.showToast(String(localized: "这个文件只在 iCloud 云端，没有下载，先不预览"))
+            store.showToast(String(localized: "这个文件只在云端，没有下载，先不预览"))
             return
         }
         previewURL = URL(fileURLWithPath: path)
@@ -675,9 +721,10 @@ struct WorkspaceView: View {
     private func fileGrid(_ workspace: Workspace) -> some View {
         let list = workspaces.files(workspace, kind: tab.kind)
         let offline = workspace.sources.filter { !workspaces.state($0).isOnline }
+        let total = tab.count(workspaces.totals(workspace))
         VStack(alignment: .leading, spacing: 12) {
             if !offline.isEmpty {
-                Label(String(localized: "\(offline.map(\.name).joined(separator: "、")) 没有连接，这里没有列出它的文件"),
+                Label(String(localized: "\(ListFormatter.localizedString(byJoining: offline.map(\.name))) 没有连接，这里没有列出它的文件"),
                       systemImage: "externaldrive.badge.xmark")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -687,6 +734,11 @@ struct WorkspaceView: View {
                     if workspaces.isScanning(workspace) {
                         ProgressView().controlSize(.small)
                         Text("正在读取…")
+                    } else if total > 0 {
+                        // 只有上次的数字（这次没扫完 / 点了停止）：不能说「没有」。
+                        Text("这次还没有读取文件列表")
+                        Button("重新统计") { workspaces.refresh(workspace.id, force: true) }
+                            .buttonStyle(.link)
                     } else {
                         Text(tab == .folders ? String(localized: "来源里没有子文件夹") : String(localized: "没有这一类文件"))
                     }
@@ -699,8 +751,9 @@ struct WorkspaceView: View {
                         fileTile(pair.entry, source: pair.source)
                     }
                 }
-                if list.count >= 300 {
-                    Text("只显示最近修改的 300 个")
+                if list.count < total {
+                    // 每个来源只记最新的一部分：说清楚是「最近的 N 个」，免得以为文件少了。
+                    Text("显示最近修改的 \(list.count.formatted()) 个，共 \(total.formatted()) 个")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -712,27 +765,18 @@ struct WorkspaceView: View {
 
     private func categories(_ workspace: Workspace) -> some View {
         let totals = workspaces.totals(workspace)
-        let recent = workspaces.recentFiles(workspace, limit: 60)
         return VStack(alignment: .leading, spacing: 14) {
             SectionHeader(title: String(localized: "workspace.section.categories", defaultValue: "分类"))
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 14)], spacing: 12) {
                 ForEach(WorkspaceFileKind.allCases, id: \.self) { kind in
                     Button { tab = WorkspaceTab.tab(for: kind) } label: {
                         WorkspaceCategoryTile(kind: kind, count: totals.count(kind),
-                                              previews: previews(kind, workspace: workspace, recent: recent))
+                                              previews: workspaces.previews(kind, workspace: workspace))
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-    }
-
-    /// 分类卡片上斜叠的三张：只用本机有的文件（不为了缩略图去下载云端文件）。
-    private func previews(_ kind: WorkspaceFileKind, workspace: Workspace,
-                          recent: [WorkspaceFileRow]) -> [FileItem] {
-        let live = workspaces.files(workspace, kind: kind, limit: 6).map(\.entry)
-        let pool = live.isEmpty ? recent.map(\.entry).filter { $0.kind == kind } : live
-        return pool.filter { !$0.cloudOnly }.prefix(3).compactMap { FileItem(url: URL(fileURLWithPath: $0.path)) }
     }
 
     // MARK: 快捷操作
@@ -750,19 +794,19 @@ struct WorkspaceView: View {
                              help: none ? offlineReason : String(localized: "每个连接着的来源开一个访达窗口")) {
                     openAllInFinder(workspace)
                 }
-                actionButton(WorkspaceActionTile(icon: .symbol("square.stack.3d.up.fill", Color(red: 0.62, green: 0.45, blue: 0.95)),
+                actionButton(WorkspaceActionTile(icon: .symbol("square.stack.3d.up.fill", .workspaceDynamic(light: (0.62, 0.45, 0.95), dark: (0.72, 0.58, 1.00))),
                                                  title: String(localized: "全部放进暂存架"), disabled: none),
                              help: none ? offlineReason : String(localized: "把来源文件夹放上暂存架（只记位置，不复制）")) {
                     putAllOnShelf(workspace)
                 }
-                actionButton(WorkspaceActionTile(icon: .symbol("doc.zipper", Color(red: 0.96, green: 0.62, blue: 0.20)),
+                actionButton(WorkspaceActionTile(icon: .symbol("doc.zipper", .workspaceDynamic(light: (0.96, 0.62, 0.20), dark: (1.00, 0.70, 0.32))),
                                                  title: zipping ? String(localized: "正在打包…点按取消") : String(localized: "打包成 ZIP"),
                                                  disabled: none && !zipping, busy: zipping),
                              help: none ? offlineReason : String(localized: "打成一个 ZIP 放进「下载」，同名不覆盖")) {
                     if zipping { workspaces.cancelZip() } else { zip(workspace) }
                 }
                 .disabled(workspaces.zipping != nil && !zipping)
-                actionButton(WorkspaceActionTile(icon: .symbol("folder.badge.plus", Color(red: 0.98, green: 0.62, blue: 0.22)),
+                actionButton(WorkspaceActionTile(icon: .symbol("folder.badge.plus", .workspaceDynamic(light: (0.98, 0.62, 0.22), dark: (1.00, 0.70, 0.34))),
                                                  title: String(localized: "新建文件夹"), disabled: none),
                              help: none ? offlineReason : String(localized: "在选中的来源里新建一个文件夹")) {
                     chooseSource(workspace, title: String(localized: "在哪个来源里新建文件夹？")) { newFolder(in: $0) }
@@ -842,7 +886,7 @@ struct WorkspaceView: View {
 
     private func zip(_ workspace: Workspace) {
         guard WorkspaceAccess.require() else { return }
-        let online = workspaces.onlineSources(workspace)
+        let online = workspaces.zipSources(workspace)
         guard !online.isEmpty else { return }
         var files = 0
         var bytes: Int64 = 0
@@ -854,18 +898,46 @@ struct WorkspaceView: View {
                 cloud += result.stats.cloudOnly
             } else if let stats = workspaces.stats(item.source) {
                 files += stats.fileCount - stats.cloudOnly
-                bytes += stats.bytes
+                bytes += max(stats.bytes - stats.cloudBytes, 0)
                 cloud += stats.cloudOnly
             }
         }
-        var detail = String(localized: "约 \(files.formatted()) 个文件，\(bytes.byteText)（压缩前）。ZIP 放进「下载」，已有同名的不会被覆盖，会自动加编号。")
-        if cloud > 0 { detail += "\n" + String(localized: "只在 iCloud 云端的 \(cloud) 个文件会跳过，不会下载。") }
+        // 先看剩余空间：不够就不开始（别把启动盘写满），让用户换个位置。
+        guard let folder = zipFolder(needed: bytes) else { return }
+        let folderName = FileManager.default.displayName(atPath: folder.path)
+        var detail = String(localized: "约 \(files.formatted()) 个文件，\(bytes.byteText)（压缩前）。ZIP 放进「\(folderName)」，已有同名的不会被覆盖，会自动加编号。")
+        detail += "\n" + String(localized: "隐藏文件（名字以「.」开头的）不打包。")
+        if cloud > 0 { detail += "\n" + String(localized: "只在云端的 \(cloud) 个文件会跳过，不会下载。") }
         if online.count < workspace.sources.count { detail += "\n" + String(localized: "没连接的来源不打包。") }
         let ok = WorkspaceConfirm.ask(title: String(localized: "把「\(workspace.name)」打包成 ZIP？"), detail: detail,
                                       confirm: String(localized: "打包"))
         guard ok else { return }
-        workspaces.zip(workspace.id) { text, isError in
+        workspaces.zip(workspace.id, to: folder) { text, isError in
             if isError { store.alertMessage = text } else { store.showToast(text) }
+        }
+    }
+
+    /// 打包放哪：默认「下载」；那块磁盘剩余空间不够（压缩前大小 + 2 GB 余量）时提示，让用户换一个位置。
+    private func zipFolder(needed: Int64) -> URL? {
+        var folder = WorkspaceStore.defaultZipFolder
+        while true {
+            let available = WorkspaceZip.availableCapacity(folder)
+            if WorkspaceZip.hasRoom(needed: needed, available: available) { return folder }
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = String(localized: "「\(FileManager.default.displayName(atPath: folder.path))」所在的磁盘空间不够")
+            alert.informativeText = String(localized: "打包大约需要 \((needed + WorkspaceZip.reserveBytes).byteText)（含余量），这块磁盘只剩 \((available ?? 0).byteText)。可以换一个空间够的位置，比如外接硬盘。")
+            alert.addButton(withTitle: String(localized: "选择其他位置…"))
+            alert.addButton(withTitle: String(localized: "取消"))
+            guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = false
+            panel.canChooseDirectories = true
+            panel.canCreateDirectories = true
+            panel.allowsMultipleSelection = false
+            panel.prompt = String(localized: "放在这里")
+            guard panel.runModal() == .OK, let url = panel.url else { return nil }
+            folder = url
         }
     }
 
@@ -908,7 +980,12 @@ struct WorkspaceView: View {
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         var name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "/", with: "-")
         if name.isEmpty || name.hasPrefix(".") { name = String(localized: "未命名文件夹") }
-        let parent = URL(fileURLWithPath: source.path, isDirectory: true)
+        // 写之前再确认一次来源还在（硬盘可能刚被拔掉；/Volumes 下残留空目录时不能建到启动盘上）。
+        guard let path = workspaces.verifiedPath(source.id) else {
+            store.alertMessage = String(localized: "「\(source.name)」现在没有连接，没有新建文件夹。")
+            return
+        }
+        let parent = URL(fileURLWithPath: path, isDirectory: true)
         let target = WorkspaceLogic.uniqueURL(for: name, in: parent)
         do {
             try FileManager.default.createDirectory(at: target, withIntermediateDirectories: false)
@@ -926,6 +1003,7 @@ struct WorkspaceTabBar: View {
     @Binding var tab: WorkspaceTab
     let totals: WorkspaceTotals
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -964,8 +1042,14 @@ struct WorkspaceTabBar: View {
                     .frame(maxWidth: .infinity)
                     .background {
                         if tab == item {
+                            // 深色下选中底要比玻璃卡片明显亮一档，再加一圈细边；「增强对比度」时更明显。
+                            let strong = contrast == .increased
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.white.opacity(scheme == .dark ? 0.12 : 0.85))
+                                .fill(Color.white.opacity(scheme == .dark ? (strong ? 0.28 : 0.18) : (strong ? 1 : 0.85)))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .strokeBorder(Color.primary.opacity(scheme == .dark ? (strong ? 0.35 : 0.14) : (strong ? 0.3 : 0.06)))
+                                )
                                 .shadow(color: .black.opacity(scheme == .dark ? 0.25 : 0.08), radius: 4, y: 1)
                         }
                     }
@@ -987,15 +1071,24 @@ struct WorkspaceSourceCard: View {
     let state: WorkspaceSourceAvailability
     let stats: WorkspaceSourceStats?
     let scanning: Bool
+    /// 落在另一个来源里面（统计不重复算）：那个来源的名字。
+    var insideOf: String?
+    /// 没有权限读取（系统隐私权限没给）：不是「0 个文件」。
+    var denied = false
 
     private var dimmed: Bool { !state.isOnline }
 
     private var countLine: String {
         guard let stats else {
+            if denied { return String(localized: "没有权限读取") }
             return scanning ? String(localized: "统计中…") : String(localized: "还没有统计")
         }
-        let count = stats.truncated ? String(localized: "至少 \(stats.fileCount.formatted()) 个") : String(localized: "\(stats.fileCount.formatted()) 个")
-        return count + " · " + stats.bytes.byteText
+        let partial = stats.truncated || stats.cloudFolders > 0 || stats.unreadableFolders > 0
+        let count = partial ? String(localized: "至少 \(stats.fileCount.formatted()) 个") : String(localized: "\(stats.fileCount.formatted()) 个")
+        var line = count + " · " + stats.bytes.byteText
+        if stats.cloudFolders > 0 { line += " · " + String(localized: "部分在云端") }
+        if stats.unreadableFolders > 0 { line += " · " + String(localized: "部分没有权限") }
+        return line
     }
 
     var body: some View {
@@ -1043,7 +1136,13 @@ struct WorkspaceSourceCard: View {
         case .missing:
             statusPill(String(localized: "找不到了"))
         case .online:
-            if scanning { ProgressView().controlSize(.mini) }
+            if scanning {
+                ProgressView().controlSize(.mini)
+            } else if denied {
+                statusPill(String(localized: "没有权限"))
+            } else if let insideOf {
+                statusPill(String(localized: "已包含在「\(insideOf)」里"))
+            }
         }
     }
 

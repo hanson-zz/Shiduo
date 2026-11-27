@@ -44808,6 +44808,630 @@
           }
         }
       }
+    },
+    "工作区配置来自更新版本的拾掇，这次的修改不会保存（原来的配置已备份）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workspace setup was saved by a newer version of Shiduo. Changes made now won’t be saved (the original setup has been backed up)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区配置来自更新版本的拾掇，这次的修改不会保存（原来的配置已备份）。"
+          }
+        }
+      }
+    },
+    "「%@」范围太大（整个磁盘或用户文件夹），请选里面具体的文件夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is too broad (a whole disk or your home folder). Choose a specific folder inside it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」范围太大（整个磁盘或用户文件夹），请选里面具体的文件夹"
+          }
+        }
+      }
+    },
+    "「%@」没有添加（它包含已有的来源）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” wasn’t added (it contains existing sources)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」没有添加（它包含已有的来源）"
+          }
+        }
+      }
+    },
+    "，替换了里面的 %lld 个来源": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", replacing %lld source(s) inside it"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "，替换了里面的 %lld 个来源"
+          }
+        }
+      }
+    },
+    "「%@」包含已有的来源 %@，换成「%@」吗？": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” contains the existing source(s) %2$@. Replace them with “%3$@”?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」包含已有的来源 %2$@，换成「%3$@」吗？"
+          }
+        }
+      }
+    },
+    "只从工作区移除里面那几个来源的记录，文件夹和文件都不会动。不换的话，同一批文件会被算两遍。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only those sources are removed from the workspace; no folders or files are touched. Otherwise the same files would be counted twice."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只从工作区移除里面那几个来源的记录，文件夹和文件都不会动。不换的话，同一批文件会被算两遍。"
+          }
+        }
+      }
+    },
+    "替换": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换"
+          }
+        }
+      }
+    },
+    "这个文件夹在「%@」里面，统计和打包时不重复计算": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder is inside “%@”, so it isn’t counted or zipped twice"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件夹在「%@」里面，统计和打包时不重复计算"
+          }
+        }
+      }
+    },
+    "已包含在「%@」里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inside “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已包含在「%@」里"
+          }
+        }
+      }
+    },
+    "%@；%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@; %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@；%2$@"
+          }
+        }
+      }
+    },
+    "跳过 %lld 个只在云端的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "skipped %lld cloud-only file(s)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳过 %lld 个只在云端的文件"
+          }
+        }
+      }
+    },
+    "%lld 个文件读不了，已跳过（例如 %@）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld file(s) couldn’t be read and were skipped (e.g. %2$@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个文件读不了，已跳过（例如 %2$@）"
+          }
+        }
+      }
+    },
+    "%@ 没有连接或没有权限读取，没打包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ not connected or not readable, so not zipped"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 没有连接或没有权限读取，没打包"
+          }
+        }
+      }
+    },
+    "磁盘剩余空间快不够了，已停止打包，没有留下不完整的 ZIP。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The disk is almost full, so zipping stopped. No incomplete ZIP was left behind."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁盘剩余空间快不够了，已停止打包，没有留下不完整的 ZIP。"
+          }
+        }
+      }
+    },
+    "已打包 %lld 个文件到「%@」：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zipped %1$lld files to “%2$@”: %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已打包 %1$lld 个文件到「%2$@」：%3$@"
+          }
+        }
+      }
+    },
+    "没有可以打包的文件（只在云端的文件不会下载）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to zip (cloud-only files aren’t downloaded)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有可以打包的文件（只在云端的文件不会下载）。"
+          }
+        }
+      }
+    },
+    "约 %@ 个文件，%@（压缩前）。ZIP 放进「%@」，已有同名的不会被覆盖，会自动加编号。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %1$@ files, %2$@ (before compression). The ZIP goes to “%3$@”; an existing file with the same name is never overwritten — a number is added instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "约 %1$@ 个文件，%2$@（压缩前）。ZIP 放进「%3$@」，已有同名的不会被覆盖，会自动加编号。"
+          }
+        }
+      }
+    },
+    "隐藏文件（名字以「.」开头的）不打包。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden files (names starting with “.”) aren’t included."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏文件（名字以「.」开头的）不打包。"
+          }
+        }
+      }
+    },
+    "只在云端的 %lld 个文件会跳过，不会下载。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld cloud-only file(s) will be skipped, not downloaded."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只在云端的 %lld 个文件会跳过，不会下载。"
+          }
+        }
+      }
+    },
+    "「%@」所在的磁盘空间不够": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough space on the disk with “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」所在的磁盘空间不够"
+          }
+        }
+      }
+    },
+    "打包大约需要 %@（含余量），这块磁盘只剩 %@。可以换一个空间够的位置，比如外接硬盘。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zipping needs about %1$@ (with headroom), but this disk only has %2$@ free. Choose a location with enough space, such as an external drive."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打包大约需要 %1$@（含余量），这块磁盘只剩 %2$@。可以换一个空间够的位置，比如外接硬盘。"
+          }
+        }
+      }
+    },
+    "选择其他位置…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Another Location…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择其他位置…"
+          }
+        }
+      }
+    },
+    "放在这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放在这里"
+          }
+        }
+      }
+    },
+    "至少 %@ 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At least %@ files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "至少 %@ 个文件"
+          }
+        }
+      }
+    },
+    "拾掇没有权限读取这个文件夹，数字是上次的。到 系统设置 › 隐私与安全性 › 文件与文件夹（或「完全磁盘访问权限」）里允许拾掇，再重新统计。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo isn’t allowed to read this folder; the numbers are from last time. Allow Shiduo in System Settings › Privacy & Security › Files and Folders (or Full Disk Access), then recount."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇没有权限读取这个文件夹，数字是上次的。到 系统设置 › 隐私与安全性 › 文件与文件夹（或「完全磁盘访问权限」）里允许拾掇，再重新统计。"
+          }
+        }
+      }
+    },
+    "打开隐私设置…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Privacy Settings…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开隐私设置…"
+          }
+        }
+      }
+    },
+    "没有权限读取": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No permission to read"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有权限读取"
+          }
+        }
+      }
+    },
+    "部分在云端": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "partly in the cloud"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分在云端"
+          }
+        }
+      }
+    },
+    "部分没有权限": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "partly unreadable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分没有权限"
+          }
+        }
+      }
+    },
+    "没有权限": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Access"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有权限"
+          }
+        }
+      }
+    },
+    "停止统计（数字先用上次的，可以在 ⋯ 里重新统计）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop counting (the last numbers are kept; recount from the ⋯ menu)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止统计（数字先用上次的，可以在 ⋯ 里重新统计）"
+          }
+        }
+      }
+    },
+    "第三方云盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第三方云盘"
+          }
+        }
+      }
+    },
+    "「%@」现在没有连接，没有新建文件夹。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” isn’t connected right now, so no folder was created."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」现在没有连接，没有新建文件夹。"
+          }
+        }
+      }
+    },
+    "「%@」没有连接，接上后才能打开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” isn’t connected. Connect it to open this file."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」没有连接，接上后才能打开"
+          }
+        }
+      }
+    },
+    "%@（只在云端）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (in the cloud only)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@（只在云端）"
+          }
+        }
+      }
+    },
+    "找不到「%@」了，已重新统计": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is gone; recounting now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到「%@」了，已重新统计"
+          }
+        }
+      }
+    },
+    "这个文件只在云端，没有下载，先不预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file is only in the cloud and isn’t downloaded, so it can’t be previewed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件只在云端，没有下载，先不预览"
+          }
+        }
+      }
+    },
+    "这次还没有读取文件列表": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file list hasn’t been read yet this time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这次还没有读取文件列表"
+          }
+        }
+      }
+    },
+    "显示最近修改的 %@ 个，共 %@ 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing the %1$@ most recently modified of %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示最近修改的 %1$@ 个，共 %2$@ 个"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
