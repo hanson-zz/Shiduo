@@ -22,6 +22,7 @@ extension WorkspaceSourceKind {
         case .documents: return String(localized: "文稿")
         case .downloads: return String(localized: "下载")
         case .iCloud: return String(localized: "iCloud 云盘")
+        case .cloudDrive: return String(localized: "第三方云盘")
         case .external: return String(localized: "外接硬盘")
         }
     }
@@ -33,6 +34,7 @@ extension WorkspaceSourceKind {
         case .documents: return "doc"
         case .downloads: return "arrow.down"
         case .iCloud: return "icloud"
+        case .cloudDrive: return "cloud"
         case .external: return "externaldrive"
         }
     }
@@ -42,7 +44,7 @@ extension WorkspaceSourceKind {
         case .local, .desktop: return Color(red: 0.40, green: 0.58, blue: 0.98)
         case .documents: return Color(red: 0.98, green: 0.62, blue: 0.25)
         case .downloads: return Color(red: 0.66, green: 0.52, blue: 0.96)
-        case .iCloud: return Color(red: 0.25, green: 0.70, blue: 0.92)
+        case .iCloud, .cloudDrive: return Color(red: 0.25, green: 0.70, blue: 0.92)
         case .external: return Color(red: 0.50, green: 0.53, blue: 0.60)
         }
     }
@@ -943,7 +945,12 @@ struct WorkspaceView: View {
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         var name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "/", with: "-")
         if name.isEmpty || name.hasPrefix(".") { name = String(localized: "未命名文件夹") }
-        let parent = URL(fileURLWithPath: source.path, isDirectory: true)
+        // 写之前再确认一次来源还在（硬盘可能刚被拔掉；/Volumes 下残留空目录时不能建到启动盘上）。
+        guard let path = workspaces.verifiedPath(source.id) else {
+            store.alertMessage = String(localized: "「\(source.name)」现在没有连接，没有新建文件夹。")
+            return
+        }
+        let parent = URL(fileURLWithPath: path, isDirectory: true)
         let target = WorkspaceLogic.uniqueURL(for: name, in: parent)
         do {
             try FileManager.default.createDirectory(at: target, withIntermediateDirectories: false)

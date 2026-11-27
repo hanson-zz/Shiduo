@@ -45304,6 +45304,38 @@
           }
         }
       }
+    },
+    "第三方云盘": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第三方云盘"
+          }
+        }
+      }
+    },
+    "「%@」现在没有连接，没有新建文件夹。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” isn’t connected right now, so no folder was created."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」现在没有连接，没有新建文件夹。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

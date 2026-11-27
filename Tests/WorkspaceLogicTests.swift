@@ -726,4 +726,59 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertEqual(result.stats.bytes, 18, "文件包的大小是里面文件加起来")
         XCTAssertEqual(result.stats.documents, 2)
     }
+
+    // MARK: - 离线和找不到（审计 P1-12、P2-1）
+
+    func testSecondInternalDiskIsRecordedAsRemovable() throws {
+        let mount = try folder("数据盘")
+        let dir = try folder("数据盘/项目")
+        let source = WorkspaceLogic.makeSource(url: dir, volume: volume(mount.path, uuid: "D-1", name: "数据盘", external: false))
+        XCTAssertEqual(source.kind, .local, "内置盘不叫「外接硬盘」")
+        XCTAssertEqual(source.volumeUUID, "D-1", "不在启动盘上：记下卷")
+        XCTAssertEqual(source.relativePath, "项目")
+        XCTAssertTrue(source.isOnExternalVolume)
+        let state = WorkspaceLogic.availability(of: source, resolvedPath: nil, mounted: [], isFolder: { _ in false })
+        XCTAssertEqual(state, .offline(volumeName: "数据盘"), "断开了是「未连接」，不是「找不到了」")
+        XCTAssertFalse(WorkspaceLogic.isStartupVolume(volume("/Volumes/数据盘", uuid: nil, external: false)))
+        XCTAssertTrue(WorkspaceLogic.isStartupVolume(volume("/", uuid: nil, external: false)))
+        XCTAssertTrue(WorkspaceLogic.isStartupVolume(volume("/System/Volumes/Data", uuid: nil, external: false)))
+    }
+
+    func testUnrecordedVolumePathIsOfflineNotMissing() {
+        // 1.0 加的 NAS 来源：没记卷信息。
+        let source = WorkspaceSource(path: "/Volumes/NAS/项目")
+        XCTAssertFalse(source.isOnExternalVolume)
+        let offline = WorkspaceLogic.availability(of: source, resolvedPath: nil, mounted: [], isFolder: { _ in true })
+        XCTAssertEqual(offline, .offline(volumeName: "NAS"), "挂载点残留空目录也不算在线")
+        let online = WorkspaceLogic.availability(of: source, resolvedPath: nil,
+                                                 mounted: [volume("/Volumes/NAS", uuid: nil, name: "NAS", external: false)],
+                                                 isFolder: { _ in true })
+        XCTAssertEqual(online, .online(path: "/Volumes/NAS/项目"))
+        let gone = WorkspaceLogic.availability(of: source, resolvedPath: nil,
+                                               mounted: [volume("/Volumes/NAS", uuid: nil, name: "NAS", external: false)],
+                                               isFolder: { _ in false })
+        XCTAssertEqual(gone, .missing, "盘在、文件夹不在：才是找不到了")
+        XCTAssertEqual(WorkspaceLogic.volumeRoot(ofPath: "/Volumes/NAS/项目/a")?.name, "NAS")
+        XCTAssertNil(WorkspaceLogic.volumeRoot(ofPath: "/Users/me/Volumes/x"))
+    }
+
+    func testMakeSourceWithoutVolumeInfoStillRecordsVolumesPath() {
+        let source = WorkspaceLogic.makeSource(url: URL(fileURLWithPath: "/Volumes/NAS/项目/客户"), volume: nil)
+        XCTAssertEqual(source.volumeName, "NAS")
+        XCTAssertEqual(source.relativePath, "项目/客户")
+        XCTAssertTrue(source.isOnExternalVolume)
+    }
+
+    func testZeroCapacityVolumeMatchesByName() {
+        let source = WorkspaceSource(path: "/Volumes/卡/a", kind: .external, volumeName: "卡", volumeCapacity: 0, relativePath: "a")
+        XCTAssertTrue(WorkspaceLogic.matches(source, volume: volume("/Volumes/卡", uuid: nil, name: "卡", capacity: 0)),
+                      "容量读不到时按名字认，不能永远「未连接」")
+        XCTAssertTrue(WorkspaceLogic.matches(source, volume: volume("/Volumes/卡", uuid: nil, name: "卡", capacity: 32)))
+        XCTAssertFalse(WorkspaceLogic.matches(source, volume: volume("/Volumes/别的", uuid: nil, name: "别的", capacity: 0)))
+    }
+
+    func testCloudStorageKind() {
+        XCTAssertEqual(WorkspaceLogic.kind(forPath: "/Users/me/Library/CloudStorage/OneDrive-个人/项目", home: "/Users/me",
+                                           isExternalVolume: false), .cloudDrive)
+    }
 }

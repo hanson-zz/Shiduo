@@ -26,6 +26,8 @@ enum WorkspaceSourceKind: String, Codable, Hashable {
     case documents
     case downloads
     case iCloud
+    /// 第三方云盘（~/Library/CloudStorage：Dropbox、OneDrive、Google Drive……）。
+    case cloudDrive
     case external
 }
 
@@ -174,8 +176,10 @@ struct WorkspaceSource: Codable, Identifiable, Equatable {
         return last.isEmpty ? path : last
     }
 
-    /// 在外接硬盘上（拔掉后显示「硬盘未连接」）。
-    var isOnExternalVolume: Bool { kind == .external || !(volumeUUID ?? "").isEmpty }
+    /// 在可以断开的卷上（外接硬盘、第二块内置盘 / 分区、网络盘）：断开后显示「硬盘未连接」，不显示「找不到了」。
+    var isOnExternalVolume: Bool {
+        kind == .external || !(volumeUUID ?? "").isEmpty || (!(volumeName ?? "").isEmpty && relativePath != nil)
+    }
 
     private enum CodingKeys: String, CodingKey, CaseIterable {
         case id, bookmark, path, kind, volumeUUID, volumeName, volumeCapacity, relativePath, added, stats
@@ -611,13 +615,28 @@ enum WorkspaceLogic {
         let p = FolderBackupLogic.standardized(path)
         let h = FolderBackupLogic.standardized(home)
         if FolderBackupLogic.isInside(p, h + "/Library/Mobile Documents") { return .iCloud }
+        if FolderBackupLogic.isInside(p, h + "/Library/CloudStorage") { return .cloudDrive }
         if FolderBackupLogic.isInside(p, h + "/Desktop") { return .desktop }
         if FolderBackupLogic.isInside(p, h + "/Downloads") { return .downloads }
         if FolderBackupLogic.isInside(p, h + "/Documents") { return .documents }
         return .local
     }
 
+    /// 卷是不是启动盘（/ 或 /System/Volumes/…）。不是的都可能被断开（外接盘、第二块内置盘、网络盘）。
+    static func isStartupVolume(_ volume: BackupVolumeInfo) -> Bool {
+        let mount = FolderBackupLogic.standardized(volume.mountPath)
+        return mount == "/" || FolderBackupLogic.isInside(mount, "/System/Volumes")
+    }
+
+    /// 路径在 /Volumes/<盘名>/ 下：返回挂载点和盘名。
+    static func volumeRoot(ofPath path: String) -> (mount: String, name: String)? {
+        let parts = FolderBackupLogic.standardized(path).split(separator: "/", omittingEmptySubsequences: true)
+        guard parts.count >= 2, parts[0] == "Volumes" else { return nil }
+        return ("/Volumes/" + parts[1], String(parts[1]))
+    }
+
     /// 新建一个来源（只做书签、记路径；volume 是文件夹所在的卷，读不到传 nil）。
+    /// 不在启动盘上的（外接盘、第二块内置盘、网络盘）都记下卷 UUID / 名字 / 相对路径：断开后显示「未连接」而不是「找不到了」。
     static func makeSource(url: URL, volume: BackupVolumeInfo?, home: String = NSHomeDirectory()) -> WorkspaceSource {
         let path = FolderBackupLogic.standardized(url.path)
         let external = volume?.isExternal ?? false
@@ -626,11 +645,17 @@ enum WorkspaceLogic {
             path: path,
             kind: kind(forPath: path, home: home, isExternalVolume: external)
         )
-        if external, let volume {
-            source.volumeUUID = volume.uuid
-            source.volumeName = volume.name
-            source.volumeCapacity = volume.capacity
-            source.relativePath = FolderBackupLogic.relativePath(of: path, inVolume: volume.mountPath)
+        if let volume {
+            if external || !isStartupVolume(volume) {
+                source.volumeUUID = volume.uuid
+                source.volumeName = volume.name
+                source.volumeCapacity = volume.capacity
+                source.relativePath = FolderBackupLogic.relativePath(of: path, inVolume: volume.mountPath)
+            }
+        } else if let root = volumeRoot(ofPath: path) {
+            // 读不到卷信息（网络盘没响应等）：至少按 /Volumes/<盘名> 记下来。
+            source.volumeName = root.name
+            source.relativePath = FolderBackupLogic.relativePath(of: path, inVolume: root.mount)
         }
         return source
     }
@@ -678,13 +703,16 @@ enum WorkspaceLogic {
     }
 
     /// 这块卷是不是来源所在的硬盘：有 UUID 只认 UUID；没有时「名字 + 容量」都一样才算（同「备份到硬盘」）。
+    /// 容量读不到（记录的或现在的是 0，部分 FAT / NTFS / 网络卷）时只能按名字认：
+    /// 接上以后还要相对路径上的文件夹真的在，才算在线（见 availability）。
     static func matches(_ source: WorkspaceSource, volume: BackupVolumeInfo) -> Bool {
         if let want = source.volumeUUID, !want.isEmpty {
             guard let have = volume.uuid else { return false }
             return have.caseInsensitiveCompare(want) == .orderedSame
         }
-        guard let name = source.volumeName, !name.isEmpty else { return false }
-        return volume.name == name && source.volumeCapacity > 0 && volume.capacity == source.volumeCapacity
+        guard let name = source.volumeName, !name.isEmpty, volume.name == name else { return false }
+        if source.volumeCapacity > 0 && volume.capacity > 0 { return volume.capacity == source.volumeCapacity }
+        return true
     }
 
     static func isInTrash(_ path: String) -> Bool {
@@ -710,6 +738,15 @@ enum WorkspaceLogic {
                 if isFolder(candidate) { return .online(path: candidate) }
             }
             return .missing
+        }
+        // 1.0 加的、没记卷的来源：路径在 /Volumes/<盘> 下而那块盘现在没挂着 → 「未连接」，不是「找不到了」。
+        // （盘被强拔后 /Volumes/<盘> 可能残留一个空目录：不能当成在线。）
+        if let root = volumeRoot(ofPath: source.path),
+           !mounted.contains(where: { FolderBackupLogic.standardized($0.mountPath).lowercased() == root.mount.lowercased() }) {
+            if let resolved = resolvedPath, !isInTrash(resolved), volumeRoot(ofPath: resolved) == nil, isFolder(resolved) {
+                return .online(path: FolderBackupLogic.standardized(resolved))
+            }
+            return .offline(volumeName: root.name)
         }
         if let resolved = resolvedPath, !isInTrash(resolved), isFolder(resolved) {
             return .online(path: FolderBackupLogic.standardized(resolved))

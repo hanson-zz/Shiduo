@@ -454,6 +454,22 @@ final class WorkspaceStore: ObservableObject {
         if changed { save() }
     }
 
+    /// 写文件之前（新建文件夹）再同步确认一次来源还在：在线、而且外接 / 可断开的卷还挂在原处、还是同一块盘。
+    /// 返回现在的路径；不在了返回 nil。
+    func verifiedPath(_ sourceID: UUID) -> String? {
+        guard let source = workspaces.flatMap(\.sources).first(where: { $0.id == sourceID }) else { return nil }
+        let mounted = Demo.isOn ? [] : FolderBackupStore.mountedVolumes()
+        let check = Self.check(source, mounted: mounted, resolveBookmark: !Demo.isOn)
+        apply(check)
+        guard let path = check.state.path else { return nil }
+        if !Demo.isOn, source.isOnExternalVolume {
+            guard let volume = mounted.first(where: { WorkspaceLogic.matches(source, volume: $0) }),
+                  FolderBackupStore.isStillMounted(volume.mountPath, uuid: volume.uuid),
+                  FolderBackupLogic.isInside(path, volume.mountPath) else { return nil }
+        }
+        return path
+    }
+
     nonisolated static func isFolder(_ path: String) -> Bool {
         var isDir: ObjCBool = false
         return FileManager.default.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
