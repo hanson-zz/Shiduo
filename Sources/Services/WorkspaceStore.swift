@@ -45,11 +45,17 @@ final class WorkspaceStore: ObservableObject {
 
     private var file = WorkspacesFile()
     private var readOnly = false
-    private var scanTasks: [UUID: Task<Void, Never>] = [:]
     private var scanFlags: [UUID: WorkspaceCancelFlag] = [:]
     private var zipFlag: WorkspaceCancelFlag?
     private var zipJob: WorkspaceZipJob?
     private var observers: [NSObjectProtocol] = []
+    /// 正在显示的工作区（页面开着几个）：计数归零才停扫描；插盘时只扫正在显示的。
+    private var visible: [UUID: Int] = [:]
+    /// 正在后台判定状态的来源。
+    private var checking: Set<UUID> = []
+    /// 分类卡片缩略图：路径 → 后台建好的条目。
+    @Published private(set) var previewItems: [String: FileItem] = [:]
+    private var previewLoading: Set<String> = []
 
     private init() {
         if !Demo.isOn {
@@ -355,37 +361,96 @@ final class WorkspaceStore: ObservableObject {
 
     // MARK: - 状态 / 扫描
 
+    /// 一个来源判定完的结果（后台算好，回主线程再写）。
+    struct SourceCheck {
+        let id: UUID
+        let state: WorkspaceSourceAvailability
+        /// 书签过期了：新书签。
+        var bookmark: Data?
+        /// 文件夹改名 / 挪了地方：新路径（和新的相对路径）。
+        var path: String?
+        var relativePath: String?
+    }
+
+    /// 判定来源状态（书签解析、stat）的后台队列：网络盘没响应时卡住的只是这一个来源，界面不转圈。
+    nonisolated private static let ioQueue = DispatchQueue(label: "io.github.hanson-zz.shiduo.workspace.io",
+                                                           qos: .userInitiated, attributes: .concurrent)
+
+    /// 扫描专用队列：不占 Swift 并发的协作线程池（扫描是长时间的同步 IO），同时最多扫 2 个来源。
+    nonisolated private static let scanQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.name = "io.github.hanson-zz.shiduo.workspace.scan"
+        queue.maxConcurrentOperationCount = 2
+        queue.qualityOfService = .utility
+        return queue
+    }()
+
     /// 重新判定所有来源的状态：书签跟着改名 / 移动走，外接硬盘看接没接上。
-    func refreshAvailability() {
-        let mounted = Demo.isOn ? [] : FolderBackupStore.mountedVolumes()
-        var changed = false
-        for wi in workspaces.indices {
-            for si in workspaces[wi].sources.indices {
-                let source = workspaces[wi].sources[si]
-                var resolved: String?
-                if let data = source.bookmark, !Demo.isOn {
-                    var stale = false
-                    if let url = try? URL(resolvingBookmarkData: data, options: [.withoutUI, .withoutMounting],
-                                          relativeTo: nil, bookmarkDataIsStale: &stale) {
-                        resolved = url.path
-                        if stale, FileManager.default.fileExists(atPath: url.path) {
-                            workspaces[wi].sources[si].bookmark = try? url.bookmarkData()
-                            changed = true
-                        }
+    /// 在后台做（读卷列表、解析书签、stat 都可能卡在没响应的网络盘上），每个来源判定完就发布；全部完成后调用 completion。
+    func refreshAvailability(_ completion: (() -> Void)? = nil) {
+        let isDemo = Demo.isOn
+        // 上一次还没判定完的来源（比如卡在网络盘上）不重复排队。
+        let sources = workspaces.flatMap(\.sources).filter { !checking.contains($0.id) }
+        checking.formUnion(sources.map(\.id))
+        let group = DispatchGroup()
+        group.enter()
+        Self.ioQueue.async {
+            let mounted = isDemo ? [] : FolderBackupStore.mountedVolumes()
+            for source in sources {
+                group.enter()
+                Self.ioQueue.async {
+                    let check = Self.check(source, mounted: mounted, resolveBookmark: !isDemo)
+                    DispatchQueue.main.async {
+                        MainActor.assumeIsolated { WorkspaceStore.shared.apply(check) }
+                        group.leave()
                     }
                 }
-                let state = WorkspaceLogic.availability(of: source, resolvedPath: resolved, mounted: mounted, isFolder: Self.isFolder)
-                if let path = state.path, path != source.path {
-                    // 文件夹改名 / 挪了地方：跟过去（显示的名字也跟着变）。
-                    workspaces[wi].sources[si].path = path
-                    if source.isOnExternalVolume, let volume = mounted.first(where: { WorkspaceLogic.matches(source, volume: $0) }) {
-                        workspaces[wi].sources[si].relativePath = FolderBackupLogic.relativePath(of: path, inVolume: volume.mountPath)
-                    }
-                    changed = true
-                }
-                if availability[source.id] != state { availability[source.id] = state }
+            }
+            group.leave()
+        }
+        group.notify(queue: .main) { completion?() }
+    }
+
+    /// 判定一个来源（后台线程）：书签过期只在来源确实在线、而且不在废纸篓里时才重新生成（别把书签改成指向废纸篓）。
+    nonisolated static func check(_ source: WorkspaceSource, mounted: [BackupVolumeInfo], resolveBookmark: Bool) -> SourceCheck {
+        var resolved: String?
+        var stale = false
+        if resolveBookmark, let data = source.bookmark,
+           let url = try? URL(resolvingBookmarkData: data, options: [.withoutUI, .withoutMounting],
+                              relativeTo: nil, bookmarkDataIsStale: &stale) {
+            resolved = url.path
+        }
+        let state = WorkspaceLogic.availability(of: source, resolvedPath: resolved, mounted: mounted, isFolder: isFolder)
+        var check = SourceCheck(id: source.id, state: state)
+        guard let path = state.path else { return check }
+        if stale, !WorkspaceLogic.isInTrash(path) {
+            check.bookmark = try? URL(fileURLWithPath: path, isDirectory: true).bookmarkData()
+        }
+        if path != source.path {
+            // 文件夹改名 / 挪了地方：跟过去（显示的名字也跟着变）。
+            check.path = path
+            if source.isOnExternalVolume, let volume = mounted.first(where: { WorkspaceLogic.matches(source, volume: $0) }) {
+                check.relativePath = FolderBackupLogic.relativePath(of: path, inVolume: volume.mountPath)
             }
         }
+        return check
+    }
+
+    private func apply(_ check: SourceCheck) {
+        checking.remove(check.id)
+        guard let wi = workspaces.firstIndex(where: { $0.sources.contains { $0.id == check.id } }),
+              let si = workspaces[wi].sources.firstIndex(where: { $0.id == check.id }) else { return }
+        var changed = false
+        if let bookmark = check.bookmark {
+            workspaces[wi].sources[si].bookmark = bookmark
+            changed = true
+        }
+        if let path = check.path {
+            workspaces[wi].sources[si].path = path
+            if let rel = check.relativePath { workspaces[wi].sources[si].relativePath = rel }
+            changed = true
+        }
+        if availability[check.id] != check.state { availability[check.id] = check.state }
         if changed { save() }
     }
 
@@ -394,26 +459,51 @@ final class WorkspaceStore: ObservableObject {
         return FileManager.default.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
     }
 
-    /// 插拔硬盘：重新判定状态，刚接上的硬盘上的来源重新扫描。
+    /// 插拔硬盘：重新判定状态。刚接上的硬盘上的来源：正在显示的工作区马上重新扫描；
+    /// 没在显示的只标成「待更新」（丢掉这次的结果），打开页面时再扫，不一次扫所有工作区。
     private func volumesChanged() {
         let before = availability
-        refreshAvailability()
-        for workspace in workspaces {
-            for source in workspace.sources {
-                let now = state(source)
-                if now.isOnline, before[source.id]?.isOnline != true { scan(source) }
-                if !now.isOnline { cancelScan(source.id) }
+        refreshAvailability { [weak self] in
+            guard let self else { return }
+            for workspace in self.workspaces {
+                let shown = self.isVisible(workspace.id) && (WorkspaceAccess.unlocked || Demo.isOn)
+                for source in workspace.sources {
+                    let now = self.state(source)
+                    if now.isOnline, before[source.id]?.isOnline != true {
+                        if shown { self.scan(source) } else { self.live[source.id] = nil }
+                    }
+                    if !now.isOnline { self.cancelScan(source.id) }
+                }
             }
         }
     }
 
+    /// 工作区页面出现：记下它在显示（双栏 / 多标签可能同时开着同一个工作区），判定状态并扫描。
+    func pageAppeared(_ id: UUID) {
+        visible[id, default: 0] += 1
+        refresh(id)
+    }
+
+    /// 工作区页面消失：所有显示它的页面都关了才停下扫描（不会把另一栏还在看的扫描停掉）。
+    func pageDisappeared(_ id: UUID) {
+        let count = (visible[id] ?? 1) - 1
+        visible[id] = count > 0 ? count : nil
+        if count <= 0 { cancelScans(id) }
+    }
+
+    private func isVisible(_ id: UUID) -> Bool { (visible[id] ?? 0) > 0 }
+
     /// 打开工作区页面时：判定状态，在线但这次还没扫过的来源在后台扫一遍（force：全部重扫）。
+    /// 试用到期（页面显示「拾掇 Pro」介绍）时只判定状态，不扫描。
     func refresh(_ id: UUID, force: Bool = false) {
         guard !Demo.isOn || force else { return }
-        refreshAvailability()
-        guard let workspace = self.workspace(id) else { return }
-        for source in workspace.sources where state(source).isOnline {
-            if force || live[source.id] == nil { scan(source) }
+        refreshAvailability { [weak self] in
+            guard let self, let workspace = self.workspace(id) else { return }
+            self.preparePreviews(workspace)
+            guard WorkspaceAccess.unlocked || Demo.isOn else { return }
+            for source in workspace.sources where self.state(source).isOnline {
+                if force || (self.live[source.id] == nil && !self.scanning.contains(source.id)) { self.scan(source) }
+            }
         }
     }
 
@@ -426,8 +516,6 @@ final class WorkspaceStore: ObservableObject {
     private func cancelScan(_ sourceID: UUID) {
         scanFlags[sourceID]?.cancel()
         scanFlags[sourceID] = nil
-        scanTasks[sourceID]?.cancel()
-        scanTasks[sourceID] = nil
         scanning.remove(sourceID)
     }
 
@@ -440,24 +528,61 @@ final class WorkspaceStore: ObservableObject {
         scanning.insert(source.id)
         let root = URL(fileURLWithPath: path, isDirectory: true)
         let sourceID = source.id
-        scanTasks[sourceID] = Task { @MainActor in
-            let result = await Task.detached(priority: .utility) {
-                WorkspaceScanner.scan(root: root, isCancelled: { flag.isCancelled })
-            }.value
-            let store = WorkspaceStore.shared
-            guard store.scanFlags[sourceID] === flag else { return }
-            store.scanFlags[sourceID] = nil
-            store.scanTasks[sourceID] = nil
-            store.scanning.remove(sourceID)
-            guard let result, !flag.isCancelled else { return }
-            if result.permissionDenied {
-                // 读不了不等于「0 个文件」：不写缓存，卡片上提示去给权限。
-                store.denied.insert(sourceID)
-                return
+        Self.scanQueue.addOperation {
+            // 排队期间被取消了：直接跳过。
+            let result = flag.isCancelled ? nil : WorkspaceScanner.scan(root: root, isCancelled: { flag.isCancelled })
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { WorkspaceStore.shared.finishScan(sourceID, flag: flag, result: result) }
             }
-            store.denied.remove(sourceID)
-            store.live[sourceID] = result
-            store.storeStats(result.stats, for: sourceID)
+        }
+    }
+
+    private func finishScan(_ sourceID: UUID, flag: WorkspaceCancelFlag, result: WorkspaceScanner.Result?) {
+        guard scanFlags[sourceID] === flag else { return }
+        scanFlags[sourceID] = nil
+        scanning.remove(sourceID)
+        guard let result, !flag.isCancelled else { return }
+        if result.permissionDenied {
+            // 读不了不等于「0 个文件」：不写缓存，卡片上提示去给权限。
+            denied.insert(sourceID)
+            return
+        }
+        denied.remove(sourceID)
+        live[sourceID] = result
+        storeStats(result.stats, for: sourceID)
+        if let workspace = workspaces.first(where: { $0.sources.contains { $0.id == sourceID } }) { preparePreviews(workspace) }
+    }
+
+    // MARK: - 分类卡片的缩略图
+
+    /// 分类卡片上斜叠的几张的候选：只用本机有的文件（不为了缩略图去下载云端文件）。
+    func previewCandidates(_ kind: WorkspaceFileKind, workspace: Workspace) -> [String] {
+        let live = files(workspace, kind: kind, limit: 6).map(\.entry)
+        let pool = live.isEmpty ? recentFiles(workspace, limit: 60).map(\.entry).filter { $0.kind == kind } : live
+        return pool.filter { !$0.cloudOnly }.prefix(3).map(\.path)
+    }
+
+    /// 已经在后台建好的缩略图条目（body 里只读缓存，不在主线程上读 Spotlight / 扩展属性）。
+    func previews(_ kind: WorkspaceFileKind, workspace: Workspace) -> [FileItem] {
+        previewCandidates(kind, workspace: workspace).compactMap { previewItems[$0] }
+    }
+
+    /// 在后台把缩略图要用的 FileItem 建好，建好后发布。
+    private func preparePreviews(_ workspace: Workspace) {
+        let paths = WorkspaceFileKind.allCases.flatMap { previewCandidates($0, workspace: workspace) }
+        let todo = paths.filter { previewItems[$0] == nil && !previewLoading.contains($0) }
+        guard !todo.isEmpty else { return }
+        if previewItems.count > 400 { previewItems.removeAll() }
+        previewLoading.formUnion(todo)
+        Self.ioQueue.async {
+            let items = todo.compactMap { path in FileItem(url: URL(fileURLWithPath: path)).map { (path, $0) } }
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    let store = WorkspaceStore.shared
+                    store.previewLoading.subtract(todo)
+                    for (path, item) in items { store.previewItems[path] = item }
+                }
+            }
         }
     }
 

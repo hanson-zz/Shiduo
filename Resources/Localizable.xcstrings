@@ -45288,6 +45288,22 @@
           }
         }
       }
+    },
+    "停止统计（数字先用上次的，可以在 ⋯ 里重新统计）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop counting (the last numbers are kept; recount from the ⋯ menu)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止统计（数字先用上次的，可以在 ⋯ 里重新统计）"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

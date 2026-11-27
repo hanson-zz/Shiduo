@@ -283,10 +283,10 @@ struct WorkspaceView: View {
         }
         .navigationTitle("工作区")
         .onAppear {
-            workspaces.refresh(id)
+            workspaces.pageAppeared(id)
             if workspaces.renamingInline == id { beginRename() }
         }
-        .onDisappear { workspaces.cancelScans(id) }
+        .onDisappear { workspaces.pageDisappeared(id) }
         .onChange(of: workspaces.renamingInline) {
             if workspaces.renamingInline == id { beginRename() }
         }
@@ -523,7 +523,7 @@ struct WorkspaceView: View {
                 ProgressView().controlSize(.mini)
                 Button("停止") { workspaces.cancelScans(workspace.id) }
                     .buttonStyle(.link)
-                    .help("停止统计（下次打开再继续）")
+                    .help("停止统计（数字先用上次的，可以在 ⋯ 里重新统计）")
             }
         }
         .font(.callout)
@@ -728,27 +728,18 @@ struct WorkspaceView: View {
 
     private func categories(_ workspace: Workspace) -> some View {
         let totals = workspaces.totals(workspace)
-        let recent = workspaces.recentFiles(workspace, limit: 60)
         return VStack(alignment: .leading, spacing: 14) {
             SectionHeader(title: String(localized: "workspace.section.categories", defaultValue: "分类"))
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 14)], spacing: 12) {
                 ForEach(WorkspaceFileKind.allCases, id: \.self) { kind in
                     Button { tab = WorkspaceTab.tab(for: kind) } label: {
                         WorkspaceCategoryTile(kind: kind, count: totals.count(kind),
-                                              previews: previews(kind, workspace: workspace, recent: recent))
+                                              previews: workspaces.previews(kind, workspace: workspace))
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-    }
-
-    /// 分类卡片上斜叠的三张：只用本机有的文件（不为了缩略图去下载云端文件）。
-    private func previews(_ kind: WorkspaceFileKind, workspace: Workspace,
-                          recent: [WorkspaceFileRow]) -> [FileItem] {
-        let live = workspaces.files(workspace, kind: kind, limit: 6).map(\.entry)
-        let pool = live.isEmpty ? recent.map(\.entry).filter { $0.kind == kind } : live
-        return pool.filter { !$0.cloudOnly }.prefix(3).compactMap { FileItem(url: URL(fileURLWithPath: $0.path)) }
     }
 
     // MARK: 快捷操作
