@@ -83,6 +83,10 @@ struct WorkspaceSourceStats: Codable, Equatable {
     var scannedAt = Date.distantPast
     /// 文件太多，扫到上限就停了（数字是「至少」）。
     var truncated = false
+    /// 整个目录都在云端（「优化储存空间」/ 云盘「仅在线」）没往下数的文件夹个数：数字不全。
+    var cloudFolders = 0
+    /// 没有权限读取的子文件夹个数（里面的文件没算进来）。
+    var unreadableFolders = 0
     /// 最近修改的几个文件（新的在前，最多 WorkspaceLogic.cachedRecentLimit 个）。
     var recent: [WorkspaceFileEntry] = []
 
@@ -107,7 +111,7 @@ struct WorkspaceSourceStats: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case fileCount, folderCount, bytes, images, documents, videos, others, cloudOnly, cloudBytes, lastModified, scannedAt, truncated, recent
+        case fileCount, folderCount, bytes, images, documents, videos, others, cloudOnly, cloudBytes, lastModified, scannedAt, truncated, cloudFolders, unreadableFolders, recent
     }
 
     init(from decoder: Decoder) throws {
@@ -124,6 +128,8 @@ struct WorkspaceSourceStats: Codable, Equatable {
         lastModified = try? c.decode(Date.self, forKey: .lastModified)
         scannedAt = (try? c.decode(Date.self, forKey: .scannedAt)) ?? .distantPast
         truncated = (try? c.decode(Bool.self, forKey: .truncated)) ?? false
+        cloudFolders = (try? c.decode(Int.self, forKey: .cloudFolders)) ?? 0
+        unreadableFolders = (try? c.decode(Int.self, forKey: .unreadableFolders)) ?? 0
         recent = WorkspaceLossy.decodeArray(WorkspaceFileEntry.self, c, .recent)
     }
 }
@@ -512,9 +518,12 @@ struct WorkspaceTotals: Equatable {
     var videos = 0
     var others = 0
     var cloudOnly = 0
+    var cloudBytes: Int64 = 0
     var lastModified: Date?
     /// 有来源还没扫过（数字不全）。
     var incomplete = false
+    /// 有来源只数了一部分（到上限、整个目录在云端、子文件夹没权限）：数字是「至少」。
+    var truncated = false
 
     func count(_ kind: WorkspaceFileKind) -> Int {
         switch kind {
@@ -757,6 +766,8 @@ enum WorkspaceLogic {
             t.videos += s.videos
             t.others += s.others
             t.cloudOnly += s.cloudOnly
+            t.cloudBytes += s.cloudBytes
+            if s.truncated || s.cloudFolders > 0 || s.unreadableFolders > 0 { t.truncated = true }
             if let d = s.lastModified { t.lastModified = max(t.lastModified ?? d, d) }
         }
         return t
@@ -829,6 +840,8 @@ enum WorkspaceScanner {
         /// 所有文件（不含只在云端的）的总数：打包 ZIP 前的确认用。
         var localFileCount: Int
         var localBytes: Int64
+        /// 来源根目录读不了（系统「文件与文件夹」权限没给、或没有读权限）：数字不可信，不能当成「0 个文件」。
+        var permissionDenied = false
     }
 
     static let defaultMaxItems = 300_000
@@ -846,9 +859,52 @@ enum WorkspaceScanner {
         return nil
     }
 
-    static func isCloudOnly(_ values: URLResourceValues) -> Bool {
-        guard values.isUbiquitousItem == true, let status = values.ubiquitousItemDownloadingStatus else { return false }
-        return status != .current
+    /// stat 的 st_flags 里的 SF_DATALESS：文件 / 文件夹只是个占位，内容在云端。
+    /// iCloud 云盘和所有 File Provider 云盘（Dropbox、OneDrive、Google Drive、坚果云……）都用它。
+    static let datalessFlag: UInt32 = 0x4000_0000
+
+    static func isDataless(flags: UInt32) -> Bool { flags & datalessFlag != 0 }
+
+    /// 读 st_flags 只是 lstat，不会触发下载。
+    static func isDataless(path: String) -> Bool {
+        var info = stat()
+        guard lstat(path, &info) == 0 else { return false }
+        return isDataless(flags: info.st_flags)
+    }
+
+    /// 只在云端、本机没有内容：iCloud 的下载状态，或者任何云盘的占位（SF_DATALESS）。
+    /// path 为 nil 时只看 iCloud 的状态。
+    static func isCloudOnly(_ values: URLResourceValues, path: String? = nil) -> Bool {
+        if values.isUbiquitousItem == true, let status = values.ubiquitousItemDownloadingStatus, status != .current { return true }
+        if let path, isDataless(path: path) { return true }
+        return false
+    }
+
+    /// 是不是「没有权限」这一类错误（系统隐私权限、文件权限）。
+    static func isPermissionError(_ error: Error) -> Bool {
+        let ns = error as NSError
+        if ns.domain == NSCocoaErrorDomain && ns.code == NSFileReadNoPermissionError { return true }
+        if ns.domain == NSPOSIXErrorDomain && (ns.code == Int(EPERM) || ns.code == Int(EACCES)) { return true }
+        if let underlying = ns.userInfo[NSUnderlyingErrorKey] as? Error { return isPermissionError(underlying) }
+        return false
+    }
+
+    /// 文件包（.fcpbundle、.photoslibrary、.logicx、.rtfd、.app……）里所有文件加起来的大小和个数（不往包外走）。
+    /// 取消了返回 nil。budget：最多数这么多项（和整个扫描的上限一起算）。
+    static func packageSize(_ url: URL, budget: Int, isCancelled: () -> Bool) -> (bytes: Int64, items: Int, truncated: Bool)? {
+        let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey, .totalFileAllocatedSizeKey]
+        guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: keys, options: [],
+                                                              errorHandler: { _, _ in true }) else { return (0, 0, false) }
+        var bytes: Int64 = 0
+        var items = 0
+        while let next = enumerator.nextObject() as? URL {
+            items += 1
+            if items % 400 == 0, isCancelled() { return nil }
+            if items > budget { return (bytes, items, true) }
+            guard let v = try? next.resourceValues(forKeys: Set(keys)), v.isRegularFile == true else { continue }
+            bytes += Int64(v.fileSize ?? v.totalFileAllocatedSize ?? 0)
+        }
+        return (bytes, items, false)
     }
 
     static func scan(root: URL, now: Date = Date(), maxItems: Int = defaultMaxItems, recentLimit: Int = WorkspaceLogic.cachedRecentLimit,
@@ -860,9 +916,20 @@ enum WorkspaceScanner {
         var recent: [WorkspaceFileEntry] = []
         var localFiles = 0
         var localBytes: Int64 = 0
+        // 根目录读不了（用户点了「不允许」、没给完全磁盘访问权限）：明确告诉调用方，不能当成「0 个文件」写进缓存。
+        if let problem = readProblem(root.path) {
+            guard problem == EPERM || problem == EACCES else { return nil }  // 不在了 / 断开了：没有结果，缓存不动
+            return Result(stats: stats, byKind: [:], folders: [], localFileCount: 0, localBytes: 0, permissionDenied: true)
+        }
+        // 子文件夹读不了：记个数（errorHandler 在别的地方调用，用一个盒子装计数）。
+        final class Counter { var denied = 0 }
+        let counter = Counter()
         guard let enumerator = fm.enumerator(at: root, includingPropertiesForKeys: keys,
                                              options: [.skipsHiddenFiles, .skipsPackageDescendants],
-                                             errorHandler: { _, _ in true }) else { return nil }
+                                             errorHandler: { _, error in
+                                                 if WorkspaceScanner.isPermissionError(error) { counter.denied += 1 }
+                                                 return true
+                                             }) else { return nil }
         var seen = 0
 
         func keepNewest(_ list: inout [WorkspaceFileEntry], _ entry: WorkspaceFileEntry, limit: Int) {
@@ -885,6 +952,11 @@ enum WorkspaceScanner {
             let modified = v.contentModificationDate ?? .distantPast
             if v.isDirectory == true && v.isPackage != true {
                 stats.folderCount += 1
+                // 整个目录都在云端：不往下走（不然枚举会去云端拉目录列表，可能很慢），记下来「数字不全」。
+                if isDataless(path: next.path) {
+                    enumerator.skipDescendants()
+                    stats.cloudFolders += 1
+                }
                 if enumerator.level == 1 {
                     let entry = WorkspaceFileEntry(path: next.path, name: next.lastPathComponent, modified: modified,
                                                    bytes: 0, kind: .other, cloudOnly: false, isFolder: true)
@@ -892,8 +964,15 @@ enum WorkspaceScanner {
                 }
                 continue
             }
-            let bytes = Int64(v.fileSize ?? 0)
-            let cloud = isCloudOnly(v)
+            let cloud = isCloudOnly(v, path: next.path)
+            var bytes = Int64(v.fileSize ?? 0)
+            if v.isDirectory == true && v.isPackage == true && !cloud {
+                // 文件包：系统不给它算大小，自己把包里的文件加起来（受取消和上限控制）；整个包算一个文件。
+                guard let package = packageSize(next, budget: max(maxItems - seen, 0), isCancelled: isCancelled) else { return nil }
+                bytes = package.bytes
+                seen += package.items
+                if package.truncated { stats.truncated = true }
+            }
             let kind = WorkspaceLogic.fileKind(ext: next.pathExtension, type: v.contentType)
             stats.fileCount += 1
             stats.bytes += bytes
@@ -914,6 +993,7 @@ enum WorkspaceScanner {
             keepNewest(&recent, entry, limit: recentLimit)
         }
         if isCancelled() { return nil }
+        stats.unreadableFolders = counter.denied
         for kind in WorkspaceFileKind.allCases {
             byKind[kind] = Array((byKind[kind] ?? []).sorted { $0.modified > $1.modified }.prefix(perKindLimit))
         }
@@ -1081,7 +1161,7 @@ enum WorkspaceZip {
                 continue
             }
             if v.isSymbolicLink == true { continue }
-            if WorkspaceScanner.isCloudOnly(v) {
+            if WorkspaceScanner.isCloudOnly(v, path: url.path) {
                 skipped += 1
                 if v.isDirectory == true { enumerator.skipDescendants() }
                 continue
@@ -1127,7 +1207,7 @@ enum WorkspaceZip {
             guard let v = try? url.resourceValues(forKeys: Set(keys)), let inner = relative(url), !inner.isEmpty,
                   !inner.contains("\n"), !inner.contains("\r") else { continue }
             if v.isDirectory == true && v.isSymbolicLink != true { continue }
-            if v.isSymbolicLink != true && WorkspaceScanner.isCloudOnly(v) {
+            if v.isSymbolicLink != true && WorkspaceScanner.isCloudOnly(v, path: url.path) {
                 cloud += 1
                 continue
             }

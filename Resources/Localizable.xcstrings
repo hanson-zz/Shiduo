@@ -45176,6 +45176,118 @@
           }
         }
       }
+    },
+    "至少 %@ 个文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At least %@ files"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "至少 %@ 个文件"
+          }
+        }
+      }
+    },
+    "拾掇没有权限读取这个文件夹，数字是上次的。到 系统设置 › 隐私与安全性 › 文件与文件夹（或「完全磁盘访问权限」）里允许拾掇，再重新统计。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shiduo isn’t allowed to read this folder; the numbers are from last time. Allow Shiduo in System Settings › Privacy & Security › Files and Folders (or Full Disk Access), then recount."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拾掇没有权限读取这个文件夹，数字是上次的。到 系统设置 › 隐私与安全性 › 文件与文件夹（或「完全磁盘访问权限」）里允许拾掇，再重新统计。"
+          }
+        }
+      }
+    },
+    "打开隐私设置…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Privacy Settings…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开隐私设置…"
+          }
+        }
+      }
+    },
+    "没有权限读取": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No permission to read"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有权限读取"
+          }
+        }
+      }
+    },
+    "部分在云端": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "partly in the cloud"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分在云端"
+          }
+        }
+      }
+    },
+    "部分没有权限": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "partly unreadable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分没有权限"
+          }
+        }
+      }
+    },
+    "没有权限": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Access"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有权限"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

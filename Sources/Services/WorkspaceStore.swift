@@ -34,6 +34,8 @@ final class WorkspaceStore: ObservableObject {
     @Published private(set) var live: [UUID: WorkspaceScanner.Result] = [:]
     /// 正在扫描的来源。
     @Published private(set) var scanning: Set<UUID> = []
+    /// 系统没给权限读取的来源（扫描读不到根目录）：卡片上显示「没有权限读取」，之前的缓存不覆盖。
+    @Published private(set) var denied: Set<UUID> = []
     /// 正在打包的工作区。
     @Published private(set) var zipping: UUID?
     /// 页面上要进入改名状态的工作区（双击标题、菜单「重命名」）。
@@ -339,6 +341,16 @@ final class WorkspaceStore: ObservableObject {
         update(id) { $0.sources.removeAll { $0.id == sourceID } }
         availability[sourceID] = nil
         live[sourceID] = nil
+        denied.remove(sourceID)
+    }
+
+    /// 打开 系统设置 › 隐私与安全性 › 文件与文件夹（没有权限读取的来源用）。
+    static func openPrivacySettings() {
+        let links = ["x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_FilesAndFolders",
+                     "x-apple.systempreferences:com.apple.preference.security?Privacy_FilesAndFolders"]
+        for link in links {
+            if let url = URL(string: link), NSWorkspace.shared.open(url) { return }
+        }
     }
 
     // MARK: - 状态 / 扫描
@@ -438,6 +450,12 @@ final class WorkspaceStore: ObservableObject {
             store.scanTasks[sourceID] = nil
             store.scanning.remove(sourceID)
             guard let result, !flag.isCancelled else { return }
+            if result.permissionDenied {
+                // 读不了不等于「0 个文件」：不写缓存，卡片上提示去给权限。
+                store.denied.insert(sourceID)
+                return
+            }
+            store.denied.remove(sourceID)
             store.live[sourceID] = result
             store.storeStats(result.stats, for: sourceID)
         }

@@ -670,4 +670,60 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertTrue(job.isStopped)
         WorkspaceZipJob.stopAllForQuit()
     }
+
+    // MARK: - 云盘占位、权限、文件包（审计 P1-5、P1-8、P1-9）
+
+    func testDatalessFlag() {
+        XCTAssertTrue(WorkspaceScanner.isDataless(flags: 0x4000_0000))
+        XCTAssertTrue(WorkspaceScanner.isDataless(flags: 0x4000_0000 | 0x8000))
+        XCTAssertFalse(WorkspaceScanner.isDataless(flags: 0))
+        XCTAssertFalse(WorkspaceScanner.isDataless(flags: 0x8000), "UF_HIDDEN 不是云端占位")
+        XCTAssertFalse(WorkspaceScanner.isDataless(path: base.path), "本地文件夹不是占位")
+        XCTAssertFalse(WorkspaceScanner.isDataless(path: "/没有这个路径"))
+    }
+
+    func testPermissionDeniedIsNotZeroFiles() throws {
+        let root = try folder("没权限")
+        try write("x", "a.txt", in: root)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: root.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: root.path) }
+        let result = try XCTUnwrap(WorkspaceScanner.scan(root: root))
+        XCTAssertTrue(result.permissionDenied, "读不了要明确说出来，不能当成 0 个文件")
+        XCTAssertNil(WorkspaceScanner.scan(root: base.appendingPathComponent("不存在")), "不在了：没有结果（缓存不动）")
+    }
+
+    func testUnreadableSubfolderMarksPartial() throws {
+        let root = try folder("部分")
+        try write("x", "a.txt", in: root)
+        let locked = try folder("部分/锁着")
+        try write("y", "b.txt", in: locked)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: locked.path) }
+        let result = try XCTUnwrap(WorkspaceScanner.scan(root: root))
+        XCTAssertFalse(result.permissionDenied)
+        XCTAssertEqual(result.stats.fileCount, 1)
+        XCTAssertEqual(result.stats.unreadableFolders, 1)
+        XCTAssertTrue(WorkspaceLogic.totals([result.stats]).truncated, "数字是「至少」")
+    }
+
+    func testPermissionErrorDetection() {
+        XCTAssertTrue(WorkspaceScanner.isPermissionError(NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoPermissionError)))
+        XCTAssertTrue(WorkspaceScanner.isPermissionError(NSError(domain: NSPOSIXErrorDomain, code: Int(EPERM))))
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: 256,
+                              userInfo: [NSUnderlyingErrorKey: NSError(domain: NSPOSIXErrorDomain, code: Int(EACCES))])
+        XCTAssertTrue(WorkspaceScanner.isPermissionError(wrapped))
+        XCTAssertFalse(WorkspaceScanner.isPermissionError(NSError(domain: NSPOSIXErrorDomain, code: Int(ENOENT))))
+    }
+
+    func testPackagesHaveRealSizeAndCountAsOneFile() throws {
+        let root = try folder("工程")
+        try write("12345", "说明.rtfd/TXT.rtf", in: root)
+        try write("1234567890", "说明.rtfd/附件.png", in: root)
+        try write("abc", "普通.txt", in: root)
+        let result = try XCTUnwrap(WorkspaceScanner.scan(root: root))
+        XCTAssertEqual(result.stats.fileCount, 2, "文件包算一个文件")
+        XCTAssertEqual(result.stats.folderCount, 0, "文件包不算文件夹")
+        XCTAssertEqual(result.stats.bytes, 18, "文件包的大小是里面文件加起来")
+        XCTAssertEqual(result.stats.documents, 2)
+    }
 }

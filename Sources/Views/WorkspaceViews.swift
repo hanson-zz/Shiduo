@@ -507,7 +507,11 @@ struct WorkspaceView: View {
             if totals.fileCount == 0 && scanning {
                 Text("统计中…")
             } else {
-                Text("\(totals.fileCount.formatted()) 个文件")
+                if totals.truncated {
+                    Text("至少 \(totals.fileCount.formatted()) 个文件")
+                } else {
+                    Text("\(totals.fileCount.formatted()) 个文件")
+                }
                 Text(verbatim: "·")
                 Text(totals.bytes.byteText)
                 if let date = totals.lastModified {
@@ -596,12 +600,14 @@ struct WorkspaceView: View {
     private func sourceCard(_ source: WorkspaceSource, in workspace: Workspace) -> some View {
         let state = workspaces.state(source)
         let parent = workspaces.nested(workspace)[source.id]
+        let denied = workspaces.denied.contains(source.id)
         return WorkspaceSourceCard(source: source, state: state, stats: workspaces.stats(source),
-                                   scanning: workspaces.scanning.contains(source.id), insideOf: parent)
+                                   scanning: workspaces.scanning.contains(source.id), insideOf: parent, denied: denied)
             .onTapGesture(count: 2) {
                 if let path = state.path { store.goToRoot(path) }
             }
-            .help(parent.map { String(localized: "这个文件夹在「\($0)」里面，统计和打包时不重复计算") } ?? sourceHelp(source, state: state))
+            .help(denied ? String(localized: "拾掇没有权限读取这个文件夹，数字是上次的。到 系统设置 › 隐私与安全性 › 文件与文件夹（或「完全磁盘访问权限」）里允许拾掇，再重新统计。")
+                  : parent.map { String(localized: "这个文件夹在「\($0)」里面，统计和打包时不重复计算") } ?? sourceHelp(source, state: state))
             .stableContextMenu {
                 Button("在拾掇中打开") { if let path = state.path { store.goToRoot(path) } }
                     .disabled(!state.isOnline)
@@ -611,6 +617,9 @@ struct WorkspaceView: View {
                 .disabled(!state.isOnline)
                 Button("重新统计") { workspaces.scan(source) }
                     .disabled(!state.isOnline)
+                if denied {
+                    Button("打开隐私设置…") { WorkspaceStore.openPrivacySettings() }
+                }
                 Divider()
                 Button("从工作区移除（文件夹不动）") { workspaces.removeSource(source.id, from: workspace.id) }
             }
@@ -1024,15 +1033,22 @@ struct WorkspaceSourceCard: View {
     let scanning: Bool
     /// 落在另一个来源里面（统计不重复算）：那个来源的名字。
     var insideOf: String?
+    /// 没有权限读取（系统隐私权限没给）：不是「0 个文件」。
+    var denied = false
 
     private var dimmed: Bool { !state.isOnline }
 
     private var countLine: String {
         guard let stats else {
+            if denied { return String(localized: "没有权限读取") }
             return scanning ? String(localized: "统计中…") : String(localized: "还没有统计")
         }
-        let count = stats.truncated ? String(localized: "至少 \(stats.fileCount.formatted()) 个") : String(localized: "\(stats.fileCount.formatted()) 个")
-        return count + " · " + stats.bytes.byteText
+        let partial = stats.truncated || stats.cloudFolders > 0 || stats.unreadableFolders > 0
+        let count = partial ? String(localized: "至少 \(stats.fileCount.formatted()) 个") : String(localized: "\(stats.fileCount.formatted()) 个")
+        var line = count + " · " + stats.bytes.byteText
+        if stats.cloudFolders > 0 { line += " · " + String(localized: "部分在云端") }
+        if stats.unreadableFolders > 0 { line += " · " + String(localized: "部分没有权限") }
+        return line
     }
 
     var body: some View {
@@ -1082,6 +1098,8 @@ struct WorkspaceSourceCard: View {
         case .online:
             if scanning {
                 ProgressView().controlSize(.mini)
+            } else if denied {
+                statusPill(String(localized: "没有权限"))
             } else if let insideOf {
                 statusPill(String(localized: "已包含在「\(insideOf)」里"))
             }
