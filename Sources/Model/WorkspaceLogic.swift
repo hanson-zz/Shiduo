@@ -77,6 +77,8 @@ struct WorkspaceSourceStats: Codable, Equatable {
     var others = 0
     /// 只在云端的文件个数（算进总数，但不下载）。
     var cloudOnly = 0
+    /// 只在云端的文件加起来的大小（打包前估算本机大小时要减掉）。
+    var cloudBytes: Int64 = 0
     var lastModified: Date?
     var scannedAt = Date.distantPast
     /// 文件太多，扫到上限就停了（数字是「至少」）。
@@ -105,7 +107,7 @@ struct WorkspaceSourceStats: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case fileCount, folderCount, bytes, images, documents, videos, others, cloudOnly, lastModified, scannedAt, truncated, recent
+        case fileCount, folderCount, bytes, images, documents, videos, others, cloudOnly, cloudBytes, lastModified, scannedAt, truncated, recent
     }
 
     init(from decoder: Decoder) throws {
@@ -118,6 +120,7 @@ struct WorkspaceSourceStats: Codable, Equatable {
         videos = (try? c.decode(Int.self, forKey: .videos)) ?? 0
         others = (try? c.decode(Int.self, forKey: .others)) ?? 0
         cloudOnly = (try? c.decode(Int.self, forKey: .cloudOnly)) ?? 0
+        cloudBytes = (try? c.decode(Int64.self, forKey: .cloudBytes)) ?? 0
         lastModified = try? c.decode(Date.self, forKey: .lastModified)
         scannedAt = (try? c.decode(Date.self, forKey: .scannedAt)) ?? .distantPast
         truncated = (try? c.decode(Bool.self, forKey: .truncated)) ?? false
@@ -836,6 +839,13 @@ enum WorkspaceScanner {
         .contentTypeKey, .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey,
     ]
 
+    /// 文件夹读不了时返回 errno（EPERM：系统「文件与文件夹」权限没给；EACCES：没有读权限；ENOENT：不在了），读得了返回 nil。
+    static func readProblem(_ path: String) -> Int32? {
+        guard let dir = opendir(path) else { return errno }
+        closedir(dir)
+        return nil
+    }
+
     static func isCloudOnly(_ values: URLResourceValues) -> Bool {
         guard values.isUbiquitousItem == true, let status = values.ubiquitousItemDownloadingStatus else { return false }
         return status != .current
@@ -890,6 +900,7 @@ enum WorkspaceScanner {
             stats.add(kind)
             if cloud {
                 stats.cloudOnly += 1
+                stats.cloudBytes += bytes
             } else {
                 localFiles += 1
                 localBytes += bytes
@@ -915,51 +926,288 @@ enum WorkspaceScanner {
 
 // MARK: - 打包 ZIP
 
-/// 把几个来源打成一个 ZIP（系统自带的 /usr/bin/zip）：每个来源一个顶层文件夹；
-/// 只打本机上有的文件，只在 iCloud 云端的跳过（不触发下载）；不覆盖已有的 ZIP。
+/// 一次正在跑的打包：App 退出时要能停掉压缩子进程、删掉临时文件（不在「下载」里留下隐藏的半个 ZIP）。
+final class WorkspaceZipJob: @unchecked Sendable {
+    private let lock = NSLock()
+    private var process: Process?
+    private var partial: URL?
+    private var stopped = false
+
+    private static let registryLock = NSLock()
+    private static var running: [ObjectIdentifier: WorkspaceZipJob] = [:]
+
+    init() {}
+
+    var isStopped: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return stopped
+    }
+
+    func attach(_ process: Process, partial: URL) {
+        lock.lock()
+        self.process = process
+        self.partial = partial
+        lock.unlock()
+        Self.registryLock.lock()
+        Self.running[ObjectIdentifier(self)] = self
+        Self.registryLock.unlock()
+    }
+
+    func detach() {
+        lock.lock()
+        process = nil
+        partial = nil
+        lock.unlock()
+        Self.registryLock.lock()
+        Self.running[ObjectIdentifier(self)] = nil
+        Self.registryLock.unlock()
+    }
+
+    /// 停下：结束压缩子进程（打包线程看到后会删临时文件）。
+    func stop() {
+        lock.lock()
+        stopped = true
+        let p = process
+        lock.unlock()
+        if let p, p.isRunning { p.terminate() }
+    }
+
+    /// App 退出时用：停下子进程，最多等 2 秒让它退出，再直接删掉临时文件（打包线程可能来不及删）。
+    func stopAndCleanUp() {
+        stop()
+        lock.lock()
+        let p = process
+        let part = partial
+        lock.unlock()
+        let deadline = Date().addingTimeInterval(2)
+        while let p, p.isRunning, Date() < deadline { Thread.sleep(forTimeInterval: 0.05) }
+        if let part { try? FileManager.default.removeItem(at: part) }
+    }
+
+    /// App 退出：停掉所有正在跑的打包。
+    static func stopAllForQuit() {
+        registryLock.lock()
+        let jobs = Array(running.values)
+        registryLock.unlock()
+        for job in jobs { job.stopAndCleanUp() }
+    }
+}
+
+/// 把几个来源打成一个 ZIP（系统自带的 /usr/bin/bsdtar，文件名按 UTF-8 写并打上 UTF-8 标记，Windows 上中文名不乱码）：
+/// 每个来源一个顶层文件夹；只打本机上有的文件，只在云端的跳过（不触发下载）；不覆盖已有的 ZIP。
+/// 临时文件写在系统给的「替换用临时目录」（和目标同一块盘），不放在「下载」里。
 enum WorkspaceZip {
     struct Outcome: Equatable {
         var url: URL?
+        /// 打进去的文件个数（文件包算一个）。
         var files = 0
         var skippedCloud = 0
+        /// 读不了的文件（打包时被删 / 改名、没有读权限）：已跳过，ZIP 照样留着。ZIP 里的路径。
+        var unreadable: [String] = []
+        /// 没能打包的来源（断开了、没有权限）：ZIP 里的顶层文件夹名。
+        var unavailableSources: [String] = []
         var cancelled = false
         var failed = false
+        /// 磁盘剩余空间不够了，中途停下（没有留下半个 ZIP）。
+        var outOfSpace = false
     }
 
-    /// 列出一个来源里要打包的文件（相对路径）；隐藏文件、只在云端的、名字里带换行的跳过。
-    static func localFiles(root: URL, isCancelled: () -> Bool = { false }) -> (files: [String], skippedCloud: Int)? {
-        let keys: Set<URLResourceKey> = [.isDirectoryKey, .isSymbolicLinkKey, .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey]
-        // 按相对路径列（不依赖系统返回的绝对路径前缀，/var 和 /private/var 这类写法不影响）。
-        guard let enumerator = FileManager.default.enumerator(atPath: root.path) else { return nil }
+    /// 打包前：压缩前的大小 + 这么多余量，大于剩余空间就不开始。
+    static let reserveBytes: Int64 = 2 * 1024 * 1024 * 1024
+    /// 打包过程中：目标磁盘剩余空间少于这个就停下。
+    static let minimumFreeBytes: Int64 = 1024 * 1024 * 1024
+
+    /// 剩余空间够不够（读不到剩余空间时不拦）。
+    static func hasRoom(needed: Int64, available: Int64?) -> Bool {
+        guard let available else { return true }
+        return max(needed, 0) + reserveBytes <= available
+    }
+
+    /// 某个文件夹所在磁盘的剩余空间（「重要用途」口径：系统可以腾出来的也算）。
+    static func availableCapacity(_ folder: URL) -> Int64? {
+        let values = try? folder.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeAvailableCapacityKey])
+        if let important = values?.volumeAvailableCapacityForImportantUsage, important > 0 { return important }
+        return values?.volumeAvailableCapacity.map(Int64.init)
+    }
+
+    /// 列出一个来源的结果。
+    enum Listing: Equatable {
+        /// files：要打包的相对路径（文件包里的文件逐个列出）；items：文件个数（文件包算一个）。
+        case listed(files: [String], items: Int, skippedCloud: Int, unreadable: [String])
+        case cancelled
+        /// 来源打不开（断开了、被删了、没有权限）。
+        case unavailable
+    }
+
+    private static let listKeys: [URLResourceKey] = [
+        .isDirectoryKey, .isPackageKey, .isSymbolicLinkKey, .isRegularFileKey,
+        .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey,
+    ]
+
+    /// 相对路径：去掉来源根目录的前缀（/var 和 /private/var 这类写法都认）。
+    private static func relativizer(_ root: URL) -> (URL) -> String? {
+        let prefixes = Set([root.path, root.standardizedFileURL.path, root.resolvingSymlinksInPath().path])
+            .map { $0.hasSuffix("/") ? $0 : $0 + "/" }
+        return { url in
+            let path = url.path
+            for prefix in prefixes where path.hasPrefix(prefix) { return String(path.dropFirst(prefix.count)) }
+            return nil
+        }
+    }
+
+    /// 列出一个来源里要打包的文件。规则和扫描一样：隐藏文件跳过、符号链接跳过、只在云端的跳过（不下载）、
+    /// 文件包（.fcpbundle、.rtfd、.app……）整个打进去但只算一个；名字里带换行的跳过；没有读权限的记下来跳过。
+    static func localFiles(root: URL, isCancelled: () -> Bool = { false }) -> Listing {
+        let fm = FileManager.default
+        var isDir: ObjCBool = false
+        guard fm.fileExists(atPath: root.path, isDirectory: &isDir), isDir.boolValue,
+              WorkspaceScanner.readProblem(root.path) == nil,
+              let enumerator = fm.enumerator(at: root, includingPropertiesForKeys: listKeys,
+                                             options: [.skipsHiddenFiles, .skipsPackageDescendants],
+                                             errorHandler: { _, _ in true }) else { return .unavailable }
+        let relative = relativizer(root)
         var files: [String] = []
+        var items = 0
         var skipped = 0
+        var unreadable: [String] = []
         var seen = 0
-        while let rel = enumerator.nextObject() as? String {
+        while let url = enumerator.nextObject() as? URL {
             seen += 1
-            if seen % 400 == 0, isCancelled() { return nil }
-            let last = (rel as NSString).lastPathComponent
-            if last.hasPrefix(".") {
-                if (enumerator.fileAttributes?[.type] as? FileAttributeType) == .typeDirectory { enumerator.skipDescendants() }
+            if seen % 400 == 0, isCancelled() { return .cancelled }
+            guard let v = try? url.resourceValues(forKeys: Set(listKeys)) else { continue }
+            guard let rel = relative(url), !rel.isEmpty, !rel.contains("\n"), !rel.contains("\r") else {
+                if v.isDirectory == true { enumerator.skipDescendants() }
                 continue
             }
-            if rel.contains("\n") || rel.contains("\r") { continue }
-            let url = root.appendingPathComponent(rel)
-            guard let v = try? url.resourceValues(forKeys: keys) else { continue }
-            if v.isSymbolicLink == true || v.isDirectory == true { continue }
+            if v.isSymbolicLink == true { continue }
             if WorkspaceScanner.isCloudOnly(v) {
                 skipped += 1
+                if v.isDirectory == true { enumerator.skipDescendants() }
+                continue
+            }
+            if v.isDirectory == true {
+                guard v.isPackage == true else { continue }
+                guard let inner = packageFiles(url, rel: rel, isCancelled: isCancelled) else { return .cancelled }
+                if inner.cloud > 0 {
+                    // 包里有文件只在云端：整个包跳过（打半个包没意义，也不下载）。
+                    skipped += 1
+                    continue
+                }
+                files += inner.files
+                unreadable += inner.unreadable
+                items += 1
+                continue
+            }
+            if access(url.path, R_OK) != 0 {
+                unreadable.append(rel)
                 continue
             }
             files.append(rel)
+            items += 1
         }
-        return (files, skipped)
+        if isCancelled() { return .cancelled }
+        return .listed(files: files, items: items, skippedCloud: skipped, unreadable: unreadable)
+    }
+
+    /// 文件包里的所有文件（包括包里的隐藏文件和符号链接，原样打包；符号链接不跟进去）。
+    private static func packageFiles(_ package: URL, rel: String, isCancelled: () -> Bool)
+        -> (files: [String], cloud: Int, unreadable: [String])? {
+        let keys: [URLResourceKey] = [.isDirectoryKey, .isSymbolicLinkKey, .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey]
+        guard let enumerator = FileManager.default.enumerator(at: package, includingPropertiesForKeys: keys, options: [],
+                                                              errorHandler: { _, _ in true }) else { return ([], 0, []) }
+        let relative = relativizer(package)
+        var files: [String] = []
+        var cloud = 0
+        var unreadable: [String] = []
+        var seen = 0
+        while let url = enumerator.nextObject() as? URL {
+            seen += 1
+            if seen % 400 == 0, isCancelled() { return nil }
+            guard let v = try? url.resourceValues(forKeys: Set(keys)), let inner = relative(url), !inner.isEmpty,
+                  !inner.contains("\n"), !inner.contains("\r") else { continue }
+            if v.isDirectory == true && v.isSymbolicLink != true { continue }
+            if v.isSymbolicLink != true && WorkspaceScanner.isCloudOnly(v) {
+                cloud += 1
+                continue
+            }
+            let path = rel + "/" + inner
+            if v.isSymbolicLink != true && access(url.path, R_OK) != 0 {
+                unreadable.append(path)
+                continue
+            }
+            files.append(path)
+        }
+        return (files, cloud, unreadable)
+    }
+
+    /// bsdtar 的错误输出里，哪些是「某个文件读不了」（ZIP 照样有用）。
+    /// 返回读不了的文件（ZIP 里的路径），onlyFileErrors：除此之外没有别的错误。
+    static func unreadableFiles(stderr: String, listed: Set<String>) -> (files: [String], onlyFileErrors: Bool) {
+        var files: [String] = []
+        var onlyFileErrors = true
+        for raw in stderr.split(whereSeparator: \.isNewline) {
+            let line = String(raw)
+            guard line.hasPrefix("bsdtar: ") else {
+                if !line.trimmingCharacters(in: .whitespaces).isEmpty { onlyFileErrors = false }
+                continue
+            }
+            let rest = String(line.dropFirst("bsdtar: ".count))
+            if rest.hasPrefix("Error exit delayed from previous errors") { continue }
+            // 「bsdtar: 路径: 原因」：从左往右找第一个「: 」前面正好是列表里的路径的位置（路径里也可能有「: 」）。
+            var matched: String?
+            var searchStart = rest.startIndex
+            while let range = rest.range(of: ": ", range: searchStart..<rest.endIndex) {
+                let candidate = String(rest[rest.startIndex..<range.lowerBound])
+                if listed.contains(candidate) {
+                    matched = candidate
+                    break
+                }
+                searchStart = range.upperBound
+            }
+            if let matched {
+                if !files.contains(matched) { files.append(matched) }
+            } else {
+                onlyFileErrors = false
+            }
+        }
+        return (files, onlyFileErrors)
+    }
+
+    /// 临时文件：系统给的「替换用临时目录」（和目标同一块盘，最后 move 是原子的；
+    /// App 崩溃时留下的东西在临时目录里，系统会清，不会藏在「下载」里）。拿不到时退回目标文件夹里的隐藏文件。
+    /// 名字不带工作区名字（避免 emoji 名字超过 255 字节）。
+    static func partialURL(for target: URL) -> (file: URL, directory: URL?) {
+        let folder = target.deletingLastPathComponent()
+        let name = "shiduo-zip-\(UUID().uuidString).part"
+        if let dir = try? FileManager.default.url(for: .itemReplacementDirectory, in: .userDomainMask,
+                                                  appropriateFor: folder, create: true) {
+            return (dir.appendingPathComponent(name), dir)
+        }
+        return (folder.appendingPathComponent("." + name), nil)
+    }
+
+    /// 以前留下的临时文件：1.0 在「下载」里写的「.<名字>.zip.<8 位>.part」、这一版退回时写的「.shiduo-zip-<UUID>.part」、
+    /// 临时目录里的「ShiduoWorkspaceZip-<UUID>」。只认这几种名字，而且超过一天没动过才算（正在打包的不碰）。
+    static func isStaleLeftover(name: String, modified: Date, now: Date = Date()) -> Bool {
+        guard now.timeIntervalSince(modified) > 24 * 3600 else { return false }
+        let patterns = [
+            #"^\..+\.zip\.[0-9A-F]{8}\.part$"#,
+            #"^\.shiduo-zip-[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\.part$"#,
+            #"^ShiduoWorkspaceZip-[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}(\.txt)?$"#,
+        ]
+        return patterns.contains { name.range(of: $0, options: .regularExpression) != nil }
     }
 
     /// 打包。sources：(ZIP 里的顶层文件夹名, 来源文件夹)。target 已经是不重名的位置。
+    /// job：App 退出时用来停下子进程；freeSpace：读目标磁盘剩余空间（测试可以换掉）。
     static func make(sources: [(name: String, root: URL)], target: URL,
-                     isCancelled: @escaping () -> Bool = { false }) -> Outcome {
+                     isCancelled: @escaping () -> Bool = { false },
+                     job: WorkspaceZipJob? = nil,
+                     freeSpace: @escaping (URL) -> Int64? = WorkspaceZip.availableCapacity) -> Outcome {
         let fm = FileManager.default
         var outcome = Outcome()
+        let stopped = { isCancelled() || job?.isStopped == true }
         let staging = fm.temporaryDirectory.appendingPathComponent("ShiduoWorkspaceZip-\(UUID().uuidString)", isDirectory: true)
         defer { try? fm.removeItem(at: staging) }
         do {
@@ -970,78 +1218,132 @@ enum WorkspaceZip {
         }
         let names = WorkspaceLogic.uniqueFolderNames(sources.map(\.name))
         var lines: [String] = []
+        var items = 0
         for (index, source) in sources.enumerated() {
-            // 临时目录里放一个指向来源的替身（符号链接），zip 顺着它读，原文件不动、不拷贝。
-            let link = staging.appendingPathComponent(names[index])
-            do {
-                try fm.createSymbolicLink(at: link, withDestinationURL: source.root)
-            } catch {
-                outcome.failed = true
-                return outcome
-            }
-            guard let listed = localFiles(root: source.root, isCancelled: isCancelled) else {
+            let listing = localFiles(root: source.root, isCancelled: stopped)
+            switch listing {
+            case .cancelled:
                 outcome.cancelled = true
                 return outcome
+            case .unavailable:
+                // 断开了 / 没有权限：这个来源不打，别的照样打（和「取消」分开）。
+                outcome.unavailableSources.append(names[index])
+                continue
+            case .listed(let files, let count, let skippedCloud, let unreadable):
+                outcome.skippedCloud += skippedCloud
+                outcome.unreadable += unreadable.map { names[index] + "/" + $0 }
+                guard !files.isEmpty else { continue }
+                // 临时目录里放一个指向来源的替身（符号链接），bsdtar 顺着它读，原文件不动、不拷贝。
+                let link = staging.appendingPathComponent(names[index])
+                do {
+                    try fm.createSymbolicLink(at: link, withDestinationURL: source.root)
+                } catch {
+                    outcome.failed = true
+                    return outcome
+                }
+                lines.append(contentsOf: files.map { names[index] + "/" + $0 })
+                items += count
             }
-            outcome.skippedCloud += listed.skippedCloud
-            lines.append(contentsOf: listed.files.map { names[index] + "/" + $0 })
         }
-        if isCancelled() {
+        if stopped() {
             outcome.cancelled = true
             return outcome
         }
         guard !lines.isEmpty else { return outcome }
-        let listURL = fm.temporaryDirectory.appendingPathComponent("ShiduoWorkspaceZip-\(UUID().uuidString).txt")
-        defer { try? fm.removeItem(at: listURL) }
+        // 文件列表用 \0 分隔（名字里什么字符都不会被误解）；放在 staging 里，结束时一起删。
+        let listURL = staging.appendingPathComponent(".list")
+        let errorURL = staging.appendingPathComponent(".errors")
         do {
-            try (lines.joined(separator: "\n") + "\n").write(to: listURL, atomically: true, encoding: .utf8)
+            try Data((lines.joined(separator: "\u{0}") + "\u{0}").utf8).write(to: listURL)
+            try Data().write(to: errorURL)
         } catch {
             outcome.failed = true
             return outcome
         }
-        // 先写到一个临时名字，成功了再改成正式名字：中途取消 / 失败不会留下半个 ZIP。
-        let partial = target.deletingLastPathComponent()
-            .appendingPathComponent(".\(target.lastPathComponent).\(UUID().uuidString.prefix(8)).part")
+        let (partial, partialDir) = partialURL(for: target)
+        defer {
+            try? fm.removeItem(at: partial)
+            if let partialDir { try? fm.removeItem(at: partialDir) }
+        }
+        guard let errorHandle = try? FileHandle(forWritingTo: errorURL) else {
+            outcome.failed = true
+            return outcome
+        }
+        defer { try? errorHandle.close() }
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/bsdtar")
         process.currentDirectoryURL = staging
-        // -nw：名字里的 * ? [ ] 不当通配符。
-        process.arguments = ["-q", "-nw", "-@", partial.path]
-        process.standardInput = try? FileHandle(forReadingFrom: listURL)
+        // --format zip + zip:hdrcharset=UTF-8：文件名按 UTF-8 写，并设置 UTF-8 标记（通用位 11）；
+        // -n：不递归（列表里都是文件）；--null -T：从列表读名字（不当通配符）；--no-mac-metadata：不写 ._ 文件。
+        process.arguments = ["-c", "--format", "zip", "--options", "zip:hdrcharset=UTF-8", "-n", "--no-mac-metadata",
+                             "--null", "-T", listURL.path, "-f", partial.path]
+        var environment = ProcessInfo.processInfo.environment
+        // App 从访达启动时没有 LANG：不设的话 bsdtar 按 C 语言环境转换中文名会失败。
+        environment["LC_ALL"] = "en_US.UTF-8"
+        environment["LANG"] = "en_US.UTF-8"
+        environment["COPYFILE_DISABLE"] = "1"
+        process.environment = environment
+        process.standardInput = FileHandle.nullDevice
         process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
+        process.standardError = errorHandle
+        let done = DispatchSemaphore(value: 0)
+        process.terminationHandler = { _ in done.signal() }
         do {
             try process.run()
         } catch {
             outcome.failed = true
             return outcome
         }
-        while process.isRunning {
-            if isCancelled() {
+        job?.attach(process, partial: partial)
+        defer { job?.detach() }
+        var lastSpaceCheck = Date.distantPast
+        // 等子进程结束（专用线程上等，不占 Swift 并发的协作线程池）；期间看取消和剩余空间。
+        while done.wait(timeout: .now() + 0.2) == .timedOut {
+            if stopped() {
                 process.terminate()
-                process.waitUntilExit()
-                try? fm.removeItem(at: partial)
+                done.wait()
                 outcome.cancelled = true
                 return outcome
             }
-            Thread.sleep(forTimeInterval: 0.1)
+            if Date().timeIntervalSince(lastSpaceCheck) > 2 {
+                lastSpaceCheck = Date()
+                if let free = freeSpace(partial.deletingLastPathComponent()), free < minimumFreeBytes {
+                    process.terminate()
+                    done.wait()
+                    outcome.outOfSpace = true
+                    return outcome
+                }
+            }
         }
-        guard process.terminationStatus == 0, fm.fileExists(atPath: partial.path) else {
-            try? fm.removeItem(at: partial)
+        if stopped() {
+            outcome.cancelled = true
+            return outcome
+        }
+        guard fm.fileExists(atPath: partial.path) else {
             outcome.failed = true
             return outcome
+        }
+        if process.terminationStatus != 0 {
+            // 有文件在列出来以后被删 / 改名、读不了：bsdtar 跳过它们、最后返回 1。只要别的错误没有，ZIP 照样留着。
+            let stderr = (try? String(contentsOf: errorURL, encoding: .utf8)) ?? ""
+            let parsed = unreadableFiles(stderr: stderr, listed: Set(lines))
+            guard parsed.onlyFileErrors, !parsed.files.isEmpty else {
+                outcome.failed = true
+                return outcome
+            }
+            outcome.unreadable += parsed.files
+            items = max(items - parsed.files.count, 0)
         }
         // 打包期间同名文件被别人建了：换一个编号，绝不覆盖。
         let final = WorkspaceLogic.uniqueURL(for: target.lastPathComponent, in: target.deletingLastPathComponent())
         do {
             try fm.moveItem(at: partial, to: final)
         } catch {
-            try? fm.removeItem(at: partial)
             outcome.failed = true
             return outcome
         }
         outcome.url = final
-        outcome.files = lines.count
+        outcome.files = items
         return outcome
     }
 }

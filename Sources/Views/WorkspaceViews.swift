@@ -861,18 +861,46 @@ struct WorkspaceView: View {
                 cloud += result.stats.cloudOnly
             } else if let stats = workspaces.stats(item.source) {
                 files += stats.fileCount - stats.cloudOnly
-                bytes += stats.bytes
+                bytes += max(stats.bytes - stats.cloudBytes, 0)
                 cloud += stats.cloudOnly
             }
         }
-        var detail = String(localized: "约 \(files.formatted()) 个文件，\(bytes.byteText)（压缩前）。ZIP 放进「下载」，已有同名的不会被覆盖，会自动加编号。")
-        if cloud > 0 { detail += "\n" + String(localized: "只在 iCloud 云端的 \(cloud) 个文件会跳过，不会下载。") }
+        // 先看剩余空间：不够就不开始（别把启动盘写满），让用户换个位置。
+        guard let folder = zipFolder(needed: bytes) else { return }
+        let folderName = FileManager.default.displayName(atPath: folder.path)
+        var detail = String(localized: "约 \(files.formatted()) 个文件，\(bytes.byteText)（压缩前）。ZIP 放进「\(folderName)」，已有同名的不会被覆盖，会自动加编号。")
+        detail += "\n" + String(localized: "隐藏文件（名字以「.」开头的）不打包。")
+        if cloud > 0 { detail += "\n" + String(localized: "只在云端的 \(cloud) 个文件会跳过，不会下载。") }
         if online.count < workspace.sources.count { detail += "\n" + String(localized: "没连接的来源不打包。") }
         let ok = WorkspaceConfirm.ask(title: String(localized: "把「\(workspace.name)」打包成 ZIP？"), detail: detail,
                                       confirm: String(localized: "打包"))
         guard ok else { return }
-        workspaces.zip(workspace.id) { text, isError in
+        workspaces.zip(workspace.id, to: folder) { text, isError in
             if isError { store.alertMessage = text } else { store.showToast(text) }
+        }
+    }
+
+    /// 打包放哪：默认「下载」；那块磁盘剩余空间不够（压缩前大小 + 2 GB 余量）时提示，让用户换一个位置。
+    private func zipFolder(needed: Int64) -> URL? {
+        var folder = WorkspaceStore.defaultZipFolder
+        while true {
+            let available = WorkspaceZip.availableCapacity(folder)
+            if WorkspaceZip.hasRoom(needed: needed, available: available) { return folder }
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = String(localized: "「\(FileManager.default.displayName(atPath: folder.path))」所在的磁盘空间不够")
+            alert.informativeText = String(localized: "打包大约需要 \((needed + WorkspaceZip.reserveBytes).byteText)（含余量），这块磁盘只剩 \((available ?? 0).byteText)。可以换一个空间够的位置，比如外接硬盘。")
+            alert.addButton(withTitle: String(localized: "选择其他位置…"))
+            alert.addButton(withTitle: String(localized: "取消"))
+            guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = false
+            panel.canChooseDirectories = true
+            panel.canCreateDirectories = true
+            panel.allowsMultipleSelection = false
+            panel.prompt = String(localized: "放在这里")
+            guard panel.runModal() == .OK, let url = panel.url else { return nil }
+            folder = url
         }
     }
 

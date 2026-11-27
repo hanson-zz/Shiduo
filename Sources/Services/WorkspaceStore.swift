@@ -46,6 +46,7 @@ final class WorkspaceStore: ObservableObject {
     private var scanTasks: [UUID: Task<Void, Never>] = [:]
     private var scanFlags: [UUID: WorkspaceCancelFlag] = [:]
     private var zipFlag: WorkspaceCancelFlag?
+    private var zipJob: WorkspaceZipJob?
     private var observers: [NSObjectProtocol] = []
 
     private init() {
@@ -180,7 +181,7 @@ final class WorkspaceStore: ObservableObject {
     func delete(_ id: UUID) {
         guard let workspace = self.workspace(id) else { return }
         for source in workspace.sources { cancelScan(source.id) }
-        if zipping == id { zipFlag?.cancel() }
+        if zipping == id { cancelZip() }
         workspaces.removeAll { $0.id == id }
         for source in workspace.sources {
             availability[source.id] = nil
@@ -472,43 +473,91 @@ final class WorkspaceStore: ObservableObject {
 
     // MARK: - 快捷操作
 
-    /// 打包整个工作区（只打在线来源里本机有的文件）。放在「下载」里，不覆盖同名；完成后在访达里选中。
-    func zip(_ id: UUID, report: @escaping (String, Bool) -> Void) {
-        guard let workspace = self.workspace(id), zipping == nil else { return }
-        let online = onlineSources(workspace)
-        guard !online.isEmpty else { return }
+    /// 打包默认放哪：「下载」；演示模式放演示临时目录（演示不碰用户真实的文件夹）。
+    static var defaultZipFolder: URL {
+        if Demo.isOn { return Demo.folder }
         let fm = FileManager.default
-        let folder = fm.urls(for: .downloadsDirectory, in: .userDomainMask).first ?? fm.temporaryDirectory
+        return fm.urls(for: .downloadsDirectory, in: .userDomainMask).first ?? fm.temporaryDirectory
+    }
+
+    /// 打包整个工作区（只打在线来源里本机有的文件，落在别的来源里面的不重复打）。放在 folder 里，不覆盖同名；完成后在访达里选中。
+    func zip(_ id: UUID, to folder: URL, report: @escaping (String, Bool) -> Void) {
+        guard let workspace = self.workspace(id), zipping == nil else { return }
+        let online = zipSources(workspace)
+        guard !online.isEmpty else { return }
         let target = WorkspaceLogic.uniqueURL(for: WorkspaceLogic.zipName(for: workspace.name), in: folder)
         let sources = online.map { (name: $0.source.name, root: URL(fileURLWithPath: $0.path, isDirectory: true)) }
+        let folderName = FileManager.default.displayName(atPath: folder.path)
         let flag = WorkspaceCancelFlag()
+        let job = WorkspaceZipJob()
         zipFlag = flag
+        zipJob = job
         zipping = id
-        Task { @MainActor in
-            let outcome = await Task.detached(priority: .userInitiated) {
-                WorkspaceZip.make(sources: sources, target: target, isCancelled: { flag.isCancelled })
-            }.value
-            let store = WorkspaceStore.shared
-            store.zipping = nil
-            store.zipFlag = nil
-            if outcome.cancelled {
-                report(String(localized: "已取消打包"), false)
-            } else if let url = outcome.url {
-                NSWorkspace.shared.activateFileViewerSelecting([url])
-                var text = String(localized: "已打包 \(outcome.files) 个文件到「下载」：\(url.lastPathComponent)")
-                if outcome.skippedCloud > 0 {
-                    text += String(localized: "（跳过 \(outcome.skippedCloud) 个只在 iCloud 云端的文件）")
+        // 专用线程上跑：等压缩子进程是阻塞的，不能占 Swift 并发的协作线程池。
+        DispatchQueue.global(qos: .userInitiated).async {
+            Self.cleanUpZipLeftovers(in: folder)
+            let outcome = WorkspaceZip.make(sources: sources, target: target, isCancelled: { flag.isCancelled }, job: job)
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    WorkspaceStore.shared.finishZip(outcome, folderName: folderName, report: report)
                 }
-                report(text, false)
-            } else if outcome.failed {
-                report(String(localized: "没能打包这个工作区。"), true)
-            } else {
-                report(String(localized: "没有可以打包的文件（只在 iCloud 云端的文件不会下载）。"), true)
             }
         }
     }
 
-    func cancelZip() { zipFlag?.cancel() }
+    private func finishZip(_ outcome: WorkspaceZip.Outcome, folderName: String, report: (String, Bool) -> Void) {
+        zipping = nil
+        zipFlag = nil
+        zipJob = nil
+        var notes: [String] = []
+        if outcome.skippedCloud > 0 { notes.append(String(localized: "跳过 \(outcome.skippedCloud) 个只在云端的文件")) }
+        if !outcome.unreadable.isEmpty {
+            let examples = outcome.unreadable.prefix(3).map { ($0 as NSString).lastPathComponent }
+            notes.append(String(localized: "\(outcome.unreadable.count) 个文件读不了，已跳过（例如 \(ListFormatter.localizedString(byJoining: examples))）"))
+        }
+        if !outcome.unavailableSources.isEmpty {
+            let names = ListFormatter.localizedString(byJoining: outcome.unavailableSources.map { "「\($0)」" })
+            notes.append(String(localized: "\(names) 没有连接或没有权限读取，没打包"))
+        }
+        if outcome.cancelled {
+            report(String(localized: "已取消打包"), false)
+        } else if outcome.outOfSpace {
+            report(String(localized: "磁盘剩余空间快不够了，已停止打包，没有留下不完整的 ZIP。"), true)
+        } else if let url = outcome.url {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+            let text = String(localized: "已打包 \(outcome.files) 个文件到「\(folderName)」：\(url.lastPathComponent)")
+            // 有文件读不了、有来源没打包：用提示框，别让用户错过。
+            let important = !outcome.unreadable.isEmpty || !outcome.unavailableSources.isEmpty
+            report(Self.joined([text] + notes), important)
+        } else if outcome.failed {
+            report(String(localized: "没能打包这个工作区。"), true)
+        } else if !outcome.unavailableSources.isEmpty {
+            report(Self.joined(notes), true)
+        } else {
+            report(String(localized: "没有可以打包的文件（只在云端的文件不会下载）。"), true)
+        }
+    }
+
+    /// 清掉以前留下的打包临时文件（只认拾掇自己起的名字、超过一天的）。只在用户打包时看目标文件夹，
+    /// 不在启动时去读「下载」（免得弹出系统权限框）。
+    nonisolated private static func cleanUpZipLeftovers(in folder: URL) {
+        let fm = FileManager.default
+        for dir in [folder, fm.temporaryDirectory] {
+            guard let names = try? fm.contentsOfDirectory(atPath: dir.path) else { continue }
+            for name in names {
+                let url = dir.appendingPathComponent(name)
+                guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .isSymbolicLinkKey]),
+                      values.isSymbolicLink != true, let modified = values.contentModificationDate,
+                      WorkspaceZip.isStaleLeftover(name: name, modified: modified) else { continue }
+                try? fm.removeItem(at: url)
+            }
+        }
+    }
+
+    func cancelZip() {
+        zipFlag?.cancel()
+        zipJob?.stop()
+    }
 }
 
 /// 页面上的一个文件格子：文件和它属于哪个来源。

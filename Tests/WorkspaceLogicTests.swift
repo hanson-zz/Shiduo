@@ -539,4 +539,135 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertFalse(outcome.failed)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: out.path), [])
     }
+
+    // MARK: - 打包 ZIP 的稳定性（审计 P1-3、P1-4、P1-10、P1-11、P2-10）
+
+    /// 读 ZIP 中央目录里每一项的「通用位标记」（第 11 位 = 文件名是 UTF-8）。
+    private func centralDirectoryFlags(_ url: URL) throws -> [(name: String, flags: UInt16)] {
+        let bytes = [UInt8](try Data(contentsOf: url))
+        func u16(_ i: Int) -> Int { Int(bytes[i]) | Int(bytes[i + 1]) << 8 }
+        func u32(_ i: Int) -> Int { u16(i) | u16(i + 2) << 16 }
+        var eocd = bytes.count - 22
+        while eocd >= 0 && u32(eocd) != 0x0605_4B50 { eocd -= 1 }
+        XCTAssertGreaterThanOrEqual(eocd, 0, "找不到 ZIP 结尾记录")
+        guard eocd >= 0 else { return [] }
+        let count = u16(eocd + 10)
+        var i = u32(eocd + 16)
+        var out: [(name: String, flags: UInt16)] = []
+        for _ in 0..<count {
+            guard u32(i) == 0x0201_4B50 else { break }
+            let flags = UInt16(u16(i + 8))
+            let n = u16(i + 28), e = u16(i + 30), c = u16(i + 32)
+            out.append((String(decoding: bytes[(i + 46)..<(i + 46 + n)], as: UTF8.self), flags))
+            i += 46 + n + e + c
+        }
+        return out
+    }
+
+    func testZipWritesUTF8NamesWithFlag() throws {
+        let one = try folder("源/客户资料")
+        try write("报价", "第一季度/报价单（终版）.pdf", in: one)
+        try write("合同", "合同 2026.docx", in: one)
+        let out = try folder("下载")
+        let outcome = WorkspaceZip.make(sources: [("客户资料", one)], target: out.appendingPathComponent("年底报价.zip"))
+        let url = try XCTUnwrap(outcome.url)
+        XCTAssertEqual(outcome.files, 2)
+        let entries = try centralDirectoryFlags(url).filter { !$0.name.hasSuffix("/") }
+        XCTAssertEqual(Set(entries.map { $0.name.precomposedStringWithCanonicalMapping }),
+                       Set(["客户资料/第一季度/报价单（终版）.pdf", "客户资料/合同 2026.docx"].map { $0.precomposedStringWithCanonicalMapping }))
+        for entry in entries {
+            XCTAssertNotEqual(entry.flags & 0x0800, 0, "\(entry.name) 没有 UTF-8 标记（Windows 上会乱码）")
+            XCTAssertFalse(entry.name.contains("._"), "不能带 AppleDouble 文件")
+        }
+        let names = try ZipDirectoryReader.readEntries(at: url).map(\.path)
+        XCTAssertFalse(names.contains { $0.contains("__MACOSX") || ($0 as NSString).lastPathComponent.hasPrefix("._") })
+    }
+
+    func testZipKeepsArchiveWhenSomeFilesUnreadable() throws {
+        let one = try folder("源/设计稿")
+        try write("好", "可以读.txt", in: one)
+        let locked = try write("锁", "读不了.txt", in: one)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: locked.path) }
+        let out = try folder("下载")
+        let outcome = WorkspaceZip.make(sources: [("设计稿", one)], target: out.appendingPathComponent("W.zip"))
+        XCTAssertFalse(outcome.failed, "一个文件读不了不能让整包失败")
+        let url = try XCTUnwrap(outcome.url)
+        XCTAssertEqual(outcome.files, 1)
+        XCTAssertEqual(outcome.unreadable.map { $0.precomposedStringWithCanonicalMapping }, ["设计稿/读不了.txt"])
+        let names = try ZipDirectoryReader.readEntries(at: url).filter { !$0.isDirectory }.map { $0.path.precomposedStringWithCanonicalMapping }
+        XCTAssertEqual(names, ["设计稿/可以读.txt"])
+    }
+
+    func testZipSkipsUnavailableSourceButKeepsOthers() throws {
+        let one = try folder("源/在")
+        try write("x", "a.txt", in: one)
+        let gone = base.appendingPathComponent("源/拔掉了", isDirectory: true)
+        let out = try folder("下载")
+        let outcome = WorkspaceZip.make(sources: [("在", one), ("拔掉了", gone)], target: out.appendingPathComponent("W.zip"))
+        XCTAssertFalse(outcome.cancelled, "来源断开不是「取消」")
+        XCTAssertEqual(outcome.unavailableSources, ["拔掉了"])
+        XCTAssertNotNil(outcome.url)
+        XCTAssertEqual(outcome.files, 1)
+        let onlyGone = WorkspaceZip.make(sources: [("拔掉了", gone)], target: out.appendingPathComponent("V.zip"))
+        XCTAssertNil(onlyGone.url)
+        XCTAssertFalse(onlyGone.cancelled)
+        XCTAssertFalse(onlyGone.failed)
+        XCTAssertEqual(onlyGone.unavailableSources, ["拔掉了"])
+    }
+
+    func testZipPackagesCountAsOneAndIncludeContents() throws {
+        let one = try folder("源/文稿")
+        try write("{\\rtf1 hi}", "说明.rtfd/TXT.rtf", in: one)
+        try write("x", "说明.rtfd/图片.png", in: one)
+        try write("y", "普通.txt", in: one)
+        let out = try folder("下载")
+        let outcome = WorkspaceZip.make(sources: [("文稿", one)], target: out.appendingPathComponent("W.zip"))
+        let url = try XCTUnwrap(outcome.url)
+        XCTAssertEqual(outcome.files, 2, "文件包算一个")
+        let names = Set(try ZipDirectoryReader.readEntries(at: url).filter { !$0.isDirectory }.map { $0.path.precomposedStringWithCanonicalMapping })
+        XCTAssertEqual(names, Set(["文稿/说明.rtfd/TXT.rtf", "文稿/说明.rtfd/图片.png", "文稿/普通.txt"].map { $0.precomposedStringWithCanonicalMapping }))
+    }
+
+    func testFreeSpaceCheck() {
+        let gb: Int64 = 1024 * 1024 * 1024
+        XCTAssertTrue(WorkspaceZip.hasRoom(needed: 10 * gb, available: 13 * gb))
+        XCTAssertFalse(WorkspaceZip.hasRoom(needed: 10 * gb, available: 11 * gb), "要留 2 GB 余量")
+        XCTAssertFalse(WorkspaceZip.hasRoom(needed: 50 * gb, available: 20 * gb))
+        XCTAssertTrue(WorkspaceZip.hasRoom(needed: 50 * gb, available: nil), "读不到剩余空间时不拦")
+    }
+
+    func testParseBsdtarErrors() {
+        let listed: Set<String> = ["设计稿/a.png", "设计稿/b: c.txt", "设计稿/d.txt"]
+        let stderr = """
+        bsdtar: 设计稿/a.png: Cannot stat: No such file or directory
+        bsdtar: 设计稿/b: c.txt: Couldn't open: Permission denied
+        bsdtar: Error exit delayed from previous errors.
+        """
+        let parsed = WorkspaceZip.unreadableFiles(stderr: stderr, listed: listed)
+        XCTAssertEqual(parsed.files, ["设计稿/a.png", "设计稿/b: c.txt"])
+        XCTAssertTrue(parsed.onlyFileErrors)
+        let fatal = WorkspaceZip.unreadableFiles(stderr: "bsdtar: Write error: No space left on device\n", listed: listed)
+        XCTAssertFalse(fatal.onlyFileErrors, "写不进去不是「个别文件读不了」")
+    }
+
+    func testStaleLeftoverNames() {
+        let old = Date().addingTimeInterval(-2 * 24 * 3600)
+        let fresh = Date()
+        XCTAssertTrue(WorkspaceZip.isStaleLeftover(name: ".默认工作区.zip.1A2B3C4D.part", modified: old), "1.0 留下的")
+        XCTAssertTrue(WorkspaceZip.isStaleLeftover(name: ".shiduo-zip-\(UUID().uuidString).part", modified: old))
+        XCTAssertTrue(WorkspaceZip.isStaleLeftover(name: "ShiduoWorkspaceZip-\(UUID().uuidString)", modified: old))
+        XCTAssertFalse(WorkspaceZip.isStaleLeftover(name: ".默认工作区.zip.1A2B3C4D.part", modified: fresh), "可能正在打包：不碰")
+        XCTAssertFalse(WorkspaceZip.isStaleLeftover(name: "默认工作区.zip", modified: old), "用户的 ZIP 不碰")
+        XCTAssertFalse(WorkspaceZip.isStaleLeftover(name: "电影.mkv.part", modified: old), "别的程序的下载临时文件不碰")
+        XCTAssertFalse(WorkspaceZip.isStaleLeftover(name: ".x.zip.abcdefgh.part", modified: old))
+    }
+
+    func testZipJobStopIsSafeWithoutProcess() {
+        let job = WorkspaceZipJob()
+        XCTAssertFalse(job.isStopped)
+        job.stopAndCleanUp()
+        XCTAssertTrue(job.isStopped)
+        WorkspaceZipJob.stopAllForQuit()
+    }
 }

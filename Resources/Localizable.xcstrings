@@ -44968,6 +44968,214 @@
           }
         }
       }
+    },
+    "跳过 %lld 个只在云端的文件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "skipped %lld cloud-only file(s)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳过 %lld 个只在云端的文件"
+          }
+        }
+      }
+    },
+    "%lld 个文件读不了，已跳过（例如 %@）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld file(s) couldn’t be read and were skipped (e.g. %2$@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个文件读不了，已跳过（例如 %2$@）"
+          }
+        }
+      }
+    },
+    "%@ 没有连接或没有权限读取，没打包": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ not connected or not readable, so not zipped"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 没有连接或没有权限读取，没打包"
+          }
+        }
+      }
+    },
+    "磁盘剩余空间快不够了，已停止打包，没有留下不完整的 ZIP。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The disk is almost full, so zipping stopped. No incomplete ZIP was left behind."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁盘剩余空间快不够了，已停止打包，没有留下不完整的 ZIP。"
+          }
+        }
+      }
+    },
+    "已打包 %lld 个文件到「%@」：%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zipped %1$lld files to “%2$@”: %3$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已打包 %1$lld 个文件到「%2$@」：%3$@"
+          }
+        }
+      }
+    },
+    "没有可以打包的文件（只在云端的文件不会下载）。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to zip (cloud-only files aren’t downloaded)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有可以打包的文件（只在云端的文件不会下载）。"
+          }
+        }
+      }
+    },
+    "约 %@ 个文件，%@（压缩前）。ZIP 放进「%@」，已有同名的不会被覆盖，会自动加编号。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %1$@ files, %2$@ (before compression). The ZIP goes to “%3$@”; an existing file with the same name is never overwritten — a number is added instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "约 %1$@ 个文件，%2$@（压缩前）。ZIP 放进「%3$@」，已有同名的不会被覆盖，会自动加编号。"
+          }
+        }
+      }
+    },
+    "隐藏文件（名字以「.」开头的）不打包。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden files (names starting with “.”) aren’t included."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏文件（名字以「.」开头的）不打包。"
+          }
+        }
+      }
+    },
+    "只在云端的 %lld 个文件会跳过，不会下载。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld cloud-only file(s) will be skipped, not downloaded."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只在云端的 %lld 个文件会跳过，不会下载。"
+          }
+        }
+      }
+    },
+    "「%@」所在的磁盘空间不够": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough space on the disk with “%@”"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」所在的磁盘空间不够"
+          }
+        }
+      }
+    },
+    "打包大约需要 %@（含余量），这块磁盘只剩 %@。可以换一个空间够的位置，比如外接硬盘。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zipping needs about %1$@ (with headroom), but this disk only has %2$@ free. Choose a location with enough space, such as an external drive."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打包大约需要 %1$@（含余量），这块磁盘只剩 %2$@。可以换一个空间够的位置，比如外接硬盘。"
+          }
+        }
+      }
+    },
+    "选择其他位置…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Another Location…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择其他位置…"
+          }
+        }
+      }
+    },
+    "放在这里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Here"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放在这里"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
