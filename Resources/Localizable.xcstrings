@@ -45336,6 +45336,102 @@
           }
         }
       }
+    },
+    "「%@」没有连接，接上后才能打开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” isn’t connected. Connect it to open this file."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」没有连接，接上后才能打开"
+          }
+        }
+      }
+    },
+    "%@（只在云端）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (in the cloud only)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@（只在云端）"
+          }
+        }
+      }
+    },
+    "找不到「%@」了，已重新统计": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is gone; recounting now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到「%@」了，已重新统计"
+          }
+        }
+      }
+    },
+    "这个文件只在云端，没有下载，先不预览": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file is only in the cloud and isn’t downloaded, so it can’t be previewed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个文件只在云端，没有下载，先不预览"
+          }
+        }
+      }
+    },
+    "这次还没有读取文件列表": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file list hasn’t been read yet this time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这次还没有读取文件列表"
+          }
+        }
+      }
+    },
+    "显示最近修改的 %@ 个，共 %@ 个": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing the %1$@ most recently modified of %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示最近修改的 %1$@ 个，共 %2$@ 个"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

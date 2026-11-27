@@ -574,12 +574,35 @@ enum WorkspaceLogic {
 
     // MARK: 名字 / 排序
 
-    /// 改名：去掉首尾空白和换行，太长截断；空的返回 nil（不改）。
+    /// 改名：换行、制表符换成空格，去掉看不见的控制字符和格式字符（零宽空格等；emoji 里的零宽连接符保留），
+    /// 去掉首尾空白，太长截断；剩下是空的（或只剩看不见的字符）返回 nil（不改）。
     static func sanitizedName(_ raw: String) -> String? {
-        let oneLine = raw.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ")
-        let trimmed = oneLine.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
+        var scalars = String.UnicodeScalarView()
+        for scalar in raw.unicodeScalars {
+            if scalar == "\n" || scalar == "\r" || scalar == "\t" {
+                scalars.append(" ")
+                continue
+            }
+            switch scalar.properties.generalCategory {
+            case .control, .format:
+                // 零宽连接符（U+200D）是组合 emoji 的一部分，留着。
+                if scalar.value == 0x200D { scalars.append(scalar) }
+            default:
+                scalars.append(scalar)
+            }
+        }
+        let trimmed = String(scalars).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.unicodeScalars.contains(where: { $0.value != 0x200D }) else { return nil }
         return String(trimmed.prefix(maxNameLength))
+    }
+
+    /// 改名后不和别的工作区重名：重了就加「 2」「 3」……（不分大小写）。
+    static func uniqueName(_ name: String, existing: [String]) -> String {
+        let taken = Set(existing.map { $0.lowercased() })
+        guard taken.contains(name.lowercased()) else { return name }
+        var n = 2
+        while taken.contains("\(name) \(n)".lowercased()) { n += 1 }
+        return "\(name) \(n)"
     }
 
     /// 新建工作区的名字：「新工作区」「新工作区 2」……不和已有的重名。

@@ -41,12 +41,23 @@ extension WorkspaceSourceKind {
 
     var tint: Color {
         switch self {
-        case .local, .desktop: return Color(red: 0.40, green: 0.58, blue: 0.98)
-        case .documents: return Color(red: 0.98, green: 0.62, blue: 0.25)
-        case .downloads: return Color(red: 0.66, green: 0.52, blue: 0.96)
-        case .iCloud, .cloudDrive: return Color(red: 0.25, green: 0.70, blue: 0.92)
-        case .external: return Color(red: 0.50, green: 0.53, blue: 0.60)
+        case .local, .desktop: return .workspaceDynamic(light: (0.40, 0.58, 0.98), dark: (0.50, 0.66, 1.00))
+        case .documents: return .workspaceDynamic(light: (0.98, 0.62, 0.25), dark: (1.00, 0.68, 0.34))
+        case .downloads: return .workspaceDynamic(light: (0.66, 0.52, 0.96), dark: (0.74, 0.62, 1.00))
+        case .iCloud, .cloudDrive: return .workspaceDynamic(light: (0.25, 0.70, 0.92), dark: (0.36, 0.76, 0.96))
+        case .external: return .workspaceDynamic(light: (0.50, 0.53, 0.60), dark: (0.66, 0.69, 0.76))
         }
+    }
+}
+
+extension Color {
+    /// 浅色 / 深色各一个值的颜色（深色下稍微提亮，在深色玻璃卡片上看得清）。
+    static func workspaceDynamic(light: (Double, Double, Double), dark: (Double, Double, Double)) -> Color {
+        Color(nsColor: NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let c = isDark ? dark : light
+            return NSColor(srgbRed: c.0, green: c.1, blue: c.2, alpha: 1)
+        })
     }
 }
 
@@ -74,7 +85,7 @@ extension WorkspaceFileKind {
         case .image: return FileCategory.images.tint
         case .document: return FileCategory.documents.tint
         case .video: return FileCategory.videos.tint
-        case .other: return Color(red: 0.96, green: 0.58, blue: 0.30)
+        case .other: return .workspaceDynamic(light: (0.96, 0.58, 0.30), dark: (1.00, 0.66, 0.40))
         }
     }
 }
@@ -639,35 +650,52 @@ struct WorkspaceView: View {
 
     private func fileTile(_ entry: WorkspaceFileEntry, source: WorkspaceSource) -> some View {
         let url = URL(fileURLWithPath: entry.path)
+        // 来源没连接（缓存里的最近文件）：调暗，不能打开、预览、拖出。
+        let available = workspaces.state(source).isOnline
         return WorkspaceFileTile(entry: entry, sourceName: source.name, sourceSymbol: source.kind.symbol,
                                  selected: selectedPath == entry.path)
-            .onTapGesture(count: 2) { open(entry) }
+            .opacity(available ? 1 : 0.45)
+            .onTapGesture(count: 2) { open(entry, source: source) }
             .onTapGesture {
                 selectedPath = entry.path
                 gridFocused = true
-                if previewURL != nil, !entry.cloudOnly { previewURL = url }
+                if previewURL != nil, !entry.cloudOnly, available { previewURL = url }
             }
             .stableContextMenu {
                 if !entry.isFolder {
                     Button("快速查看") { preview(entry.path, cloudOnly: entry.cloudOnly) }
-                        .disabled(entry.cloudOnly)
+                        .disabled(entry.cloudOnly || !available)
                 }
-                Button("打开") { open(entry) }
+                Button("打开") { open(entry, source: source) }
+                    .disabled(!available)
                 Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+                    .disabled(!available)
                 Divider()
                 Button("放进暂存架") {
                     let added = ShelfStore.shared.add([url])
                     store.showToast(added > 0 ? String(localized: "已加入暂存架：\(added) 个") : String(localized: "已经在暂存架上了"))
                 }
+                .disabled(!available)
             }
-            .onDrag { InAppDrag.copyOnlyProvider(url) }
-            .help(entry.cloudOnly ? String(localized: "\(entry.path)（只在 iCloud 云端）") : entry.path)
+            .onDrag { available ? InAppDrag.copyOnlyProvider(url) : NSItemProvider() }
+            .help(!available ? String(localized: "「\(source.name)」没有连接，接上后才能打开")
+                  : entry.cloudOnly ? String(localized: "\(entry.path)（只在云端）") : entry.path)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
-            .accessibilityAction { open(entry) }
+            .accessibilityAction { open(entry, source: source) }
     }
 
-    private func open(_ entry: WorkspaceFileEntry) {
+    /// 打开前先看来源连着、文件还在：不在了提示一句并重新统计（列表是扫描时记下的，可能过时）。
+    private func open(_ entry: WorkspaceFileEntry, source: WorkspaceSource) {
+        guard workspaces.state(source).isOnline else {
+            store.showToast(String(localized: "「\(source.name)」没有连接，接上后才能打开"))
+            return
+        }
+        guard FileManager.default.fileExists(atPath: entry.path) else {
+            store.showToast(String(localized: "找不到「\(entry.name)」了，已重新统计"))
+            workspaces.scan(source)
+            return
+        }
         let url = URL(fileURLWithPath: entry.path)
         if entry.isFolder {
             store.goToRoot(entry.path)
@@ -678,7 +706,7 @@ struct WorkspaceView: View {
 
     private func preview(_ path: String, cloudOnly: Bool) {
         if cloudOnly {
-            store.showToast(String(localized: "这个文件只在 iCloud 云端，没有下载，先不预览"))
+            store.showToast(String(localized: "这个文件只在云端，没有下载，先不预览"))
             return
         }
         previewURL = URL(fileURLWithPath: path)
@@ -693,9 +721,10 @@ struct WorkspaceView: View {
     private func fileGrid(_ workspace: Workspace) -> some View {
         let list = workspaces.files(workspace, kind: tab.kind)
         let offline = workspace.sources.filter { !workspaces.state($0).isOnline }
+        let total = tab.count(workspaces.totals(workspace))
         VStack(alignment: .leading, spacing: 12) {
             if !offline.isEmpty {
-                Label(String(localized: "\(offline.map(\.name).joined(separator: "、")) 没有连接，这里没有列出它的文件"),
+                Label(String(localized: "\(ListFormatter.localizedString(byJoining: offline.map(\.name))) 没有连接，这里没有列出它的文件"),
                       systemImage: "externaldrive.badge.xmark")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -705,6 +734,11 @@ struct WorkspaceView: View {
                     if workspaces.isScanning(workspace) {
                         ProgressView().controlSize(.small)
                         Text("正在读取…")
+                    } else if total > 0 {
+                        // 只有上次的数字（这次没扫完 / 点了停止）：不能说「没有」。
+                        Text("这次还没有读取文件列表")
+                        Button("重新统计") { workspaces.refresh(workspace.id, force: true) }
+                            .buttonStyle(.link)
                     } else {
                         Text(tab == .folders ? String(localized: "来源里没有子文件夹") : String(localized: "没有这一类文件"))
                     }
@@ -717,8 +751,9 @@ struct WorkspaceView: View {
                         fileTile(pair.entry, source: pair.source)
                     }
                 }
-                if list.count >= 300 {
-                    Text("只显示最近修改的 300 个")
+                if list.count < total {
+                    // 每个来源只记最新的一部分：说清楚是「最近的 N 个」，免得以为文件少了。
+                    Text("显示最近修改的 \(list.count.formatted()) 个，共 \(total.formatted()) 个")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -759,19 +794,19 @@ struct WorkspaceView: View {
                              help: none ? offlineReason : String(localized: "每个连接着的来源开一个访达窗口")) {
                     openAllInFinder(workspace)
                 }
-                actionButton(WorkspaceActionTile(icon: .symbol("square.stack.3d.up.fill", Color(red: 0.62, green: 0.45, blue: 0.95)),
+                actionButton(WorkspaceActionTile(icon: .symbol("square.stack.3d.up.fill", .workspaceDynamic(light: (0.62, 0.45, 0.95), dark: (0.72, 0.58, 1.00))),
                                                  title: String(localized: "全部放进暂存架"), disabled: none),
                              help: none ? offlineReason : String(localized: "把来源文件夹放上暂存架（只记位置，不复制）")) {
                     putAllOnShelf(workspace)
                 }
-                actionButton(WorkspaceActionTile(icon: .symbol("doc.zipper", Color(red: 0.96, green: 0.62, blue: 0.20)),
+                actionButton(WorkspaceActionTile(icon: .symbol("doc.zipper", .workspaceDynamic(light: (0.96, 0.62, 0.20), dark: (1.00, 0.70, 0.32))),
                                                  title: zipping ? String(localized: "正在打包…点按取消") : String(localized: "打包成 ZIP"),
                                                  disabled: none && !zipping, busy: zipping),
                              help: none ? offlineReason : String(localized: "打成一个 ZIP 放进「下载」，同名不覆盖")) {
                     if zipping { workspaces.cancelZip() } else { zip(workspace) }
                 }
                 .disabled(workspaces.zipping != nil && !zipping)
-                actionButton(WorkspaceActionTile(icon: .symbol("folder.badge.plus", Color(red: 0.98, green: 0.62, blue: 0.22)),
+                actionButton(WorkspaceActionTile(icon: .symbol("folder.badge.plus", .workspaceDynamic(light: (0.98, 0.62, 0.22), dark: (1.00, 0.70, 0.34))),
                                                  title: String(localized: "新建文件夹"), disabled: none),
                              help: none ? offlineReason : String(localized: "在选中的来源里新建一个文件夹")) {
                     chooseSource(workspace, title: String(localized: "在哪个来源里新建文件夹？")) { newFolder(in: $0) }
@@ -968,6 +1003,7 @@ struct WorkspaceTabBar: View {
     @Binding var tab: WorkspaceTab
     let totals: WorkspaceTotals
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -1006,8 +1042,14 @@ struct WorkspaceTabBar: View {
                     .frame(maxWidth: .infinity)
                     .background {
                         if tab == item {
+                            // 深色下选中底要比玻璃卡片明显亮一档，再加一圈细边；「增强对比度」时更明显。
+                            let strong = contrast == .increased
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.white.opacity(scheme == .dark ? 0.12 : 0.85))
+                                .fill(Color.white.opacity(scheme == .dark ? (strong ? 0.28 : 0.18) : (strong ? 1 : 0.85)))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .strokeBorder(Color.primary.opacity(scheme == .dark ? (strong ? 0.35 : 0.14) : (strong ? 0.3 : 0.06)))
+                                )
                                 .shadow(color: .black.opacity(scheme == .dark ? 0.25 : 0.08), radius: 4, y: 1)
                         }
                     }

@@ -781,4 +781,19 @@ final class WorkspaceLogicTests: XCTestCase {
         XCTAssertEqual(WorkspaceLogic.kind(forPath: "/Users/me/Library/CloudStorage/OneDrive-个人/项目", home: "/Users/me",
                                            isExternalVolume: false), .cloudDrive)
     }
+
+    // MARK: - 改名（审计 P2-14）
+
+    func testNamesDropInvisibleCharacters() {
+        XCTAssertNil(WorkspaceLogic.sanitizedName("\u{200B}\u{200B}"), "只有零宽空格：等于空的")
+        XCTAssertNil(WorkspaceLogic.sanitizedName("\t \u{FEFF}"))
+        XCTAssertEqual(WorkspaceLogic.sanitizedName("品\u{200B}牌\t改版"), "品牌 改版")
+        XCTAssertEqual(WorkspaceLogic.sanitizedName("家人👨\u{200D}👩\u{200D}👧"), "家人👨\u{200D}👩\u{200D}👧", "组合 emoji 不拆")
+    }
+
+    func testRenameAvoidsDuplicates() {
+        XCTAssertEqual(WorkspaceLogic.uniqueName("品牌", existing: ["品牌", "品牌 2"]), "品牌 3")
+        XCTAssertEqual(WorkspaceLogic.uniqueName("Brand", existing: ["brand"]), "Brand 2", "不分大小写")
+        XCTAssertEqual(WorkspaceLogic.uniqueName("新名字", existing: ["品牌"]), "新名字")
+    }
 }

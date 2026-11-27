@@ -168,8 +168,9 @@ final class WorkspaceStore: ObservableObject {
     }
 
     func rename(_ id: UUID, to raw: String) {
-        guard let name = WorkspaceLogic.sanitizedName(raw) else { return }
-        update(id) { $0.name = name }
+        guard let name = WorkspaceLogic.sanitizedName(raw), workspace(id)?.name != name else { return }
+        let others = workspaces.filter { $0.id != id }.map(\.name)
+        update(id) { $0.name = WorkspaceLogic.uniqueName(name, existing: others) }
     }
 
     func setColor(_ id: UUID, _ index: Int) {
