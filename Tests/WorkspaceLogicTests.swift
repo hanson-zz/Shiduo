@@ -174,8 +174,9 @@ final class WorkspaceLogicTests: XCTestCase {
     func testUnknownFieldsSurviveRoundTrip() throws {
         let json = """
         {"version": 1, "seededDefault": true, "topLevelNew": {"a": [1, "b", null, true]},
-         "workspaces": [{"id": "11111111-1111-1111-1111-111111111111", "name": "品牌", "pinned": true,
-           "sources": [{"id": "22222222-2222-2222-2222-222222222222", "path": "/Volumes/NAS/项目", "kind": "nas", "share": "smb://nas/项目"}]}]}
+         "workspaces": [{"id": "11111111-1111-1111-1111-111111111111", "name": "品牌", "pinned": true, "created": "2026-01-01T00:00:00Z",
+           "sources": [{"id": "22222222-2222-2222-2222-222222222222", "path": "/Volumes/NAS/项目", "kind": "nas", "share": "smb://nas/项目",
+                        "added": "2026-01-02T00:00:00Z"}]}]}
         """
         let file = WorkspaceCodec.decode(Data(json.utf8))
         XCTAssertEqual(file.workspaces.first?.sources.first?.kind, .local)
@@ -492,7 +493,7 @@ final class WorkspaceLogicTests: XCTestCase {
         let target = WorkspaceLogic.uniqueURL(for: "默认工作区.zip", in: out)
         XCTAssertEqual(target.lastPathComponent, "默认工作区 2.zip")
         let first = WorkspaceZip.make(sources: [("设计稿", one), ("设计稿", two)], target: target)
-        XCTAssertFalse(first.failed)
+        XCTAssertFalse(first.failed, "\(first)")
         XCTAssertEqual(first.files, 3)
         let firstURL = try XCTUnwrap(first.url)
         XCTAssertEqual(firstURL.lastPathComponent, "默认工作区 2.zip")
@@ -570,7 +571,7 @@ final class WorkspaceLogicTests: XCTestCase {
         try write("合同", "合同 2026.docx", in: one)
         let out = try folder("下载")
         let outcome = WorkspaceZip.make(sources: [("客户资料", one)], target: out.appendingPathComponent("年底报价.zip"))
-        let url = try XCTUnwrap(outcome.url)
+        let url = try XCTUnwrap(outcome.url, "\(outcome)")
         XCTAssertEqual(outcome.files, 2)
         let entries = try centralDirectoryFlags(url).filter { !$0.name.hasSuffix("/") }
         XCTAssertEqual(Set(entries.map { $0.name.precomposedStringWithCanonicalMapping }),
@@ -591,8 +592,8 @@ final class WorkspaceLogicTests: XCTestCase {
         defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: locked.path) }
         let out = try folder("下载")
         let outcome = WorkspaceZip.make(sources: [("设计稿", one)], target: out.appendingPathComponent("W.zip"))
-        XCTAssertFalse(outcome.failed, "一个文件读不了不能让整包失败")
-        let url = try XCTUnwrap(outcome.url)
+        XCTAssertFalse(outcome.failed, "一个文件读不了不能让整包失败：\(outcome)")
+        let url = try XCTUnwrap(outcome.url, "\(outcome)")
         XCTAssertEqual(outcome.files, 1)
         XCTAssertEqual(outcome.unreadable.map { $0.precomposedStringWithCanonicalMapping }, ["设计稿/读不了.txt"])
         let names = try ZipDirectoryReader.readEntries(at: url).filter { !$0.isDirectory }.map { $0.path.precomposedStringWithCanonicalMapping }
@@ -607,7 +608,7 @@ final class WorkspaceLogicTests: XCTestCase {
         let outcome = WorkspaceZip.make(sources: [("在", one), ("拔掉了", gone)], target: out.appendingPathComponent("W.zip"))
         XCTAssertFalse(outcome.cancelled, "来源断开不是「取消」")
         XCTAssertEqual(outcome.unavailableSources, ["拔掉了"])
-        XCTAssertNotNil(outcome.url)
+        XCTAssertNotNil(outcome.url, "\(outcome)")
         XCTAssertEqual(outcome.files, 1)
         let onlyGone = WorkspaceZip.make(sources: [("拔掉了", gone)], target: out.appendingPathComponent("V.zip"))
         XCTAssertNil(onlyGone.url)
@@ -623,7 +624,7 @@ final class WorkspaceLogicTests: XCTestCase {
         try write("y", "普通.txt", in: one)
         let out = try folder("下载")
         let outcome = WorkspaceZip.make(sources: [("文稿", one)], target: out.appendingPathComponent("W.zip"))
-        let url = try XCTUnwrap(outcome.url)
+        let url = try XCTUnwrap(outcome.url, "\(outcome)")
         XCTAssertEqual(outcome.files, 2, "文件包算一个")
         let names = Set(try ZipDirectoryReader.readEntries(at: url).filter { !$0.isDirectory }.map { $0.path.precomposedStringWithCanonicalMapping })
         XCTAssertEqual(names, Set(["文稿/说明.rtfd/TXT.rtf", "文稿/说明.rtfd/图片.png", "文稿/普通.txt"].map { $0.precomposedStringWithCanonicalMapping }))

@@ -1155,6 +1155,8 @@ enum WorkspaceZip {
         var failed = false
         /// 磁盘剩余空间不够了，中途停下（没有留下半个 ZIP）。
         var outOfSpace = false
+        /// 失败时压缩程序的错误输出（排查用，不给用户看）。
+        var errorOutput: String?
     }
 
     /// 打包前：压缩前的大小 + 这么多余量，大于剩余空间就不开始。
@@ -1185,53 +1187,55 @@ enum WorkspaceZip {
     }
 
     private static let listKeys: [URLResourceKey] = [
-        .isDirectoryKey, .isPackageKey, .isSymbolicLinkKey, .isRegularFileKey,
+        .isDirectoryKey, .isPackageKey, .isSymbolicLinkKey, .isHiddenKey,
         .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey,
     ]
 
-    /// 相对路径：去掉来源根目录的前缀（/var 和 /private/var 这类写法都认）。
-    private static func relativizer(_ root: URL) -> (URL) -> String? {
-        let prefixes = Set([root.path, root.standardizedFileURL.path, root.resolvingSymlinksInPath().path])
-            .map { $0.hasSuffix("/") ? $0 : $0 + "/" }
-        return { url in
-            let path = url.path
-            for prefix in prefixes where path.hasPrefix(prefix) { return String(path.dropFirst(prefix.count)) }
-            return nil
-        }
-    }
-
     /// 列出一个来源里要打包的文件。规则和扫描一样：隐藏文件跳过、符号链接跳过、只在云端的跳过（不下载）、
     /// 文件包（.fcpbundle、.rtfd、.app……）整个打进去但只算一个；名字里带换行的跳过；没有读权限的记下来跳过。
+    /// 按相对路径列（enumerator(atPath:)）：不依赖系统返回的绝对路径前缀，/var 和 /private/var 这类写法不影响。
     static func localFiles(root: URL, isCancelled: () -> Bool = { false }) -> Listing {
         let fm = FileManager.default
         var isDir: ObjCBool = false
         guard fm.fileExists(atPath: root.path, isDirectory: &isDir), isDir.boolValue,
               WorkspaceScanner.readProblem(root.path) == nil,
-              let enumerator = fm.enumerator(at: root, includingPropertiesForKeys: listKeys,
-                                             options: [.skipsHiddenFiles, .skipsPackageDescendants],
-                                             errorHandler: { _, _ in true }) else { return .unavailable }
-        let relative = relativizer(root)
+              let enumerator = fm.enumerator(atPath: root.path) else { return .unavailable }
         var files: [String] = []
         var items = 0
         var skipped = 0
         var unreadable: [String] = []
         var seen = 0
-        while let url = enumerator.nextObject() as? URL {
+        while let rel = enumerator.nextObject() as? String {
             seen += 1
             if seen % 400 == 0, isCancelled() { return .cancelled }
-            guard let v = try? url.resourceValues(forKeys: Set(listKeys)) else { continue }
-            guard let rel = relative(url), !rel.isEmpty, !rel.contains("\n"), !rel.contains("\r") else {
-                if v.isDirectory == true { enumerator.skipDescendants() }
+            let isDirType = (enumerator.fileAttributes?[.type] as? FileAttributeType) == .typeDirectory
+            let last = (rel as NSString).lastPathComponent
+            if last.hasPrefix(".") || rel.contains("\n") || rel.contains("\r") {
+                if isDirType { enumerator.skipDescendants() }
                 continue
             }
+            let url = root.appendingPathComponent(rel)
+            guard let v = try? url.resourceValues(forKeys: Set(listKeys)) else { continue }
             if v.isSymbolicLink == true { continue }
+            if v.isHidden == true {
+                if isDirType { enumerator.skipDescendants() }
+                continue
+            }
             if WorkspaceScanner.isCloudOnly(v, path: url.path) {
                 skipped += 1
-                if v.isDirectory == true { enumerator.skipDescendants() }
+                if isDirType { enumerator.skipDescendants() }
                 continue
             }
             if v.isDirectory == true {
-                guard v.isPackage == true else { continue }
+                guard v.isPackage == true else {
+                    // 没有读权限的子文件夹：不往下走（打包时也读不了）。
+                    if access(url.path, R_OK | X_OK) != 0 {
+                        enumerator.skipDescendants()
+                        unreadable.append(rel)
+                    }
+                    continue
+                }
+                enumerator.skipDescendants()
                 guard let inner = packageFiles(url, rel: rel, isCancelled: isCancelled) else { return .cancelled }
                 if inner.cloud > 0 {
                     // 包里有文件只在云端：整个包跳过（打半个包没意义，也不下载）。
@@ -1257,19 +1261,18 @@ enum WorkspaceZip {
     /// 文件包里的所有文件（包括包里的隐藏文件和符号链接，原样打包；符号链接不跟进去）。
     private static func packageFiles(_ package: URL, rel: String, isCancelled: () -> Bool)
         -> (files: [String], cloud: Int, unreadable: [String])? {
-        let keys: [URLResourceKey] = [.isDirectoryKey, .isSymbolicLinkKey, .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey]
-        guard let enumerator = FileManager.default.enumerator(at: package, includingPropertiesForKeys: keys, options: [],
-                                                              errorHandler: { _, _ in true }) else { return ([], 0, []) }
-        let relative = relativizer(package)
+        let keys: Set<URLResourceKey> = [.isDirectoryKey, .isSymbolicLinkKey, .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey]
+        guard let enumerator = FileManager.default.enumerator(atPath: package.path) else { return ([], 0, []) }
         var files: [String] = []
         var cloud = 0
         var unreadable: [String] = []
         var seen = 0
-        while let url = enumerator.nextObject() as? URL {
+        while let inner = enumerator.nextObject() as? String {
             seen += 1
             if seen % 400 == 0, isCancelled() { return nil }
-            guard let v = try? url.resourceValues(forKeys: Set(keys)), let inner = relative(url), !inner.isEmpty,
-                  !inner.contains("\n"), !inner.contains("\r") else { continue }
+            guard !inner.contains("\n"), !inner.contains("\r") else { continue }
+            let url = package.appendingPathComponent(inner)
+            guard let v = try? url.resourceValues(forKeys: keys) else { continue }
             if v.isDirectory == true && v.isSymbolicLink != true { continue }
             if v.isSymbolicLink != true && WorkspaceScanner.isCloudOnly(v, path: url.path) {
                 cloud += 1
@@ -1465,6 +1468,7 @@ enum WorkspaceZip {
         }
         guard fm.fileExists(atPath: partial.path) else {
             outcome.failed = true
+            outcome.errorOutput = "exit \(process.terminationStatus), no output: " + ((try? String(contentsOf: errorURL, encoding: .utf8)) ?? "")
             return outcome
         }
         if process.terminationStatus != 0 {
@@ -1473,6 +1477,7 @@ enum WorkspaceZip {
             let parsed = unreadableFiles(stderr: stderr, listed: Set(lines))
             guard parsed.onlyFileErrors, !parsed.files.isEmpty else {
                 outcome.failed = true
+                outcome.errorOutput = "exit \(process.terminationStatus): " + stderr
                 return outcome
             }
             outcome.unreadable += parsed.files
